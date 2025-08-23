@@ -69,17 +69,12 @@ public class PlayerController : MonoBehaviour
 
     public void EnableHitbox()
     {
-        if (hitboxObject != null)
-        {
-            hitboxObject.SetActive(true);
-        }
+        hitboxObject.GetComponent<Hitbox>()?.Activate();
     }
 
     public void DisableHitbox()
     {
-        if (hitboxObject != null)
-        {
-            hitboxObject.SetActive(false);
-        }
+        hitboxObject.GetComponent<Hitbox>()?.Deactivate();
     }
+
 }
