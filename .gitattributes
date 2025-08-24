@@ -1,0 +1,42 @@
+# ----- Unity text assets (force LF in repo for clean diffs/merges) -----
+*.cs     text eol=lf
+*.meta   text eol=lf
+*.unity  text eol=lf
+*.prefab text eol=lf
+*.shader text eol=lf
+*.cginc  text eol=lf
+*.uxml   text eol=lf
+*.uss    text eol=lf
+*.asmdef text eol=lf
+*.asmref text eol=lf
+*.json   text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.txt    text eol=lf
+*.md     text eol=lf
+.gitattributes text eol=lf
+.gitignore    text eol=lf
+
+# ----- Windows-specific scripts (keep CRLF when checked out on Windows) -----
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+
+# ----- Binary assets (never attempt line ending normalization) -----
+# (Unity treats these as binary; prevents accidental text conversions)
+*.png    -text
+*.jpg    -text
+*.jpeg   -text
+*.psd    -text
+*.tga    -text
+*.fbx    -text
+*.wav    -text
+*.mp3    -text
+*.ogg    -text
+*.ttf    -text
+*.otf    -text
+*.mp4    -text
+*.mov    -text
+*.gif    -text
+*.zip    -text
+*.unitypackage -text
+*.dll    -text

@@ -79,12 +79,12 @@ public class EnemyController2D : MonoBehaviour
         Vector2 tangential = tangent * (tangentialStrength * holdT);
 
         // 3) soft separation (inverse-square, clamped)
-        int count = Physics2D.OverlapCircleNonAlloc(pos, separationRadius, overlapBuf, enemiesMask);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(pos, separationRadius, enemiesMask);
         Vector2 separation = Vector2.zero;
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < hits.Length; i++)
         {
-            var c = overlapBuf[i];
-            if (!c || c.attachedRigidbody == rb) continue;
+            var c = hits[i];
+            if (!c || c.attachedRigidbody == rb) continue;  // skip self
             Vector2 away = pos - (Vector2)c.transform.position;
             float d = away.magnitude;
             if (d > 0.0001f) separation += away / (d * d);
