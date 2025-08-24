@@ -6,6 +6,9 @@
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Ss]ysInfo/
 
 # Visual Studio cache
 .vs/
@@ -26,5 +29,13 @@
 
 # OS-specific files
 .DS_Store
+desktop.ini
 Thumbs.db
-"UpgradeLog*.htm" 
+
+# Upgrade/VS logs
+UpgradeLog*.htm
+
+# Unity packages & mobile builds
+*.unitypackage
+*.apk
+*.aab
