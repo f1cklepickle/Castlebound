@@ -23,6 +23,8 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] float faceSmoothTime = 0.08f;        // smooth facing (seconds)
     [SerializeField] Animator animator;
 
+    public bool IsInHoldRange => inHoldRange;
+
     Rigidbody2D rb;
     Transform target;
     bool inHoldRange;

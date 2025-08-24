@@ -1,29 +1,19 @@
 using UnityEngine;
 
-public class Health : MonoBehaviour
+public class Health : MonoBehaviour, IDamageable
 {
-    [SerializeField] private int maxHealth = 10;
-    private int currentHealth;
+    [SerializeField] int maxHealth = 10;
+    int current;
 
-    private void Awake()
-    {
-        currentHealth = maxHealth;
-    }
+    void Awake() => current = maxHealth;
 
     public void TakeDamage(int amount)
     {
-        currentHealth -= amount;
-        Debug.Log(gameObject.name + " took " + amount + " damage. Remaining: " + currentHealth);
-
-        if (currentHealth <= 0)
+        current -= amount;
+        if (current <= 0)
         {
-            Die();
+            // TODO: death anim/effects
+            Destroy(gameObject);
         }
-    }
-
-    private void Die()
-    {
-        // For now just destroy the object
-        Destroy(gameObject);
     }
 }
