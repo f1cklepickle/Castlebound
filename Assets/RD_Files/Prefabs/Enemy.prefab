@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4418641983238910643}
   - component: {fileID: 7926314504726225482}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -99,9 +99,9 @@ GameObject:
   - component: {fileID: 2170073844796163517}
   - component: {fileID: 1123869059645467061}
   - component: {fileID: 8747018169664145618}
-  - component: {fileID: -3325400146794094972}
-  - component: {fileID: -2020155777117128777}
-  m_Layer: 6
+  - component: {fileID: 7189814229194096064}
+  - component: {fileID: 3821050183671550168}
+  m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -136,11 +136,11 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 3
-  m_LinearDamping: 0
+  m_Mass: 1
+  m_LinearDamping: 0.5
   m_AngularDamping: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 49437cb8ef3d1a646bba5b956e9bda95, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -149,7 +149,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &1123869059645467061
 MonoBehaviour:
@@ -181,7 +181,7 @@ CircleCollider2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_LayerOverridePriority: 0
+  m_LayerOverridePriority: 1
   m_ForceSendLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -200,7 +200,7 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0.0009070839, y: 0.2821796}
   m_Radius: 0.27511346
---- !u!114 &-3325400146794094972
+--- !u!114 &7189814229194096064
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -212,22 +212,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b42b7e1aae77f64e8810845a4e4cbbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2.2
-  stopDistance: 1.1
-  resumeDistance: 1.6
-  maxChaseDistance: 25
-  desiredRingRadius: 1
-  tangentialStrength: 1
-  separationRadius: 2
-  separationStrength: 0.5
-  enemiesMask:
-    serializedVersion: 2
-    m_Bits: 64
-  spriteChild: {fileID: 4418641983238910643}
-  facingOffset: 90
-  faceSmoothTime: 0.08
-  animator: {fileID: 0}
---- !u!114 &-2020155777117128777
+  target: {fileID: 0}
+  speed: 2.2
+  holdRadius: 1
+  releaseMargin: 0.6
+  orbitBase: 1.5
+  angularGain: 3
+  maxTangent: 2
+  outrunFrames: 8
+  epsilonDist: 0.01
+  reseatBias: 0.3
+--- !u!114 &3821050183671550168
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -236,7 +231,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6394411849047796180}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ba6697574394ae49a5e2c73623a6693, type: 3}
+  m_Script: {fileID: 11500000, guid: 7dfca71295eaa624886501b28f268bb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 1
@@ -245,6 +240,6 @@ MonoBehaviour:
   cooldownSeconds: 0.8
   targetMask:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 0
   animator: {fileID: 0}
   attackTriggerName: Attack
