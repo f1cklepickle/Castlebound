@@ -1,137 +1,167 @@
-// Assets/Scripts/Enemies/EnemyController2D.cs
+using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class EnemyController2D : MonoBehaviour
 {
-    [Header("Chase Tuning")]
-    [SerializeField] float moveSpeed = 2.5f;
-    [SerializeField] float stopDistance = 1.1f;          // stop when <= this
-    [SerializeField] float resumeDistance = 1.6f;         // start moving again when > this
-    [SerializeField] float maxChaseDistance = 25f;        // leash
-
-    [Header("Ring & Separation")]
-    [SerializeField] float desiredRingRadius = 1.25f;     // target circle around player
-    [SerializeField] float tangentialStrength = 0.6f;     // sideways slide
-    [SerializeField] float separationRadius = 0.8f;       // neighbor radius
-    [SerializeField] float separationStrength = 1.1f;     // neighbor push
-    [SerializeField] LayerMask enemiesMask;               // set to "Enemies" layer in Inspector
-
-    [Header("Visuals")]
-    [SerializeField] Transform spriteChild;               // rotate this child (keep RB2D Z frozen)
-    [SerializeField] float facingOffset = -90f;           // set for your art orientation
-    [SerializeField] float faceSmoothTime = 0.08f;        // smooth facing (seconds)
-    [SerializeField] Animator animator;
-
-    public bool IsInHoldRange => inHoldRange;
-
-    Rigidbody2D rb;
-    Transform target;
-    bool inHoldRange;
-
-    static readonly Collider2D[] overlapBuf = new Collider2D[16];
-    float faceVel; // for SmoothDampAngle
-
-    void Awake()
+    public enum State
     {
-        rb = GetComponent<Rigidbody2D>();
-        if (!animator) animator = GetComponentInChildren<Animator>();
-        var p = GameObject.FindGameObjectWithTag("Player");
-        if (p) target = p.transform;
+        CHASE,
+        HOLD
     }
 
-    void FixedUpdate()
-    {
-        if (!target) return;
+    // Static registry for manager access
+    internal static readonly List<EnemyController2D> All = new List<EnemyController2D>();
 
-        Vector2 pos = rb.position;
+    [SerializeField] private Transform target;           // auto-find by Tag "Player" if null
+    [SerializeField] private float speed = 3.5f;
+    [SerializeField] private float holdRadius = 2.6f;    // R_in
+    [SerializeField] private float releaseMargin = 0.6f; // R_out
+    [SerializeField] private float orbitBase = 0.8f;
+    [SerializeField] private float angularGain = 2.5f;
+    [SerializeField] private float maxTangent = 2.5f;
+    [SerializeField] private int outrunFrames = 8;
+    [SerializeField] private float epsilonDist = 0.01f;
+    [SerializeField] private float reseatBias = 0.3f;    // small inward nudge if slightly outside R_in
+
+    // Public API
+    public Transform Target => target;
+    public bool IsInHoldRange()
+    {
+        if (target == null) return false;
+        Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
+        float dist = Vector2.Distance(pos, target.position);
+        return dist <= holdRadius;
+    }
+
+    private Rigidbody2D _rb;
+
+    // State
+    private State _state = State.CHASE;
+
+    // Outrun detection
+    private float _prevDist;
+    private int _distTrend; // consecutive increases
+
+    // Angular gaps (radians) provided by manager
+    private float _gapCW;
+    private float _gapCCW;
+
+    public void SetAngularGaps(float gapCW, float gapCCW)
+    {
+        _gapCW = gapCW;
+        _gapCCW = gapCCW;
+    }
+
+    private void Awake()
+    {
+        _rb = GetComponent<Rigidbody2D>();
+
+        if (target == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) target = player.transform;
+        }
+
+        if (target != null)
+        {
+            Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
+            _prevDist = Vector2.Distance(pos, target.position);
+        }
+        else
+        {
+            _prevDist = 0f;
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (!All.Contains(this)) All.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        All.Remove(this);
+    }
+
+    private void FixedUpdate()
+    {
+        if (_rb == null) return;
+        if (target == null) return;
+
+        Vector2 pos = _rb.position;
         Vector2 toTarget = (Vector2)target.position - pos;
         float dist = toTarget.magnitude;
 
-        // leash
-        if (dist > maxChaseDistance) { StopMoving(); return; }
+        Vector2 dir = dist > 1e-6f ? (toTarget / dist) : Vector2.zero;
 
-        // --- hysteresis to prevent jitter ---
-        if (inHoldRange)
+        // Update outrun trend (consecutive increases)
+        if (dist > _prevDist + epsilonDist)
         {
-            if (dist > resumeDistance) inHoldRange = false;
-            StopMoving();
-            SmoothFace(toTarget);
-            return;
+            _distTrend++;
         }
-        else if (dist <= stopDistance)
+        else
         {
-            inHoldRange = true;
-            StopMoving();
-            SmoothFace(toTarget);
-            return;
+            _distTrend = 0;
         }
+        _prevDist = dist;
 
-        // --- steering (ring + tangential + separation) ---
-        Vector2 dirToPlayer = (dist > 0.0001f) ? toTarget / dist : Vector2.right;
+        float rIn = holdRadius;
+        float rOut = holdRadius + releaseMargin;
 
-        // 1) ring goal
-        Vector2 desiredPos = (Vector2)target.position - dirToPlayer * desiredRingRadius;
-        Vector2 ringDir = (desiredPos - pos);
-        if (ringDir.sqrMagnitude > 0.0001f) ringDir.Normalize();
-
-        // 2) tangential slide (fade out near stop radius)
-        float holdT = Mathf.InverseLerp(stopDistance, resumeDistance, dist); // 0 near stop, 1 near resume
-        Vector2 tangent = new Vector2(-dirToPlayer.y, dirToPlayer.x);
-        Vector2 tangential = tangent * (tangentialStrength * holdT);
-
-        // 3) soft separation (inverse-square, clamped)
-        Collider2D[] hits = Physics2D.OverlapCircleAll(pos, separationRadius, enemiesMask);
-        Vector2 separation = Vector2.zero;
-        for (int i = 0; i < hits.Length; i++)
+        // State transitions (hysteresis + outrun)
+        if (_state == State.CHASE)
         {
-            var c = hits[i];
-            if (!c || c.attachedRigidbody == rb) continue;  // skip self
-            Vector2 away = pos - (Vector2)c.transform.position;
-            float d = away.magnitude;
-            if (d > 0.0001f) separation += away / (d * d);
+            if (dist <= rIn)
+                _state = State.HOLD;
         }
-        if (separation.sqrMagnitude > 1f) separation = separation.normalized;
-        separation *= separationStrength;
+        else // HOLD
+        {
+            if (dist >= rOut || _distTrend >= outrunFrames)
+                _state = State.CHASE;
+        }
 
-        // tiny forward bias so they don't orbit forever
-        Vector2 forwardBias = dirToPlayer * 0.25f;
+        Vector2 radial = Vector2.zero;
+        Vector2 tangent = Vector2.zero;
 
-        // combine & move
-        Vector2 steer = ringDir + tangential + separation + forwardBias;
-        if (steer.sqrMagnitude > 0.0001f) steer.Normalize();
+        if (_state == State.CHASE)
+        {
+            radial = dir * speed;
+            // tangent = Vector2.zero;
+        }
+        else // HOLD
+        {
+            // Small inward nudge only if outside R_in
+            if (dist > rIn)
+            {
+                radial = dir * (reseatBias * speed);
+            }
 
-        Vector2 step = steer * moveSpeed * Time.fixedDeltaTime;
-        rb.MovePosition(pos + step);
+            // Determine tangential movement based on gap preference
+            float preference = _gapCCW - _gapCW; // >0 => prefer CCW, <0 => prefer CW
+            bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
+            float sign = hasNoGaps ? 1f : (preference < 0f ? -1f : 1f);
 
-        SmoothFace(step.sqrMagnitude > 0.0001f ? steer : dirToPlayer);
-        SetAnim(step.sqrMagnitude);
+            float normPref = Mathf.Clamp01(Mathf.Abs(preference) / Mathf.PI);
+            float tangentMag = orbitBase + normPref * angularGain;
+            if (tangentMag > maxTangent) tangentMag = maxTangent;
+
+            if (dir != Vector2.zero)
+            {
+                // CCW perpendicular to dir: (-y, x)
+                Vector2 perpCCW = new Vector2(-dir.y, dir.x);
+                tangent = perpCCW * (sign * tangentMag);
+            }
+        }
+
+        float dt = Time.fixedDeltaTime;
+        _rb.MovePosition(pos + (radial + tangent) * dt);
     }
 
-    void StopMoving()
+    private void OnDrawGizmosSelected()
     {
-        rb.linearVelocity = Vector2.zero;     // kill drift so they truly hold position
-        SetAnim(0f);
-    }
-
-    void SmoothFace(Vector2 dir)
-    {
-        if (!spriteChild || dir.sqrMagnitude < 0.0001f) return;
-        float targetAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg + facingOffset;
-        float current = spriteChild.eulerAngles.z;
-        float smoothed = Mathf.SmoothDampAngle(current, targetAngle, ref faceVel, faceSmoothTime);
-        spriteChild.rotation = Quaternion.Euler(0, 0, smoothed);
-    }
-
-    void SetAnim(float moveAmount)
-    {
-        if (animator) animator.SetFloat("MoveSpeed", moveAmount);
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow; Gizmos.DrawWireSphere(transform.position, stopDistance);
-        Gizmos.color = Color.green; Gizmos.DrawWireSphere(transform.position, resumeDistance);
-        Gizmos.color = Color.cyan; Gizmos.DrawWireSphere(transform.position, separationRadius);
+        Gizmos.color = new Color(0.3f, 0.9f, 0.3f, 1f);
+        Gizmos.DrawWireSphere(transform.position, holdRadius);
+        Gizmos.color = new Color(0.9f, 0.3f, 0.3f, 1f);
+        Gizmos.DrawWireSphere(transform.position, holdRadius + releaseMargin);
     }
 }

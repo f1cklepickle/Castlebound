@@ -29,7 +29,7 @@ public class EnemyAttack : MonoBehaviour
         if (onCooldown || controller == null) return;
 
         // Only attack while we're holding position near the player
-        if (!controller.IsInHoldRange) return;
+        if (!controller.IsInHoldRange()) return;
 
         // Confirm target really is in range (extra safety)
         int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);

@@ -12,11 +12,11 @@ TagManager:
   - Player
   - Water
   - UI
+  - Walls
   - Enemies
-  - 
-  - 
-  - 
-  - 
+  - PlayerBoundary
+  - BreakableWalls
+  - Gates
   - 
   - 
   - 
