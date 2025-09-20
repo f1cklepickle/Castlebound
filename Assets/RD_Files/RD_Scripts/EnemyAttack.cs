@@ -11,6 +11,7 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
     [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
     [SerializeField] Animator animator;            // optional, can be null
+    [SerializeField] string playerLayerName = "Player";
     [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
     EnemyController2D controller;
@@ -22,6 +23,12 @@ public class EnemyAttack : MonoBehaviour
     {
         controller = GetComponent<EnemyController2D>();
         if (!animator) animator = GetComponentInChildren<Animator>();
+        if (targetMask.value == 0) {
+            int lm = LayerMask.NameToLayer(playerLayerName);
+            if (lm >= 0) {
+                targetMask = LayerMask.GetMask(playerLayerName);
+            }
+        }
     }
 
     void Update()
@@ -33,6 +40,11 @@ public class EnemyAttack : MonoBehaviour
 
         // Confirm target really is in range (extra safety)
         int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);
+        if (count == 0 && controller != null && controller.Target != null && targetMask.value == 0) {
+            // Fallback when mask is unset: distance check to the intended target
+            float dist = Vector2.Distance(transform.position, controller.Target.position);
+            if (dist <= attackRange) count = 1;
+        }
         if (count > 0) StartCoroutine(AttackRoutine());
     }
 
