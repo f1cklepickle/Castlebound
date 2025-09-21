@@ -44,4 +44,15 @@ public class BarrierSegment : MonoBehaviour, IDamageable
         if (!IsBroken) { health = 0; BreakNow(); }
     }
 #endif
+
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        // Simple HP dot: green (unbroken) -> red (broken)
+        Color c = IsBroken ? Color.red : Color.green;
+        c.a = 0.9f;
+        Gizmos.color = c;
+        Gizmos.DrawSphere(transform.position, 0.08f);
+    }
+#endif
 }

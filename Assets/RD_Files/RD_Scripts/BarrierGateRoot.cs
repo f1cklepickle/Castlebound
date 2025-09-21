@@ -88,7 +88,11 @@ public class BarrierGateRoot : MonoBehaviour
             Gizmos.DrawSphere(GatePoint.position, 0.08f);
             Gizmos.DrawLine(transform.position, GatePoint.position);
         }
+        
+#if UNITY_EDITOR
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.3f,
+            IsOpen ? "Gate: OPEN" : "Gate: CLOSED");
+#endif
     }
 #endif
 }
-
