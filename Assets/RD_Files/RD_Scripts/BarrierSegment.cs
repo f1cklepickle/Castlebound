@@ -29,12 +29,19 @@ public class BarrierSegment : MonoBehaviour, IDamageable
         if (IsBroken) BreakNow();
     }
 
-    void BreakNow() {
+    internal void BreakNow() {
         if (breakVfx) Instantiate(breakVfx, transform.position, Quaternion.identity);
         if (col) col.enabled = false;
         if (sr && brokenSprite) sr.sprite = brokenSprite;
         onBroken?.Invoke(this);
         if (destroyOnBreak) Destroy(gameObject);
     }
-}
 
+#if UNITY_EDITOR
+    [ContextMenu("DEBUG: Break Now")]
+    void DebugBreakNow()
+    {
+        if (!IsBroken) { health = 0; BreakNow(); }
+    }
+#endif
+}
