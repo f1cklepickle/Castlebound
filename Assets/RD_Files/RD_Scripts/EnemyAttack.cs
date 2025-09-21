@@ -24,9 +24,15 @@ public class EnemyAttack : MonoBehaviour
         controller = GetComponent<EnemyController2D>();
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (targetMask.value == 0) {
-            int lm = LayerMask.NameToLayer(playerLayerName);
-            if (lm >= 0) {
-                targetMask = LayerMask.GetMask(playerLayerName);
+            int p = LayerMask.NameToLayer("Player");
+            int w = LayerMask.NameToLayer("Walls");
+            if (p >= 0 && w >= 0) targetMask = LayerMask.GetMask("Player", "Walls");
+        }
+        int walls = LayerMask.NameToLayer("Walls");
+        if (walls >= 0) {
+            int wallsMask = 1 << walls;
+            if ((targetMask.value & wallsMask) == 0) {
+                targetMask = targetMask | wallsMask; // ensure Walls is included
             }
         }
     }
