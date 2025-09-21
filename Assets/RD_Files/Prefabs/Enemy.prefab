@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 8747018169664145618}
   - component: {fileID: 7189814229194096064}
   - component: {fileID: 3821050183671550168}
+  - component: {fileID: -6814748790006484250}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -240,6 +241,20 @@ MonoBehaviour:
   cooldownSeconds: 0.8
   targetMask:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 72
   animator: {fileID: 0}
+  playerLayerName: Player
   attackTriggerName: Attack
+--- !u!114 &-6814748790006484250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 864446b8dff05d74cbc1881a999d3a0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTag: Player
