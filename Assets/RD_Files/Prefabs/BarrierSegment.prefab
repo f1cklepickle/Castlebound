@@ -150,4 +150,4 @@ MonoBehaviour:
   maxHealth: 5
   brokenSprite: {fileID: 0}
   breakVfx: {fileID: 0}
-  destroyOnBreak: 0
+  destroyOnBreak: 1

@@ -86,6 +86,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6603409777453530748}
     m_Modifications:
+    - target: {fileID: 71537860137663497, guid: 1c76dcd7bac7c214c9b4db4877dc6ac2, type: 3}
+      propertyPath: destroyOnBreak
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5401610411212419540, guid: 1c76dcd7bac7c214c9b4db4877dc6ac2, type: 3}
       propertyPath: m_Name
       value: BarrierSegment
