@@ -39,3 +39,6 @@ UpgradeLog*.htm
 *.unitypackage
 *.apk
 *.aab
+
+# VS Code
+.vscode/
