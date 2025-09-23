@@ -1,0 +1,15 @@
+{
+"name": "_Project.Core",
+"rootNamespace": "Castlebound",
+"references": [],
+"optionalUnityReferences": [],
+"includePlatforms": [],
+"excludePlatforms": [],
+"allowUnsafeCode": false,
+"overrideReferences": false,
+"precompiledReferences": [],
+"autoReferenced": true,
+"defineConstraints": [],
+"versionDefines": [],
+"noEngineReferences": false
+}
