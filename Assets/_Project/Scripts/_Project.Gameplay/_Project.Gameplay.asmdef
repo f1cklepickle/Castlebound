@@ -1,17 +1,19 @@
 {
-"name": "_Project.Gameplay",
-"rootNamespace": "Castlebound.Gameplay",
-"references": [
-"_Project.Core"
-],
-"optionalUnityReferences": [],
-"includePlatforms": [],
-"excludePlatforms": [],
-"allowUnsafeCode": false,
-"overrideReferences": false,
-"precompiledReferences": [],
-"autoReferenced": true,
-"defineConstraints": [],
-"versionDefines": [],
-"noEngineReferences": false
+  "name": "_Project.Gameplay",
+  "rootNamespace": "Castlebound.Gameplay",
+  "references": [
+    "_Project.Core",
+    "Unity.InputSystem",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

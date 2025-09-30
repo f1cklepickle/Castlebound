@@ -97,10 +97,10 @@ GameObject:
   m_Component:
   - component: {fileID: 3011338220405360025}
   - component: {fileID: 2170073844796163517}
-  - component: {fileID: 1123869059645467061}
   - component: {fileID: 8747018169664145618}
   - component: {fileID: 7189814229194096064}
   - component: {fileID: 3821050183671550168}
+  - component: {fileID: 4031526577869015660}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -151,19 +151,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
---- !u!114 &1123869059645467061
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6394411849047796180}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4a6191530409f24e8678b555025451d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 10
 --- !u!58 &8747018169664145618
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -242,4 +229,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   animator: {fileID: 0}
+  playerLayerName: Player
   attackTriggerName: Attack
+--- !u!114 &4031526577869015660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf7bc62db1356084b98850f16aa3a9b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 10

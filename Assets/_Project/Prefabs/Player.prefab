@@ -88,7 +88,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1272401345759337948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5638b74e12e36a643b693010c1d1e15e, type: 3}
+  m_Script: {fileID: 11500000, guid: bbfff868dea261e44802d7a99abd02ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &8325390509751579795
@@ -222,12 +222,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 8325390509751579795}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 505999e303cdc344e862d687a1dcb536, type: 3}
+  m_Script: {fileID: 11500000, guid: 46b2ad7cb8a7016428ebbadebf1330c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3.8
+  moveSpeed: 5
   deadZone: 0.1
-  rotationSpeed: 500
+  rotationSpeed: 720
   facingDirectionOffset: 90
   flipDirection: 0
   animator: {fileID: 0}
@@ -244,7 +244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 63ca22c6fc72deb4584eb414a91d5c86, type: 3}
+  m_Actions: {fileID: -944628639613478452, guid: 36671cfe877dff646a42289a76dfb94f, type: 3}
   m_NotificationBehavior: 0
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
@@ -325,7 +325,7 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -362,10 +362,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8325390509751579795}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4a6191530409f24e8678b555025451d, type: 3}
+  m_Script: {fileID: 11500000, guid: cf7bc62db1356084b98850f16aa3a9b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 2000
+  maxHealth: 200
 --- !u!114 &-5784453068084145222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,11 +375,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8325390509751579795}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46ac5ef2b2de6f8439570c6e1c7f3f63, type: 3}
+  m_Script: {fileID: 11500000, guid: 22600ae4e0edf31428c4e361261e97b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
+  moveSpeed: 5
   solidMask:
     serializedVersion: 2
-    m_Bits: 448
+    m_Bits: 192
   skin: 0.02

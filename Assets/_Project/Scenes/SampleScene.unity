@@ -822,11 +822,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 519420028}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33cd9d4b97c07af4facdae194c543854, type: 3}
+  m_Script: {fileID: 11500000, guid: 69d289d71353d6b4c8b53b2d026cb52b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1979340878}
-  offset: {x: 0, y: 0, z: -5}
+  offset: {x: 0, y: 0, z: -10}
 --- !u!1 &549938748
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,7 +1133,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 769406674}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 704aff3a7a2298a4ca820509965d04f1, type: 3}
+  m_Script: {fileID: 11500000, guid: a1262b97825a87f43b6a0bb1a792b751, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   healthSlider: {fileID: 769406676}
@@ -1747,7 +1747,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1153037250}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58c497d6ffe5ac247a97e9624c25fcbc, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d82f481291db614e9cbac723fbe4836, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverUI: {fileID: 904751785}
@@ -2885,7 +2885,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4a6191530409f24e8678b555025451d, type: 3}
+  m_Script: {fileID: 11500000, guid: cf7bc62db1356084b98850f16aa3a9b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &1979340878 stripped
