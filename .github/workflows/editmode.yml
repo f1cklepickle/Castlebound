@@ -27,7 +27,7 @@ jobs:
         uses: game-ci/unity-test-runner@v4
         with:
           projectPath: .
-          unityVersion: 6000.1.14f1  # <- set to your exact Unity LTS (e.g., 2022.3.40f1)
+          unityVersion: 2022.3.xxF1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           customParameters: -nographics -batchmode
