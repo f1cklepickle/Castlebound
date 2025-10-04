@@ -12,21 +12,28 @@ jobs:
     runs-on: [self-hosted, Windows]
 
     env:
-      UNITY_VERSION: 6000.1.14f1   # update when you upgrade Unity on the runner
+      UNITY_VERSION: 6000.1.14f1  # update when you upgrade Unity on the runner
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Locate Unity.exe for ${{ env.UNITY_VERSION }}
-        shell: powershell -ExecutionPolicy Bypass
+      # Allow pwsh script execution for THIS JOB ONLY (no machine change)
+      - name: Allow pwsh in this job
+        shell: pwsh
         run: |
-          $version = $env:UNITY_VERSION
+          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+      # Locate Unity.exe for the given UNITY_VERSION and export to GITHUB_ENV
+      - name: Locate Unity.exe
+        shell: pwsh
+        run: |
+          $version = "${{ env.UNITY_VERSION }}"
           $roots = @(
             "C:\Program Files\Unity\Hub\Editor",
-            "D:\Program Files\Unity\Hub\Editor",
-            "$env:ProgramFiles\Unity\Hub\Editor",
-            "$env:ProgramFiles(x86)\Unity\Hub\Editor"
+            "C:\Program Files\Unity\Hub",
+            "C:\Program Files\Unity",
+            "$Env:ProgramFiles\Unity\Hub\Editor"
           ) | Select-Object -Unique
 
           $unityExe = $null
@@ -36,18 +43,18 @@ jobs:
           }
 
           if (-not $unityExe) {
-            $match = Get-ChildItem -Path C:\,D:\ -ErrorAction SilentlyContinue -Filter Unity.exe -Recurse |
-              Where-Object { $_.FullName -match "\\Editor\\Unity.exe$" -and $_.FullName -match [regex]::Escape($version) } |
-              Select-Object -First 1
-            if ($match) { $unityExe = $match.FullName }
+            # Fallback: narrow search to versioned paths first to avoid false hits
+            $unityExe = Get-ChildItem -Path 'C:\' -Filter Unity.exe -ErrorAction SilentlyContinue -Recurse |
+              Where-Object { $_.FullName -match [regex]::Escape($version) } |
+              Select-Object -First 1 -ExpandProperty FullName
           }
 
           if (-not $unityExe) {
-            Write-Error "Unity $version not found. Check UNITY_VERSION or install path."
+            Write-Error "Unity $version not found on this runner. Install via Unity Hub."
             exit 1
           }
 
-          "UNITY_EXE=$unityExe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "UNITY_EXE=$unityExe" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Prepare workspace (cmd)
         shell: cmd
