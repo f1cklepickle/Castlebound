@@ -1,0 +1,23 @@
+name: EditMode CI (Self-Hosted)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  editmode-tests:
+    name: EditMode Tests (Unity)
+    runs-on: [self-hosted, Windows]   # your PC's runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unity EditMode Tests
+        uses: game-ci/unity-test-runner@v4
+        with:
+          projectPath: .
+          unityVersion: 6000.1.14f1     # <-- set to your exact Unity 6 version on PC
+          testMode: EditMode
+          customParameters: -nographics -batchmode
