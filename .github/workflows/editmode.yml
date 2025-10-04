@@ -10,36 +10,44 @@ jobs:
   editmode-tests:
     name: Unity EditMode Tests (Self-Hosted)
     runs-on: [self-hosted, Windows]
+    env:
+      UNITY_VERSION: 6000.1.14f1   # change here when you upgrade Unity on the runner
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Optional: clean test results from previous runs
       - name: Prepare workspace
-        shell: pwsh
+        shell: powershell
         run: |
-          if (Test-Path "$PWD\TestResults") {
-            Remove-Item "$PWD\TestResults" -Recurse -Force
-          }
-          New-Item -ItemType Directory -Force -Path "$PWD\TestResults" | Out-Null
+          $Results = Join-Path "${{ github.workspace }}" "TestResults"
+          if (Test-Path $Results) { Remove-Item $Results -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $Results | Out-Null
 
-      # Run Unity EditMode tests directly (no Docker)
       - name: Run Unity EditMode Tests
-        shell: pwsh
+        shell: powershell
         run: |
-          $unityExe = "C:\Program Files\Unity\Hub\Editor\6000.1.14f1\Editor\Unity.exe"
-          if (!(Test-Path $unityExe)) {
-            Write-Error "❌ Unity not found at $unityExe. Check version or install path."
+          $UnityExe   = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VERSION\Editor\Unity.exe"
+          if (!(Test-Path $UnityExe)) {
+            Write-Error "❌ Unity not found at $UnityExe. Check version or install path."
+            exit 1
           }
-          & "$unityExe" -batchmode -nographics -quit `
-            -projectPath "$PWD" `
-            -logfile "$PWD\TestResults\EditModeLog.txt" `
-            -runTests -testPlatform EditMode `
-            -testResults "$PWD\TestResults\EditModeResults.xml"
 
-      # Upload test results for review
+          $ProjectPath = "${{ github.workspace }}"
+          $ResultsDir  = Join-Path $ProjectPath "TestResults"
+          $LogFile     = Join-Path $ResultsDir  "EditModeLog.txt"
+          $XmlFile     = Join-Path $ResultsDir  "EditModeResults.xml"
+
+          & "$UnityExe" -batchmode -nographics -quit `
+            -projectPath "$ProjectPath" `
+            -runTests -testPlatform EditMode `
+            -logfile "$LogFile" `
+            -testResults "$XmlFile"
+
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: EditModeResults
