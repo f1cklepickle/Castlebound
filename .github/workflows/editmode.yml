@@ -12,38 +12,31 @@ jobs:
     runs-on: [self-hosted, Windows]
 
     env:
-      UNITY_VERSION: 6000.1.14f1   # update if you change your local Unity install
+      UNITY_VERSION: 6000.1.14f1   # update when you upgrade Unity on the runner
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Allow PowerShell scripts in THIS job only (no machine-wide change)
-      - name: Allow PowerShell scripts (process scope)
-        shell: powershell
+      - name: Prepare workspace (cmd)
+        shell: cmd
         run: |
-          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-          $PSVersionTable.PSVersion
+          if exist "%CD%\TestResults" rmdir /s /q "%CD%\TestResults"
+          mkdir "%CD%\TestResults"
 
-      - name: Prepare workspace
-        shell: powershell
+      - name: Run Unity EditMode Tests (cmd)
+        shell: cmd
         run: |
-          $results = Join-Path "${{ github.workspace }}" "TestResults"
-          if (Test-Path $results) { Remove-Item $results -Recurse -Force }
-          New-Item -ItemType Directory -Force -Path $results | Out-Null
-
-      - name: Run Unity EditMode Tests
-        shell: powershell
-        run: |
-          $unityExe = "C:\Program Files\Unity\Hub\Editor\${{ env.UNITY_VERSION }}\Editor\Unity.exe"
-          if (!(Test-Path $unityExe)) {
-            Write-Error "Unity not found at $unityExe. Check version or install path."
-          }
-          & "$unityExe" -batchmode -nographics -quit `
-            -projectPath "${{ github.workspace }}" `
-            -logfile "${{ github.workspace }}\TestResults\EditModeLog.txt" `
-            -runTests -testPlatform EditMode `
-            -testResults "${{ github.workspace }}\TestResults\EditModeResults.xml"
+          set "UNITY_EXE=C:\Program Files\Unity\Hub\Editor\%UNITY_VERSION%\Editor\Unity.exe"
+          if not exist "%UNITY_EXE%" (
+            echo Unity not found at "%UNITY_EXE%"
+            exit /b 1
+          )
+          "%UNITY_EXE%" -batchmode -nographics -quit ^
+            -projectPath "%CD%" ^
+            -logfile "%CD%\TestResults\EditModeLog.txt" ^
+            -runTests -testPlatform EditMode ^
+            -testResults "%CD%\TestResults\EditModeResults.xml"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
