@@ -18,11 +18,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Resolve the full path to Unity.exe for the requested version
       - name: Locate Unity.exe for ${{ env.UNITY_VERSION }}
-        shell: pwsh
+        shell: powershell -ExecutionPolicy Bypass
         run: |
-          $version = "${env:UNITY_VERSION}"
+          $version = $env:UNITY_VERSION
           $roots = @(
             "C:\Program Files\Unity\Hub\Editor",
             "D:\Program Files\Unity\Hub\Editor",
@@ -37,7 +36,6 @@ jobs:
           }
 
           if (-not $unityExe) {
-            # Fallback: quick search (may take a few seconds on first run)
             $match = Get-ChildItem -Path C:\,D:\ -ErrorAction SilentlyContinue -Filter Unity.exe -Recurse |
               Where-Object { $_.FullName -match "\\Editor\\Unity.exe$" -and $_.FullName -match [regex]::Escape($version) } |
               Select-Object -First 1
