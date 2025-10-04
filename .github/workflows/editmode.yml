@@ -18,6 +18,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Resolve the full path to Unity.exe for the requested version
+      - name: Locate Unity.exe for ${{ env.UNITY_VERSION }}
+        shell: pwsh
+        run: |
+          $version = "${env:UNITY_VERSION}"
+          $roots = @(
+            "C:\Program Files\Unity\Hub\Editor",
+            "D:\Program Files\Unity\Hub\Editor",
+            "$env:ProgramFiles\Unity\Hub\Editor",
+            "$env:ProgramFiles(x86)\Unity\Hub\Editor"
+          ) | Select-Object -Unique
+
+          $unityExe = $null
+          foreach ($r in $roots) {
+            $candidate = Join-Path $r $version | Join-Path -ChildPath "Editor\Unity.exe"
+            if (Test-Path $candidate) { $unityExe = $candidate; break }
+          }
+
+          if (-not $unityExe) {
+            # Fallback: quick search (may take a few seconds on first run)
+            $match = Get-ChildItem -Path C:\,D:\ -ErrorAction SilentlyContinue -Filter Unity.exe -Recurse |
+              Where-Object { $_.FullName -match "\\Editor\\Unity.exe$" -and $_.FullName -match [regex]::Escape($version) } |
+              Select-Object -First 1
+            if ($match) { $unityExe = $match.FullName }
+          }
+
+          if (-not $unityExe) {
+            Write-Error "Unity $version not found. Check UNITY_VERSION or install path."
+            exit 1
+          }
+
+          "UNITY_EXE=$unityExe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
@@ -27,7 +60,6 @@ jobs:
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
         run: |
-          set "UNITY_EXE=C:\Program Files\Unity\Hub\Editor\%UNITY_VERSION%\Editor\Unity.exe"
           if not exist "%UNITY_EXE%" (
             echo Unity not found at "%UNITY_EXE%"
             exit /b 1
