@@ -11,19 +11,18 @@ jobs:
     name: Unity EditMode Tests (Self-Hosted)
     runs-on: [self-hosted, Windows]
     env:
-      UNITY_VERSION: 6000.1.14f1   # change if you update your local Unity
+      UNITY_VERSION: 6000.1.14f1   # change if you update Unity on the runner
+
+    # <- Key fix: every PowerShell step runs with Bypass
+    defaults:
+      run:
+        shell: 'powershell -NoProfile -ExecutionPolicy Bypass'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Allow inline PowerShell scripts in this job (no admin needed)
-      - name: Allow PowerShell scripts (process scope)
-        shell: powershell
-        run: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
       - name: Prepare workspace
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $Results = Join-Path "${{ github.workspace }}" "TestResults"
@@ -31,7 +30,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path $Results | Out-Null
 
       - name: Run Unity EditMode Tests
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $UnityExe   = "C:\Program Files\Unity\Hub\Editor\$env:UNITY_VERSION\Editor\Unity.exe"
