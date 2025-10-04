@@ -8,18 +8,39 @@ on:
 
 jobs:
   editmode-tests:
+    name: Unity EditMode Tests (Self-Hosted)
     runs-on: [self-hosted, Windows]
-    env:
-      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Unity EditMode Tests
-        uses: game-ci/unity-test-runner@v4
+
+      # Optional: clean test results from previous runs
+      - name: Prepare workspace
+        shell: pwsh
+        run: |
+          if (Test-Path "$PWD\TestResults") {
+            Remove-Item "$PWD\TestResults" -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path "$PWD\TestResults" | Out-Null
+
+      # Run Unity EditMode tests directly (no Docker)
+      - name: Run Unity EditMode Tests
+        shell: pwsh
+        run: |
+          $unityExe = "C:\Program Files\Unity\Hub\Editor\6000.1.14f1\Editor\Unity.exe"
+          if (!(Test-Path $unityExe)) {
+            Write-Error "❌ Unity not found at $unityExe. Check version or install path."
+          }
+          & "$unityExe" -batchmode -nographics -quit `
+            -projectPath "$PWD" `
+            -logfile "$PWD\TestResults\EditModeLog.txt" `
+            -runTests -testPlatform EditMode `
+            -testResults "$PWD\TestResults\EditModeResults.xml"
+
+      # Upload test results for review
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
         with:
-          projectPath: .
-          unityVersion: 6000.1.14f1
-          testMode: EditMode
-          customParameters: -nographics -batchmode
-
-
+          name: EditModeResults
+          path: TestResults/
