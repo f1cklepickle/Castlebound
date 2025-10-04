@@ -11,12 +11,11 @@ jobs:
     name: Unity EditMode Tests (Self-Hosted)
     runs-on: [self-hosted, Windows]
     env:
-      UNITY_VERSION: 6000.1.14f1   # change if you update Unity on the runner
+      UNITY_VERSION: 6000.1.14f1   # update if you upgrade Unity on the runner
 
-    # <- Key fix: every PowerShell step runs with Bypass
     defaults:
       run:
-        shell: 'powershell -NoProfile -ExecutionPolicy Bypass'
+        shell: 'pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{0}"'
 
     steps:
       - name: Checkout
