@@ -35,17 +35,23 @@ jobs:
             exit /b 1
           )
 
-          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION=%%V"
+          REM Example values: 2022.3.6f1  or  6000.1.14f1
+          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
 
-          REM ---- Normalize version (strip trailing .x or suffixes if needed)
-          set "UNITY_VERSION_CLEAN=!UNITY_VERSION:.x=!"
-          for /f "tokens=1 delims=_" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
+          REM ---- Normalize version (strip trailing .x or suffix like f1)
+          set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
+          for /f "tokens=2 delims=." %%A in ("!UNITY_VERSION_RAW!") do (
+            REM no-op; just ensure variable is set for delayed expansion
+          )
+          REM strip trailing f/b/p suffix (e.g., 2022.3.6f1 -> 2022.3.6)
+          for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
+          REM strip trailing '.x' if someone saved that form
+          if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
 
-          echo Detected UNITY_VERSION=!UNITY_VERSION!
-          echo Normalized UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN!
-
-          REM ---- Probe common Hub roots first (fast-path)
+          REM Prefer full raw version first (exact folder match), then clean
           set "UNITY_EXE="
+
+          REM ---- Fast path: known Hub roots (C:, D:, E:)
           for %%R in (
             "C:\Program Files\Unity\Hub\Editor"
             "D:\Program Files\Unity\Hub\Editor"
@@ -54,18 +60,21 @@ jobs:
             "D:\Program Files\Unity"
             "E:\Program Files\Unity"
           ) do (
-            if exist "%%~R\!UNITY_VERSION!\Editor\Unity.exe" (
-              set "UNITY_EXE=%%~R\!UNITY_VERSION!\Editor\Unity.exe"
-            ) else if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" (
-              set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
-            )
+            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe"
+            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
           )
 
-          REM ---- Slow-path: scan fixed drives if not found yet
+          REM ---- Slow path: scan fixed drives for either exact or clean folder names
           if not defined UNITY_EXE (
             for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
               if not defined UNITY_EXE (
-                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION!\Editor\Unity.exe" 2^>nul') do (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_RAW!\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+              if not defined UNITY_EXE (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" 2^>nul') do (
                   set "UNITY_EXE=%%P"
                   goto :found
                 )
@@ -75,7 +84,7 @@ jobs:
           :found
 
           if not defined UNITY_EXE (
-            echo ERROR: Unity !UNITY_VERSION! not found on this runner. Install via Unity Hub.
+            echo ERROR: Unity !UNITY_VERSION_RAW! not found on this runner. Install via Unity Hub.
             exit /b 1
           )
 
