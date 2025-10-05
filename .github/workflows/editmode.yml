@@ -21,70 +21,43 @@ jobs:
         run: |
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
-      # Read the Unity version from ProjectSettings/ProjectVersion.txt
+      # Read Unity version from ProjectVersion.txt (via PowerShell 7, invoked from cmd)
       - name: Read Unity version from ProjectVersion.txt
-        id: unityver
-        shell: powershell
+        shell: cmd
         run: |
-          $pv = Get-Content "ProjectSettings/ProjectVersion.txt" -ErrorAction Stop |
-                Where-Object { $_ -match 'm_EditorVersion:\s*(.+)$' } |
-                ForEach-Object { $Matches[1].Trim() }
-          if (-not $pv) { Write-Error "Could not read Unity version from ProjectVersion.txt"; exit 1 }
-          "UNITY_VERSION=$pv" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Host "Unity version: $pv"
+          "%ProgramFiles%\PowerShell\7\pwsh.exe" -NoProfile -ExecutionPolicy Bypass -Command ^
+            "$p = Get-Content 'ProjectSettings/ProjectVersion.txt' | Select-String -Pattern 'm_EditorVersion:\s*(.+)';" ^
+            "if (-not $p) { Write-Error 'ProjectVersion.txt not found or malformed'; exit 1 }" ^
+            "$v = $p.Matches[0].Groups[1].Value.Trim();" ^
+            "\"UNITY_VERSION=$v\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append;"
 
-      # Locate Unity.exe for the detected version.
-      # Fast path: check Hub's standard locations on every fixed drive (C:, D:, ...).
-      # Fallback: one-time search, then cache the result to avoid future scans.
+      # Locate Unity.exe for UNITY_VERSION and export UNITY_EXE (PowerShell 7, invoked from cmd)
       - name: Locate Unity.exe
-        shell: powershell
+        shell: cmd
         run: |
-          $version = "${{ env.UNITY_VERSION }}"
-          $cacheFile = Join-Path $Env:RUNNER_TEMP "unity_exe_path.txt"
-
-          # If we have a cached path for this version and it still exists, reuse it
-          if (Test-Path $cacheFile) {
-            $cached = Get-Content $cacheFile | Select-Object -First 1
-            if ($cached -and (Test-Path $cached) -and ($cached -match [regex]::Escape($version))) {
-              "UNITY_EXE=$cached" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-              Write-Host "Using cached Unity path: $cached"
-              exit 0
-            }
-          }
-
-          $unityExe = $null
-
-          # All fixed drives (C:, D:, …)
-          $drives = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Free -ne $null } | Select-Object -ExpandProperty Root
-
-          # Check common Hub locations first (very fast)
-          foreach ($root in $drives) {
-            foreach ($pf in @("Program Files","Program Files (x86)")) {
-              $candidate = Join-Path $root "$pf/Unity/Hub/Editor/$version/Editor/Unity.exe"
-              if (Test-Path $candidate) { $unityExe = $candidate; break }
-            }
-            if ($unityExe) { break }
-          }
-
-          # Fallback: targeted search for Unity.exe that contains the version in its path (runs once, then cached)
-          if (-not $unityExe) {
-            foreach ($root in $drives) {
-              $hit = Get-ChildItem -Path $root -Filter Unity.exe -File -Recurse -ErrorAction SilentlyContinue |
-                     Where-Object { $_.FullName -match [regex]::Escape($version) } |
-                     Select-Object -First 1
-              if ($hit) { $unityExe = $hit.FullName; break }
-            }
-          }
-
-          if (-not $unityExe) {
-            Write-Error "Unity $version not found on this runner. Install it via Unity Hub."
-            exit 1
-          }
-
-          # Cache and export
-          Set-Content -Path $cacheFile -Value $unityExe -Encoding UTF8
-          "UNITY_EXE=$unityExe" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Host "Found Unity: $unityExe"
+          "%ProgramFiles%\PowerShell\7\pwsh.exe" -NoProfile -ExecutionPolicy Bypass -Command ^
+            "$version = $env:UNITY_VERSION;" ^
+            "$roots = @(" ^
+            "  'C:\Program Files\Unity\Hub\Editor'," ^
+            "  'D:\Program Files\Unity\Hub\Editor'," ^
+            "  'C:\Program Files\Unity'," ^
+            "  'D:\Program Files\Unity'" ^
+            ");" ^
+            "$roots = $roots | Select-Object -Unique;" ^
+            "$unityExe = $null;" ^
+            "foreach ($r in $roots) {" ^
+            "  $cand = Join-Path (Join-Path $r $version) 'Editor/Unity.exe';" ^
+            "  if (Test-Path $cand) { $unityExe = $cand; break }" ^
+            "}" ^
+            "if (-not $unityExe) {" ^
+            "  $drives = @('C:\','D:\');" ^
+            "  $unityExe = foreach ($d in $drives) {" ^
+            "    Get-ChildItem -LiteralPath $d -Filter Unity.exe -ErrorAction SilentlyContinue -Recurse |" ^
+            "      Where-Object { $_.FullName -match [regex]::Escape($version) } | Select-Object -First 1 -ExpandProperty FullName" ^
+            "  } | Select-Object -First 1" ^
+            "}" ^
+            "if (-not $unityExe) { Write-Error \"Unity $version not found on this runner.\"; exit 1 }" ^
+            "\"UNITY_EXE=$unityExe\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append;"
 
       # Make a clean results folder
       - name: Prepare workspace (cmd)
