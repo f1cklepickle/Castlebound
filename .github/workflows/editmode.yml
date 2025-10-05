@@ -15,13 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Detect Unity install path automatically (supports 2022 LTS + Unity 6)
       - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
           setlocal enableextensions enabledelayedexpansion
 
-          REM ---- Read version from ProjectSettings/ProjectVersion.txt
           if not exist "ProjectSettings\ProjectVersion.txt" (
             echo ERROR: ProjectSettings\ProjectVersion.txt not found.
             exit /b 1
@@ -35,12 +33,10 @@ jobs:
             exit /b 1
           )
 
-          REM Example: 2022.3.6f1 or 6000.1.14f1
           for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
           set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
           for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
           if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
-
           for /f "tokens=1,2 delims=." %%A in ("!UNITY_VERSION_CLEAN!") do set "SERIES=%%A.%%B."
 
           set "UNITY_EXE="
@@ -130,23 +126,22 @@ jobs:
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
-         - name: Summarize NUnit results to Job Summary
+      - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
-          $results  = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
-          $logPath  = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
+          $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
+          $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
           $unityExit = $env:UNITY_EXITCODE
 
           if (Test-Path $results) {
             [xml]$xml = Get-Content $results
-            $root = $xml.'test-run'
-            $total   = [int]$root.total
-            $passed  = [int]$root.passed
-            $failed  = [int]$root.failed
-            $skipped = [int]$root.skipped
+            $root     = $xml.'test-run'
+            $total    = [int]$root.total
+            $passed   = [int]$root.passed
+            $failed   = [int]$root.failed
+            $skipped  = [int]$root.skipped
             $duration = [string]$root.duration
 
-            # Build summary lines without here-strings (YAML-safe)
             $lines = @(
               '# 🧪 EditMode Test Summary',
               '',
@@ -163,7 +158,6 @@ jobs:
             if ($unityExit -ne 0) { exit 1 }
           }
           else {
-            # Tail the log (or provide a default) and wrap in fenced code block
             $tailText = if (Test-Path $logPath) {
               (Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue) -join "`n"
             } else {
