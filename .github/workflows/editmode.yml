@@ -15,72 +15,79 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Allow PowerShell scripts only for THIS job (no machine-wide change)
-      - name: Allow PowerShell in this job
-        shell: powershell
-        run: |
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-      # Read Unity version from ProjectVersion.txt (via PowerShell 7, invoked from cmd)
-      - name: Read Unity version from ProjectVersion.txt
+      # Pure CMD: detect Unity version and locate Unity.exe (no PowerShell)
+      - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
-          "%ProgramFiles%\PowerShell\7\pwsh.exe" -NoProfile -ExecutionPolicy Bypass -Command ^
-            "$p = Get-Content 'ProjectSettings/ProjectVersion.txt' | Select-String -Pattern 'm_EditorVersion:\s*(.+)';" ^
-            "if (-not $p) { Write-Error 'ProjectVersion.txt not found or malformed'; exit 1 }" ^
-            "$v = $p.Matches[0].Groups[1].Value.Trim();" ^
-            "\"UNITY_VERSION=$v\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append;"
+          setlocal enableextensions enabledelayedexpansion
 
-      # Locate Unity.exe for UNITY_VERSION and export UNITY_EXE (PowerShell 7, invoked from cmd)
-      - name: Locate Unity.exe
-        shell: cmd
-        run: |
-          "%ProgramFiles%\PowerShell\7\pwsh.exe" -NoProfile -ExecutionPolicy Bypass -Command ^
-            "$version = $env:UNITY_VERSION;" ^
-            "$roots = @(" ^
-            "  'C:\Program Files\Unity\Hub\Editor'," ^
-            "  'D:\Program Files\Unity\Hub\Editor'," ^
-            "  'C:\Program Files\Unity'," ^
-            "  'D:\Program Files\Unity'" ^
-            ");" ^
-            "$roots = $roots | Select-Object -Unique;" ^
-            "$unityExe = $null;" ^
-            "foreach ($r in $roots) {" ^
-            "  $cand = Join-Path (Join-Path $r $version) 'Editor/Unity.exe';" ^
-            "  if (Test-Path $cand) { $unityExe = $cand; break }" ^
-            "}" ^
-            "if (-not $unityExe) {" ^
-            "  $drives = @('C:\','D:\');" ^
-            "  $unityExe = foreach ($d in $drives) {" ^
-            "    Get-ChildItem -LiteralPath $d -Filter Unity.exe -ErrorAction SilentlyContinue -Recurse |" ^
-            "      Where-Object { $_.FullName -match [regex]::Escape($version) } | Select-Object -First 1 -ExpandProperty FullName" ^
-            "  } | Select-Object -First 1" ^
-            "}" ^
-            "if (-not $unityExe) { Write-Error \"Unity $version not found on this runner.\"; exit 1 }" ^
-            "\"UNITY_EXE=$unityExe\" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append;"
+          REM ---- Read version from ProjectSettings/ProjectVersion.txt
+          if not exist "ProjectSettings\ProjectVersion.txt" (
+            echo ERROR: ProjectSettings\ProjectVersion.txt not found.
+            exit /b 1
+          )
+          set "VERLINE="
+          for /f "usebackq tokens=* delims=" %%L in ("ProjectSettings\ProjectVersion.txt") do (
+            echo %%L | findstr /b /c:"m_EditorVersion:" >nul && set "VERLINE=%%L"
+          )
+          if not defined VERLINE (
+            echo ERROR: m_EditorVersion not found in ProjectVersion.txt
+            exit /b 1
+          )
+          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION=%%V"
+          echo Detected UNITY_VERSION=!UNITY_VERSION!
 
-      # Make a clean results folder
+          REM ---- Probe common Hub roots first (fast-path)
+          set "UNITY_EXE="
+          for %%R in (
+            "C:\Program Files\Unity\Hub\Editor"
+            "D:\Program Files\Unity\Hub\Editor"
+            "E:\Program Files\Unity\Hub\Editor"
+            "C:\Program Files\Unity"
+            "D:\Program Files\Unity"
+            "E:\Program Files\Unity"
+          ) do (
+            if exist "%%~R\!UNITY_VERSION!\Editor\Unity.exe" (
+              set "UNITY_EXE=%%~R\!UNITY_VERSION!\Editor\Unity.exe"
+            )
+          )
+
+          REM ---- Slow-path: scan fixed drives if not found yet
+          if not defined UNITY_EXE (
+            for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
+              if not defined UNITY_EXE (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION!\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+            )
+          )
+          :found
+
+          if not defined UNITY_EXE (
+            echo ERROR: Unity !UNITY_VERSION! not found on this runner. Install via Unity Hub.
+            exit /b 1
+          )
+
+          echo Found UNITY_EXE=!UNITY_EXE!
+          echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
+
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
           if exist "%CD%\TestResults" rmdir /s /q "%CD%\TestResults"
           mkdir "%CD%\TestResults"
 
-      # Run EditMode tests
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
         run: |
-          if not exist "%UNITY_EXE%" (
-            echo Unity not found at "%UNITY_EXE%"
-            exit /b 1
-          )
           "%UNITY_EXE%" -batchmode -nographics -quit ^
             -projectPath "%CD%" ^
             -logfile "%CD%\TestResults\EditModeLog.txt" ^
             -runTests -testPlatform EditMode ^
             -testResults "%CD%\TestResults\EditModeResults.xml"
 
-      # Upload results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
