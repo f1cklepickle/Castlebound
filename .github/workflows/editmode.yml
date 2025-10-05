@@ -127,9 +127,41 @@ jobs:
             -logfile "%CD%\TestResults\EditModeLog.txt" ^
             -runTests -testPlatform EditMode ^
             -testResults "%CD%\TestResults\EditModeResults.xml"
+          exit /b %ERRORLEVEL%
+
+      # Parse NUnit XML and print a readable summary in the Job Summary.
+      # Fails the job if any tests failed (even if Unity returned 0).
+      - name: Summarize NUnit results to Job Summary
+        shell: pwsh
+        run: |
+          $results = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
+          if (!(Test-Path $results)) {
+            "No test results file found at TestResults\EditModeResults.xml" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            exit 1
+          }
+          [xml]$xml = Get-Content $results
+          $root = $xml.'test-run'
+          $total   = [int]$root.total
+          $passed  = [int]$root.passed
+          $failed  = [int]$root.failed
+          $skipped = [int]$root.skipped
+          $duration = [string]$root.duration
+          @"
+          # 🧪 EditMode Test Summary
+
+          **Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
+
+          **Duration (s):** $duration
+
+          > Results file: TestResults/EditModeResults.xml
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          if ($failed -gt 0) { exit 1 }
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: EditModeResults
-          path: TestResults/
+          path: |
+            TestResults/EditModeResults.xml
+            TestResults/EditModeLog.txt
+          if-no-files-found: error
