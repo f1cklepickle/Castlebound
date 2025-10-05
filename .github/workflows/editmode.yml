@@ -1,0 +1,95 @@
+name: EditMode CI (Self-Hosted)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  editmode-tests:
+    name: Unity EditMode Tests (Self-Hosted)
+    runs-on: [self-hosted, Windows]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pure CMD: detect Unity version and locate Unity.exe (no PowerShell)
+      - name: Detect Unity and export path (cmd only)
+        shell: cmd
+        run: |
+          setlocal enableextensions enabledelayedexpansion
+
+          REM ---- Read version from ProjectSettings/ProjectVersion.txt
+          if not exist "ProjectSettings\ProjectVersion.txt" (
+            echo ERROR: ProjectSettings\ProjectVersion.txt not found.
+            exit /b 1
+          )
+          set "VERLINE="
+          for /f "usebackq tokens=* delims=" %%L in ("ProjectSettings\ProjectVersion.txt") do (
+            echo %%L | findstr /b /c:"m_EditorVersion:" >nul && set "VERLINE=%%L"
+          )
+          if not defined VERLINE (
+            echo ERROR: m_EditorVersion not found in ProjectVersion.txt
+            exit /b 1
+          )
+          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION=%%V"
+          echo Detected UNITY_VERSION=!UNITY_VERSION!
+
+          REM ---- Probe common Hub roots first (fast-path)
+          set "UNITY_EXE="
+          for %%R in (
+            "C:\Program Files\Unity\Hub\Editor"
+            "D:\Program Files\Unity\Hub\Editor"
+            "E:\Program Files\Unity\Hub\Editor"
+            "C:\Program Files\Unity"
+            "D:\Program Files\Unity"
+            "E:\Program Files\Unity"
+          ) do (
+            if exist "%%~R\!UNITY_VERSION!\Editor\Unity.exe" (
+              set "UNITY_EXE=%%~R\!UNITY_VERSION!\Editor\Unity.exe"
+            )
+          )
+
+          REM ---- Slow-path: scan fixed drives if not found yet
+          if not defined UNITY_EXE (
+            for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
+              if not defined UNITY_EXE (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION!\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+            )
+          )
+          :found
+
+          if not defined UNITY_EXE (
+            echo ERROR: Unity !UNITY_VERSION! not found on this runner. Install via Unity Hub.
+            exit /b 1
+          )
+
+          echo Found UNITY_EXE=!UNITY_EXE!
+          echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
+
+      - name: Prepare workspace (cmd)
+        shell: cmd
+        run: |
+          if exist "%CD%\TestResults" rmdir /s /q "%CD%\TestResults"
+          mkdir "%CD%\TestResults"
+
+      - name: Run Unity EditMode Tests (cmd)
+        shell: cmd
+        run: |
+          "%UNITY_EXE%" -batchmode -nographics -quit ^
+            -projectPath "%CD%" ^
+            -logfile "%CD%\TestResults\EditModeLog.txt" ^
+            -runTests -testPlatform EditMode ^
+            -testResults "%CD%\TestResults\EditModeResults.xml"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: EditModeResults
+          path: TestResults/
