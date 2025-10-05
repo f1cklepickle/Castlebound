@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Pure CMD: detect Unity version and locate Unity.exe (no PowerShell)
+      # Pure CMD: detect Unity version and locate Unity.exe (supports 2022 LTS + Unity 6)
       - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
@@ -34,8 +34,15 @@ jobs:
             echo ERROR: m_EditorVersion not found in ProjectVersion.txt
             exit /b 1
           )
+
           for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION=%%V"
+
+          REM ---- Normalize version (strip trailing .x or suffixes if needed)
+          set "UNITY_VERSION_CLEAN=!UNITY_VERSION:.x=!"
+          for /f "tokens=1 delims=_" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
+
           echo Detected UNITY_VERSION=!UNITY_VERSION!
+          echo Normalized UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN!
 
           REM ---- Probe common Hub roots first (fast-path)
           set "UNITY_EXE="
@@ -49,6 +56,8 @@ jobs:
           ) do (
             if exist "%%~R\!UNITY_VERSION!\Editor\Unity.exe" (
               set "UNITY_EXE=%%~R\!UNITY_VERSION!\Editor\Unity.exe"
+            ) else if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" (
+              set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
             )
           )
 
