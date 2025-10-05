@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Pure CMD: detect Unity version and locate Unity.exe (supports 2022 LTS + Unity 6)
+      # Detect Unity install path automatically (supports 2022 LTS + Unity 6)
       - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
@@ -35,21 +35,16 @@ jobs:
             exit /b 1
           )
 
-          REM Example values: 2022.3.6f1  or  6000.1.14f1
+          REM Example: 2022.3.6f1 or 6000.1.14f1
           for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
-
-          REM ---- Normalize version (strip trailing .x or suffix like f1/p1/b1)
           set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
           for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
           if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
 
-          REM ---- Also compute series (major.minor.) for patch-tolerant fallback (e.g., 2022.3.)
-          set "SERIES="
           for /f "tokens=1,2 delims=." %%A in ("!UNITY_VERSION_CLEAN!") do set "SERIES=%%A.%%B."
 
           set "UNITY_EXE="
 
-          REM ---- Fast path: known Hub roots (C:, D:, E:) + legacy Program Files\Unity
           for %%R in (
             "C:\Program Files\Unity\Hub\Editor"
             "D:\Program Files\Unity\Hub\Editor"
@@ -62,7 +57,6 @@ jobs:
             if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
           )
 
-          REM ---- Series fallback: accept any patch in same major.minor (e.g., 2022.3.* or 6000.1.*)
           if not defined UNITY_EXE if defined SERIES (
             for %%R in (
               "C:\Program Files\Unity\Hub\Editor"
@@ -80,7 +74,6 @@ jobs:
             )
           )
 
-          REM ---- Slow path: scan fixed drives for either exact or clean folder names
           if not defined UNITY_EXE (
             for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
               if not defined UNITY_EXE (
@@ -113,55 +106,82 @@ jobs:
           echo Found UNITY_EXE=!UNITY_EXE!
           echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
 
+      - name: Debug paths (cmd)
+        shell: cmd
+        run: |
+          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
+          echo RUNNER_TEMP=%RUNNER_TEMP%
+
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
-          if exist "%CD%\TestResults" rmdir /s /q "%CD%\TestResults"
-          mkdir "%CD%\TestResults"
+          if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
+          mkdir "%GITHUB_WORKSPACE%\TestResults"
+          dir "%GITHUB_WORKSPACE%" /b
 
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
+        continue-on-error: true
         run: |
           "%UNITY_EXE%" -batchmode -nographics -quit ^
-            -projectPath "%CD%" ^
-            -logfile "%CD%\TestResults\EditModeLog.txt" ^
+            -projectPath "%GITHUB_WORKSPACE%" ^
+            -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
             -runTests -testPlatform EditMode ^
-            -testResults "%CD%\TestResults\EditModeResults.xml"
-          exit /b %ERRORLEVEL%
+            -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
+          echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
-      # Parse NUnit XML and print a readable summary in the Job Summary.
-      # Fails the job if any tests failed (even if Unity returned 0).
       - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
           $results = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
-          if (!(Test-Path $results)) {
-            "No test results file found at TestResults\EditModeResults.xml" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          $logPath = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
+          $unityExit = $env:UNITY_EXITCODE
+
+          if (Test-Path $results) {
+            [xml]$xml = Get-Content $results
+            $root = $xml.'test-run'
+            $total   = [int]$root.total
+            $passed  = [int]$root.passed
+            $failed  = [int]$root.failed
+            $skipped = [int]$root.skipped
+            $duration = [string]$root.duration
+            @"
+# 🧪 EditMode Test Summary
+
+**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
+
+**Duration (s):** $duration  
+**Unity ExitCode:** $unityExit
+
+> Results file: TestResults/EditModeResults.xml
+"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            if ($failed -gt 0) { exit 1 }
+            if ($unityExit -ne 0) { exit 1 }
+          }
+          else {
+            $tail = if (Test-Path $logPath) { Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue } else { @("No EditModeLog.txt found.") }
+            @"
+# ⚠️ No NUnit XML produced
+
+Tried: TestResults\EditModeResults.xml  
+**Unity ExitCode:** $unityExit
+
+## Log Tail (last 200 lines)
+
+```
+$($tail -join "`n")
+```
+
+"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
             exit 1
           }
-          [xml]$xml = Get-Content $results
-          $root = $xml.'test-run'
-          $total   = [int]$root.total
-          $passed  = [int]$root.passed
-          $failed  = [int]$root.failed
-          $skipped = [int]$root.skipped
-          $duration = [string]$root.duration
-          @"
-          # 🧪 EditMode Test Summary
 
-          **Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
-
-          **Duration (s):** $duration
-
-          > Results file: TestResults/EditModeResults.xml
-          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-          if ($failed -gt 0) { exit 1 }
-
-      - name: Upload Test Results
+      - name: Upload Test Results (always)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: EditModeResults
           path: |
-            TestResults/EditModeResults.xml
-            TestResults/EditModeLog.txt
-          if-no-files-found: error
+            ${{ env.GITHUB_WORKSPACE }}\TestResults\EditModeResults.xml
+            ${{ env.GITHUB_WORKSPACE }}\TestResults\EditModeLog.txt
+          if-no-files-found: warn
