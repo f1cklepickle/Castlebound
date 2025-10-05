@@ -130,7 +130,7 @@ jobs:
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
-      - name: Summarize NUnit results to Job Summary
+           - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
           $results = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
@@ -145,6 +145,7 @@ jobs:
             $failed  = [int]$root.failed
             $skipped = [int]$root.skipped
             $duration = [string]$root.duration
+
             @"
 # 🧪 EditMode Test Summary
 
@@ -155,11 +156,18 @@ jobs:
 
 > Results file: TestResults/EditModeResults.xml
 "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
             if ($failed -gt 0) { exit 1 }
             if ($unityExit -ne 0) { exit 1 }
           }
           else {
-            $tail = if (Test-Path $logPath) { Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue } else { @("No EditModeLog.txt found.") }
+            $tail = if (Test-Path $logPath) {
+              Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue
+            }
+            else {
+              @("No EditModeLog.txt found.")
+            }
+
             @"
 # ⚠️ No NUnit XML produced
 
@@ -173,6 +181,7 @@ $($tail -join "`n")
 ```
 
 "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+
             exit 1
           }
 
