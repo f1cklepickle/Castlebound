@@ -139,6 +139,7 @@ jobs:
       - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
           $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
           $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
           $unityExit = $env:UNITY_EXITCODE
@@ -168,7 +169,7 @@ jobs:
               '',
               '> Results file: TestResults/EditModeResults.xml'
             )
-            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
             if ($failed -gt 0) { exit 1 }
             if ($unityExit -ne 0) { exit 1 }
@@ -191,7 +192,7 @@ jobs:
               $tailText,
               '```'
             )
-            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
             exit 1
           }
 
