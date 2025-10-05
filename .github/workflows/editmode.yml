@@ -130,11 +130,11 @@ jobs:
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
-           - name: Summarize NUnit results to Job Summary
+         - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
-          $results = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
-          $logPath = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
+          $results  = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
+          $logPath  = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
           $unityExit = $env:UNITY_EXITCODE
 
           if (Test-Path $results) {
@@ -146,42 +146,42 @@ jobs:
             $skipped = [int]$root.skipped
             $duration = [string]$root.duration
 
-            @"
-# 🧪 EditMode Test Summary
-
-**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
-
-**Duration (s):** $duration  
-**Unity ExitCode:** $unityExit
-
-> Results file: TestResults/EditModeResults.xml
-"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            # Build summary lines without here-strings (YAML-safe)
+            $lines = @(
+              '# 🧪 EditMode Test Summary',
+              '',
+              "**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped",
+              '',
+              "**Duration (s):** $duration",
+              "**Unity ExitCode:** $unityExit",
+              '',
+              '> Results file: TestResults/EditModeResults.xml'
+            )
+            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
 
             if ($failed -gt 0) { exit 1 }
             if ($unityExit -ne 0) { exit 1 }
           }
           else {
-            $tail = if (Test-Path $logPath) {
-              Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue
+            # Tail the log (or provide a default) and wrap in fenced code block
+            $tailText = if (Test-Path $logPath) {
+              (Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue) -join "`n"
+            } else {
+              'No EditModeLog.txt found.'
             }
-            else {
-              @("No EditModeLog.txt found.")
-            }
 
-            @"
-# ⚠️ No NUnit XML produced
-
-Tried: TestResults\EditModeResults.xml  
-**Unity ExitCode:** $unityExit
-
-## Log Tail (last 200 lines)
-
-```
-$($tail -join "`n")
-```
-
-"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-
+            $lines = @(
+              '# ⚠️ No NUnit XML produced',
+              '',
+              'Tried: TestResults\EditModeResults.xml',
+              "**Unity ExitCode:** $unityExit",
+              '',
+              '## Log Tail (last 200 lines)',
+              '```',
+              $tailText,
+              '```'
+            )
+            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
             exit 1
           }
 
