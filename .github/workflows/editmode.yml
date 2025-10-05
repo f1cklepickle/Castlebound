@@ -126,12 +126,28 @@ jobs:
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
+      - name: List TestResults folder (debug)
+        shell: cmd
+        run: |
+          echo Listing %GITHUB_WORKSPACE%\TestResults
+          if exist "%GITHUB_WORKSPACE%\TestResults" (
+            dir "%GITHUB_WORKSPACE%\TestResults"
+          ) else (
+            echo (TestResults folder missing)
+          )
+
       - name: Summarize NUnit results to Job Summary
         shell: pwsh
         run: |
           $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
           $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
           $unityExit = $env:UNITY_EXITCODE
+
+          # If our custom -logfile was not created, fall back to Unity's default Editor.log
+          if (-not (Test-Path $logPath) -and $env:LOCALAPPDATA) {
+            $defaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
+            if (Test-Path $defaultEditorLog) { $logPath = $defaultEditorLog }
+          }
 
           if (Test-Path $results) {
             [xml]$xml = Get-Content $results
@@ -185,6 +201,6 @@ jobs:
         with:
           name: EditModeResults
           path: |
-            ${{ env.GITHUB_WORKSPACE }}\TestResults\EditModeResults.xml
-            ${{ env.GITHUB_WORKSPACE }}\TestResults\EditModeLog.txt
+            ${{ github.workspace }}\TestResults\EditModeResults.xml
+            ${{ github.workspace }}\TestResults\EditModeLog.txt
           if-no-files-found: warn
