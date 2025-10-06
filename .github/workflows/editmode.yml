@@ -139,13 +139,13 @@ jobs:
       - name: Summarize NUnit results to Job Summary
         shell: powershell
         run: |
+          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
           $ErrorActionPreference = 'Continue'
 
           $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
           $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
           $unityExit = $env:UNITY_EXITCODE
 
-          # Fallback to Unity's default Editor.log if our custom logfile wasn't created
           if (-not (Test-Path $logPath) -and $env:LOCALAPPDATA) {
             $defaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
             if (Test-Path $defaultEditorLog) { $logPath = $defaultEditorLog }
@@ -171,10 +171,6 @@ jobs:
               '> Results file: TestResults/EditModeResults.xml'
             )
             ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-
-            # (Optional) FAIL CI on test failures:
-            # if ($failed -gt 0) { exit 1 }
-            # if ($unityExit -ne 0) { exit 1 }
           }
           else {
             $tailText = if (Test-Path $logPath) {
@@ -195,10 +191,6 @@ jobs:
               '```'
             )
             ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-
-            # IMPORTANT: Make the whole job PASS for now
-            # (remove this exit code so the workflow succeeds even without XML)
-            # Previously: exit 1
           }
 
       - name: Upload Test Results (always)
