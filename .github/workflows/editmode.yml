@@ -137,7 +137,7 @@ jobs:
           )
 
       - name: Summarize NUnit results to Job Summary
-        shell: powershell
+        shell: pwsh
         run: |
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
           $ErrorActionPreference = 'Continue'
