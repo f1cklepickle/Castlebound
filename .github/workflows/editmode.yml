@@ -102,22 +102,14 @@ jobs:
           echo Found UNITY_EXE=!UNITY_EXE!
           echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
 
-      - name: Debug paths (cmd)
-        shell: cmd
-        run: |
-          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
-          echo RUNNER_TEMP=%RUNNER_TEMP%
-
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
           if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
           mkdir "%GITHUB_WORKSPACE%\TestResults"
-          dir "%GITHUB_WORKSPACE%" /b
 
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
-        continue-on-error: true
         run: |
           "%UNITY_EXE%" -batchmode -nographics -quit ^
             -projectPath "%GITHUB_WORKSPACE%" ^
@@ -136,62 +128,59 @@ jobs:
             echo (TestResults folder missing)
           )
 
-      - name: Summarize NUnit results to Job Summary
+      - name: Summarize + enforce results
         shell: pwsh
         run: |
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
           $ErrorActionPreference = 'Continue'
 
           $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
           $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
-          $unityExit = $env:UNITY_EXITCODE
+          $unityExit = [int]$env:UNITY_EXITCODE
 
+          # Fallback to Unity's default Editor.log if our custom logfile wasn't created
           if (-not (Test-Path $logPath) -and $env:LOCALAPPDATA) {
             $defaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
             if (Test-Path $defaultEditorLog) { $logPath = $defaultEditorLog }
           }
 
-          if (Test-Path $results) {
-            [xml]$xml  = Get-Content $results
-            $root      = $xml.'test-run'
-            $total     = [int]$root.total
-            $passed    = [int]$root.passed
-            $failed    = [int]$root.failed
-            $skipped   = [int]$root.skipped
-            $duration  = [string]$root.duration
+          if (-not (Test-Path $results)) {
+            $tailLines = if (Test-Path $logPath) { Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue } else { @('No EditModeLog.txt found.') }
+            $quotedTail = ($tailLines | ForEach-Object { '> ' + $_ }) -join "`n"
 
-            $lines = @(
-              '# 🧪 EditMode Test Summary',
-              '',
-              "**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped",
-              '',
-              "**Duration (s):** $duration",
-              "**Unity ExitCode:** $unityExit",
-              '',
-              '> Results file: TestResults/EditModeResults.xml'
-            )
-            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          }
-          else {
-            $tailText = if (Test-Path $logPath) {
-              (Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue) -join "`n"
-            } else {
-              'No EditModeLog.txt found.'
-            }
+            @"
+# ❌ No NUnit XML produced
 
-            $lines = @(
-              '# ⚠️ No NUnit XML produced',
-              '',
-              'Tried: TestResults\EditModeResults.xml',
-              "**Unity ExitCode:** $unityExit",
-              '',
-              '## Log Tail (last 200 lines)',
-              '```',
-              $tailText,
-              '```'
-            )
-            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+Tried: TestResults\EditModeResults.xml  
+**Unity ExitCode:** $unityExit
+
+## Log Tail (last 200 lines)
+$quotedTail
+"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            exit 1
           }
+
+          [xml]$xml = Get-Content $results
+          $root     = $xml.'test-run'
+          $total    = [int]$root.total
+          $passed   = [int]$root.passed
+          $failed   = [int]$root.failed
+          $skipped  = [int]$root.skipped
+          $duration = [string]$root.duration
+
+          @"
+# 🧪 EditMode Test Summary
+
+**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
+
+**Duration (s):** $duration  
+**Unity ExitCode:** $unityExit
+
+> Results file: TestResults/EditModeResults.xml
+"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+          if ($total -eq 0)  { Write-Error "Discovered 0 tests."; exit 1 }
+          if ($failed -gt 0) { Write-Error ("{0} tests failed." -f $failed); exit 1 }
+          if ($unityExit -ne 0) { Write-Error ("Unity exit code {0}." -f $unityExit); exit 1 }
 
       - name: Upload Test Results (always)
         if: always()
