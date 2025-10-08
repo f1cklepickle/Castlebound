@@ -15,11 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Detect Unity install path automatically (supports 2022 LTS + Unity 6)
       - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
           setlocal enableextensions enabledelayedexpansion
 
+          REM ---- Read version from ProjectSettings/ProjectVersion.txt
           if not exist "ProjectSettings\ProjectVersion.txt" (
             echo ERROR: ProjectSettings\ProjectVersion.txt not found.
             exit /b 1
@@ -33,10 +35,12 @@ jobs:
             exit /b 1
           )
 
+          REM Example: 2022.3.6f1 or 6000.1.14f1
           for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
           set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
           for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
           if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
+
           for /f "tokens=1,2 delims=." %%A in ("!UNITY_VERSION_CLEAN!") do set "SERIES=%%A.%%B."
 
           set "UNITY_EXE="
@@ -102,14 +106,22 @@ jobs:
           echo Found UNITY_EXE=!UNITY_EXE!
           echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
 
+      - name: Debug paths (cmd)
+        shell: cmd
+        run: |
+          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
+          echo RUNNER_TEMP=%RUNNER_TEMP%
+
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
           if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
           mkdir "%GITHUB_WORKSPACE%\TestResults"
+          dir "%GITHUB_WORKSPACE%" /b
 
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
+        continue-on-error: true
         run: |
           "%UNITY_EXE%" -batchmode -nographics -quit ^
             -projectPath "%GITHUB_WORKSPACE%" ^
@@ -144,18 +156,24 @@ jobs:
           }
 
           if (-not (Test-Path $results)) {
-            $tailLines = if (Test-Path $logPath) { Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue } else { @('No EditModeLog.txt found.') }
-            $quotedTail = ($tailLines | ForEach-Object { '> ' + $_ }) -join "`n"
-
-            @"
-# ❌ No NUnit XML produced
-
-Tried: TestResults\EditModeResults.xml  
-**Unity ExitCode:** $unityExit
-
-## Log Tail (last 200 lines)
-$quotedTail
-"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            $tail = if (Test-Path $logPath) {
+              Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue
+            } else {
+              @('No EditModeLog.txt found.')
+            }
+            $lines = @(
+              '# ⚠️ No NUnit XML produced',
+              '',
+              'Tried: TestResults\EditModeResults.xml',
+              \"**Unity ExitCode:** $unityExit\",
+              '',
+              '## Log Tail (last 200 lines)',
+              '```',
+              ($tail -join \"`n\"),
+              '```'
+            )
+            ($lines -join \"`n\") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            Write-Error \"No NUnit results file was created.\"
             exit 1
           }
 
@@ -167,20 +185,21 @@ $quotedTail
           $skipped  = [int]$root.skipped
           $duration = [string]$root.duration
 
-          @"
-# 🧪 EditMode Test Summary
+          $lines = @(
+            '# 🧪 EditMode Test Summary',
+            '',
+            \"**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped\",
+            '',
+            \"**Duration (s):** $duration\",
+            \"**Unity ExitCode:** $unityExit\",
+            '',
+            '> Results file: TestResults/EditModeResults.xml'
+          )
+          ($lines -join \"`n\") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
-**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped
-
-**Duration (s):** $duration  
-**Unity ExitCode:** $unityExit
-
-> Results file: TestResults/EditModeResults.xml
-"@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-
-          if ($total -eq 0)  { Write-Error "Discovered 0 tests."; exit 1 }
-          if ($failed -gt 0) { Write-Error ("{0} tests failed." -f $failed); exit 1 }
-          if ($unityExit -ne 0) { Write-Error ("Unity exit code {0}." -f $unityExit); exit 1 }
+          if ($total -eq 0) { Write-Error \"Discovered 0 tests.\"; exit 1 }
+          if ($failed -gt 0) { Write-Error (\"{0} tests failed.\" -f $failed); exit 1 }
+          if ($unityExit -ne 0) { Write-Error (\"Unity exit code {0}.\" -f $unityExit); exit 1 }
 
       - name: Upload Test Results (always)
         if: always()
