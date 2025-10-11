@@ -1,4 +1,4 @@
-name: Unity CI (Self-Hosted) — EditMode
+name: EditMode CI (Self-Hosted)
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  editmode:
+  editmode-tests:
     name: Unity EditMode Tests (Self-Hosted)
     runs-on: [self-hosted, Windows]
 
@@ -15,10 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Detect Unity install and export path as UNITY_EXE
       - name: Detect Unity and export path (cmd only)
         shell: cmd
         run: |
           setlocal enableextensions enabledelayedexpansion
+
           if not exist "ProjectSettings\ProjectVersion.txt" (
             echo ERROR: ProjectSettings\ProjectVersion.txt not found.
             exit /b 1
@@ -31,12 +33,15 @@ jobs:
             echo ERROR: m_EditorVersion not found in ProjectVersion.txt
             exit /b 1
           )
+
           for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
           set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
           for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
           if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
           for /f "tokens=1,2 delims=." %%A in ("!UNITY_VERSION_CLEAN!") do set "SERIES=%%A.%%B."
+
           set "UNITY_EXE="
+
           for %%R in (
             "C:\Program Files\Unity\Hub\Editor"
             "D:\Program Files\Unity\Hub\Editor"
@@ -48,68 +53,150 @@ jobs:
             if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe"
             if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
           )
+
           if not defined UNITY_EXE if defined SERIES (
-            for %%R in ("C:\Program Files\Unity\Hub\Editor" "D:\Program Files\Unity\Hub\Editor" "E:\Program Files\Unity\Hub\Editor") do (
+            for %%R in (
+              "C:\Program Files\Unity\Hub\Editor"
+              "D:\Program Files\Unity\Hub\Editor"
+              "E:\Program Files\Unity\Hub\Editor"
+            ) do (
               if not defined UNITY_EXE if exist "%%~R\!SERIES!*" (
                 for /f "delims=" %%P in ('dir /b /ad "%%~R\!SERIES!*" 2^>nul') do (
-                  if not defined UNITY_EXE if exist "%%~R\%%P\Editor\Unity.exe" set "UNITY_EXE=%%~R\%%P\Editor\Unity.exe"
+                  if not defined UNITY_EXE if exist "%%~R\%%P\Editor\Unity.exe" (
+                    set "UNITY_EXE=%%~R\%%P\Editor\Unity.exe"
+                    goto :found
+                  )
                 )
               )
             )
           )
+
+          if not defined UNITY_EXE (
+            for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
+              if not defined UNITY_EXE (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_RAW!\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+              if not defined UNITY_EXE (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+              if not defined UNITY_EXE if defined SERIES (
+                for /f "delims=" %%P in ('dir /b /s "%%D\*\!SERIES!*\Editor\Unity.exe" 2^>nul') do (
+                  set "UNITY_EXE=%%P"
+                  goto :found
+                )
+              )
+            )
+          )
+          :found
+
           if not defined UNITY_EXE (
             echo ERROR: Unity !UNITY_VERSION_RAW! not found on this runner. Install via Unity Hub.
             exit /b 1
           )
+
           echo Found UNITY_EXE=!UNITY_EXE!
           echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
+
+      - name: Debug paths (cmd)
+        shell: cmd
+        run: |
+          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
+          echo RUNNER_TEMP=%RUNNER_TEMP%
+          echo UNITY_EXE=%UNITY_EXE%
 
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
           if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
           mkdir "%GITHUB_WORKSPACE%\TestResults"
+          dir "%GITHUB_WORKSPACE%" /b
 
-      - name: Run EditMode Tests (cmd)
+      - name: Run Unity EditMode Tests (cmd)
         shell: cmd
-        continue-on-error: true
         run: |
           "%UNITY_EXE%" -batchmode -nographics -quit ^
             -projectPath "%GITHUB_WORKSPACE%" ^
             -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
             -runTests -testPlatform EditMode ^
-            -assemblyNames _Project.Tests.EditMode ^
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
+
+      - name: List TestResults folder (debug)
+        shell: cmd
+        run: |
+          echo Listing %GITHUB_WORKSPACE%\TestResults
+          if exist "%GITHUB_WORKSPACE%\TestResults" (
+            dir "%GITHUB_WORKSPACE%\TestResults"
+          ) else (
+            echo (TestResults folder missing)
+          )
 
       - name: Summarize + enforce results
         shell: pwsh
         run: |
-          $results   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeResults.xml'
-          $logPath   = Join-Path $env:GITHUB_WORKSPACE 'TestResults\EditModeLog.txt'
+          $ErrorActionPreference = 'Continue'
+
+          $ws        = $env:GITHUB_WORKSPACE
+          $results   = Join-Path $ws 'TestResults\EditModeResults.xml'
+          $logPath   = Join-Path $ws 'TestResults\EditModeLog.txt'
+          $dllPath   = Join-Path $ws 'Library\ScriptAssemblies\_Project.Tests.EditMode.dll'
+          $asmdef    = Join-Path $ws 'Assets\_Project\_Tests\EditMode\_Project.Tests.EditMode.asmdef'
           $unityExit = [int]$env:UNITY_EXITCODE
 
           if (-not (Test-Path $logPath) -and $env:LOCALAPPDATA) {
-            $fallback = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
-            if (Test-Path $fallback) { $logPath = $fallback }
+            $defaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
+            if (Test-Path $defaultEditorLog) { $logPath = $defaultEditorLog }
           }
 
+          $dllFound = Test-Path $dllPath
+
           if (-not (Test-Path $results)) {
-            $tail = if (Test-Path $logPath) {
-              (Get-Content $logPath -Tail 200 -ErrorAction SilentlyContinue) -join "`n"
-            } else { '(no log file found)' }
+            $tailText = if (Test-Path $logPath) {
+              (Get-Content $logPath -Head 200 -ErrorAction SilentlyContinue) -join "`n"
+            } else { 'No EditModeLog.txt found.' }
+
+            $asmdefText = if (Test-Path $asmdef) {
+              (Get-Content $asmdef -ErrorAction SilentlyContinue) -join "`n"
+            } else { '(asmdef not found at expected path)' }
+
+            $why = if (-not $dllFound) {
+              @(
+                '**Likely cause:** The test assembly was **not compiled**.'
+                'Common reasons:'
+                '- Define Constraints (e.g., `UNITY_INCLUDE_TESTS`) exclude CI'
+                '- Platforms not including **Editor**'
+                '- Missing references to NUnit / Test Runner'
+              ) -join "`n"
+            } else {
+              'Test DLL exists, but NUnit XML was not produced (discovery yielded 0 tests or runner failed before writing results).'
+            }
 
             $lines = @(
-              '# ⚠️ No NUnit XML produced for EditMode',
+              '# ⚠️ No NUnit XML produced',
               '',
-              'Tried: TestResults\EditModeResults.xml',
               "**Unity ExitCode:** $unityExit",
+              "**Test DLL present:** $dllFound",
               '',
-              '## Log Tail (last 200 lines)',
+              '## Why it might have happened',
+              $why,
+              '',
+              '## Test asmdef snapshot',
+              '```json',
+              $asmdefText,
               '```',
-              $tail,
+              '',
+              '## Log Head (first 200 lines)',
+              '```',
+              $tailText,
               '```'
             )
+
             ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
             exit 1
           }
@@ -129,14 +216,16 @@ jobs:
             '',
             "**Duration (s):** $duration",
             "**Unity ExitCode:** $unityExit",
+            "**Test DLL present:** $((Test-Path $dllPath))",
             '',
             '> Results file: TestResults/EditModeResults.xml'
           )
+
           ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
-          if ($total -eq 0)  { Write-Error 'Discovered 0 tests.'; exit 1 }
-          if ($failed -gt 0) { Write-Error ("{0} tests failed." -f $failed); exit 1 }
-          if ($unityExit -ne 0) { Write-Error ("Unity exited with code {0}." -f $unityExit); exit 1 }
+          if ($total -eq 0) { Write-Error "Discovered 0 tests."; exit 1 }
+          if ($failed -gt 0) { Write-Error "$failed tests failed."; exit 1 }
+          if ($unityExit -ne 0) { Write-Error "Unity exited with code $unityExit."; exit 1 }
 
       - name: Upload Test Results (always)
         if: always()
