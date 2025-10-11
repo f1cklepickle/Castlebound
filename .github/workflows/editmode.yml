@@ -158,9 +158,16 @@ jobs:
           $dllFound = Test-Path $dllPath
 
           if (-not (Test-Path $results)) {
+            # --- diagnostic tail and runner hint count ---
             $tailText = if (Test-Path $logPath) {
-              (Get-Content $logPath -Head 200 -ErrorAction SilentlyContinue) -join "`n"
+              (Get-Content $logPath -Tail 500 -ErrorAction SilentlyContinue) -join "`n"
             } else { 'No EditModeLog.txt found.' }
+
+            $hintPattern = '(TestRunner|Running tests|NUnit|nunit|Test Results|Discovering tests)'
+            $hintCount   = if (Test-Path $logPath) {
+              (Select-String -Path $logPath -Pattern $hintPattern -AllMatches | Measure-Object).Count
+            } else { 0 }
+            # -------------------------------------------------
 
             $asmdefText = if (Test-Path $asmdef) {
               (Get-Content $asmdef -ErrorAction SilentlyContinue) -join "`n"
@@ -183,6 +190,7 @@ jobs:
               '',
               "**Unity ExitCode:** $unityExit",
               "**Test DLL present:** $dllFound",
+              "**Log hints for TestRunner/NUnit:** $hintCount",
               '',
               '## Why it might have happened',
               $why,
@@ -192,7 +200,7 @@ jobs:
               $asmdefText,
               '```',
               '',
-              '## Log Head (first 200 lines)',
+              '## Log Tail (last 500 lines)',
               '```',
               $tailText,
               '```'
