@@ -124,6 +124,7 @@ jobs:
             -projectPath "%GITHUB_WORKSPACE%" ^
             -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
             -runTests -testPlatform EditMode ^
+            -assemblyNames _Project.Tests.EditMode ^
             -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
           echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
