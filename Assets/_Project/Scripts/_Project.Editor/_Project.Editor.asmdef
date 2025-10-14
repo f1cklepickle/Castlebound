@@ -1,18 +1,19 @@
 {
-"name": "_Project.Editor",
-"rootNamespace": "Castlebound.Editor",
-"references": [
-"_Project.Core",
-"_Project.Gameplay"
-],
-"optionalUnityReferences": [],
-"includePlatforms": [ "Editor" ],
-"excludePlatforms": [],
-"allowUnsafeCode": false,
-"overrideReferences": false,
-"precompiledReferences": [],
-"autoReferenced": true,
-"defineConstraints": [],
-"versionDefines": [],
-"noEngineReferences": false
+    "name": "_Project.Editor",
+    "rootNamespace": "Castlebound.Editor",
+    "references": [
+        "GUID:26c31025cbb4d9d43939e96e0b66f59a",
+        "GUID:182c032bd5c6f344db9b143e1ea69938"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

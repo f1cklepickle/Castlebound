@@ -1,4 +1,4 @@
-name: Unity EditMode Tests (Self-Hosted)
+name: EditMode CI (Self-Hosted)
 
 on:
   pull_request:
@@ -15,128 +15,102 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Detect Unity install and export path as UNITY_EXE
       - name: Detect Unity and export path (cmd only)
-        id: unity
         shell: cmd
         run: |
-          echo UNITY_EXE=D:\Program Files\Unity\Hub\Editor\2022.3.62f2\Editor\Unity.exe>> %GITHUB_ENV%
+          setlocal enableextensions enabledelayedexpansion
 
-      - name: Debug paths (cmd)
-        shell: cmd
-        run: |
-          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
-          echo RUNNER_TEMP=%RUNNER_TEMP%
-          echo UNITY_EXE=%UNITY_EXE%
+          if not exist "ProjectSettings\ProjectVersion.txt" (
+            echo ERROR: ProjectSettings\ProjectVersion.txt not found.
+            exit /b 1
+          )
+
+          set "VERLINE="
+          for /f "usebackq tokens=* delims=" %%L in ("ProjectSettings\ProjectVersion.txt") do (
+            echo %%L | findstr /b /c:"m_EditorVersion:" >nul && set "VERLINE=%%L"
+          )
+
+          if not defined VERLINE (
+            echo ERROR: m_EditorVersion not found in ProjectVersion.txt
+            exit /b 1
+          )
+
+          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
+          set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
+          for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
+
+          for %%R in (
+            "C:\Program Files\Unity\Hub\Editor"
+            "D:\Program Files\Unity\Hub\Editor"
+            "E:\Program Files\Unity\Hub\Editor"
+          ) do (
+            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe"
+            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
+          )
+
+          if not defined UNITY_EXE (
+            echo ERROR: Unity !UNITY_VERSION_RAW! not found on this runner.
+            exit /b 1
+          )
+
+          echo Found UNITY_EXE=!UNITY_EXE!
+          echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
 
       - name: Prepare workspace (cmd)
         shell: cmd
         run: |
           if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
           mkdir "%GITHUB_WORKSPACE%\TestResults"
-          dir "%GITHUB_WORKSPACE%"
 
       - name: Run Unity EditMode Tests (cmd)
         shell: cmd
         run: |
           "%UNITY_EXE%" -batchmode -nographics -quit ^
-          -projectPath "%GITHUB_WORKSPACE%" ^
-          -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
-          -runTests -testPlatform EditMode ^
-          -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml" ^
-          -testResultsFormat nunit3
-          echo UNITY_EXITCODE=%ERRORLEVEL% >> "%GITHUB_ENV%"
-
-      - name: List TestResults folder (debug)
-        shell: cmd
-        run: |
-          echo Listing %GITHUB_WORKSPACE%\TestResults
-          dir "%GITHUB_WORKSPACE%\TestResults"
+            -projectPath "%GITHUB_WORKSPACE%" ^
+            -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
+            -runTests -testPlatform EditMode ^
+            -assemblyNames _Project.Tests.EditMode ^
+            -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
+          echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
 
       - name: Summarize + enforce results
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Continue'
-
           $ws        = $env:GITHUB_WORKSPACE
           $results   = Join-Path $ws 'TestResults\EditModeResults.xml'
           $logPath   = Join-Path $ws 'TestResults\EditModeLog.txt'
           $dllPath   = Join-Path $ws 'Library\ScriptAssemblies\_Project.Tests.EditMode.dll'
-          $asmdef    = Join-Path $ws 'Assets\_Project\_Tests\EditMode\_Project.Tests.EditMode.asmdef'
           $unityExit = [int]$env:UNITY_EXITCODE
 
-          if (-not (Test-Path $logPath) -and $env:LOCALAPPDATA) {
-            $defaultEditorLog = Join-Path $env:LOCALAPPDATA 'Unity\Editor\Editor.log'
-            if (Test-Path $defaultEditorLog) { $logPath = $defaultEditorLog }
-          }
-
-          $dllFound = Test-Path $dllPath
-
           if (-not (Test-Path $results)) {
-            $tailText = if (Test-Path $logPath) {
-              (Get-Content $logPath -Head 500 -ErrorAction SilentlyContinue) -join "`n"
-            } else { 'No EditModeLog.txt found.' }
-
-            $asmdefText = if (Test-Path $asmdef) {
-              (Get-Content $asmdef -ErrorAction SilentlyContinue) -join "`n"
-            } else { '(asmdef not found at expected path)' }
-
-            $why = if (-not $dllFound) {
-              @(
-                '**Likely cause:** The test assembly was **not compiled**.'
-                'Common reasons:'
-                '- Define Constraints (e.g., `UNITY_INCLUDE_TESTS`) exclude CI'
-                '- Platforms not including **Editor**'
-                '- Missing references to NUnit / Test Runner'
-              ) -join "`n"
-            } else {
-              'Test DLL exists, but NUnit XML was not produced (discovery yielded 0 tests or runner failed before writing results).'
+            Write-Error "❌ No NUnit XML results were produced. Check Unity logs." 
+            if (Test-Path $logPath) {
+              $tail = Get-Content $logPath -Head 200
+              $tail | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
             }
-
-            $lines = @(
-              '# ⚠️ No NUnit XML produced',
-              '',
-              "**Unity ExitCode:** $unityExit",
-              "**Test DLL present:** $dllFound",
-              '',
-              '## Why it might have happened',
-              $why,
-              '',
-              '## Test asmdef snapshot',
-              '```json',
-              $asmdefText,
-              '```',
-              '',
-              '## Log Head (first 200 lines)',
-              '```',
-              $tailText,
-              '```'
-            )
-
-            ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
             exit 1
           }
 
           [xml]$xml = Get-Content $results
-          $root     = $xml.'test-run'
-          $total    = [int]$root.total
-          $passed   = [int]$root.passed
-          $failed   = [int]$root.failed
-          $skipped  = [int]$root.skipped
+          $root = $xml.'test-run'
+          $total = [int]$root.total
+          $passed = [int]$root.passed
+          $failed = [int]$root.failed
+          $skipped = [int]$root.skipped
           $duration = [string]$root.duration
 
-          $lines = @(
-            '# 🧪 EditMode Test Summary',
-            '',
+          $summary = @(
+            "# 🧪 EditMode Test Summary",
+            "",
             "**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped",
-            '',
+            "",
             "**Duration (s):** $duration",
             "**Unity ExitCode:** $unityExit",
-            "**Test DLL present:** $((Test-Path $dllPath))",
-            '',
-            '> Results file: TestResults/EditModeResults.xml'
+            "> Results: TestResults/EditModeResults.xml"
           )
 
-          ($lines -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          ($summary -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
           if ($total -eq 0) { Write-Error "Discovered 0 tests."; exit 1 }
           if ($failed -gt 0) { Write-Error "$failed tests failed."; exit 1 }
@@ -148,6 +122,6 @@ jobs:
         with:
           name: EditModeResults
           path: |
-            ${{ github.workspace }}/TestResults/EditModeResults.xml
-            ${{ github.workspace }}/TestResults/EditModeLog.txt
+            ${{ github.workspace }}\TestResults\EditModeResults.xml
+            ${{ github.workspace }}\TestResults\EditModeLog.txt
           if-no-files-found: warn
