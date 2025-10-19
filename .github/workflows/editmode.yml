@@ -1,20 +1,20 @@
 name: editmode
 
 on:
-  push:
+
   pull_request:
-  
+    types: [opened, synchronize, reopened]
+
 jobs:
   run-editmode:
     runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Ensure project not locked
         shell: pwsh
         run: |
-          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue |
             Stop-Process -Force -ErrorAction SilentlyContinue
           if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
             Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
