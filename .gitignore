@@ -50,3 +50,10 @@ UpgradeLog*.htm
 /Build/
 /Builds/
 /TestResults/
+
+# Unity + CI artifacts
+/[Tt]estResults/
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/

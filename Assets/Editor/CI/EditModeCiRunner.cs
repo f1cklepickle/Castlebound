@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Linq;                             // <-- for .Any()
+using System.Linq;                             // Any()
 using UnityEngine;                             // ScriptableObject, Debug
-using UnityEditor;                            // Editor APIs
-using UnityEditor.TestTools.TestRunner.Api;   // TestRunner API
+using UnityEditor;                             // Editor APIs
+using UnityEditor.TestTools.TestRunner.Api;    // TestRunner API
 
 namespace CI
 {
@@ -99,7 +99,6 @@ namespace CI
         {
             private readonly Action<ITestResultAdaptor> onFinished;
             public Callbacks(Action<ITestResultAdaptor> onFinished) => this.onFinished = onFinished;
-
             public void RunStarted(ITestAdaptor testsToRun) { }
             public void RunFinished(ITestResultAdaptor result) => onFinished?.Invoke(result);
             public void TestStarted(ITestAdaptor test) { }

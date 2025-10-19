@@ -1,9 +1,8 @@
 name: editmode
-
 on:
-
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
 
 jobs:
   run-editmode:
@@ -14,7 +13,7 @@ jobs:
       - name: Ensure project not locked
         shell: pwsh
         run: |
-          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue |
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
             Stop-Process -Force -ErrorAction SilentlyContinue
           if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
             Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
@@ -30,3 +29,4 @@ jobs:
         with:
           name: EditModeResults
           path: TestResults/*
+
