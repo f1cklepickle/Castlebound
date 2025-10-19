@@ -42,3 +42,11 @@ UpgradeLog*.htm
 
 # VS Code
 .vscode/
+
+/Library/
+/Logs/
+/Temp/
+/Obj/
+/Build/
+/Builds/
+/TestResults/

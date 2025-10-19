@@ -1,127 +1,32 @@
-name: EditMode CI (Self-Hosted)
+name: editmode
 
 on:
-  pull_request:
-    branches: [ main ]
   push:
-    branches: [ main ]
-
+  pull_request:
+  
 jobs:
-  editmode-tests:
-    name: Unity EditMode Tests (Self-Hosted)
-    runs-on: [self-hosted, Windows]
-
+  run-editmode:
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Detect Unity install and export path as UNITY_EXE
-      - name: Detect Unity and export path (cmd only)
-        shell: cmd
-        run: |
-          setlocal enableextensions enabledelayedexpansion
-
-          if not exist "ProjectSettings\ProjectVersion.txt" (
-            echo ERROR: ProjectSettings\ProjectVersion.txt not found.
-            exit /b 1
-          )
-
-          set "VERLINE="
-          for /f "usebackq tokens=* delims=" %%L in ("ProjectSettings\ProjectVersion.txt") do (
-            echo %%L | findstr /b /c:"m_EditorVersion:" >nul && set "VERLINE=%%L"
-          )
-
-          if not defined VERLINE (
-            echo ERROR: m_EditorVersion not found in ProjectVersion.txt
-            exit /b 1
-          )
-
-          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
-          set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
-          for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
-
-          for %%R in (
-            "C:\Program Files\Unity\Hub\Editor"
-            "D:\Program Files\Unity\Hub\Editor"
-            "E:\Program Files\Unity\Hub\Editor"
-          ) do (
-            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe"
-            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
-          )
-
-          if not defined UNITY_EXE (
-            echo ERROR: Unity !UNITY_VERSION_RAW! not found on this runner.
-            exit /b 1
-          )
-
-          echo Found UNITY_EXE=!UNITY_EXE!
-          echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
-
-      - name: Prepare workspace (cmd)
-        shell: cmd
-        run: |
-          if exist "%GITHUB_WORKSPACE%\TestResults" rmdir /s /q "%GITHUB_WORKSPACE%\TestResults"
-          mkdir "%GITHUB_WORKSPACE%\TestResults"
-
-      - name: Run Unity EditMode Tests (cmd)
-        shell: cmd
-        run: |
-          "%UNITY_EXE%" -batchmode -nographics -quit ^
-            -projectPath "%GITHUB_WORKSPACE%" ^
-            -logfile "%GITHUB_WORKSPACE%\TestResults\EditModeLog.txt" ^
-            -runTests -testPlatform EditMode ^
-            -assemblyNames _Project.Tests.EditMode ^
-            -testResults "%GITHUB_WORKSPACE%\TestResults\EditModeResults.xml;format=nunit3"
-          echo UNITY_EXITCODE=%ERRORLEVEL%>>"%GITHUB_ENV%"
-
-      - name: Summarize + enforce results
+      - name: Ensure project not locked
         shell: pwsh
         run: |
-          $ws        = $env:GITHUB_WORKSPACE
-          $results   = Join-Path $ws 'TestResults\EditModeResults.xml'
-          $logPath   = Join-Path $ws 'TestResults\EditModeLog.txt'
-          $dllPath   = Join-Path $ws 'Library\ScriptAssemblies\_Project.Tests.EditMode.dll'
-          $unityExit = [int]$env:UNITY_EXITCODE
-
-          if (-not (Test-Path $results)) {
-            Write-Error "❌ No NUnit XML results were produced. Check Unity logs." 
-            if (Test-Path $logPath) {
-              $tail = Get-Content $logPath -Head 200
-              $tail | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-            }
-            exit 1
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
+            Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
           }
 
-          [xml]$xml = Get-Content $results
-          $root = $xml.'test-run'
-          $total = [int]$root.total
-          $passed = [int]$root.passed
-          $failed = [int]$root.failed
-          $skipped = [int]$root.skipped
-          $duration = [string]$root.duration
+      - name: Run EditMode tests
+        shell: pwsh
+        run: .\ci\run-editmode.ps1
 
-          $summary = @(
-            "# 🧪 EditMode Test Summary",
-            "",
-            "**Total:** $total  |  **Passed:** $passed  |  **Failed:** $failed  |  **Skipped:** $skipped",
-            "",
-            "**Duration (s):** $duration",
-            "**Unity ExitCode:** $unityExit",
-            "> Results: TestResults/EditModeResults.xml"
-          )
-
-          ($summary -join "`n") | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-
-          if ($total -eq 0) { Write-Error "Discovered 0 tests."; exit 1 }
-          if ($failed -gt 0) { Write-Error "$failed tests failed."; exit 1 }
-          if ($unityExit -ne 0) { Write-Error "Unity exited with code $unityExit."; exit 1 }
-
-      - name: Upload Test Results (always)
+      - name: Upload NUnit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: EditModeResults
-          path: |
-            ${{ github.workspace }}\TestResults\EditModeResults.xml
-            ${{ github.workspace }}\TestResults\EditModeLog.txt
-          if-no-files-found: warn
+          path: TestResults/*
