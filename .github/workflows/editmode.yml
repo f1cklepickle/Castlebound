@@ -9,6 +9,13 @@ jobs:
   run-editmode:
     runs-on: self-hosted
     steps:
+      - name: Pre-clean workspace (avoid checkout warning)
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:GITHUB_WORKSPACE") {
+            Get-ChildItem -Force "$env:GITHUB_WORKSPACE" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
       - uses: actions/checkout@v4
 
       - name: Ensure project not locked
