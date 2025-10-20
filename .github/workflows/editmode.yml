@@ -9,7 +9,7 @@ jobs:
   run-editmode:
     runs-on: self-hosted
     steps:
-      - name: Pre-clean workspace (avoid checkout warning)
+      - name: Pre-clean workspace
         shell: pwsh
         run: |
           if (Test-Path "$env:GITHUB_WORKSPACE") {
