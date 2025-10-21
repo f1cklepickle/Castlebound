@@ -1,21 +1,15 @@
 {
   "name": "_Project.Tests.EditMode",
-  "references": [
-    "_Project.Core",
-    "_Project.Gameplay"
-  ],
-  "optionalUnityReferences": [
-    "TestAssemblies"
-  ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "rootNamespace": "",
+  "references": ["_Project.Core", "_Project.Gameplay"],
+  "includePlatforms": ["Editor"],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,
   "precompiledReferences": [],
   "autoReferenced": true,
-  "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": false
+  "noEngineReferences": false,
+  "isTestAssembly": true
 }
+

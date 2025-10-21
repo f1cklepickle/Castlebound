@@ -1,0 +1,7 @@
+git rm --cached *.csproj
+git commit -m "chore: untrack generated csproj files"
+
+Run local EditMode CI test:
+  pwsh .\ci\run-editmode.ps1
+Artifacts are written to TestResults/.
+

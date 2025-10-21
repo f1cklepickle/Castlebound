@@ -1,135 +1,39 @@
-name: EditMode CI (Self-Hosted)
-
+name: editmode
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     branches: [ main ]
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  editmode-tests:
-    name: Unity EditMode Tests (Self-Hosted)
-    runs-on: [self-hosted, Windows]
-
+  run-editmode:
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Pure CMD: detect Unity version and locate Unity.exe (supports 2022 LTS + Unity 6)
-      - name: Detect Unity and export path (cmd only)
-        shell: cmd
+      - name: Pre-clean workspace
+        shell: pwsh
         run: |
-          setlocal enableextensions enabledelayedexpansion
+          if (Test-Path "$env:GITHUB_WORKSPACE") {
+            Get-ChildItem -Force "$env:GITHUB_WORKSPACE" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
 
-          REM ---- Read version from ProjectSettings/ProjectVersion.txt
-          if not exist "ProjectSettings\ProjectVersion.txt" (
-            echo ERROR: ProjectSettings\ProjectVersion.txt not found.
-            exit /b 1
-          )
-          set "VERLINE="
-          for /f "usebackq tokens=* delims=" %%L in ("ProjectSettings\ProjectVersion.txt") do (
-            echo %%L | findstr /b /c:"m_EditorVersion:" >nul && set "VERLINE=%%L"
-          )
-          if not defined VERLINE (
-            echo ERROR: m_EditorVersion not found in ProjectVersion.txt
-            exit /b 1
-          )
+      - uses: actions/checkout@v4
 
-          REM Example values: 2022.3.6f1  or  6000.1.14f1
-          for /f "tokens=2 delims= " %%V in ("!VERLINE!") do set "UNITY_VERSION_RAW=%%V"
-
-          REM ---- Normalize version (strip trailing .x or suffix like f1/p1/b1)
-          set "UNITY_VERSION_CLEAN=!UNITY_VERSION_RAW!"
-          for /f "tokens=1 delims=fFbBpP" %%A in ("!UNITY_VERSION_CLEAN!") do set "UNITY_VERSION_CLEAN=%%A"
-          if /i "!UNITY_VERSION_CLEAN:~-2!"==".x" set "UNITY_VERSION_CLEAN=!UNITY_VERSION_CLEAN:~0,-2!"
-
-          REM ---- Also compute series (major.minor.) for patch-tolerant fallback (e.g., 2022.3.)
-          set "SERIES="
-          for /f "tokens=1,2 delims=." %%A in ("!UNITY_VERSION_CLEAN!") do set "SERIES=%%A.%%B."
-
-          set "UNITY_EXE="
-
-          REM ---- Fast path: known Hub roots (C:, D:, E:) + legacy Program Files\Unity
-          for %%R in (
-            "C:\Program Files\Unity\Hub\Editor"
-            "D:\Program Files\Unity\Hub\Editor"
-            "E:\Program Files\Unity\Hub\Editor"
-            "C:\Program Files\Unity"
-            "D:\Program Files\Unity"
-            "E:\Program Files\Unity"
-          ) do (
-            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_RAW!\Editor\Unity.exe"
-            if not defined UNITY_EXE if exist "%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" set "UNITY_EXE=%%~R\!UNITY_VERSION_CLEAN!\Editor\Unity.exe"
-          )
-
-          REM ---- Series fallback: accept any patch in same major.minor (e.g., 2022.3.* or 6000.1.*)
-          if not defined UNITY_EXE if defined SERIES (
-            for %%R in (
-              "C:\Program Files\Unity\Hub\Editor"
-              "D:\Program Files\Unity\Hub\Editor"
-              "E:\Program Files\Unity\Hub\Editor"
-            ) do (
-              if not defined UNITY_EXE if exist "%%~R\!SERIES!*" (
-                for /f "delims=" %%P in ('dir /b /ad "%%~R\!SERIES!*" 2^>nul') do (
-                  if not defined UNITY_EXE if exist "%%~R\%%P\Editor\Unity.exe" (
-                    set "UNITY_EXE=%%~R\%%P\Editor\Unity.exe"
-                    goto :found
-                  )
-                )
-              )
-            )
-          )
-
-          REM ---- Slow path: scan fixed drives for either exact or clean folder names
-          if not defined UNITY_EXE (
-            for /f %%D in ('wmic logicaldisk where "drivetype=3" get deviceid ^| find ":"') do (
-              if not defined UNITY_EXE (
-                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_RAW!\Editor\Unity.exe" 2^>nul') do (
-                  set "UNITY_EXE=%%P"
-                  goto :found
-                )
-              )
-              if not defined UNITY_EXE (
-                for /f "delims=" %%P in ('dir /b /s "%%D\*\!UNITY_VERSION_CLEAN!\Editor\Unity.exe" 2^>nul') do (
-                  set "UNITY_EXE=%%P"
-                  goto :found
-                )
-              )
-              if not defined UNITY_EXE if defined SERIES (
-                for /f "delims=" %%P in ('dir /b /s "%%D\*\!SERIES!*\Editor\Unity.exe" 2^>nul') do (
-                  set "UNITY_EXE=%%P"
-                  goto :found
-                )
-              )
-            )
-          )
-          :found
-
-          if not defined UNITY_EXE (
-            echo ERROR: Unity !UNITY_VERSION_RAW! not found on this runner. Install via Unity Hub.
-            exit /b 1
-          )
-
-          echo Found UNITY_EXE=!UNITY_EXE!
-          echo UNITY_EXE=!UNITY_EXE!>>"%GITHUB_ENV%"
-
-      - name: Prepare workspace (cmd)
-        shell: cmd
+      - name: Ensure project not locked
+        shell: pwsh
         run: |
-          if exist "%CD%\TestResults" rmdir /s /q "%CD%\TestResults"
-          mkdir "%CD%\TestResults"
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
+            Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
+          }
 
-      - name: Run Unity EditMode Tests (cmd)
-        shell: cmd
-        run: |
-          "%UNITY_EXE%" -batchmode -nographics -quit ^
-            -projectPath "%CD%" ^
-            -logfile "%CD%\TestResults\EditModeLog.txt" ^
-            -runTests -testPlatform EditMode ^
-            -testResults "%CD%\TestResults\EditModeResults.xml"
+      - name: Run EditMode tests
+        shell: pwsh
+        run: .\ci\run-editmode.ps1
 
-      - name: Upload Test Results
+      - name: Upload NUnit results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: EditModeResults
-          path: TestResults/
+          path: TestResults/*
