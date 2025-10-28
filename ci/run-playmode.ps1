@@ -35,11 +35,34 @@ Write-Host ('Log: {0}' -f $logPath)
 
 $unityExit = $LASTEXITCODE
 
-# --- Validate results XML exists
+# --- If results XML is missing, check the log for "no tests" fingerprints.
+$noTestsPatterns = @(
+  'No tests found',
+  'No tests were found',
+  'Skipping execution\.\? No tests',
+  'Test run finished.*Total:\s*0',
+  'there were no tests to run'
+)
+
+function LogIndicatesNoTests {
+    param([string]$path)
+    if (-not (Test-Path $path)) { return $false }
+    $text = Get-Content $path -Raw
+    foreach ($p in $noTestsPatterns) {
+        if ($text -match $p) { return $true }
+    }
+    return $false
+}
+
 if (-not (Test-Path $xmlPath)) {
-    Write-Host ("PlayMode results XML not found at {0}" -f $xmlPath)
-    Write-Host ("Unity Exit Code: {0} (failing due to missing XML)" -f $unityExit)
-    exit 1
+    if (LogIndicatesNoTests -path $logPath) {
+        Write-Host 'No PlayMode tests found (detected via log; Unity emitted no XML).'
+        exit 2
+    } else {
+        Write-Host ("PlayMode results XML not found at {0}" -f $xmlPath)
+        Write-Host ("Unity Exit Code: {0} (failing due to missing XML)" -f $unityExit)
+        exit 1
+    }
 }
 
 # --- Parse XML, enforce '0 tests = fail'
