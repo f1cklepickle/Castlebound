@@ -1,3 +1,6 @@
+# ci/run-playmode.ps1
+# Launches Unity and executes CI.PlayModeCiRunner.Run (writes NUnit XML and enforces 0-tests fail).
+
 $ErrorActionPreference = 'Stop'
 
 # --- Paths
@@ -15,72 +18,46 @@ if (-not $env:UNITY_EDITOR -or -not (Test-Path $env:UNITY_EDITOR)) {
 if (Test-Path $resultsDir) { Remove-Item -Recurse -Force $resultsDir }
 New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
 
-# --- Expose results path for CI (parity with EditMode)
+# --- Expose results path for the Editor runner
 $env:CB_TEST_RESULTS_PATH = $xmlPath
 
-Write-Host 'Running Unity PlayMode tests...'
+Write-Host 'Running Unity PlayMode tests via CI.PlayModeCiRunner.Run...'
 Write-Host ('Editor: {0}' -f $env:UNITY_EDITOR)
 Write-Host ('Project: {0}' -f $projectRoot)
 Write-Host ('XML: {0}' -f $xmlPath)
 Write-Host ('Log: {0}' -f $logPath)
 
-# --- Run Unity once
+# --- Execute the custom Editor method (no -runTests)
 & "$env:UNITY_EDITOR" `
-  -runTests `
   -projectPath "$projectRoot" `
-  -testPlatform playmode `
-  -testResults "$xmlPath" `
+  -batchmode -nographics `
+  -executeMethod CI.PlayModeCiRunner.Run `
   -logFile "$logPath" `
-  -batchmode -nographics -quit
+  -quit
 
 $unityExit = $LASTEXITCODE
 
-# --- If results XML is missing, check the log for "no tests" fingerprints.
-$noTestsPatterns = @(
-  'No tests found',
-  'No tests were found',
-  'Skipping execution\.\? No tests',
-  'Test run finished.*Total:\s*0',
-  'there were no tests to run'
-)
-
-function LogIndicatesNoTests {
-    param([string]$path)
-    if (-not (Test-Path $path)) { return $false }
-    $text = Get-Content $path -Raw
-    foreach ($p in $noTestsPatterns) {
-        if ($text -match $p) { return $true }
-    }
-    return $false
-}
-
+# --- Validate results XML exists
 if (-not (Test-Path $xmlPath)) {
-    if (LogIndicatesNoTests -path $logPath) {
-        Write-Host 'No PlayMode tests found (detected via log; Unity emitted no XML).'
-        exit 2
-    } else {
-        Write-Host ("PlayMode results XML not found at {0}" -f $xmlPath)
-        Write-Host ("Unity Exit Code: {0} (failing due to missing XML)" -f $unityExit)
-        exit 1
-    }
+    Write-Host ("[CI] PlayMode results XML not found at {0}" -f $xmlPath)
+    Write-Host ("[CI] Unity Exit Code: {0} (failing due to missing XML)" -f $unityExit)
+    exit 1
 }
 
-# --- Parse XML, enforce '0 tests = fail'
+# --- Parse XML, enforce '0 tests = fail' (belt-and-suspenders; Editor script already enforces)
 [xml]$xml = Get-Content $xmlPath
-
 [int]$total = 0
 $testRunNode = $xml.SelectSingleNode('//test-run')
 if ($testRunNode -and $testRunNode.Attributes['total']) {
     $total = [int]$testRunNode.Attributes['total'].Value
 } else {
-    $cases = $xml.SelectNodes('//test-case')
-    if ($cases) { $total = $cases.Count }
+    $cases = $xml.SelectNodes('//test-case'); if ($cases) { $total = $cases.Count }
 }
-
 if ($total -eq 0) {
-    Write-Host 'No PlayMode tests found! Ensure you have at least one test in Assets/_Project/_Tests/PlayMode/.'
+    Write-Host '[CI] No PlayMode tests found (XML total==0).'
     exit 2
 }
 
-# --- Mirror Unity result (non-zero means failing tests or crash)
+# --- Mirror Unity/editor exit (0 ok; 1 failure/crash; 2 zero-tests handled above)
 exit $unityExit
+
