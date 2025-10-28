@@ -13,6 +13,8 @@ concurrency:
 jobs:
   playmode:
     runs-on: self-hosted
+    env:
+      UNITY_EDITOR: 'D:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Unity.exe'
 
     defaults:
       run:
