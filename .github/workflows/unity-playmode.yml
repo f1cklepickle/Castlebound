@@ -43,7 +43,8 @@ jobs:
       #   if: ${{ env.UNITY_EDITOR == '' }}
 
       - name: Run PlayMode tests
-        run: pwsh ci/run-playmode.ps1
+        shell: pwsh
+        run: ./ci/run-playmode.ps1
 
       # Always upload artifacts (success or failure) for diagnostics
       - name: Upload PlayMode artifacts
@@ -60,4 +61,3 @@ jobs:
             **/error.log
           if-no-files-found: warn
           retention-days: 14
-
