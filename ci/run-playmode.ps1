@@ -1,7 +1,37 @@
 # ci/run-playmode.ps1
 # Launches Unity and executes CI.PlayModeCiRunner.Run (writes NUnit XML and enforces 0-tests fail).
+# Robustly resolves Unity editor path so $env:UNITY_EDITOR is optional.
 
 $ErrorActionPreference = 'Stop'
+
+function Resolve-UnityEditor {
+    # 1) Respect UNITY_EDITOR if valid
+    if ($env:UNITY_EDITOR -and (Test-Path $env:UNITY_EDITOR)) { return $env:UNITY_EDITOR }
+
+    # 2) Probe typical Unity Hub locations (latest first)
+    $hubRoots = @(
+        'C:\Program Files\Unity\Hub\Editor',
+        'D:\Program Files\Unity\Hub\Editor'
+    )
+    foreach ($root in $hubRoots) {
+        if (Test-Path $root) {
+            $cand = Get-ChildItem -Path $root -Directory -ErrorAction SilentlyContinue |
+                    Sort-Object Name -Descending |
+                    ForEach-Object { Join-Path $_.FullName 'Editor/Unity.exe' } |
+                    Where-Object { Test-Path $_ } |
+                    Select-Object -First 1
+            if ($cand) { return $cand }
+        }
+    }
+
+    # 3) Fall back to Unity.exe on PATH
+    try {
+        & 'Unity.exe' -batchmode -nographics -quit -version -logFile - | Out-Null
+        if ($LASTEXITCODE -eq 0) { return 'Unity.exe' }
+    } catch { }
+
+    throw 'Unity editor not found. Set UNITY_EDITOR or install a Hub editor on this runner.'
+}
 
 # --- Paths
 $projectRoot = (Get-Location).Path
@@ -9,26 +39,24 @@ $resultsDir  = Join-Path $projectRoot 'TestResults'
 $xmlPath     = Join-Path $resultsDir 'PlayModeResults.xml'
 $logPath     = Join-Path $resultsDir 'PlayModeLog.txt'
 
-# --- Unity Editor
-if (-not $env:UNITY_EDITOR -or -not (Test-Path $env:UNITY_EDITOR)) {
-    throw 'UNITY_EDITOR env var not set or path not found. Example: D:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Unity.exe'
-}
+# --- Resolve Unity
+$unity = Resolve-UnityEditor
 
 # --- Clean results
 if (Test-Path $resultsDir) { Remove-Item -Recurse -Force $resultsDir }
 New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
 
-# --- Expose results path for the Editor runner
+# --- Expose results path for the Editor runner (your runners read this)
 $env:CB_TEST_RESULTS_PATH = $xmlPath
 
 Write-Host 'Running Unity PlayMode tests via CI.PlayModeCiRunner.Run...'
-Write-Host ('Editor: {0}' -f $env:UNITY_EDITOR)
-Write-Host ('Project: {0}' -f $projectRoot)
-Write-Host ('XML: {0}' -f $xmlPath)
-Write-Host ('Log: {0}' -f $logPath)
+Write-Host ("Editor: {0}" -f $unity)
+Write-Host ("Project: {0}" -f $projectRoot)
+Write-Host ("XML: {0}" -f $xmlPath)
+Write-Host ("Log: {0}" -f $logPath)
 
-# --- Execute the custom Editor method (no -runTests)
-& "$env:UNITY_EDITOR" `
+# --- Execute the custom Editor method (not -runTests)
+& "$unity" `
   -projectPath "$projectRoot" `
   -batchmode -nographics `
   -executeMethod CI.PlayModeCiRunner.Run `
@@ -44,13 +72,12 @@ if (-not (Test-Path $xmlPath)) {
     exit 1
 }
 
-# --- Parse XML, enforce '0 tests = fail' (belt-and-suspenders; Editor script already enforces)
+# --- Parse XML, enforce '0 tests = fail' (belt & suspenders; PlayModeCiRunner already does this)
 [xml]$xml = Get-Content $xmlPath
 [int]$total = 0
-$testRunNode = $xml.SelectSingleNode('//test-run')
-if ($testRunNode -and $testRunNode.Attributes['total']) {
-    $total = [int]$testRunNode.Attributes['total'].Value
-} else {
+$node = $xml.SelectSingleNode('//test-run')
+if ($node -and $node.Attributes['total']) { $total = [int]$node.Attributes['total'].Value }
+else {
     $cases = $xml.SelectNodes('//test-case'); if ($cases) { $total = $cases.Count }
 }
 if ($total -eq 0) {
