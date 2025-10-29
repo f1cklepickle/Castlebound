@@ -42,6 +42,14 @@ jobs:
       #     $env:UNITY_EDITOR = "D:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Unity.exe"
       #   if: ${{ env.UNITY_EDITOR == '' }}
 
+      - name: Activate Unity license (ulf secret)
+        if: ${{ secrets.UNITY_LICENSE_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $bytes = [Convert]::FromBase64String("${{ secrets.UNITY_LICENSE_BASE64 }}")
+          [IO.File]::WriteAllBytes("unity.ulf", $bytes)
+          & "$env:UNITY_EDITOR" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
+
       - name: Run PlayMode tests
         shell: pwsh
         run: ./ci/run-playmode.ps1
