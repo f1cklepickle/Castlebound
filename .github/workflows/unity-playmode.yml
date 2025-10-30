@@ -43,12 +43,32 @@ jobs:
       #   if: ${{ env.UNITY_EDITOR == '' }}
 
       - name: Activate Unity license (ulf secret)
-        if: ${{ secrets.UNITY_LICENSE_BASE64 != '' }}
+        env:
+          UNITY_LICENSE_BASE64: ${{ secrets.UNITY_LICENSE_BASE64 }}
         shell: pwsh
         run: |
-          $bytes = [Convert]::FromBase64String("${{ secrets.UNITY_LICENSE_BASE64 }}")
+          if (-not $env:UNITY_LICENSE_BASE64 -or $env:UNITY_LICENSE_BASE64.Trim().Length -eq 0) {
+            Write-Host "[CI] UNITY_LICENSE_BASE64 not set; skipping activation."
+            exit 0
+          }
+          $pv = Get-Content ProjectSettings/ProjectVersion.txt -Raw
+          $ver = ($pv | Select-String -Pattern 'm_EditorVersion:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
+          if (-not $ver) {
+            $ver = ($pv | Select-String -Pattern 'm_EditorVersionWithRevision:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
+          }
+          $roots = @('C:\\Program Files\\Unity\\Hub\\Editor','D:\\Program Files\\Unity\\Hub\\Editor')
+          $unity = $null
+          foreach ($r in $roots) {
+            $cand = Join-Path (Join-Path $r $ver) 'Editor/Unity.exe'
+            if (Test-Path $cand) { $unity = $cand; break }
+          }
+          if (-not $unity) { $unity = 'Unity.exe' }
+
+          $bytes = [Convert]::FromBase64String("$env:UNITY_LICENSE_BASE64")
           [IO.File]::WriteAllBytes("unity.ulf", $bytes)
-          & "$env:UNITY_EDITOR" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
+
+          & "$unity" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "Unity license activation failed with exit code $LASTEXITCODE" }
 
       - name: Run PlayMode tests
         shell: pwsh
