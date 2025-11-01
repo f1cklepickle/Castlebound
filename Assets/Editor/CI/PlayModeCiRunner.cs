@@ -10,6 +10,31 @@ namespace CI
 {
     public static class PlayModeCiRunner
     {
+        static string GetResultsPath()
+        {
+            var path = Environment.GetEnvironmentVariable("CB_TEST_RESULTS_PATH");
+            if (string.IsNullOrEmpty(path)) path = "TestResults/PlayModeResults.xml";
+            var dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            return path.Replace('\\','/');
+        }
+
+        static void WriteMinimalNUnitXml(string filePath, int testCount, int failCount, string message)
+        {
+            var now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
+            var resultAttr = failCount > 0 ? "Failed" : (testCount > 0 ? "Passed" : "Inconclusive");
+            var passed = Math.Max(0, testCount - failCount);
+            var safeMsg = System.Security.SecurityElement.Escape(message ?? string.Empty);
+            var xml = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                      $"<test-run id=\"2\" name=\"PlayMode\" testcasecount=\"{testCount}\" result=\"{resultAttr}\" total=\"{testCount}\" passed=\"{passed}\" failed=\"{failCount}\" inconclusive=\"0\" skipped=\"0\" asserts=\"0\" start-time=\"{now}\" end-time=\"{now}\">\n" +
+                      $"  <command-line>CI.PlayModeCiRunner.Run</command-line>\n" +
+                      $"  <test-suite type=\"TestSuite\" name=\"PlayMode\" result=\"{resultAttr}\" total=\"{testCount}\" executed=\"True\" passed=\"{passed}\" failed=\"{failCount}\" inconclusive=\"0\" skipped=\"0\" asserts=\"0\">\n" +
+                      $"    <failure><message>{safeMsg}</message></failure>\n" +
+                      $"  </test-suite>\n" +
+                      $"</test-run>";
+            File.WriteAllText(filePath, xml);
+        }
+
         [MenuItem("CI/Run PlayMode Tests (CI)")]
         public static void Run()
         {
@@ -21,28 +46,25 @@ namespace CI
                 // Optional: testNames = new[] { "SamplePlaymodeTests.PlaymodeTest_Passes" }
             };
 
-            var outputPath = Environment.GetEnvironmentVariable("CB_TEST_RESULTS_PATH");
-            if (string.IsNullOrEmpty(outputPath))
-                outputPath = "TestResults/PlayModeResults.xml";
-
-            var dir = Path.GetDirectoryName(outputPath);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
+            var resultsPath = GetResultsPath();
             var exitCode = 0;
 
             api.RegisterCallbacks(new Callbacks(result =>
             {
                 try
                 {
-                    // Write XML always, even if 0 tests discovered
-                    WriteMinimalNUnitXml(result, outputPath);
-                    Debug.Log($"[CI] (PlayMode) Wrote NUnit XML to: {outputPath}");
+                    // Write XML from adaptor
+                    WriteMinimalNUnitXml(result, resultsPath);
+                    Debug.Log($"[CI] (PlayMode) Wrote NUnit XML to: {resultsPath}");
 
                     int total = result.PassCount + result.FailCount + result.SkipCount + result.InconclusiveCount;
                     if (total == 0)
                     {
-                        Debug.LogError("[CI] (PlayMode) No tests discovered (total == 0). Failing with exit code 2.");
-                        exitCode = 2; // explicit 0-tests fail
+                        Debug.LogError("[CI] (PlayMode) No tests discovered (total == 0). Marking as exit code 2.");
+                        // If adaptor write produced nothing, ensure minimal XML exists
+                        if (!File.Exists(resultsPath))
+                            WriteMinimalNUnitXml(resultsPath, 0, 0, "No PlayMode tests discovered.");
+                        exitCode = 2; // explicit 0-tests
                     }
                     else
                     {
@@ -51,8 +73,19 @@ namespace CI
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[CI] (PlayMode) Failed to write XML: {ex}");
+                    Debug.LogError($"[CI] (PlayMode) Exception while writing XML: {ex}");
+                    // Fallback minimal XML to guarantee artifact
+                    try { WriteMinimalNUnitXml(resultsPath, 0, 1, "Internal error: " + ex.GetType().Name + " - " + ex.Message); }
+                    catch { /* swallow */ }
                     exitCode = 1;
+                }
+
+                // As a final guard, ensure XML exists
+                if (!File.Exists(resultsPath))
+                {
+                    try { WriteMinimalNUnitXml(resultsPath, 0, 0, "No PlayMode tests discovered."); }
+                    catch { /* swallow */ }
+                    if (exitCode == 0) exitCode = 2;
                 }
 
                 EditorApplication.Exit(exitCode);
@@ -119,4 +152,3 @@ namespace CI
         }
     }
 }
-
