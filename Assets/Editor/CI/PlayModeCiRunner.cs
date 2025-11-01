@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Xml;
+using System.Xml.Linq;
 using System.Linq;
 using UnityEngine;                             // ScriptableObject, Debug
 using UnityEditor;                             // Editor APIs
@@ -10,6 +11,31 @@ namespace CI
 {
     public static class PlayModeCiRunner
     {
+        private static void WriteEmptyNUnitXml(string resultsPath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(resultsPath) ?? ".");
+            var now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var root = new XElement("test-run",
+                new XAttribute("id", "2"),
+                new XAttribute("name", "PlayMode"),
+                new XAttribute("fullname", "CI.PlayMode"),
+                new XAttribute("runstate", "Runnable"),
+                new XAttribute("result", "Passed"),
+                new XAttribute("total", "0"),
+                new XAttribute("passed", "0"),
+                new XAttribute("failed", "0"),
+                new XAttribute("inconclusive", "0"),
+                new XAttribute("skipped", "0"),
+                new XAttribute("asserts", "0"),
+                new XAttribute("engine-version", "3.13.0"),
+                new XAttribute("clr-version", "4.0.30319.42000"),
+                new XAttribute("start-time", now),
+                new XAttribute("end-time", now),
+                new XAttribute("duration", "0")
+            );
+            var doc = new XDocument(root);
+            doc.Save(resultsPath);
+        }
         static string GetResultsPath()
         {
             var path = Environment.GetEnvironmentVariable("CB_TEST_RESULTS_PATH");
@@ -61,9 +87,8 @@ namespace CI
                     if (total == 0)
                     {
                         Debug.LogError("[CI] (PlayMode) No tests discovered (total == 0). Marking as exit code 2.");
-                        // If adaptor write produced nothing, ensure minimal XML exists
                         if (!File.Exists(resultsPath))
-                            WriteMinimalNUnitXml(resultsPath, 0, 0, "No PlayMode tests discovered.");
+                            WriteEmptyNUnitXml(resultsPath);
                         exitCode = 2; // explicit 0-tests
                     }
                     else
@@ -83,7 +108,7 @@ namespace CI
                 // As a final guard, ensure XML exists
                 if (!File.Exists(resultsPath))
                 {
-                    try { WriteMinimalNUnitXml(resultsPath, 0, 0, "No PlayMode tests discovered."); }
+                    try { WriteEmptyNUnitXml(resultsPath); }
                     catch { /* swallow */ }
                     if (exitCode == 0) exitCode = 2;
                 }
