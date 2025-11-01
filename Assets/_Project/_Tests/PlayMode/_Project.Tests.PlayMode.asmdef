@@ -6,9 +6,14 @@
         "GUID:182c032bd5c6f344db9b143e1ea69938",
         "GUID:27619889b8ba8c24980f49ee34dbb44a",
         "GUID:0acc523941302664db1f4e527237feb3",
-        "GUID:81704b1bb6efba44c9df9b9dea4d07a0"
+        "GUID:81704b1bb6efba44c9df9b9dea4d07a0",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "nunit.framework"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
@@ -20,5 +25,8 @@
         "UNITY_INCLUDE_TESTS"
     ],
     "versionDefines": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
     "noEngineReferences": false
 }
