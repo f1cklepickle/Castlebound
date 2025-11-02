@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
 
       # Cache Library/ to speed up imports/compilation; mirror EditMode's key pattern
       - name: Cache Unity Library
@@ -69,6 +72,12 @@ jobs:
 
           & "$unity" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
           if ($LASTEXITCODE -ne 0) { throw "Unity license activation failed with exit code $LASTEXITCODE" }
+
+      - name: Verify script revision
+        shell: pwsh
+        run: |
+          Get-FileHash -Algorithm SHA256 .\ci\run-playmode.ps1
+          Get-Content .\ci\run-playmode.ps1 -TotalCount 3
 
       - name: Run PlayMode tests
         shell: pwsh
