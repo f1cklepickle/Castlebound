@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Xml.Linq;
 using System.Linq;
 using UnityEngine;                             // ScriptableObject, Debug
 using UnityEditor;                             // Editor APIs
@@ -11,31 +10,7 @@ namespace CI
 {
     public static class PlayModeCiRunner
     {
-        private static void WriteEmptyNUnitXml(string resultsPath)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(resultsPath) ?? ".");
-            var now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var root = new XElement("test-run",
-                new XAttribute("id", "2"),
-                new XAttribute("name", "PlayMode"),
-                new XAttribute("fullname", "CI.PlayMode"),
-                new XAttribute("runstate", "Runnable"),
-                new XAttribute("result", "Passed"),
-                new XAttribute("total", "0"),
-                new XAttribute("passed", "0"),
-                new XAttribute("failed", "0"),
-                new XAttribute("inconclusive", "0"),
-                new XAttribute("skipped", "0"),
-                new XAttribute("asserts", "0"),
-                new XAttribute("engine-version", "3.13.0"),
-                new XAttribute("clr-version", "4.0.30319.42000"),
-                new XAttribute("start-time", now),
-                new XAttribute("end-time", now),
-                new XAttribute("duration", "0")
-            );
-            var doc = new XDocument(root);
-            doc.Save(resultsPath);
-        }
+        // XML is generated from TestRunnerApi results; no pre-seed needed here
         static string GetResultsPath()
         {
             var path = Environment.GetEnvironmentVariable("CB_TEST_RESULTS_PATH");
@@ -45,89 +20,14 @@ namespace CI
             return path.Replace('\\','/');
         }
 
-        static void WriteMinimalNUnitXml(string filePath, int testCount, int failCount, string message)
-        {
-            var now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
-            var resultAttr = failCount > 0 ? "Failed" : (testCount > 0 ? "Passed" : "Inconclusive");
-            var passed = Math.Max(0, testCount - failCount);
-            var safeMsg = System.Security.SecurityElement.Escape(message ?? string.Empty);
-            var xml = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                      $"<test-run id=\"2\" name=\"PlayMode\" testcasecount=\"{testCount}\" result=\"{resultAttr}\" total=\"{testCount}\" passed=\"{passed}\" failed=\"{failCount}\" inconclusive=\"0\" skipped=\"0\" asserts=\"0\" start-time=\"{now}\" end-time=\"{now}\">\n" +
-                      $"  <command-line>CI.PlayModeCiRunner.Run</command-line>\n" +
-                      $"  <test-suite type=\"TestSuite\" name=\"PlayMode\" result=\"{resultAttr}\" total=\"{testCount}\" executed=\"True\" passed=\"{passed}\" failed=\"{failCount}\" inconclusive=\"0\" skipped=\"0\" asserts=\"0\">\n" +
-                      $"    <failure><message>{safeMsg}</message></failure>\n" +
-                      $"  </test-suite>\n" +
-                      $"</test-run>";
-            File.WriteAllText(filePath, xml);
-        }
-
-        [MenuItem("CI/Run PlayMode Tests (CI)")]
-        public static void Run()
-        {
-            var api = ScriptableObject.CreateInstance<TestRunnerApi>();
-
-            var filter = new Filter
-            {
-                testMode = TestMode.PlayMode
-                // Optional: testNames = new[] { "SamplePlaymodeTests.PlaymodeTest_Passes" }
-            };
-
-            var resultsPath = GetResultsPath();
-            var exitCode = 0;
-
-            api.RegisterCallbacks(new Callbacks(result =>
-            {
-                try
-                {
-                    // Write XML from adaptor
-                    WriteMinimalNUnitXml(result, resultsPath);
-                    Debug.Log($"[CI] (PlayMode) Wrote NUnit XML to: {resultsPath}");
-
-                    int total = result.PassCount + result.FailCount + result.SkipCount + result.InconclusiveCount;
-                    if (total == 0)
-                    {
-                        Debug.LogError("[CI] (PlayMode) No tests discovered (total == 0). Marking as exit code 2.");
-                        if (!File.Exists(resultsPath))
-                            WriteEmptyNUnitXml(resultsPath);
-                        exitCode = 2; // explicit 0-tests
-                    }
-                    else
-                    {
-                        exitCode = result.FailCount > 0 ? 1 : 0;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[CI] (PlayMode) Exception while writing XML: {ex}");
-                    // Fallback minimal XML to guarantee artifact
-                    try { WriteMinimalNUnitXml(resultsPath, 0, 1, "Internal error: " + ex.GetType().Name + " - " + ex.Message); }
-                    catch { /* swallow */ }
-                    exitCode = 1;
-                }
-
-                // As a final guard, ensure XML exists
-                if (!File.Exists(resultsPath))
-                {
-                    try { WriteEmptyNUnitXml(resultsPath); }
-                    catch { /* swallow */ }
-                    if (exitCode == 0) exitCode = 2;
-                }
-
-                EditorApplication.Exit(exitCode);
-            }));
-
-            api.Execute(new ExecutionSettings(filter));
-        }
-
+        // Writer that mirrors EditMode runner's structure
         private static void WriteMinimalNUnitXml(ITestResultAdaptor root, string path)
         {
             using var w = XmlWriter.Create(path, new XmlWriterSettings { Indent = true });
-            int total = root.PassCount + root.FailCount + root.SkipCount + root.InconclusiveCount;
-
             w.WriteStartDocument();
             w.WriteStartElement("test-run");
             w.WriteAttributeString("result", root.ResultState.ToString());
-            w.WriteAttributeString("total", total.ToString());
+            w.WriteAttributeString("total", (root.PassCount + root.FailCount + root.SkipCount + root.InconclusiveCount).ToString());
             w.WriteAttributeString("passed", root.PassCount.ToString());
             w.WriteAttributeString("failed", root.FailCount.ToString());
             w.WriteAttributeString("skipped", root.SkipCount.ToString());
@@ -140,10 +40,66 @@ namespace CI
 
             WriteCasesRecursive(w, root);
 
-            w.WriteEndElement(); // results
-            w.WriteEndElement(); // test-suite
-            w.WriteEndElement(); // test-run
+            w.WriteEndElement();
+            w.WriteEndElement();
+            w.WriteEndElement();
             w.WriteEndDocument();
+        }
+
+        [MenuItem("CI/Run PlayMode Tests (CI)")]
+        public static void Run()
+        {
+            var api = ScriptableObject.CreateInstance<TestRunnerApi>();
+
+            var filter = new Filter
+            {
+                testMode = TestMode.PlayMode
+            };
+
+            var resultsPath = GetResultsPath();
+
+            Callbacks cb = null;
+            cb = new Callbacks(result =>
+            {
+                try
+                {
+                    WriteMinimalNUnitXml(result, resultsPath);
+                    Debug.Log($"[CI][PlayMode] Wrote NUnit XML to: {resultsPath}");
+                    var total = result.PassCount + result.FailCount + result.SkipCount + result.InconclusiveCount;
+                    Debug.Log($"[CI][PlayMode] Totals -> total={total} passed={result.PassCount} failed={result.FailCount} skipped={result.SkipCount}");
+                    if (total == 0)
+                    {
+                        Debug.LogWarning("[CI][PlayMode] No tests were discovered by TestRunnerApi.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[CI][PlayMode] Failed to write XML: {ex}");
+                }
+                finally
+                {
+                    // Always unregister callbacks when the run finishes
+                    api.UnregisterCallbacks(cb);
+                }
+            });
+
+            api.RegisterCallbacks(cb);
+
+            var settings = new ExecutionSettings(filter);
+
+            Debug.Log("[CI][PlayMode] Executing ALL PlayMode tests via TestRunnerApi (no filters)...");
+
+            if (Application.isBatchMode)
+            {
+                // In CI / batchmode, run synchronously so Unity quits only after tests are done.
+                settings.runSynchronously = true;
+                api.Execute(settings);
+            }
+            else
+            {
+                // In the Editor, run asynchronously so we don't block the UI.
+                api.Execute(settings);
+            }
         }
 
         private static void WriteCasesRecursive(XmlWriter w, ITestResultAdaptor node)
