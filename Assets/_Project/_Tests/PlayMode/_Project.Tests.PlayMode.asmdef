@@ -10,9 +10,10 @@
   "allowUnsafeCode": false,
   "overrideReferences": false,
   "precompiledReferences": [],
-  "autoReferenced": false,
-  "defineConstraints": [],
+  "autoReferenced": true,
+  "defineConstraints": [ "UNITY_INCLUDE_TESTS" ],
   "versionDefines": [],
   "noEngineReferences": false,
-  "optionalUnityReferences": [ "TestAssemblies" ]
+  "optionalUnityReferences": [ "TestAssemblies" ],
+  "isTestAssembly": true
 }
