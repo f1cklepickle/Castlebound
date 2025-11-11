@@ -1,0 +1,100 @@
+name: Unity – PlayMode
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: playmode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playmode:
+    runs-on: self-hosted
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
+
+      # Cache Library/ to speed up imports/compilation; mirror EditMode's key pattern
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: playmode-library-${{ runner.os }}-${{ hashFiles('Packages/manifest.json','ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            playmode-library-${{ runner.os }}-
+
+      - name: Create TestResults folder
+        run: |
+          if (Test-Path TestResults) { Remove-Item -Recurse -Force TestResults }
+          New-Item -ItemType Directory -Force -Path TestResults | Out-Null
+
+      # If UNITY_EDITOR isn't provided by the runner's environment, you can set it here via repo/organization secrets or variables
+      # - name: Configure UNITY_EDITOR (example)
+      #   run: |
+      #     $env:UNITY_EDITOR = "D:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Unity.exe"
+      #   if: ${{ env.UNITY_EDITOR == '' }}
+
+      - name: Activate Unity license (ulf secret)
+        env:
+          UNITY_LICENSE_BASE64: ${{ secrets.UNITY_LICENSE_BASE64 }}
+        shell: pwsh
+        run: |
+          if (-not $env:UNITY_LICENSE_BASE64 -or $env:UNITY_LICENSE_BASE64.Trim().Length -eq 0) {
+            Write-Host "[CI] UNITY_LICENSE_BASE64 not set; skipping activation."
+            exit 0
+          }
+          $pv = Get-Content ProjectSettings/ProjectVersion.txt -Raw
+          $ver = ($pv | Select-String -Pattern 'm_EditorVersion:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
+          if (-not $ver) {
+            $ver = ($pv | Select-String -Pattern 'm_EditorVersionWithRevision:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
+          }
+          $roots = @('C:\\Program Files\\Unity\\Hub\\Editor','D:\\Program Files\\Unity\\Hub\\Editor')
+          $unity = $null
+          foreach ($r in $roots) {
+            $cand = Join-Path (Join-Path $r $ver) 'Editor/Unity.exe'
+            if (Test-Path $cand) { $unity = $cand; break }
+          }
+          if (-not $unity) { $unity = 'Unity.exe' }
+
+          $bytes = [Convert]::FromBase64String("$env:UNITY_LICENSE_BASE64")
+          [IO.File]::WriteAllBytes("unity.ulf", $bytes)
+
+          & "$unity" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw "Unity license activation failed with exit code $LASTEXITCODE" }
+
+      - name: Verify script revision
+        shell: pwsh
+        run: |
+          Get-FileHash -Algorithm SHA256 .\ci\run-playmode.ps1
+          Get-Content .\ci\run-playmode.ps1 -TotalCount 3
+
+      - name: Run PlayMode tests
+        shell: pwsh
+        run: ./ci/run-playmode.ps1
+
+      # Always upload artifacts (success or failure) for diagnostics
+      - name: Upload PlayMode artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayMode-TestResults
+          path: |
+            TestResults/PlayModeResults.xml
+            TestResults/PlayModeLog.txt
+            **/Player.log
+            **/*.dmp
+            **/crash.dmp
+            **/error.log
+          if-no-files-found: warn
+          retention-days: 14
