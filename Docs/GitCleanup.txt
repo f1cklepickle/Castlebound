@@ -5,3 +5,23 @@ Run local EditMode CI test:
   pwsh .\ci\run-editmode.ps1
 Artifacts are written to TestResults/.
 
+Git Maintenance Audit — November 2025
+
+- Cleaned obsolete local CI/test branches:
+  chore/asmdef-file-placement, chore/ci-add-summary, ci/editmode,
+  docs/workflow-baseline, feat/ci-playmode, test/editmode-smoke
+
+- Archived historical branches:
+  archive/maintenance-unity6-stable
+  archive/migration-2022lts
+
+- Removed outdated remote branches fully merged into main:
+  feat/enemy-movement-improvements, feat/enemy-wall-damage, fix/enemy-attack-damage
+
+- Renamed tag:
+  v0.1.0-ci-stable → milestone/ci-editmode-only
+
+- Current milestone tags:
+  milestone/ci-editmode-only
+  milestone/infra-baseline
+  ci/2022.3-lts-migration-ok
