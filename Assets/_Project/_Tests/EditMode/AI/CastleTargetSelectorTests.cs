@@ -190,5 +190,38 @@ namespace Castlebound.Tests.AI
             Object.DestroyImmediate(enemy.gameObject);
             Object.DestroyImmediate(player.gameObject);
         }
+
+        [Test]
+        public void ReturnsGate_WhenBroken()
+        {
+            // Arrange
+            var enemy = new GameObject("Enemy").transform;
+            var player = new GameObject("Player").transform;
+            var gate = new GameObject("BrokenGate").transform;
+
+            enemy.position = new Vector2(0f, 0f);
+            gate.position = new Vector2(4f, 0f);
+
+            bool enemyInside = false;
+            bool playerInside = false;
+
+            var gates = new[] { gate };
+
+            // Act
+            var result = CastleTargetSelector.ChooseTarget(
+                enemy.position,
+                enemyInside,
+                playerInside,
+                player,
+                gates);
+
+            // Assert
+            Assert.AreSame(gate, result, "Broken gate should still be selected.");
+
+            // Cleanup
+            Object.DestroyImmediate(enemy.gameObject);
+            Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(gate.gameObject);
+        }
     }
 }
