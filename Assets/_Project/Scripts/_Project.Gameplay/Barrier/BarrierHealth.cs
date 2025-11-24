@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BarrierHealth : MonoBehaviour
+public class BarrierHealth : MonoBehaviour, IDamageable
 {
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;

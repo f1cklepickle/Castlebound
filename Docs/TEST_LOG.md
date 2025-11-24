@@ -44,3 +44,38 @@
 - `CastleRegionTracker` with a `PolygonCollider2D` defines the castle interior.
 - Gate `Transform` acts as an entrance waypoint; enemies switch to chasing the player once inside the region.
 - Future work: gate destruction + repair UI, with gate collider/visual toggling while keeping the Transform as an AI waypoint.
+
+## 2025-11-24 — feat/gate-destruction-repair (WIP)
+
+### Summary
+Begin implementing destructible castle barriers and unifying enemy attack logic via the `IDamageable` interface.
+
+### New tests
+- **BarrierHealthTests**
+  - `Breaks_WhenHealthReachesZero`
+  - `DisablesColliderAndSprite_WhenBroken`
+- **EnemyAttackTests**
+  - `EnemyAttack_DealsDamage_ToIDamageableTarget`
+
+### Behavior added
+- `BarrierHealth` now:
+  - Implements `IDamageable`
+  - Disables its collider and sprite on break
+  - Uses lazy component caching for EditMode stability
+- `EnemyAttack` now:
+  - Exposes a public `Damage` value
+  - Implements `DealDamage(IDamageable target)` for unified damage application
+
+### Notes
+- Barriers no longer use `Health.cs` (that remains for player/enemy only).
+- All enemy → structure damage will be routed through `IDamageable` to support:
+  - Player damage
+  - Barrier damage
+  - Future destructible objects
+- Scene wiring and collision→IDamageable refactor planned next.
+
+### Next planned tests
+- Enemy → barrier contact triggers damage through `IDamageable`
+- Barrier repair flow:
+  - `Repairs_WhenHealedAboveZero`
+  - `Reenables_ColliderAndSprite_WhenRepaired`

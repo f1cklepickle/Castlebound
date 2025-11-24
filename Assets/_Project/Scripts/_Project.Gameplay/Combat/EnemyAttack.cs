@@ -6,6 +6,11 @@ public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack")]
     [SerializeField] int damage = 1;
+    public int Damage
+    {
+        get => damage;
+        set => damage = value;
+    }
     [SerializeField] float attackRange = 1.2f;     // should be >= stopDistance
     [SerializeField] float windupSeconds = 0.15f;  // time before damage applies
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
@@ -78,5 +83,15 @@ public class EnemyAttack : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
+    }
+
+    public void DealDamage(IDamageable target)
+    {
+        if (target == null || Damage <= 0)
+        {
+            return;
+        }
+
+        target.TakeDamage(Damage);
     }
 }
