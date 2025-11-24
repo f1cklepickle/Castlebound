@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Castlebound.Gameplay.AI;
 
 public class EnemyController2D : MonoBehaviour
 {
@@ -12,37 +13,32 @@ public class EnemyController2D : MonoBehaviour
     // Static registry for manager access
     internal static readonly List<EnemyController2D> All = new List<EnemyController2D>();
 
-    [SerializeField] private Transform target;           // auto-find by Tag "Player" if null
+    [SerializeField] private Transform target;           // current chase target (player or barrier)
+    [SerializeField] private Transform player;           // authoritative player reference
+    [SerializeField] private Transform barrier;
+
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float holdRadius = 2.6f;    // R_in
     [SerializeField] private float releaseMargin = 0.6f; // R_out
     [SerializeField] private float orbitBase = 0.8f;
-    [SerializeField] private float angularGain = 2.5f;
     [SerializeField] private float maxTangent = 2.5f;
     [SerializeField] private int outrunFrames = 8;
     [SerializeField] private float epsilonDist = 0.01f;
-    [SerializeField] private float reseatBias = 0.3f;    // small inward nudge if slightly outside R_in
+    [SerializeField] private float reseatBias = 0.3f;
+    [SerializeField] private bool useBarrierTargeting = true;
 
-    // Public API
     public Transform Target => target;
+
+    // NEW: used by EnemyAttack to decide when we're close enough to attack.
     public bool IsInHoldRange()
     {
-        if (target == null) return false;
-        Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
-        float dist = Vector2.Distance(pos, target.position);
-        return dist <= holdRadius;
+        return _state == State.HOLD;
     }
 
     private Rigidbody2D _rb;
-
-    // State
     private State _state = State.CHASE;
-
-    // Outrun detection
     private float _prevDist;
-    private int _distTrend; // consecutive increases
-
-    // Angular gaps (radians) provided by manager
+    private int _distTrend;
     private float _gapCW;
     private float _gapCCW;
 
@@ -56,19 +52,24 @@ public class EnemyController2D : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
 
-        if (target == null)
+        // Ensure player reference is valid.
+        if (player == null)
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null) target = player.transform;
+            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+            if (playerGO != null)
+                player = playerGO.transform;
         }
 
-        if (target != null)
+        // Initialize target from player.
+        if (player != null)
         {
+            target = player;
             Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
             _prevDist = Vector2.Distance(pos, target.position);
         }
         else
         {
+            target = null;
             _prevDist = 0f;
         }
     }
@@ -86,6 +87,34 @@ public class EnemyController2D : MonoBehaviour
     private void FixedUpdate()
     {
         if (_rb == null) return;
+
+        if (player != null)
+        {
+            var region = CastleRegionTracker.Instance;
+
+            if (useBarrierTargeting && region != null)
+            {
+                bool playerInside = region.PlayerInside;
+                bool enemyInside = region.EnemyInside(this);
+
+                Transform[] gates = barrier != null
+                    ? new[] { barrier }
+                    : System.Array.Empty<Transform>();
+
+                target = CastleTargetSelector.ChooseTarget(
+                    transform.position,
+                    enemyInside,
+                    playerInside,
+                    player,
+                    gates);
+            }
+            else
+            {
+                // Fallback: direct chase
+                target = player;
+            }
+        }
+
         if (target == null) return;
 
         Vector2 pos = _rb.position;
@@ -94,27 +123,22 @@ public class EnemyController2D : MonoBehaviour
 
         Vector2 dir = dist > 1e-6f ? (toTarget / dist) : Vector2.zero;
 
-        // Update outrun trend (consecutive increases)
         if (dist > _prevDist + epsilonDist)
-        {
             _distTrend++;
-        }
-        else
-        {
+        else if (dist < _prevDist - epsilonDist)
             _distTrend = 0;
-        }
+
         _prevDist = dist;
 
         float rIn = holdRadius;
         float rOut = holdRadius + releaseMargin;
 
-        // State transitions (hysteresis + outrun)
         if (_state == State.CHASE)
         {
             if (dist <= rIn)
                 _state = State.HOLD;
         }
-        else // HOLD
+        else
         {
             if (dist >= rOut || _distTrend >= outrunFrames)
                 _state = State.CHASE;
@@ -126,28 +150,32 @@ public class EnemyController2D : MonoBehaviour
         if (_state == State.CHASE)
         {
             radial = dir * speed;
-            // tangent = Vector2.zero;
         }
-        else // HOLD
+        else
         {
-            // Small inward nudge only if outside R_in
             if (dist > rIn)
-            {
                 radial = dir * (reseatBias * speed);
+
+            float preference = _gapCCW - _gapCW;
+            bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
+
+            float sign = 0f;
+            if (!hasNoGaps)
+            {
+                if (preference > 0f) sign = +1f;
+                else if (preference < 0f) sign = -1f;
             }
 
-            // Determine tangential movement based on gap preference
-            float preference = _gapCCW - _gapCW; // >0 => prefer CCW, <0 => prefer CW
-            bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
-            float sign = hasNoGaps ? 1f : (preference < 0f ? -1f : 1f);
-
-            float normPref = Mathf.Clamp01(Mathf.Abs(preference) / Mathf.PI);
-            float tangentMag = orbitBase + normPref * angularGain;
-            if (tangentMag > maxTangent) tangentMag = maxTangent;
+            float tangentMag = 0f;
+            if (dist > 0f && !hasNoGaps && sign != 0f)
+            {
+                float orbitDist = Mathf.Max(dist, rIn);
+                tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(rIn, 0.01f));
+                tangentMag = Mathf.Min(tangentMag, maxTangent);
+            }
 
             if (dir != Vector2.zero)
             {
-                // CCW perpendicular to dir: (-y, x)
                 Vector2 perpCCW = new Vector2(-dir.y, dir.x);
                 tangent = perpCCW * (sign * tangentMag);
             }
