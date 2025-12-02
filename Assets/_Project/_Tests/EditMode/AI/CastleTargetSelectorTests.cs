@@ -192,12 +192,15 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
-        public void ReturnsGate_WhenBroken()
+        public void ReturnsPlayer_WhenBarrierBroken()
         {
             // Arrange
             var enemy = new GameObject("Enemy").transform;
             var player = new GameObject("Player").transform;
             var gate = new GameObject("BrokenGate").transform;
+
+            var barrierHealth = gate.gameObject.AddComponent<BarrierHealth>();
+            barrierHealth.TakeDamage(barrierHealth.MaxHealth);
 
             enemy.position = new Vector2(0f, 0f);
             gate.position = new Vector2(4f, 0f);
@@ -216,7 +219,7 @@ namespace Castlebound.Tests.AI
                 gates);
 
             // Assert
-            Assert.AreSame(gate, result, "Broken gate should still be selected.");
+            Assert.AreSame(player, result, "When the barrier is broken, selector should target the player.");
 
             // Cleanup
             Object.DestroyImmediate(enemy.gameObject);
