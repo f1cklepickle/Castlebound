@@ -1165,7 +1165,7 @@ GameObject:
   - component: {fileID: 769892622}
   - component: {fileID: 769892621}
   - component: {fileID: 769892623}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: CastleRegion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
