@@ -45,6 +45,11 @@
 - Gate `Transform` acts as an entrance waypoint; enemies switch to chasing the player once inside the region.
 - Future work: gate destruction + repair UI, with gate collider/visual toggling while keeping the Transform as an AI waypoint.
 
+## 2025-12-01 — selector broken-barrier pivot
+
+- `CastleTargetSelector` now treats a broken barrier as absent and returns the player instead of the gate.
+- Updated selector tests to expect the player when the barrier is broken.
+
 ## 2025-11-24 — feat/gate-destruction-repair (WIP)
 
 ### Summary
