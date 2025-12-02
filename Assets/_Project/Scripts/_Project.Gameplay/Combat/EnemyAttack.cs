@@ -70,9 +70,15 @@ public class EnemyAttack : MonoBehaviour
             if (!c) continue;
             // Look for IDamageable on the collider or its parent
             if (c.TryGetComponent<IDamageable>(out var dmg))
-                dmg.TakeDamage(damage);
+            {
+                Debug.Log($"[EnemyAttack] Hit IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
+                DealDamage(dmg);
+            }
             else if (c.GetComponentInParent<IDamageable>() is IDamageable parentDmg)
-                parentDmg.TakeDamage(damage);
+            {
+                Debug.Log($"[EnemyAttack] Hit parent IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
+                DealDamage(parentDmg);
+            }
         }
 
         yield return new WaitForSeconds(cooldownSeconds);

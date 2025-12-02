@@ -12,9 +12,8 @@ GameObject:
   - component: {fileID: 6741045512655291703}
   - component: {fileID: 7387045752396709800}
   - component: {fileID: 1051614195052203920}
-  - component: {fileID: 3345444124668795246}
   - component: {fileID: 3476958120085971061}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: Barrier_Gate
   m_TagString: Barrier
   m_Icon: {fileID: 0}
@@ -160,19 +159,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &3345444124668795246
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 683792860472063015}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf7bc62db1356084b98850f16aa3a9b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 10
 --- !u!114 &3476958120085971061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -185,5 +171,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f575a91196874d28a7eaaf24ea1e1b29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 10
-  currentHealth: 10
+  maxHealth: 5
+  currentHealth: 5

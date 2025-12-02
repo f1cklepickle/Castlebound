@@ -20,12 +20,18 @@ namespace Castlebound.Gameplay.AI
             // Enemy outside → prefer nearest gate if any.
             if (!enemyInside && gates != null && gates.Count > 0)
             {
-                Transform nearestGate = gates[0];
-                float bestSqrDist = ((Vector2)gates[0].position - enemyPosition).sqrMagnitude;
+                Transform nearestGate = null;
+                float bestSqrDist = float.MaxValue;
 
-                for (int i = 1; i < gates.Count; i++)
+                for (int i = 0; i < gates.Count; i++)
                 {
                     var gate = gates[i];
+                    var barrierHealth = gate != null ? gate.GetComponent<BarrierHealth>() : null;
+                    bool barrierBroken = barrierHealth != null && barrierHealth.IsBroken;
+
+                    if (barrierBroken || gate == null)
+                        continue;
+
                     float sqrDist = ((Vector2)gate.position - enemyPosition).sqrMagnitude;
                     if (sqrDist < bestSqrDist)
                     {
@@ -34,7 +40,8 @@ namespace Castlebound.Gameplay.AI
                     }
                 }
 
-                return nearestGate;
+                if (nearestGate != null)
+                    return nearestGate;
             }
 
             // If player is outside, always chase player.

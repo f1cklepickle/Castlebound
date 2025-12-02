@@ -202,7 +202,6 @@ MonoBehaviour:
   holdRadius: 1
   releaseMargin: 0.6
   orbitBase: 1.5
-  angularGain: 3
   maxTangent: 2
   outrunFrames: 8
   epsilonDist: 0.01
@@ -226,7 +225,7 @@ MonoBehaviour:
   cooldownSeconds: 0.8
   targetMask:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 264
   animator: {fileID: 0}
   playerLayerName: Player
   attackTriggerName: Attack
