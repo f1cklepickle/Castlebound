@@ -97,6 +97,16 @@ public class EnemyController2D : MonoBehaviour
             target = null;
             _prevDist = 0f;
         }
+
+        // Auto-assign a barrier at runtime if none was wired on this instance.
+        if (useBarrierTargeting && barrier == null)
+        {
+            var barrierHealth = FindObjectOfType<BarrierHealth>();
+            if (barrierHealth != null)
+            {
+                barrier = barrierHealth.transform;
+            }
+        }
     }
 
     private void OnEnable()

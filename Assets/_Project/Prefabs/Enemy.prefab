@@ -197,9 +197,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 0}
   player: {fileID: 0}
-  barrier: {fileID: 738055936485911948, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+  barrier: {fileID: 0}
   speed: 2.2
-  holdRadius: 1
+  holdRadius: 1.1
   releaseMargin: 0.6
   orbitBase: 1.5
   maxTangent: 2
