@@ -17,6 +17,12 @@ namespace Castlebound.Gameplay.AI
             Transform player,
             IReadOnlyList<Transform> gates)
         {
+            // If player is outside, always chase player (ignore gates).
+            if (!playerInside)
+            {
+                return player;
+            }
+
             // Enemy outside → prefer nearest gate if any.
             if (!enemyInside && gates != null && gates.Count > 0)
             {
@@ -44,13 +50,7 @@ namespace Castlebound.Gameplay.AI
                     return nearestGate;
             }
 
-            // If player is outside, always chase player.
-            if (!playerInside)
-            {
-                return player;
-            }
-
-            // Default: target player (both inside, enemy inside/player outside, or no gates).
+            // Default: target player (both inside or no gates available).
             return player;
         }
     }

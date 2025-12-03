@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using System.Collections.Generic;
 using Castlebound.Gameplay.AI;
 
 namespace Castlebound.Tests.AI
@@ -37,6 +38,147 @@ namespace Castlebound.Tests.AI
             // Cleanup
             Object.DestroyImmediate(enemy.gameObject);
             Object.DestroyImmediate(player.gameObject);
+        }
+
+        // Player outside castle: always target player even if gates exist.
+        [Test]
+        public void ReturnsPlayer_WhenPlayerOutside_RegardlessOfGates()
+        {
+            var player = new GameObject("Player").transform;
+            var gate = new GameObject("Gate").transform;
+
+            var enemyPosition = Vector2.zero;
+            bool enemyInside = false;
+            bool playerInside = false;
+
+            var gates = new List<Transform> { gate };
+
+            var result = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                gates);
+
+            Assert.AreSame(player, result);
+
+            Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(gate.gameObject);
+        }
+
+        // Player inside, enemy outside, gate present: target the gate (siege behavior).
+        [Test]
+        public void ReturnsGate_WhenPlayerInside_EnemyOutside_GatePresent()
+        {
+            var player = new GameObject("Player").transform;
+            var gate = new GameObject("Gate").transform;
+
+            var enemyPosition = new Vector2(-5f, 0f);
+            bool enemyInside = false;
+            bool playerInside = true;
+
+            var gates = new List<Transform> { gate };
+
+            var result = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                gates);
+
+            Assert.AreSame(gate, result);
+
+            Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(gate.gameObject);
+        }
+
+        // Player inside, enemy outside, no gates: chase the player (gate broken/missing).
+        [Test]
+        public void ReturnsPlayer_WhenPlayerInside_EnemyOutside_NoGates()
+        {
+            var player = new GameObject("Player").transform;
+
+            var enemyPosition = new Vector2(-5f, 0f);
+            bool enemyInside = false;
+            bool playerInside = true;
+
+            var gates = new List<Transform>(); // no gates
+
+            var result = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                gates);
+
+            Assert.AreSame(player, result);
+
+            Object.DestroyImmediate(player.gameObject);
+        }
+
+        // Player and enemy both inside castle: always chase player, even if gates exist/rebuild.
+        [Test]
+        public void ReturnsPlayer_WhenPlayerAndEnemyInside_EvenIfGatesExist()
+        {
+            var player = new GameObject("Player").transform;
+            var gate = new GameObject("Gate").transform;
+
+            var enemyPosition = new Vector2(0f, 0f);
+            bool enemyInside = true;
+            bool playerInside = true;
+
+            var gates = new List<Transform> { gate };
+
+            var result = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                gates);
+
+            Assert.AreSame(player, result);
+
+            Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(gate.gameObject);
+        }
+
+        // Rebuild scenario: no gates -> target player, then gate appears -> target gate.
+        [Test]
+        public void ReturnsGate_AfterGateReappears_WhilePlayerInside_EnemyOutside()
+        {
+            var player = new GameObject("Player").transform;
+            var gate = new GameObject("Gate").transform;
+
+            var enemyPosition = new Vector2(-5f, 0f);
+            bool enemyInside = false;
+            bool playerInside = true;
+
+            // First: no gates (broken/missing) -> should chase player.
+            var noGates = new List<Transform>();
+
+            var firstResult = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                noGates);
+
+            Assert.AreSame(player, firstResult);
+
+            // Then: gate "rebuilt" (gate list now contains an entry) -> should target gate.
+            var withGate = new List<Transform> { gate };
+
+            var secondResult = CastleTargetSelector.ChooseTarget(
+                enemyPosition,
+                enemyInside,
+                playerInside,
+                player,
+                withGate);
+
+            Assert.AreSame(gate, secondResult);
+
+            Object.DestroyImmediate(player.gameObject);
+            Object.DestroyImmediate(gate.gameObject);
         }
 
         [Test]
