@@ -6,40 +6,15 @@ using Castlebound.Gameplay.AI;
 namespace Castlebound.Tests.AI
 {
     /// <summary>
-    /// Castle gate targeting rules:
-    /// - If both player and enemy are outside, target player.
-    /// - If player is inside and enemy is outside, target nearest gate.
-    /// - If both are inside, target player.
-    /// - If no gates exist, fall back to player.
+    /// Castle gate targeting rules covered here:
+    /// - Player outside: always player (regardless of gates).
+    /// - Player inside & enemy outside: nearest intact gate; fall back to player when none/broken.
+    /// - Player and enemy inside: player.
+    /// - Enemy inside, player outside: player.
+    /// - Multiple gates: choose nearest.
     /// </summary>
     public class CastleTargetSelectorTests
     {
-        [Test]
-        public void SelectsPlayer_IfBothOutside()
-        {
-            // Arrange
-            var enemy = new GameObject("Enemy").transform;
-            var player = new GameObject("Player").transform;
-
-            bool enemyInside = false;
-            bool playerInside = false;
-
-            // Act
-            var result = Castlebound.Gameplay.AI.CastleTargetSelector.ChooseTarget(
-                enemy.position,
-                enemyInside,
-                playerInside,
-                player,
-                System.Array.Empty<Transform>());
-
-            // Assert
-            Assert.AreSame(player, result, "When both are outside, selector should choose player.");
-
-            // Cleanup
-            Object.DestroyImmediate(enemy.gameObject);
-            Object.DestroyImmediate(player.gameObject);
-        }
-
         // Player outside castle: always target player even if gates exist.
         [Test]
         public void ReturnsPlayer_WhenPlayerOutside_RegardlessOfGates()
@@ -216,32 +191,6 @@ namespace Castlebound.Tests.AI
             Object.DestroyImmediate(player.gameObject);
             Object.DestroyImmediate(gateNear.gameObject);
             Object.DestroyImmediate(gateFar.gameObject);
-        }
-
-        [Test]
-        public void SelectsPlayer_IfEnemyAndPlayerInside()
-        {
-            // Arrange
-            var enemy = new GameObject("Enemy").transform;
-            var player = new GameObject("Player").transform;
-
-            bool enemyInside = true;
-            bool playerInside = true;
-
-            // Act
-            var result = CastleTargetSelector.ChooseTarget(
-                enemy.position,
-                enemyInside,
-                playerInside,
-                player,
-                System.Array.Empty<Transform>());
-
-            // Assert
-            Assert.AreSame(player, result, "When enemy and player are inside, selector should choose player.");
-
-            // Cleanup
-            Object.DestroyImmediate(enemy.gameObject);
-            Object.DestroyImmediate(player.gameObject);
         }
 
         [Test]
