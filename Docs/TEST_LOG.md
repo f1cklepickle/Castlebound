@@ -120,12 +120,9 @@ All EditMode tests pass.
 - `CanHold_WhenBarrierIntact_AndWithinHoldRadius`
 - `DoesNotHold_WhenBarrierIsBroken`
 
-### Deferred / Ignored Tests
-- `Enemy_UsesNearestBarrier_FromRegisteredBarriers`
-  - Marked `[Ignore]`
-  - Will be reactivated in a future multi-barrier feature branch
-
 ### Notes
 - This entry closes out the previously “WIP” 2025-11-24 section.
-- Multi-barrier logic is intentionally deferred to maintain scope discipline.
 - R-key repair interaction added as part of the manual playtesting loop.
+
+### Future Work
+- Multi-barrier targeting & nearest-barrier selection (test name: `Enemy_UsesNearestBarrier_FromRegisteredBarriers`) will be implemented in a future feature branch (e.g. `feat/multi-barrier-targeting`).
