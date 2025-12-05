@@ -13,6 +13,23 @@ public class EnemyController2D : MonoBehaviour
     // Static registry for manager access
     internal static readonly List<EnemyController2D> All = new List<EnemyController2D>();
 
+    public static bool ShouldHoldForBarrierTarget(
+        float distanceToBarrier,
+        bool barrierBroken,
+        float holdRadius,
+        float releaseMargin,
+        int distTrend,
+        int outrunFrames)
+    {
+        // For now, this is intentionally minimal:
+        // - If the barrier is broken, enemies should *not* HOLD at the barrier.
+        // - Otherwise, they may HOLD when inside the hold radius.
+        if (barrierBroken)
+            return false;
+
+        return distanceToBarrier <= holdRadius;
+    }
+
     [SerializeField] private Transform target;           // current chase target (player or barrier)
     [SerializeField] private Transform player;           // authoritative player reference
     [SerializeField] private Transform barrier;
@@ -41,6 +58,14 @@ public class EnemyController2D : MonoBehaviour
     private int _distTrend;
     private float _gapCW;
     private float _gapCCW;
+    // Last non-zero direction toward our current target (for pass-through).
+    private Vector2 _lastNonZeroDir = Vector2.right;
+
+        // True while we are walking straight through a broken barrier.
+        private bool _isPassingThroughBarrier = false;
+
+        // Direction to walk while in pass-through phase.
+        private Vector2 _passThroughDir = Vector2.right;
 
     public void SetAngularGaps(float gapCW, float gapCCW)
     {
@@ -72,6 +97,16 @@ public class EnemyController2D : MonoBehaviour
             target = null;
             _prevDist = 0f;
         }
+
+        // Auto-assign a barrier at runtime if none was wired on this instance.
+        if (useBarrierTargeting && barrier == null)
+        {
+            var barrierHealth = FindObjectOfType<BarrierHealth>();
+            if (barrierHealth != null)
+            {
+                barrier = barrierHealth.transform;
+            }
+        }
     }
 
     private void OnEnable()
@@ -88,6 +123,8 @@ public class EnemyController2D : MonoBehaviour
     {
         if (_rb == null) return;
 
+        bool enemyInsideCastle = false;
+
         if (player != null)
         {
             var region = CastleRegionTracker.Instance;
@@ -95,18 +132,18 @@ public class EnemyController2D : MonoBehaviour
             if (useBarrierTargeting && region != null)
             {
                 bool playerInside = region.PlayerInside;
-                bool enemyInside = region.EnemyInside(this);
+                enemyInsideCastle = region.EnemyInside(this);
 
-                Transform[] gates = barrier != null
-                    ? new[] { barrier }
-                    : System.Array.Empty<Transform>();
+                target = SelectTarget(playerInside, enemyInsideCastle);
 
-                target = CastleTargetSelector.ChooseTarget(
-                    transform.position,
-                    enemyInside,
-                    playerInside,
-                    player,
-                    gates);
+                if (useBarrierTargeting)
+                {
+                    var targetBarrier = target != null ? target.GetComponent<BarrierHealth>() : null;
+                    if (targetBarrier != null)
+                    {
+                        barrier = targetBarrier.transform;
+                    }
+                }
             }
             else
             {
@@ -123,6 +160,11 @@ public class EnemyController2D : MonoBehaviour
 
         Vector2 dir = dist > 1e-6f ? (toTarget / dist) : Vector2.zero;
 
+        if (dir != Vector2.zero)
+        {
+            _lastNonZeroDir = dir;
+        }
+
         if (dist > _prevDist + epsilonDist)
             _distTrend++;
         else if (dist < _prevDist - epsilonDist)
@@ -130,18 +172,70 @@ public class EnemyController2D : MonoBehaviour
 
         _prevDist = dist;
 
+        bool isBarrierTarget = (barrier != null && target == barrier);
+        bool barrierBroken = false;
+
+        if (isBarrierTarget)
+        {
+            var barrierHealth = barrier.GetComponent<BarrierHealth>();
+            if (barrierHealth != null)
+            {
+                barrierBroken = barrierHealth.IsBroken;
+            }
+        }
+
+        if (isBarrierTarget && barrierBroken && player != null)
+        {
+            // Broken barrier: retarget to player and recompute direction.
+            target = player;
+            isBarrierTarget = false;
+
+            if (_state == State.HOLD)
+                _state = State.CHASE;
+
+            var toPlayer = (Vector2)player.position - pos;
+            var playerDist = toPlayer.magnitude;
+
+            toTarget = toPlayer;
+            dist = playerDist;
+            dir = playerDist > 1e-6f ? (toPlayer / playerDist) : Vector2.zero;
+
+            if (dir != Vector2.zero)
+            {
+                _lastNonZeroDir = dir;
+            }
+        }
+
         float rIn = holdRadius;
         float rOut = holdRadius + releaseMargin;
 
-        if (_state == State.CHASE)
+        if (isBarrierTarget)
         {
-            if (dist <= rIn)
-                _state = State.HOLD;
+            // For barriers, we delegate to the helper so broken barriers
+            // never produce HOLD, and intact ones may HOLD inside radius.
+            bool shouldHold = ShouldHoldForBarrierTarget(
+                dist,
+                barrierBroken,
+                holdRadius,
+                releaseMargin,
+                _distTrend,
+                outrunFrames);
+
+            _state = shouldHold ? State.HOLD : State.CHASE;
         }
         else
         {
-            if (dist >= rOut || _distTrend >= outrunFrames)
-                _state = State.CHASE;
+            // Existing CHASE/HOLD logic for non-barrier targets (e.g. player).
+            if (_state == State.CHASE)
+            {
+                if (dist <= rIn)
+                    _state = State.HOLD;
+            }
+            else
+            {
+                if (dist >= rOut || _distTrend >= outrunFrames)
+                    _state = State.CHASE;
+            }
         }
 
         Vector2 radial = Vector2.zero;
@@ -149,40 +243,81 @@ public class EnemyController2D : MonoBehaviour
 
         if (_state == State.CHASE)
         {
+            // CHASE: always move straight at the target.
             radial = dir * speed;
         }
         else
         {
-            if (dist > rIn)
-                radial = dir * (reseatBias * speed);
-
-            float preference = _gapCCW - _gapCW;
-            bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
-
-            float sign = 0f;
-            if (!hasNoGaps)
+            // HOLD behavior depends on whether we're holding at a barrier
+            // or at a non-barrier target (e.g. the player).
+            if (isBarrierTarget)
             {
-                if (preference > 0f) sign = +1f;
-                else if (preference < 0f) sign = -1f;
+                // HOLD at barrier: stand near the barrier and attack.
+                // No orbiting; just a small reseat if we drift too far.
+                if (dist > rIn)
+                {
+                    radial = dir * (reseatBias * speed);
+                }
+
+                tangent = Vector2.zero;
             }
-
-            float tangentMag = 0f;
-            if (dist > 0f && !hasNoGaps && sign != 0f)
+            else
             {
-                float orbitDist = Mathf.Max(dist, rIn);
-                tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(rIn, 0.01f));
-                tangentMag = Mathf.Min(tangentMag, maxTangent);
-            }
+                // Existing ring/orbit logic for non-barrier targets (player).
+                if (dist > rIn)
+                    radial = dir * (reseatBias * speed);
 
-            if (dir != Vector2.zero)
-            {
-                Vector2 perpCCW = new Vector2(-dir.y, dir.x);
-                tangent = perpCCW * (sign * tangentMag);
+                float preference = _gapCCW - _gapCW;
+                bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
+
+                float sign = 0f;
+
+                if (!hasNoGaps)
+                {
+                    if (preference > 0f)
+                        sign = 1f;
+                    else if (preference < 0f)
+                        sign = -1f;
+                }
+
+                float tangentMag = 0f;
+
+                if (dist > 0f && !hasNoGaps && sign != 0f)
+                {
+                    float orbitDist = Mathf.Max(dist, rIn);
+                    tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(rIn, 0.01f));
+                    tangentMag = Mathf.Min(tangentMag, maxTangent);
+                }
+
+                if (dir != Vector2.zero)
+                {
+                    Vector2 perpCCW = new Vector2(-dir.y, dir.x);
+                    tangent = perpCCW * (sign * tangentMag);
+                }
             }
         }
 
         float dt = Time.fixedDeltaTime;
         _rb.MovePosition(pos + (radial + tangent) * dt);
+    }
+
+    private Transform SelectTarget(bool playerInside, bool enemyInside)
+    {
+        Transform[] gates = useBarrierTargeting
+            ? BarrierHealth.GetActiveGateTransforms()
+            : System.Array.Empty<Transform>();
+
+        return CastleTargetSelector.ChooseTarget(
+            transform.position,
+            enemyInside,
+            playerInside,
+            player,
+            gates);
+    }
+
+    public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
+    {
+        return SelectTarget(playerInside, enemyInside);
     }
 
     private void OnDrawGizmosSelected()

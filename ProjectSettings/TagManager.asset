@@ -17,11 +17,11 @@ TagManager:
   - UI
   - Walls
   - Enemies
+  - Barriers
   - PlayerBoundary
-  - BreakableWalls
   - Gates
   - Environment
-  - 
+  - CastleRegion
   - 
   - 
   - 
