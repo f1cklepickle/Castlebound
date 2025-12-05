@@ -84,3 +84,48 @@ Begin implementing destructible castle barriers and unifying enemy attack logic 
 - Barrier repair flow:
   - `Repairs_WhenHealedAboveZero`
   - `Reenables_ColliderAndSprite_WhenRepaired`
+
+---
+
+## 2025-12-04 — feat/gate-destruction-repair (COMPLETED)
+
+### Summary
+The destructible barrier + repair system has been fully implemented and merged. 
+Enemy targeting now correctly handles:
+- Player inside/outside castle region
+- Barrier intact vs broken
+- Rebuild retargeting (enemy switches back to barrier when repaired)
+All EditMode tests pass.
+
+### New or Updated Tests
+**BarrierHealthTests**
+- `Breaks_WhenHealthReachesZero`
+- `DisablesColliderAndSprite_WhenBroken`
+- `Repairs_WhenRepaired_FromBrokenState`
+- `Restores_ColliderAndSprite_WhenRepaired`
+
+**EnemyAttackTests**
+- `EnemyAttack_DealsDamage_ToIDamageableTarget`
+- `EnemyAttack_BreaksBarrier_WhenDamageExceedsHealth`
+- `EnemyAttack_DoesNotDamage_WhenBarrierAlreadyBroken`
+
+**CastleTargetSelectorTests**
+- `ReturnsPlayer_WhenPlayerOutside_RegardlessOfGates`
+- `ReturnsGate_WhenPlayerInside_EnemyOutside_GatePresent`
+- `ReturnsPlayer_WhenBarrierBroken`
+- `ReturnsGate_AfterGateReappears_WhilePlayerInside_EnemyOutside`
+- `ReturnsPlayer_WhenPlayerAndEnemyInside`
+
+**EnemyBarrierHoldBehaviorTests**
+- `CanHold_WhenBarrierIntact_AndWithinHoldRadius`
+- `DoesNotHold_WhenBarrierIsBroken`
+
+### Deferred / Ignored Tests
+- `Enemy_UsesNearestBarrier_FromRegisteredBarriers`
+  - Marked `[Ignore]`
+  - Will be reactivated in a future multi-barrier feature branch
+
+### Notes
+- This entry closes out the previously “WIP” 2025-11-24 section.
+- Multi-barrier logic is intentionally deferred to maintain scope discipline.
+- R-key repair interaction added as part of the manual playtesting loop.
