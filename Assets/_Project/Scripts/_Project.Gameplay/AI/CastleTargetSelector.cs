@@ -17,13 +17,18 @@ namespace Castlebound.Gameplay.AI
             Transform player,
             IReadOnlyList<Transform> gates)
         {
-            // If player is outside, always chase player (ignore gates).
-            if (!playerInside)
-            {
-                return player;
-            }
+            // If we have no player reference, nothing to do.
+            if (player == null)
+                return null;
 
-            // Enemy outside → prefer nearest gate if any.
+            // If player is outside the castle, ALWAYS chase the player,
+            // regardless of how many gates or barriers exist.
+            if (!playerInside)
+                return player;
+
+            // At this point, playerInside == true.
+
+            // If the enemy is outside and there are gates, pick the nearest INTACT gate.
             if (!enemyInside && gates != null && gates.Count > 0)
             {
                 Transform nearestGate = null;
@@ -32,10 +37,13 @@ namespace Castlebound.Gameplay.AI
                 for (int i = 0; i < gates.Count; i++)
                 {
                     var gate = gates[i];
-                    var barrierHealth = gate != null ? gate.GetComponent<BarrierHealth>() : null;
-                    bool barrierBroken = barrierHealth != null && barrierHealth.IsBroken;
+                    if (gate == null)
+                        continue;
 
-                    if (barrierBroken || gate == null)
+                    // Skip broken barriers.
+                    var barrierHealth = gate.GetComponent<BarrierHealth>();
+                    bool barrierBroken = barrierHealth != null && barrierHealth.IsBroken;
+                    if (barrierBroken)
                         continue;
 
                     float sqrDist = ((Vector2)gate.position - enemyPosition).sqrMagnitude;
@@ -50,7 +58,10 @@ namespace Castlebound.Gameplay.AI
                     return nearestGate;
             }
 
-            // Default: target player (both inside or no gates available).
+            // Default: target player.
+            // - Enemy outside but no intact gates / gates list empty.
+            // - Enemy inside with player inside.
+            // - Any other fallback condition.
             return player;
         }
     }

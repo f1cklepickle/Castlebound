@@ -228,6 +228,10 @@ MonoBehaviour:
   flipDirection: 0
   animator: {fileID: 0}
   hitboxObject: {fileID: 1272401345759337948}
+  repairRadius: 1.5
+  barrierMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!114 &6061923462103248084
 MonoBehaviour:
   m_ObjectHideFlags: 0

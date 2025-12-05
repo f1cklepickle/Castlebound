@@ -12,6 +12,10 @@ public class PlayerController : MonoBehaviour
     public Animator animator;
     public GameObject hitboxObject;
 
+    [Header("Repair")]
+    [SerializeField] private float repairRadius = 1.5f;
+    [SerializeField] private LayerMask barrierMask;
+
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 lastMoveDirection;
@@ -65,6 +69,36 @@ void Awake() {
     public void DisableHitbox()
     {
         hitboxObject.GetComponent<Hitbox>()?.Deactivate();
+    }
+
+    public void OnRepair(InputValue value)
+    {
+        // We only care about the press event.
+        if (!value.isPressed)
+            return;
+
+        // Find any barriers within repairRadius on the configured barrierMask.
+        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
+        if (hits == null || hits.Length == 0)
+            return;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            var hit = hits[i];
+            if (!hit) continue;
+
+            // Look for BarrierHealth on this object or its parent.
+            var barrier = hit.GetComponentInParent<BarrierHealth>();
+            if (barrier == null)
+                continue;
+
+            // Only repair broken barriers.
+            if (!barrier.IsBroken)
+                continue;
+
+            barrier.Repair();
+            break; // Repair one barrier per key press.
+        }
     }
 
 }

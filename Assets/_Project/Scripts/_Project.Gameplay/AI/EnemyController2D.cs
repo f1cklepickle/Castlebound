@@ -134,16 +134,16 @@ public class EnemyController2D : MonoBehaviour
                 bool playerInside = region.PlayerInside;
                 enemyInsideCastle = region.EnemyInside(this);
 
-                Transform[] gates = barrier != null
-                    ? new[] { barrier }
-                    : System.Array.Empty<Transform>();
+                target = SelectTarget(playerInside, enemyInsideCastle);
 
-                target = CastleTargetSelector.ChooseTarget(
-                    transform.position,
-                    enemyInsideCastle,
-                    playerInside,
-                    player,
-                    gates);
+                if (useBarrierTargeting)
+                {
+                    var targetBarrier = target != null ? target.GetComponent<BarrierHealth>() : null;
+                    if (targetBarrier != null)
+                    {
+                        barrier = targetBarrier.transform;
+                    }
+                }
             }
             else
             {
@@ -299,6 +299,25 @@ public class EnemyController2D : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
         _rb.MovePosition(pos + (radial + tangent) * dt);
+    }
+
+    private Transform SelectTarget(bool playerInside, bool enemyInside)
+    {
+        Transform[] gates = useBarrierTargeting
+            ? BarrierHealth.GetActiveGateTransforms()
+            : System.Array.Empty<Transform>();
+
+        return CastleTargetSelector.ChooseTarget(
+            transform.position,
+            enemyInside,
+            playerInside,
+            player,
+            gates);
+    }
+
+    public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
+    {
+        return SelectTarget(playerInside, enemyInside);
     }
 
     private void OnDrawGizmosSelected()
