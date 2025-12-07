@@ -26,19 +26,33 @@ public class EnemyRingManager : MonoBehaviour
         int step = updateEveryN < 1 ? 1 : updateEveryN;
         if ((_tick % step) != 0) return;
 
-        // Find player position from any enemy with a non-null target
+        // Anchor ring spacing on the actual player, not the current chase target.
         Vector3 playerPos3 = default;
         bool foundPlayer = false;
-        for (int i = 0; i < n; i++)
+
+        // Prefer the Player tag.
+        var playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null)
         {
-            EnemyController2D e = EnemyController2D.All[i];
-            if (e != null && e.Target != null)
+            playerPos3 = playerGO.transform.position;
+            foundPlayer = true;
+        }
+
+        // Fallback: any enemy's player reference.
+        if (!foundPlayer)
+        {
+            for (int i = 0; i < n; i++)
             {
-                playerPos3 = e.Target.position;
-                foundPlayer = true;
-                break;
+                EnemyController2D e = EnemyController2D.All[i];
+                if (e != null && e.Target != null && e.Target.CompareTag("Player"))
+                {
+                    playerPos3 = e.Target.position;
+                    foundPlayer = true;
+                    break;
+                }
             }
         }
+
         if (!foundPlayer) return;
 
         Vector2 playerPos = new Vector2(playerPos3.x, playerPos3.y);

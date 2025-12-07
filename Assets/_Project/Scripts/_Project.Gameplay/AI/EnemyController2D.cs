@@ -30,9 +30,12 @@ public class EnemyController2D : MonoBehaviour
         return distanceToBarrier <= holdRadius;
     }
 
-    [SerializeField] private Transform target;           // current chase target (player or barrier)
+    [SerializeField] private Transform target;           // current orbit/spacing target (player)
     [SerializeField] private Transform player;           // authoritative player reference
     [SerializeField] private Transform barrier;
+    [SerializeField] private Transform homeBarrier;      // per-enemy assigned barrier (nearest at spawn)
+    [SerializeField] private Transform steerTarget;      // movement target (home barrier outside, player inside)
+    [SerializeField] private float passThroughRadius = 0.6f; // distance to consider "at" the barrier opening
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float holdRadius = 2.6f;    // R_in
@@ -83,29 +86,36 @@ public class EnemyController2D : MonoBehaviour
             GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
             if (playerGO != null)
                 player = playerGO.transform;
+            else
+            {
+                var pc = FindObjectOfType<PlayerController>();
+                if (pc != null)
+                    player = pc.transform;
+            }
         }
 
         // Initialize target from player.
         if (player != null)
         {
             target = player;
+            steerTarget = player;
             Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
             _prevDist = Vector2.Distance(pos, target.position);
         }
         else
         {
             target = null;
+            steerTarget = null;
             _prevDist = 0f;
         }
 
-        // Auto-assign a barrier at runtime if none was wired on this instance.
-        if (useBarrierTargeting && barrier == null)
+        // Assign home barrier at spawn (nearest, regardless of health).
+        if (useBarrierTargeting && homeBarrier == null)
         {
-            var barrierHealth = FindObjectOfType<BarrierHealth>();
-            if (barrierHealth != null)
-            {
-                barrier = barrierHealth.transform;
-            }
+            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
+                transform.position,
+                GetAllBarrierTransforms());
+            barrier = homeBarrier;
         }
     }
 
@@ -134,11 +144,15 @@ public class EnemyController2D : MonoBehaviour
                 bool playerInside = region.PlayerInside;
                 enemyInsideCastle = region.EnemyInside(this);
 
-                target = SelectTarget(playerInside, enemyInsideCastle);
+                // Determine steering target: outside → home barrier; inside → player.
+                steerTarget = SelectSteerTarget(playerInside, enemyInsideCastle);
+
+                // Orbit/spacing target remains the player.
+                target = player;
 
                 if (useBarrierTargeting)
                 {
-                    var targetBarrier = target != null ? target.GetComponent<BarrierHealth>() : null;
+                    var targetBarrier = steerTarget != null ? steerTarget.GetComponent<BarrierHealth>() : null;
                     if (targetBarrier != null)
                     {
                         barrier = targetBarrier.transform;
@@ -149,13 +163,15 @@ public class EnemyController2D : MonoBehaviour
             {
                 // Fallback: direct chase
                 target = player;
+                steerTarget = player;
             }
         }
 
         if (target == null) return;
+        if (steerTarget == null) steerTarget = target;
 
         Vector2 pos = _rb.position;
-        Vector2 toTarget = (Vector2)target.position - pos;
+        Vector2 toTarget = (Vector2)steerTarget.position - pos;
         float dist = toTarget.magnitude;
 
         Vector2 dir = dist > 1e-6f ? (toTarget / dist) : Vector2.zero;
@@ -172,7 +188,7 @@ public class EnemyController2D : MonoBehaviour
 
         _prevDist = dist;
 
-        bool isBarrierTarget = (barrier != null && target == barrier);
+        bool isBarrierTarget = (barrier != null && steerTarget == barrier);
         bool barrierBroken = false;
 
         if (isBarrierTarget)
@@ -184,27 +200,7 @@ public class EnemyController2D : MonoBehaviour
             }
         }
 
-        if (isBarrierTarget && barrierBroken && player != null)
-        {
-            // Broken barrier: retarget to player and recompute direction.
-            target = player;
-            isBarrierTarget = false;
-
-            if (_state == State.HOLD)
-                _state = State.CHASE;
-
-            var toPlayer = (Vector2)player.position - pos;
-            var playerDist = toPlayer.magnitude;
-
-            toTarget = toPlayer;
-            dist = playerDist;
-            dir = playerDist > 1e-6f ? (toPlayer / playerDist) : Vector2.zero;
-
-            if (dir != Vector2.zero)
-            {
-                _lastNonZeroDir = dir;
-            }
-        }
+        // No early retarget on broken barrier; switch happens when enemyInside becomes true.
 
         float rIn = holdRadius;
         float rOut = holdRadius + releaseMargin;
@@ -304,20 +300,83 @@ public class EnemyController2D : MonoBehaviour
     private Transform SelectTarget(bool playerInside, bool enemyInside)
     {
         Transform[] gates = useBarrierTargeting
-            ? BarrierHealth.GetActiveGateTransforms()
+            ? GetAllBarrierTransforms()
             : System.Array.Empty<Transform>();
 
-        return CastleTargetSelector.ChooseTarget(
-            transform.position,
-            enemyInside,
-            playerInside,
-            player,
-            gates);
+        EnsureHomeBarrier(gates);
+
+        if (!enemyInside && playerInside && homeBarrier != null)
+        {
+            // If broken and we're effectively at the barrier opening, switch to player.
+            var hbHealth = homeBarrier.GetComponent<BarrierHealth>();
+            bool broken = hbHealth != null && hbHealth.IsBroken;
+            float distToHome = Vector2.Distance(transform.position, homeBarrier.position);
+            if (broken && distToHome <= passThroughRadius)
+                return player;
+
+            return homeBarrier;
+        }
+
+        return player;
+    }
+
+    private Transform SelectSteerTarget(bool playerInside, bool enemyInside)
+    {
+        return SelectTarget(playerInside, enemyInside);
     }
 
     public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
     {
         return SelectTarget(playerInside, enemyInside);
+    }
+
+    public Transform Debug_SteerTarget(bool playerInside, bool enemyInside)
+    {
+        return SelectSteerTarget(playerInside, enemyInside);
+    }
+
+    // Test helper: force references for deterministic behavior in EditMode tests.
+    public void Debug_SetupRefs(Transform playerRef, Transform homeRef = null)
+    {
+        player = playerRef;
+        target = playerRef;
+        steerTarget = playerRef;
+        homeBarrier = homeRef;
+        barrier = homeRef;
+
+        if (homeBarrier == null && useBarrierTargeting)
+        {
+            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
+                transform.position,
+                GetAllBarrierTransforms());
+            barrier = homeBarrier;
+        }
+    }
+
+    private void EnsureHomeBarrier(Transform[] gates)
+    {
+        if (homeBarrier != null) return;
+        if (!useBarrierTargeting) return;
+
+        homeBarrier = CastleTargetSelector.AssignHomeBarrier(
+            transform.position,
+            gates);
+        barrier = homeBarrier;
+    }
+
+    private static Transform[] GetAllBarrierTransforms()
+    {
+        var all = BarrierHealth.All;
+        if (all == null || all.Count == 0)
+            return System.Array.Empty<Transform>();
+
+        var result = new Transform[all.Count];
+        for (int i = 0; i < all.Count; i++)
+        {
+            result[i] = all[i] != null ? all[i].transform : null;
+        }
+
+        return result;
     }
 
     private void OnDrawGizmosSelected()

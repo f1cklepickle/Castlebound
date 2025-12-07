@@ -10,6 +10,68 @@ namespace Castlebound.Gameplay.AI
     /// </summary>
     public static class CastleTargetSelector
     {
+        public static Transform AssignHomeBarrier(Vector2 spawnPosition, IReadOnlyList<Transform> barriers)
+        {
+            if (barriers == null || barriers.Count == 0)
+                return null;
+
+            Transform nearest = null;
+            float bestSqrDist = float.MaxValue;
+
+            for (int i = 0; i < barriers.Count; i++)
+            {
+                var barrier = barriers[i];
+                if (barrier == null)
+                    continue;
+
+                float sqrDist = ((Vector2)barrier.position - spawnPosition).sqrMagnitude;
+                if (sqrDist < bestSqrDist)
+                {
+                    bestSqrDist = sqrDist;
+                    nearest = barrier;
+                }
+            }
+
+            return nearest;
+        }
+
+        public static Transform ChooseTargetWithHome(
+            Vector2 enemyPosition,
+            bool enemyInside,
+            bool playerInside,
+            Transform player,
+            Transform homeBarrier,
+            IReadOnlyList<Transform> barriers)
+        {
+            if (player == null)
+                return null;
+
+            // If player is outside, always chase player.
+            if (!playerInside)
+                return player;
+
+            // Player inside; if enemy already inside, chase player.
+            if (enemyInside)
+                return player;
+
+            // Enemy outside, player inside.
+            if (homeBarrier != null)
+            {
+                var barrierHealth = homeBarrier.GetComponent<BarrierHealth>();
+                bool barrierBroken = barrierHealth != null && barrierHealth.IsBroken;
+
+                // While outside, continue targeting home barrier even if broken.
+                // Broken state only matters once we are inside/past the barrier.
+                if (barrierBroken && enemyInside)
+                    return player;
+
+                return homeBarrier;
+            }
+
+            // No home barrier found: fall back to player.
+            return player;
+        }
+
         public static Transform ChooseTarget(
             Vector2 enemyPosition,
             bool enemyInside,
