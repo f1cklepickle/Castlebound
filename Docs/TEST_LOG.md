@@ -146,3 +146,9 @@ All EditMode tests pass.
 ### Notes
 - Controller retains orbit/tangent spacing because ring manager now anchors on player.
 - Steering handoff uses proximity to a broken home barrier to switch to player and avoid jitter at the opening.
+
+### Additional tests (2025-12-07)
+- `EnemyControllerSteeringStateTests`
+  - `SteersToHomeBarrier_Outside_AndPlayer_Inside`
+- `CastleRegionTrackerTests`
+  - `RegistersPlayerAndEnemy_OnTriggerEnter_AndClears_OnExit`
