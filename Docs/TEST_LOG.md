@@ -126,3 +126,23 @@ All EditMode tests pass.
 
 ### Future Work
 - Multi-barrier targeting & nearest-barrier selection (test name: `Enemy_UsesNearestBarrier_FromRegisteredBarriers`) will be implemented in a future feature branch (e.g. `feat/multi-barrier-targeting`).
+
+## 2025-12-07 - feat/enemy-home-barrier-targeting
+
+### Summary
+- Enemies now assign a home barrier at spawn (nearest regardless of health) and steer to it while outside; they hand off to the player after passing the broken barrier opening.
+- Steering was decoupled from ring spacing so orbit behavior stays anchored on the player; ring manager now centers on the player, not transient targets.
+
+### New or Updated Tests
+**CastleTargetSelectorHomeBarrierTests**
+- `AssignsHomeBarrier_BasedOnSpawnPosition`
+- `KeepsHomeBarrier_EvenIfAnotherBecomesCloser`
+- `UsesAssignedBarrier_WhenPlayerInside_EnemyOutside_EvenIfBroken`
+- `TargetsPlayerAfterHomeBarrierBroken`
+
+**EnemyControllerHomeBarrierTargetingTests**
+- `RetainsHomeBarrierOutside_WhenBroken_ThenTargetsPlayerInside`
+
+### Notes
+- Controller retains orbit/tangent spacing because ring manager now anchors on player.
+- Steering handoff uses proximity to a broken home barrier to switch to player and avoid jitter at the opening.
