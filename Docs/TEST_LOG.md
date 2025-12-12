@@ -152,3 +152,24 @@ All EditMode tests pass.
   - `SteersToHomeBarrier_Outside_AndPlayer_Inside`
 - `CastleRegionTrackerTests`
   - `RegistersPlayerAndEnemy_OnTriggerEnter_AndClears_OnExit`
+
+## 2025-12-10 - feat/enemy-spawner-basic
+
+### Summary
+- Added data-driven enemy spawner (round-robin gate coverage, timed sequences) and runtime bootstrap (schedule asset + spawn markers + runner).
+- Ensured end-to-end spawning works via PlayMode smoke: schedule asset + markers + prefab mapping instantiate enemies at marker positions over time.
+
+### New or Updated Tests
+**EditMode**
+- `EnemySpawnerTests`
+  - `SelectsEachGateBeforeRepeating`
+  - `RespectsInitialDelayAndIntervals`
+
+**PlayMode**
+- `EnemySpawnerRunnerPlayTests`
+  - `SpawnsEnemiesAtMarkersOverTime`
+
+### Notes
+- Runner builds spawn points from `SpawnPointMarker` components, reads `EnemySpawnScheduleAsset`, and uses `enemyTypeId` → prefab mappings to instantiate.
+- Round-robin selection guarantees every gate gets spawns before repeating.
+- Future work: barrier approach anchors for reliable barrier contact; optional PlayMode smokes for that flow.

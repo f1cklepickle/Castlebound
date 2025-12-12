@@ -19,22 +19,10 @@ namespace Castlebound.Gameplay.Spawning
         private EnemySpawner _spawner;
         private Dictionary<string, GameObject> _prefabMap;
 
-        private void Awake()
-        {
-            _prefabMap = new Dictionary<string, GameObject>();
-            foreach (var mapping in prefabMappings)
-            {
-                if (string.IsNullOrWhiteSpace(mapping.enemyTypeId) || mapping.prefab == null)
-                {
-                    continue;
-                }
-
-                _prefabMap[mapping.enemyTypeId] = mapping.prefab;
-            }
-        }
-
         private void Start()
         {
+            BuildPrefabMap();
+
             if (scheduleAsset == null)
             {
                 Debug.LogWarning("EnemySpawnerRunner: no schedule asset assigned.");
@@ -71,6 +59,20 @@ namespace Castlebound.Gameplay.Spawning
                 }
 
                 Instantiate(prefab, request.Position, Quaternion.identity);
+            }
+        }
+
+        private void BuildPrefabMap()
+        {
+            _prefabMap = new Dictionary<string, GameObject>();
+            foreach (var mapping in prefabMappings)
+            {
+                if (string.IsNullOrWhiteSpace(mapping.enemyTypeId) || mapping.prefab == null)
+                {
+                    continue;
+                }
+
+                _prefabMap[mapping.enemyTypeId] = mapping.prefab;
             }
         }
     }
