@@ -207,13 +207,25 @@ public class EnemyController2D : MonoBehaviour
 
         if (isBarrierTarget)
         {
+            var holdBehavior = barrier.GetComponent<EnemyBarrierHoldBehavior>();
+            float effectiveHoldRadius = holdRadius;
+            float effectiveReleaseMargin = releaseMargin;
+            float distToBarrier = dist;
+
+            if (holdBehavior != null)
+            {
+                distToBarrier = holdBehavior.DistanceToAnchor(pos);
+                effectiveHoldRadius = holdBehavior.HoldRadius;
+                effectiveReleaseMargin = holdBehavior.ReleaseMargin;
+            }
+
             // For barriers, we delegate to the helper so broken barriers
             // never produce HOLD, and intact ones may HOLD inside radius.
             bool shouldHold = ShouldHoldForBarrierTarget(
-                dist,
+                distToBarrier,
                 barrierBroken,
-                holdRadius,
-                releaseMargin,
+                effectiveHoldRadius,
+                effectiveReleaseMargin,
                 _distTrend,
                 outrunFrames);
 
