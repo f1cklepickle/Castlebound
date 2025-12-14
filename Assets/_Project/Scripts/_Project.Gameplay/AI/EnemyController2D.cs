@@ -109,14 +109,7 @@ public class EnemyController2D : MonoBehaviour
             _prevDist = 0f;
         }
 
-        // Assign home barrier at spawn (nearest, regardless of health).
-        if (useBarrierTargeting && homeBarrier == null)
-        {
-            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
-                transform.position,
-                GetAllBarrierTransforms());
-            barrier = homeBarrier;
-        }
+        // Home barrier assignment deferred to Start to ensure barriers are registered.
     }
 
     private void OnEnable()
@@ -127,6 +120,17 @@ public class EnemyController2D : MonoBehaviour
     private void OnDisable()
     {
         All.Remove(this);
+    }
+
+    private void Start()
+    {
+        if (useBarrierTargeting && homeBarrier == null)
+        {
+            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
+                transform.position,
+                GetAllBarrierTransforms());
+            barrier = homeBarrier;
+        }
     }
 
     private void FixedUpdate()
@@ -207,13 +211,25 @@ public class EnemyController2D : MonoBehaviour
 
         if (isBarrierTarget)
         {
+            var holdBehavior = barrier.GetComponent<EnemyBarrierHoldBehavior>();
+            float effectiveHoldRadius = holdRadius;
+            float effectiveReleaseMargin = releaseMargin;
+            float distToBarrier = dist;
+
+            if (holdBehavior != null)
+            {
+                distToBarrier = holdBehavior.DistanceToAnchor(pos);
+                effectiveHoldRadius = holdBehavior.HoldRadius;
+                effectiveReleaseMargin = holdBehavior.ReleaseMargin;
+            }
+
             // For barriers, we delegate to the helper so broken barriers
             // never produce HOLD, and intact ones may HOLD inside radius.
             bool shouldHold = ShouldHoldForBarrierTarget(
-                dist,
+                distToBarrier,
                 barrierBroken,
-                holdRadius,
-                releaseMargin,
+                effectiveHoldRadius,
+                effectiveReleaseMargin,
                 _distTrend,
                 outrunFrames);
 

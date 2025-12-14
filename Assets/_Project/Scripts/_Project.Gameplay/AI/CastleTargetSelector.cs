@@ -16,6 +16,7 @@ namespace Castlebound.Gameplay.AI
                 return null;
 
             Transform nearest = null;
+            string nearestName = null;
             float bestSqrDist = float.MaxValue;
 
             for (int i = 0; i < barriers.Count; i++)
@@ -24,11 +25,29 @@ namespace Castlebound.Gameplay.AI
                 if (barrier == null)
                     continue;
 
-                float sqrDist = ((Vector2)barrier.position - spawnPosition).sqrMagnitude;
+                Vector2 targetPos = barrier.position;
+                var hold = barrier.GetComponent<EnemyBarrierHoldBehavior>();
+                if (hold != null)
+                {
+                    var anchor = hold.Debug_GetAnchorPosition();
+                    targetPos = anchor;
+                }
+
+                float sqrDist = (targetPos - spawnPosition).sqrMagnitude;
                 if (sqrDist < bestSqrDist)
                 {
                     bestSqrDist = sqrDist;
                     nearest = barrier;
+                    nearestName = barrier.name;
+                }
+                else if (Mathf.Approximately(sqrDist, bestSqrDist))
+                {
+                    var name = barrier.name;
+                    if (nearestName == null || string.Compare(name, nearestName, System.StringComparison.Ordinal) < 0)
+                    {
+                        nearest = barrier;
+                        nearestName = name;
+                    }
                 }
             }
 
