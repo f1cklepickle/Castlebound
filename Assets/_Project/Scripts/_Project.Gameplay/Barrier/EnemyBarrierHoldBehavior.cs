@@ -17,6 +17,11 @@ namespace Castlebound.Gameplay.AI
             return Vector2.Distance(enemyPosition, anchorPos);
         }
 
+        public Vector2 Debug_GetAnchorPosition()
+        {
+            return approachAnchor != null ? (Vector2)approachAnchor.position : (Vector2)transform.position;
+        }
+
         public bool CanHold(Vector2 enemyPosition, bool barrierBroken, int distTrend, int outrunFrames)
         {
             float dist = DistanceToAnchor(enemyPosition);
@@ -45,5 +50,15 @@ namespace Castlebound.Gameplay.AI
             return CanHold(enemyPosition, barrierBroken: false, distTrend: 0, outrunFrames: 0);
         }
         #endregion
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            Vector3 pos = approachAnchor != null ? approachAnchor.position : transform.position;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(pos, 0.08f);
+            Gizmos.DrawLine(transform.position, pos);
+        }
+#endif
     }
 }

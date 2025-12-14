@@ -153,6 +153,24 @@ All EditMode tests pass.
 - `CastleRegionTrackerTests`
   - `RegistersPlayerAndEnemy_OnTriggerEnter_AndClears_OnExit`
 
+## 2025-12-10 - fix/barrier-targeting-anchors
+
+### Summary
+- Stabilized enemy home barrier assignment: uses barrier approach anchors when present, breaks distance ties deterministically, and assigns in Start after barriers register.
+- Prevented double damage on multi-collider targets by deduping `IDamageable` hits per attack.
+- Wired barrier anchors/gizmos and placed gates on all walls in MainPrototype for consistent spawning/attacks.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyBarrierApproachAnchorTests`
+  - `EntersHold_WhenApproachingFromSide_UsesAnchorPosition`
+
+**Play/Manual**
+- Manual/PlayMode: verify enemies at N/E/S/W spawn positions pick the nearest gate and damage barriers by 1 per attack.
+
+### Notes
+- Enemy hold reseat bias increased for normal approach speed.
+- Home assignment now runs after barriers register to avoid partial lists.
 ## 2025-12-10 - feat/enemy-spawner-basic
 
 ### Summary

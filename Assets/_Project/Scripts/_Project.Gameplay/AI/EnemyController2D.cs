@@ -109,14 +109,7 @@ public class EnemyController2D : MonoBehaviour
             _prevDist = 0f;
         }
 
-        // Assign home barrier at spawn (nearest, regardless of health).
-        if (useBarrierTargeting && homeBarrier == null)
-        {
-            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
-                transform.position,
-                GetAllBarrierTransforms());
-            barrier = homeBarrier;
-        }
+        // Home barrier assignment deferred to Start to ensure barriers are registered.
     }
 
     private void OnEnable()
@@ -127,6 +120,17 @@ public class EnemyController2D : MonoBehaviour
     private void OnDisable()
     {
         All.Remove(this);
+    }
+
+    private void Start()
+    {
+        if (useBarrierTargeting && homeBarrier == null)
+        {
+            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
+                transform.position,
+                GetAllBarrierTransforms());
+            barrier = homeBarrier;
+        }
     }
 
     private void FixedUpdate()

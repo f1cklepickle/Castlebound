@@ -62,23 +62,33 @@ public class EnemyAttack : MonoBehaviour
 
         yield return new WaitForSeconds(windupSeconds);
 
-        // Apply damage to everything in range that can be damaged (usually just the Player)
+        // Apply damage once per unique IDamageable in range (avoid double hits on multi-collider targets).
         int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);
+        var uniqueTargets = new System.Collections.Generic.HashSet<IDamageable>();
+
         for (int i = 0; i < count; i++)
         {
             var c = hits[i];
             if (!c) continue;
-            // Look for IDamageable on the collider or its parent
-            if (c.TryGetComponent<IDamageable>(out var dmg))
+
+            IDamageable dmg = null;
+            if (c.TryGetComponent<IDamageable>(out var selfDmg))
             {
-                Debug.Log($"[EnemyAttack] Hit IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
-                DealDamage(dmg);
+                dmg = selfDmg;
             }
-            else if (c.GetComponentInParent<IDamageable>() is IDamageable parentDmg)
+            else
             {
-                Debug.Log($"[EnemyAttack] Hit parent IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
-                DealDamage(parentDmg);
+                dmg = c.GetComponentInParent<IDamageable>();
             }
+
+            if (dmg == null)
+                continue;
+
+            if (!uniqueTargets.Add(dmg))
+                continue;
+
+            Debug.Log($"[EnemyAttack] Hit IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
+            DealDamage(dmg);
         }
 
         yield return new WaitForSeconds(cooldownSeconds);
