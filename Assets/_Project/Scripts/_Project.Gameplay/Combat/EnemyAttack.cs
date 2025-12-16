@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Castlebound.Gameplay.AI;
 
 [RequireComponent(typeof(EnemyController2D))]
 public class EnemyAttack : MonoBehaviour
@@ -20,6 +21,20 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
     EnemyController2D controller;
+    CastleRegionTracker region;
+
+    private CastleRegionTracker Region
+    {
+        get
+        {
+            if (region == null)
+            {
+                region = CastleRegionTracker.Instance;
+            }
+
+            return region;
+        }
+    }
     bool onCooldown;
 
     static readonly Collider2D[] hits = new Collider2D[4];
@@ -42,6 +57,16 @@ public class EnemyAttack : MonoBehaviour
 
         // Only attack while we're holding position near the player
         if (!controller.IsInHoldRange()) return;
+
+        // Gate barrier damage by inside/outside state when targeting a barrier.
+        if (controller.Target != null && controller.Target.GetComponent<BarrierHealth>() != null)
+        {
+            var reg = Region;
+            bool enemyInside = reg != null && reg.EnemyInside(controller);
+            bool playerInside = reg != null && reg.PlayerInside;
+            if (!CanDamageBarrier(enemyInside, playerInside))
+                return;
+        }
 
         // Confirm target really is in range (extra safety)
         int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);
@@ -84,6 +109,17 @@ public class EnemyAttack : MonoBehaviour
             if (dmg == null)
                 continue;
 
+            // Skip barrier damage if gate logic disallows it.
+            var barrierHealth = c.GetComponentInParent<BarrierHealth>();
+            if (barrierHealth != null)
+            {
+                var reg = Region;
+                bool enemyInside = reg != null && reg.EnemyInside(controller);
+                bool playerInside = reg != null && reg.PlayerInside;
+                if (!CanDamageBarrier(enemyInside, playerInside))
+                    continue;
+            }
+
             if (!uniqueTargets.Add(dmg))
                 continue;
 
@@ -109,5 +145,14 @@ public class EnemyAttack : MonoBehaviour
         }
 
         target.TakeDamage(Damage);
+    }
+
+    // Barrier damage gate: allow if enemy outside, or enemy inside while player is outside.
+    public static bool CanDamageBarrier(bool enemyInside, bool playerInside)
+    {
+        if (!enemyInside)
+            return true;
+
+        return !playerInside;
     }
 }
