@@ -176,5 +176,16 @@ public class EnemyAttack : MonoBehaviour
     // Test helpers (Editor-only)
     public void Debug_GetRegionState(out bool enemyInside, out bool playerInside) => GetRegionState(out enemyInside, out playerInside);
     public static void Debug_ResetMissingRegionWarning() => missingRegionTrackerWarningLogged = false;
+    public void Debug_EnsureTargetMask()
+    {
+        if (targetMask.value == 0)
+        {
+            int lm = LayerMask.NameToLayer(playerLayerName);
+            if (lm >= 0)
+            {
+                targetMask = LayerMask.GetMask(playerLayerName);
+            }
+        }
+    }
 #endif
 }
