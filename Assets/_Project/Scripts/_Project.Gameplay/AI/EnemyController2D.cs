@@ -48,6 +48,8 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private bool useBarrierTargeting = true;
 
     public Transform Target => target;
+    private EnemyTargetType _currentTargetType = EnemyTargetType.None;
+    public EnemyTargetType CurrentTargetType => _currentTargetType;
 
     // NEW: used by EnemyAttack to decide when we're close enough to attack.
     public bool IsInHoldRange()
@@ -64,11 +66,11 @@ public class EnemyController2D : MonoBehaviour
     // Last non-zero direction toward our current target (for pass-through).
     private Vector2 _lastNonZeroDir = Vector2.right;
 
-        // True while we are walking straight through a broken barrier.
-        private bool _isPassingThroughBarrier = false;
+    // True while we are walking straight through a broken barrier.
+    private bool _isPassingThroughBarrier = false;
 
-        // Direction to walk while in pass-through phase.
-        private Vector2 _passThroughDir = Vector2.right;
+    // Direction to walk while in pass-through phase.
+    private Vector2 _passThroughDir = Vector2.right;
 
     public void SetAngularGaps(float gapCW, float gapCCW)
     {
@@ -138,6 +140,7 @@ public class EnemyController2D : MonoBehaviour
         if (_rb == null) return;
 
         bool enemyInsideCastle = false;
+        bool playerInsideCastle = false;
 
         if (player != null)
         {
@@ -145,29 +148,18 @@ public class EnemyController2D : MonoBehaviour
 
             if (useBarrierTargeting && region != null)
             {
-                bool playerInside = region.PlayerInside;
+                playerInsideCastle = region.PlayerInside;
                 enemyInsideCastle = region.EnemyInside(this);
-
-                // Determine steering target: outside → home barrier; inside → player.
-                steerTarget = SelectSteerTarget(playerInside, enemyInsideCastle);
-
-                // Orbit/spacing target remains the player.
-                target = player;
-
-                if (useBarrierTargeting)
-                {
-                    var targetBarrier = steerTarget != null ? steerTarget.GetComponent<BarrierHealth>() : null;
-                    if (targetBarrier != null)
-                    {
-                        barrier = targetBarrier.transform;
-                    }
-                }
             }
-            else
+
+            var decision = EvaluateTargetDecision(playerInsideCastle, enemyInsideCastle);
+            steerTarget = decision.SteerTarget != null ? decision.SteerTarget : player;
+            target = decision.AttackTarget != null ? decision.AttackTarget : player;
+            _currentTargetType = decision.TargetType;
+
+            if (useBarrierTargeting && _currentTargetType == EnemyTargetType.Barrier)
             {
-                // Fallback: direct chase
-                target = player;
-                steerTarget = player;
+                barrier = steerTarget;
             }
         }
 
@@ -315,30 +307,14 @@ public class EnemyController2D : MonoBehaviour
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)
     {
-        Transform[] gates = useBarrierTargeting
-            ? GetAllBarrierTransforms()
-            : System.Array.Empty<Transform>();
-
-        EnsureHomeBarrier(gates);
-
-        if (!enemyInside && playerInside && homeBarrier != null)
-        {
-            // If broken and we're effectively at the barrier opening, switch to player.
-            var hbHealth = homeBarrier.GetComponent<BarrierHealth>();
-            bool broken = hbHealth != null && hbHealth.IsBroken;
-            float distToHome = Vector2.Distance(transform.position, homeBarrier.position);
-            if (broken && distToHome <= passThroughRadius)
-                return player;
-
-            return homeBarrier;
-        }
-
-        return player;
+        var decision = EvaluateTargetDecision(playerInside, enemyInside);
+        return decision.AttackTarget;
     }
 
     private Transform SelectSteerTarget(bool playerInside, bool enemyInside)
     {
-        return SelectTarget(playerInside, enemyInside);
+        var decision = EvaluateTargetDecision(playerInside, enemyInside);
+        return decision.SteerTarget;
     }
 
     public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
@@ -378,6 +354,24 @@ public class EnemyController2D : MonoBehaviour
             transform.position,
             gates);
         barrier = homeBarrier;
+    }
+
+    private EnemyTargetSelector.Decision EvaluateTargetDecision(bool playerInside, bool enemyInside)
+    {
+        if (useBarrierTargeting)
+        {
+            EnsureHomeBarrier(GetAllBarrierTransforms());
+        }
+
+        return EnemyTargetSelector.Select(new EnemyTargetSelector.Input
+        {
+            EnemyPosition = transform.position,
+            EnemyInside = enemyInside,
+            PlayerInside = playerInside,
+            Player = player,
+            HomeBarrier = homeBarrier,
+            PassThroughRadius = passThroughRadius
+        });
     }
 
     private static Transform[] GetAllBarrierTransforms()

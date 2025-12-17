@@ -175,19 +175,18 @@ All EditMode tests pass.
 ## 2025-12-XX - fix/barrier-inside-attack-gate
 
 ### Summary
-- Block barrier damage when enemy is inside and player is inside; allow when enemy is inside and player is outside (break out).
+- Block barrier damage when enemy is inside and player is inside.
 - Barrier attacks gate on CastleRegionTracker state and detect barriers via parent to avoid hitbox bypass.
 
 ### New or Updated Tests
 **EditMode**
 - `EnemyBarrierAttackGateTests`
   - `AllowsBarrierDamage_WhenEnemyOutside`
-  - `AllowsBarrierDamage_WhenEnemyInside_PlayerOutside`
   - `BlocksBarrierDamage_WhenEnemyInside_PlayerInside`
 
 ### Notes
 - EnemyAttack caches region lookup and dedupes barrier damage even with hitbox colliders.
-- Manual check: inside enemies do not damage barriers when the player is inside; allowed when the player is outside.
+- Targeting unchanged; inside enemies still prioritize player when player is outside.
 ## 2025-12-10 - feat/enemy-spawner-basic
 
 ### Summary
