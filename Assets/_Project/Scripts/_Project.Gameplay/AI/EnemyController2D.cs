@@ -83,18 +83,7 @@ public class EnemyController2D : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
 
         // Ensure player reference is valid.
-        if (player == null)
-        {
-            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
-            if (playerGO != null)
-                player = playerGO.transform;
-            else
-            {
-                var pc = FindObjectOfType<PlayerController>();
-                if (pc != null)
-                    player = pc.transform;
-            }
-        }
+        EnsurePlayerReference();
 
         // Initialize target from player.
         if (player != null)
@@ -327,6 +316,12 @@ public class EnemyController2D : MonoBehaviour
         return SelectSteerTarget(playerInside, enemyInside);
     }
 
+    // Debug/test helper to ensure player reference via tag/lookup.
+    public void Debug_EnsurePlayerReference()
+    {
+        EnsurePlayerReference();
+    }
+
     // Test helper: force references for deterministic behavior in EditMode tests.
     public void Debug_SetupRefs(Transform playerRef, Transform homeRef = null)
     {
@@ -342,6 +337,28 @@ public class EnemyController2D : MonoBehaviour
                 transform.position,
                 GetAllBarrierTransforms());
             barrier = homeBarrier;
+        }
+    }
+
+    private void EnsurePlayerReference()
+    {
+        if (player != null) return;
+
+        GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null)
+        {
+            player = playerGO.transform;
+            target = player;
+            steerTarget = player;
+            return;
+        }
+
+        var pc = FindObjectOfType<PlayerController>();
+        if (pc != null)
+        {
+            player = pc.transform;
+            target = player;
+            steerTarget = player;
         }
     }
 
