@@ -66,12 +66,6 @@ public class EnemyController2D : MonoBehaviour
     // Last non-zero direction toward our current target (for pass-through).
     private Vector2 _lastNonZeroDir = Vector2.right;
 
-    // True while we are walking straight through a broken barrier.
-    private bool _isPassingThroughBarrier = false;
-
-    // Direction to walk while in pass-through phase.
-    private Vector2 _passThroughDir = Vector2.right;
-
     public void SetAngularGaps(float gapCW, float gapCCW)
     {
         _gapCW = gapCW;
