@@ -59,7 +59,7 @@ public class EnemyAttack : MonoBehaviour
         if (!controller.IsInHoldRange()) return;
 
         // Gate barrier damage by inside/outside state when targeting a barrier.
-        if (controller.Target != null && controller.Target.GetComponent<BarrierHealth>() != null)
+        if (controller.CurrentTargetType == EnemyTargetType.Barrier)
         {
             var reg = Region;
             bool enemyInside = reg != null && reg.EnemyInside(controller);
@@ -111,7 +111,7 @@ public class EnemyAttack : MonoBehaviour
 
             // Skip barrier damage if gate logic disallows it.
             var barrierHealth = c.GetComponentInParent<BarrierHealth>();
-            if (barrierHealth != null)
+            if (barrierHealth != null && controller.CurrentTargetType == EnemyTargetType.Barrier)
             {
                 var reg = Region;
                 bool enemyInside = reg != null && reg.EnemyInside(controller);
