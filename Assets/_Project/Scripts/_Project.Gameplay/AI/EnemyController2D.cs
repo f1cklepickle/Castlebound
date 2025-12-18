@@ -221,6 +221,22 @@ public class EnemyController2D : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
+    // Editor-only validation helper to surface missing refs without relying on Unity lifecycle.
+    public void Debug_ValidateRefs()
+    {
+        if (player == null)
+        {
+            Debug.LogWarning("[EnemyController2D] Player reference not found in scene. Enemy will have no target.", this);
+        }
+
+        if (useBarrierTargeting && homeBarrier == null)
+        {
+            Debug.LogWarning("[EnemyController2D] No home barrier found while barrier targeting is enabled.", this);
+        }
+    }
+#endif
+
     private void EnsurePlayerReference()
     {
         if (player != null) return;
