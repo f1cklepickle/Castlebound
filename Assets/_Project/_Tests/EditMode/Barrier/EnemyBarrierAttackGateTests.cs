@@ -3,11 +3,11 @@ using NUnit.Framework;
 public class EnemyBarrierAttackGateTests
 {
     [Test]
-        public void AllowsBarrierDamage_WhenEnemyOutside()
-        {
-            bool canDamage = EnemyAttack.CanDamageBarrier(
-                enemyInside: false,
-                playerInside: false);
+    public void AllowsBarrierDamage_WhenEnemyOutside()
+    {
+        bool canDamage = EnemyAttack.CanDamageBarrier(
+            enemyInside: false,
+            playerInside: false);
 
         Assert.IsTrue(canDamage, "Enemy outside should be allowed to damage barriers.");
     }
