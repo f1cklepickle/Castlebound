@@ -150,139 +150,26 @@ public class EnemyController2D : MonoBehaviour
         if (steerTarget == null) steerTarget = target;
 
         Vector2 pos = _rb.position;
-        Vector2 toTarget = (Vector2)steerTarget.position - pos;
-        float dist = toTarget.magnitude;
-
-        Vector2 dir = dist > 1e-6f ? (toTarget / dist) : Vector2.zero;
-
-        if (dir != Vector2.zero)
-        {
-            _lastNonZeroDir = dir;
-        }
-
-        if (dist > _prevDist + epsilonDist)
-            _distTrend++;
-        else if (dist < _prevDist - epsilonDist)
-            _distTrend = 0;
-
-        _prevDist = dist;
-
-        bool isBarrierTarget = (barrier != null && steerTarget == barrier);
-        bool barrierBroken = false;
-
-        if (isBarrierTarget)
-        {
-            var barrierHealth = barrier.GetComponent<BarrierHealth>();
-            if (barrierHealth != null)
-            {
-                barrierBroken = barrierHealth.IsBroken;
-            }
-        }
-
-        // No early retarget on broken barrier; switch happens when enemyInside becomes true.
-
-        float rIn = holdRadius;
-        float rOut = holdRadius + releaseMargin;
-
-        if (isBarrierTarget)
-        {
-            var holdBehavior = barrier.GetComponent<EnemyBarrierHoldBehavior>();
-            float effectiveHoldRadius = holdRadius;
-            float effectiveReleaseMargin = releaseMargin;
-            float distToBarrier = dist;
-
-            if (holdBehavior != null)
-            {
-                distToBarrier = holdBehavior.DistanceToAnchor(pos);
-                effectiveHoldRadius = holdBehavior.HoldRadius;
-                effectiveReleaseMargin = holdBehavior.ReleaseMargin;
-            }
-
-            // For barriers, we delegate to the helper so broken barriers
-            // never produce HOLD, and intact ones may HOLD inside radius.
-            bool shouldHold = ShouldHoldForBarrierTarget(
-                distToBarrier,
-                barrierBroken,
-                effectiveHoldRadius,
-                effectiveReleaseMargin,
-                _distTrend,
-                outrunFrames);
-
-            _state = shouldHold ? State.HOLD : State.CHASE;
-        }
-        else
-        {
-            // Existing CHASE/HOLD logic for non-barrier targets (e.g. player).
-            if (_state == State.CHASE)
-            {
-                if (dist <= rIn)
-                    _state = State.HOLD;
-            }
-            else
-            {
-                if (dist >= rOut || _distTrend >= outrunFrames)
-                    _state = State.CHASE;
-            }
-        }
-
-        Vector2 radial = Vector2.zero;
-        Vector2 tangent = Vector2.zero;
-
-        if (_state == State.CHASE)
-        {
-            // CHASE: always move straight at the target.
-            radial = dir * speed;
-        }
-        else
-        {
-            // HOLD behavior depends on whether we're holding at a barrier
-            // or at a non-barrier target (e.g. the player).
-            if (isBarrierTarget)
-            {
-                // HOLD at barrier: stand near the barrier and attack.
-                // No orbiting; just a small reseat if we drift too far.
-                if (dist > rIn)
-                {
-                    radial = dir * (reseatBias * speed);
-                }
-
-                tangent = Vector2.zero;
-            }
-            else
-            {
-                // Existing ring/orbit logic for non-barrier targets (player).
-                if (dist > rIn)
-                    radial = dir * (reseatBias * speed);
-
-                float preference = _gapCCW - _gapCW;
-                bool hasNoGaps = (_gapCW == 0f && _gapCCW == 0f);
-
-                float sign = 0f;
-
-                if (!hasNoGaps)
-                {
-                    if (preference > 0f)
-                        sign = 1f;
-                    else if (preference < 0f)
-                        sign = -1f;
-                }
-
-                float tangentMag = 0f;
-
-                if (dist > 0f && !hasNoGaps && sign != 0f)
-                {
-                    float orbitDist = Mathf.Max(dist, rIn);
-                    tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(rIn, 0.01f));
-                    tangentMag = Mathf.Min(tangentMag, maxTangent);
-                }
-
-                if (dir != Vector2.zero)
-                {
-                    Vector2 perpCCW = new Vector2(-dir.y, dir.x);
-                    tangent = perpCCW * (sign * tangentMag);
-                }
-            }
-        }
+        EnemyMovement.ComputeMovement(
+            pos,
+            steerTarget,
+            barrier,
+            holdRadius,
+            releaseMargin,
+            reseatBias,
+            speed,
+            orbitBase,
+            maxTangent,
+            outrunFrames,
+            epsilonDist,
+            _gapCW,
+            _gapCCW,
+            ref _state,
+            ref _prevDist,
+            ref _distTrend,
+            ref _lastNonZeroDir,
+            out Vector2 radial,
+            out Vector2 tangent);
 
         float dt = Time.fixedDeltaTime;
         _rb.MovePosition(pos + (radial + tangent) * dt);
@@ -407,4 +294,35 @@ public class EnemyController2D : MonoBehaviour
         Gizmos.color = new Color(0.9f, 0.3f, 0.3f, 1f);
         Gizmos.DrawWireSphere(transform.position, holdRadius + releaseMargin);
     }
+
+#if UNITY_EDITOR
+    // Editor-only helper to compute movement vectors without moving.
+    public void Debug_ComputeMovement(out Vector2 radial, out Vector2 tangent)
+    {
+        radial = Vector2.zero;
+        tangent = Vector2.zero;
+        if (_rb == null) return;
+
+        EnemyMovement.ComputeMovement(
+            _rb.position,
+            steerTarget,
+            barrier,
+            holdRadius,
+            releaseMargin,
+            reseatBias,
+            speed,
+            orbitBase,
+            maxTangent,
+            outrunFrames,
+            epsilonDist,
+            _gapCW,
+            _gapCCW,
+            ref _state,
+            ref _prevDist,
+            ref _distTrend,
+            ref _lastNonZeroDir,
+            out radial,
+            out tangent);
+    }
+#endif
 }
