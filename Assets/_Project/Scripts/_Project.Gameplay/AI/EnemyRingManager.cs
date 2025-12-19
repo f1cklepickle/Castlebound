@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class EnemyRingManager : MonoBehaviour
 {
-    [SerializeField] private float bandWidth = 1.0f;     // ± distance band around median ring
+    [SerializeField] private Transform player;
+    [SerializeField] private float bandWidth = 1.0f;     // ñ distance band around median ring
     [SerializeField] private int updateEveryN = 1;       // 1 = every FixedUpdate
     [SerializeField] private float neighborArcDeg = 60f; // local neighborhood arc
 
@@ -17,6 +18,11 @@ public class EnemyRingManager : MonoBehaviour
 
     private const float TwoPI = Mathf.PI * 2f;
 
+    private void Awake()
+    {
+        CachePlayer();
+    }
+
     private void FixedUpdate()
     {
         int n = EnemyController2D.All != null ? EnemyController2D.All.Count : 0;
@@ -27,33 +33,9 @@ public class EnemyRingManager : MonoBehaviour
         if ((_tick % step) != 0) return;
 
         // Anchor ring spacing on the actual player, not the current chase target.
-        Vector3 playerPos3 = default;
-        bool foundPlayer = false;
-
-        // Prefer the Player tag.
-        var playerGO = GameObject.FindGameObjectWithTag("Player");
-        if (playerGO != null)
-        {
-            playerPos3 = playerGO.transform.position;
-            foundPlayer = true;
-        }
-
-        // Fallback: any enemy's player reference.
-        if (!foundPlayer)
-        {
-            for (int i = 0; i < n; i++)
-            {
-                EnemyController2D e = EnemyController2D.All[i];
-                if (e != null && e.Target != null && e.Target.CompareTag("Player"))
-                {
-                    playerPos3 = e.Target.position;
-                    foundPlayer = true;
-                    break;
-                }
-            }
-        }
-
-        if (!foundPlayer) return;
+        Vector3 playerPos3;
+        if (!TryGetPlayerPosition(out playerPos3, n))
+            return;
 
         Vector2 playerPos = new Vector2(playerPos3.x, playerPos3.y);
 
@@ -224,6 +206,48 @@ public class EnemyRingManager : MonoBehaviour
             if (k <= j) right = j;
             else if (k >= i) left = i;
             else return arr[k];
+        }
+    }
+
+    private bool TryGetPlayerPosition(out Vector3 playerPos3, int enemyCount)
+    {
+        playerPos3 = default;
+
+        if (player != null)
+        {
+            playerPos3 = player.position;
+            return true;
+        }
+
+        CachePlayer();
+        if (player != null)
+        {
+            playerPos3 = player.position;
+            return true;
+        }
+
+        // Fallback: any enemy's player reference.
+        for (int i = 0; i < enemyCount; i++)
+        {
+            EnemyController2D e = EnemyController2D.All[i];
+            if (e != null && e.Target != null && e.Target.CompareTag("Player"))
+            {
+                player = e.Target;
+                playerPos3 = player.position;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void CachePlayer()
+    {
+        if (player != null) return;
+        var playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null)
+        {
+            player = playerGO.transform;
         }
     }
 }

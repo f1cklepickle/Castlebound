@@ -35,6 +35,7 @@ public class EnemyAttack : MonoBehaviour
             return region;
         }
     }
+    static bool missingRegionTrackerWarningLogged;
     bool onCooldown;
 
     static readonly Collider2D[] hits = new Collider2D[4];
@@ -59,11 +60,9 @@ public class EnemyAttack : MonoBehaviour
         if (!controller.IsInHoldRange()) return;
 
         // Gate barrier damage by inside/outside state when targeting a barrier.
-        if (controller.Target != null && controller.Target.GetComponent<BarrierHealth>() != null)
+        if (controller.CurrentTargetType == EnemyTargetType.Barrier)
         {
-            var reg = Region;
-            bool enemyInside = reg != null && reg.EnemyInside(controller);
-            bool playerInside = reg != null && reg.PlayerInside;
+            GetRegionState(out bool enemyInside, out bool playerInside);
             if (!CanDamageBarrier(enemyInside, playerInside))
                 return;
         }
@@ -111,11 +110,9 @@ public class EnemyAttack : MonoBehaviour
 
             // Skip barrier damage if gate logic disallows it.
             var barrierHealth = c.GetComponentInParent<BarrierHealth>();
-            if (barrierHealth != null)
+            if (barrierHealth != null && controller.CurrentTargetType == EnemyTargetType.Barrier)
             {
-                var reg = Region;
-                bool enemyInside = reg != null && reg.EnemyInside(controller);
-                bool playerInside = reg != null && reg.PlayerInside;
+                GetRegionState(out bool enemyInside, out bool playerInside);
                 if (!CanDamageBarrier(enemyInside, playerInside))
                     continue;
             }
@@ -155,4 +152,40 @@ public class EnemyAttack : MonoBehaviour
 
         return !playerInside;
     }
+
+    private void GetRegionState(out bool enemyInside, out bool playerInside)
+    {
+        var reg = Region;
+        if (reg == null)
+        {
+            if (!missingRegionTrackerWarningLogged)
+            {
+                Debug.LogWarning("[EnemyAttack] CastleRegionTracker.Instance is missing; treating enemy/player as outside for barrier gating.", this);
+                missingRegionTrackerWarningLogged = true;
+            }
+            enemyInside = false;
+            playerInside = false;
+            return;
+        }
+
+        enemyInside = reg.EnemyInside(controller);
+        playerInside = reg.PlayerInside;
+    }
+
+#if UNITY_EDITOR
+    // Test helpers (Editor-only)
+    public void Debug_GetRegionState(out bool enemyInside, out bool playerInside) => GetRegionState(out enemyInside, out playerInside);
+    public static void Debug_ResetMissingRegionWarning() => missingRegionTrackerWarningLogged = false;
+    public void Debug_EnsureTargetMask()
+    {
+        if (targetMask.value == 0)
+        {
+            int lm = LayerMask.NameToLayer(playerLayerName);
+            if (lm >= 0)
+            {
+                targetMask = LayerMask.GetMask(playerLayerName);
+            }
+        }
+    }
+#endif
 }

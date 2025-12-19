@@ -172,22 +172,47 @@ All EditMode tests pass.
 - Enemy hold reseat bias increased for normal approach speed.
 - Home assignment now runs after barriers register to avoid partial lists.
 
+## 2025-12-18 - refactor/enemy-targeting-movement-attack
+
+### Summary
+- Introduced EnemyTargetSelector with broken-home pass-through and target type; EnemyController2D consumes selector outputs.
+- EnemyAttack gates by target type, defaults barrier gating to outside if CastleRegionTracker is missing (warning logged).
+- Movement calculation extracted to EnemyMovement helper; orbit vs barrier tangents tested.
+- Cached player in EnemyRingManager to avoid per-frame finds.
+- Added validation warnings (via Debug_ValidateRefs) for missing player/home barrier; player tag fallback test.
+- Target mask defaults: EnemyAttack sets Player layer when unset; preserves when set.
+- Removed unused controller pass-through fields.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyTargetSelectorTests` (barrier vs player, broken home pass-through)
+- `EnemyAttackTargetTypeTests` (gating by target type)
+- `EnemyAttackRegionTrackerFallbackTests` (missing tracker warning/default outside)
+- `EnemyAttackTargetMaskTests` (mask default/preserve)
+- `EnemyControllerValidationTests` (Player tag fallback)
+- `EnemyControllerOrbitVsBarrierTests` (tangent only for player target)
+- `EnemyControllerWarningsTests` (warnings via Debug_ValidateRefs for missing player/home barrier)
+
+### Notes
+- Barrier damage gating aligned with behavior: inside+playerInside blocked; inside+playerOutside not exercised due to targeting.
+- Missing CastleRegionTracker logs a warning and treats enemy/player as outside for barrier gating.
+- Ring manager now caches player; no behavior change expected.
+
 ## 2025-12-XX - fix/barrier-inside-attack-gate
 
 ### Summary
-- Block barrier damage when enemy is inside and player is inside; allow when enemy is inside and player is outside (break out).
+- Block barrier damage when enemy is inside and player is inside.
 - Barrier attacks gate on CastleRegionTracker state and detect barriers via parent to avoid hitbox bypass.
 
 ### New or Updated Tests
 **EditMode**
 - `EnemyBarrierAttackGateTests`
   - `AllowsBarrierDamage_WhenEnemyOutside`
-  - `AllowsBarrierDamage_WhenEnemyInside_PlayerOutside`
   - `BlocksBarrierDamage_WhenEnemyInside_PlayerInside`
 
 ### Notes
 - EnemyAttack caches region lookup and dedupes barrier damage even with hitbox colliders.
-- Manual check: inside enemies do not damage barriers when the player is inside; allowed when the player is outside.
+- Targeting unchanged; inside enemies still prioritize player when player is outside.
 ## 2025-12-10 - feat/enemy-spawner-basic
 
 ### Summary
