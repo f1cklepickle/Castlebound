@@ -15,6 +15,7 @@ namespace Castlebound.Gameplay.Spawning
         [SerializeField] private EnemySpawnScheduleAsset scheduleAsset;
         [SerializeField] private List<SpawnPointMarker> spawnMarkers = new List<SpawnPointMarker>();
         [SerializeField] private List<EnemyPrefabMapping> prefabMappings = new List<EnemyPrefabMapping>();
+        [SerializeField] private bool autoFindMarkers = true;
 
         private EnemySpawner _spawner;
         private EnemyWaveSpawner _waveSpawner;
@@ -33,7 +34,13 @@ namespace Castlebound.Gameplay.Spawning
             }
 
             var spawnPoints = new List<SpawnPoint>(spawnMarkers.Count);
-            foreach (var marker in spawnMarkers)
+            var markersToUse = spawnMarkers;
+            if ((markersToUse == null || markersToUse.Count == 0) && autoFindMarkers)
+            {
+                markersToUse = new List<SpawnPointMarker>(FindObjectsOfType<SpawnPointMarker>());
+            }
+
+            foreach (var marker in markersToUse)
             {
                 if (marker != null)
                 {
