@@ -29,6 +29,7 @@ namespace Castlebound.Gameplay.Spawning
         private readonly int _defaultSeed;
         private readonly List<WaveConfig> _waves;
         private readonly RampConfig _ramp;
+        private readonly System.Random _rng;
 
         public WaveScheduleRuntime(SpawnMarkerStrategy defaultStrategy, int defaultSeed, IEnumerable<WaveConfig> waves, RampConfig ramp)
         {
@@ -36,6 +37,7 @@ namespace Castlebound.Gameplay.Spawning
             _defaultSeed = defaultSeed;
             _waves = waves?.ToList() ?? new List<WaveConfig>();
             _ramp = ramp;
+            _rng = new System.Random(_defaultSeed);
         }
 
         public bool HasAuthoredWaves => _waves.Count > 0;
@@ -115,7 +117,7 @@ namespace Castlebound.Gameplay.Spawning
                 return null;
             }
 
-            var chosenType = pool[0].enemyTypeId; // Equal-weight simple pick for now.
+            var chosenType = ChooseEnemyType(pool);
 
             var sequence = new SpawnSequenceConfig
             {
@@ -152,6 +154,39 @@ namespace Castlebound.Gameplay.Spawning
 
             // If no weights set, weights are effectively equal; we just pick the first for now.
             return pool;
+        }
+
+        private string ChooseEnemyType(List<RampTier> pool)
+        {
+            if (pool.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            float totalWeight = 0f;
+            foreach (var tier in pool)
+            {
+                totalWeight += tier.weight > 0f ? tier.weight : 1f;
+            }
+
+            if (totalWeight <= 0f)
+            {
+                return pool[0].enemyTypeId;
+            }
+
+            var roll = (float)(_rng.NextDouble() * totalWeight);
+            float cumulative = 0f;
+            foreach (var tier in pool)
+            {
+                var w = tier.weight > 0f ? tier.weight : 1f;
+                cumulative += w;
+                if (roll <= cumulative)
+                {
+                    return tier.enemyTypeId;
+                }
+            }
+
+            return pool[pool.Count - 1].enemyTypeId;
         }
     }
 }

@@ -49,7 +49,48 @@ namespace Castlebound.Tests.Spawning
             var wave3 = schedule.GetWave(3);
             Assert.IsNotNull(wave3);
             Assert.AreEqual(7, wave3.Sequences[0].spawnCount, "Wave3 adds countPerStep (5 + 2).");
-            Assert.AreEqual("grunt", wave3.Sequences[0].enemyTypeId, "Type selection currently takes first in pool; pool now includes archer too.");
+            CollectionAssert.Contains(new[] { "grunt", "archer" }, wave3.Sequences[0].enemyTypeId, "Type selection uses available pool when multiple tiers unlocked.");
+        }
+
+        [Test]
+        public void Ramp_UsesWeightsWhenSelectingTypes()
+        {
+            var ramp = new RampConfig
+            {
+                baseSpawnCount = 5,
+                countPerStep = 0,
+                stepSize = 1,
+                startWave = 1,
+                unlocks = new List<RampTierUnlock>
+                {
+                    new RampTierUnlock
+                    {
+                        waveIndex = 1,
+                        tiers = new List<RampTier>
+                        {
+                            new RampTier { enemyTypeId = "grunt", weight = 0.1f },
+                            new RampTier { enemyTypeId = "archer", weight = 2f }
+                        }
+                    }
+                }
+            };
+
+            var schedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 123,
+                waves: null,
+                ramp: ramp);
+
+            var picks = new List<string>();
+            for (int i = 0; i < 10; i++)
+            {
+                var wave = schedule.GetWave(1);
+                picks.Add(wave.Sequences[0].enemyTypeId);
+            }
+
+            // With deterministic seed and weight bias, expect majority archers.
+            var archerCount = picks.FindAll(x => x == "archer").Count;
+            Assert.Greater(archerCount, 6, "Weights should bias selection toward archer.");
         }
     }
 }
