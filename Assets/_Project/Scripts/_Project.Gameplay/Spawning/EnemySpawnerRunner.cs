@@ -94,7 +94,16 @@ namespace Castlebound.Gameplay.Spawning
 
                 var instance = Instantiate(prefab, request.Position, Quaternion.identity);
                 _aliveCount++;
-                // TODO: hook enemy death/despawn to decrement _aliveCount.
+
+                var lifetime = instance.GetComponent<SpawnedEntityLifetime>();
+                if (lifetime == null)
+                {
+                    lifetime = instance.AddComponent<SpawnedEntityLifetime>();
+                }
+                lifetime.Initialize(() =>
+                {
+                    _aliveCount = Mathf.Max(0, _aliveCount - 1);
+                });
             }
         }
     }
