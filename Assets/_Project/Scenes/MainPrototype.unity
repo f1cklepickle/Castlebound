@@ -754,6 +754,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1038297311701369034, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_N
+      objectReference: {fileID: 0}
+    - target: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_N
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1331,6 +1339,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -90.041
       objectReference: {fileID: 0}
+    - target: {fileID: 1038297311701369034, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_E
+      objectReference: {fileID: 0}
+    - target: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_E
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1380,6 +1396,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29e470d8b5838314e97a9b4007075d92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  player: {fileID: 0}
   bandWidth: 1
   updateEveryN: 1
   neighborArcDeg: 60
@@ -2269,6 +2286,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
+    - target: {fileID: 1038297311701369034, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_W
+      objectReference: {fileID: 0}
+    - target: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_W
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2318,6 +2343,55 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 977390126}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1166075762
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1166075764}
+  - component: {fileID: 1166075763}
+  m_Layer: 0
+  m_Name: EnemySpawnerRunner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1166075763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166075762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a8b6269f34043d28b916d247b78b428, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scheduleAsset: {fileID: 11400000, guid: b8131ce0d2d210540bc4d0b4535b89b8, type: 2}
+  spawnMarkers:
+  - {fileID: 0}
+  prefabMappings: []
+  autoFindMarkers: 1
+--- !u!4 &1166075764
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166075762}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.574246, y: 0.2618607, z: -0.10936005}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1202776162
@@ -3367,6 +3441,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -179.985
       objectReference: {fileID: 0}
+    - target: {fileID: 1038297311701369034, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_S
+      objectReference: {fileID: 0}
+    - target: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: gateId
+      value: Barrier_Gate_S
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3620,3 +3702,4 @@ SceneRoots:
   - {fileID: 2072199511}
   - {fileID: 1644631659}
   - {fileID: 324324233}
+  - {fileID: 1166075764}
