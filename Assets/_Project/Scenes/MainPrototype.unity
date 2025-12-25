@@ -122,17 +122,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &4184383 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-  m_PrefabInstance: {fileID: 1145592310}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &60918954
 GameObject:
   m_ObjectHideFlags: 0
@@ -589,17 +578,6 @@ CapsuleCollider2D:
   m_Offset: {x: -0.121531546, y: 0.005284071}
   m_Size: {x: 0.94385445, y: 1.98282}
   m_Direction: 0
---- !u!114 &335636389 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-  m_PrefabInstance: {fileID: 701907156}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &369104077
 GameObject:
   m_ObjectHideFlags: 0
@@ -1252,17 +1230,6 @@ CapsuleCollider2D:
   m_Offset: {x: -0.121531546, y: 0.005284071}
   m_Size: {x: 0.94385445, y: 1.98282}
   m_Direction: 0
---- !u!114 &675833163 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-  m_PrefabInstance: {fileID: 376172580}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &701907156
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1854,17 +1821,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 904751785}
   m_CullTransparentMesh: 1
---- !u!114 &934521359 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-  m_PrefabInstance: {fileID: 1923301195}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &969171467
 GameObject:
   m_ObjectHideFlags: 0
@@ -2362,15 +2318,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scheduleAsset: {fileID: 11400000, guid: b8131ce0d2d210540bc4d0b4535b89b8, type: 2}
-  spawnMarkers:
-  - {fileID: 675833163}
-  - {fileID: 335636389}
-  - {fileID: 934521359}
-  - {fileID: 4184383}
+  spawnMarkers: []
   prefabMappings:
   - enemyTypeId: grunt
     prefab: {fileID: 6394411849047796180, guid: 92ae0aa6b169f3b4a9beb3199ee80614, type: 3}
-  autoFindMarkers: 0
+  autoFindMarkers: 1
 --- !u!4 &1166075764
 Transform:
   m_ObjectHideFlags: 0
