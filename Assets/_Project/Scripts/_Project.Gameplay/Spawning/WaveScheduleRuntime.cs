@@ -54,7 +54,14 @@ namespace Castlebound.Gameplay.Spawning
                 return new WaveRuntime(authored.sequences, strategy, seed, gap, waitForClear, maxAlive);
             }
 
-            // No authored wave; fall back to defaults with empty sequences for now (ramp to be wired later).
+            // Generate via ramp if available.
+            var generated = GenerateRampWave(waveIndex);
+            if (generated != null)
+            {
+                return generated;
+            }
+
+            // No wave available; fall back to defaults with empty sequence to avoid nulls.
             return new WaveRuntime(
                 sequences: new List<SpawnSequenceConfig>(),
                 strategy: _defaultStrategy,
@@ -78,6 +85,73 @@ namespace Castlebound.Gameplay.Spawning
             }
 
             return _waves[zeroBased];
+        }
+
+        private WaveRuntime GenerateRampWave(int waveIndex)
+        {
+            if (_ramp == null || waveIndex < _ramp.startWave)
+            {
+                return null;
+            }
+
+            var count = _ramp.baseSpawnCount;
+            if (_ramp.stepSize > 0 && _ramp.countPerStep != 0)
+            {
+                var steps = (waveIndex - _ramp.startWave) / _ramp.stepSize;
+                if (steps > 0)
+                {
+                    count += steps * _ramp.countPerStep;
+                }
+            }
+
+            if (count < _ramp.baseSpawnCount)
+            {
+                count = _ramp.baseSpawnCount;
+            }
+
+            var pool = BuildTierPool(waveIndex);
+            if (pool.Count == 0)
+            {
+                return null;
+            }
+
+            var chosenType = pool[0].enemyTypeId; // Equal-weight simple pick for now.
+
+            var sequence = new SpawnSequenceConfig
+            {
+                enemyTypeId = chosenType,
+                spawnCount = count,
+                intervalSeconds = 1f,
+                initialDelaySeconds = 0f
+            };
+
+            return new WaveRuntime(
+                sequences: new List<SpawnSequenceConfig> { sequence },
+                strategy: _defaultStrategy,
+                seed: _defaultSeed,
+                gapSeconds: 5f,
+                waitForClear: true,
+                maxAlive: 0);
+        }
+
+        private List<RampTier> BuildTierPool(int waveIndex)
+        {
+            var pool = new List<RampTier>();
+            if (_ramp == null || _ramp.unlocks == null)
+            {
+                return pool;
+            }
+
+            foreach (var unlock in _ramp.unlocks)
+            {
+                if (waveIndex >= unlock.waveIndex && unlock.tiers != null)
+                {
+                    pool.AddRange(unlock.tiers.Where(t => !string.IsNullOrWhiteSpace(t.enemyTypeId)));
+                }
+            }
+
+            // If no weights set, weights are effectively equal; we just pick the first for now.
+            return pool;
         }
     }
 }
