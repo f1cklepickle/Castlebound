@@ -38,6 +38,8 @@ namespace Castlebound.Gameplay.Spawning
             _ramp = ramp;
         }
 
+        public bool HasAuthoredWaves => _waves.Count > 0;
+
         public WaveRuntime GetWave(int waveIndex)
         {
             var authored = GetAuthoredWaveConfig(waveIndex);

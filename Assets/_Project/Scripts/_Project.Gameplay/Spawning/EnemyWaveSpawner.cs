@@ -14,6 +14,9 @@ namespace Castlebound.Gameplay.Spawning
         private List<SpawnRequest> _pendingWaveRequests;
         private int _nextSpawnRequestIndex;
 
+        // Timing per sequence
+        private readonly List<SequenceTimer> _sequenceTimers = new List<SequenceTimer>();
+
         private float _gapTimer;
         private bool _waitingForClear;
 
@@ -69,9 +72,14 @@ namespace Castlebound.Gameplay.Spawning
                 return ready;
             }
 
-            // Emit next spawn immediately; per-sequence timing is preserved by precomputed requests.
-            ready.Add(_pendingWaveRequests[_nextSpawnRequestIndex]);
-            _nextSpawnRequestIndex++;
+            // Advance timers and emit ready spawns in order.
+            UpdateSequenceTimers(deltaTime);
+            EmitReadySpawns(ready);
+
+            if (_nextSpawnRequestIndex >= _pendingWaveRequests.Count)
+            {
+                EnterPostWaveWait();
+            }
 
             return ready;
         }
@@ -83,6 +91,7 @@ namespace Castlebound.Gameplay.Spawning
             _pendingWaveRequests = null;
             _gapTimer = 0f;
             _waitingForClear = false;
+            _sequenceTimers.Clear();
 
             if (_currentWave == null || _spawnPoints.Count == 0)
             {
@@ -94,10 +103,19 @@ namespace Castlebound.Gameplay.Spawning
             foreach (var seq in _currentWave.Sequences)
             {
                 var gateOrder = SpawnMarkerOrderBuilder.BuildGateOrder(_spawnPoints, seq.spawnCount, _currentWave.Strategy, _currentWave.Seed);
+                var startsAt = requests.Count;
                 foreach (var gate in gateOrder)
                 {
                     requests.Add(new SpawnRequest(seq.enemyTypeId, gate.GateId, gate.Position));
                 }
+
+                _sequenceTimers.Add(new SequenceTimer
+                {
+                    NextIndex = startsAt,
+                    EndIndexExclusive = requests.Count,
+                    TimeUntilNext = seq.initialDelaySeconds,
+                    Interval = seq.intervalSeconds
+                });
             }
 
             _pendingWaveRequests = requests;
@@ -136,6 +154,68 @@ namespace Castlebound.Gameplay.Spawning
         {
             _currentWaveIndex++;
             PrepareWave(_currentWaveIndex);
+        }
+
+        private void UpdateSequenceTimers(float deltaTime)
+        {
+            for (int i = 0; i < _sequenceTimers.Count; i++)
+            {
+                if (_sequenceTimers[i].IsComplete)
+                {
+                    continue;
+                }
+
+                _sequenceTimers[i] = _sequenceTimers[i].Advance(deltaTime);
+            }
+        }
+
+        private void EmitReadySpawns(List<SpawnRequest> ready)
+        {
+            for (int i = 0; i < _sequenceTimers.Count; i++)
+            {
+                var timer = _sequenceTimers[i];
+                while (!timer.IsComplete && timer.TimeUntilNext <= 0f && _nextSpawnRequestIndex < _pendingWaveRequests.Count)
+                {
+                    ready.Add(_pendingWaveRequests[_nextSpawnRequestIndex]);
+                    _nextSpawnRequestIndex++;
+                    timer = timer.Consume();
+                }
+
+                _sequenceTimers[i] = timer;
+            }
+        }
+
+        private struct SequenceTimer
+        {
+            public int NextIndex;
+            public int EndIndexExclusive;
+            public float TimeUntilNext;
+            public float Interval;
+
+            public bool IsComplete => NextIndex >= EndIndexExclusive;
+
+            public SequenceTimer Advance(float deltaTime)
+            {
+                if (IsComplete)
+                {
+                    return this;
+                }
+
+                TimeUntilNext -= deltaTime;
+                return this;
+            }
+
+            public SequenceTimer Consume()
+            {
+                NextIndex++;
+                if (IsComplete)
+                {
+                    return this;
+                }
+
+                TimeUntilNext += Interval;
+                return this;
+            }
         }
     }
 }

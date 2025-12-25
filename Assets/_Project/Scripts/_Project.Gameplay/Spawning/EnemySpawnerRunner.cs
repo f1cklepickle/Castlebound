@@ -17,6 +17,8 @@ namespace Castlebound.Gameplay.Spawning
         [SerializeField] private List<EnemyPrefabMapping> prefabMappings = new List<EnemyPrefabMapping>();
 
         private EnemySpawner _spawner;
+        private EnemyWaveSpawner _waveSpawner;
+        private int _aliveCount;
         private Dictionary<string, GameObject> _prefabMap;
 
         private void Start()
@@ -39,26 +41,30 @@ namespace Castlebound.Gameplay.Spawning
                 }
             }
 
-            _spawner = new EnemySpawner(scheduleAsset.ToRuntimeSchedule(), spawnPoints);
+            var waveSchedule = scheduleAsset.ToRuntimeWaveSchedule();
+            var hasAuthoredWaves = scheduleAsset != null && waveSchedule != null && waveSchedule.HasAuthoredWaves;
+
+            if (hasAuthoredWaves)
+            {
+                _waveSpawner = new EnemyWaveSpawner(waveSchedule, spawnPoints);
+            }
+            else
+            {
+                _spawner = new EnemySpawner(scheduleAsset.ToRuntimeSchedule(), spawnPoints);
+            }
         }
 
         private void Update()
         {
-            if (_spawner == null)
+            if (_waveSpawner != null)
             {
-                return;
+                var ready = _waveSpawner.Tick(Time.deltaTime, _aliveCount);
+                SpawnReady(ready);
             }
-
-            var ready = _spawner.Tick(Time.deltaTime);
-            foreach (var request in ready)
+            else if (_spawner != null)
             {
-                if (!_prefabMap.TryGetValue(request.EnemyTypeId, out var prefab) || prefab == null)
-                {
-                    Debug.LogWarning($"EnemySpawnerRunner: no prefab for enemy type '{request.EnemyTypeId}'.");
-                    continue;
-                }
-
-                Instantiate(prefab, request.Position, Quaternion.identity);
+                var ready = _spawner.Tick(Time.deltaTime);
+                SpawnReady(ready);
             }
         }
 
@@ -73,6 +79,22 @@ namespace Castlebound.Gameplay.Spawning
                 }
 
                 _prefabMap[mapping.enemyTypeId] = mapping.prefab;
+            }
+        }
+
+        private void SpawnReady(List<SpawnRequest> ready)
+        {
+            foreach (var request in ready)
+            {
+                if (!_prefabMap.TryGetValue(request.EnemyTypeId, out var prefab) || prefab == null)
+                {
+                    Debug.LogWarning($"EnemySpawnerRunner: no prefab for enemy type '{request.EnemyTypeId}'.");
+                    continue;
+                }
+
+                var instance = Instantiate(prefab, request.Position, Quaternion.identity);
+                _aliveCount++;
+                // TODO: hook enemy death/despawn to decrement _aliveCount.
             }
         }
     }
