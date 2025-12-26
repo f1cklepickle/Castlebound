@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1051614195052203920}
   - component: {fileID: 3476958120085971061}
   - component: {fileID: 3822971309403945246}
+  - component: {fileID: 1038297311701369034}
   m_Layer: 8
   m_Name: Barrier_Gate
   m_TagString: Barrier
@@ -36,6 +37,7 @@ Transform:
   m_Children:
   - {fileID: 3654758991378814183}
   - {fileID: 824082721035161966}
+  - {fileID: 7704152403565933767}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6741045512655291703
@@ -191,6 +193,19 @@ MonoBehaviour:
   approachAnchor: {fileID: 824082721035161966}
   holdRadius: 2.6
   releaseMargin: 0.6
+--- !u!114 &1038297311701369034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683792860472063015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 388159faf3893b349a7688e3364349f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gateId: Barrier_Gate
 --- !u!1 &1826470595709888173
 GameObject:
   m_ObjectHideFlags: 0
@@ -299,3 +314,48 @@ Transform:
   m_Children: []
   m_Father: {fileID: 738055936485911948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9092703534570667029
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7704152403565933767}
+  - component: {fileID: 6296148108499927986}
+  m_Layer: 8
+  m_Name: SpawnPointMarker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7704152403565933767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9092703534570667029}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 4.353, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 738055936485911948}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6296148108499927986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9092703534570667029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gateId: Barrier_Gate

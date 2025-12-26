@@ -12,6 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d6062245036e3b4584a9eb72d1c53bb, type: 3}
   m_Name: BasicSpawnSchedule
   m_EditorClassIdentifier: 
+  defaultStrategy: 0
+  useDefaultSeed: 0
+  defaultSeed: 0
+  waves:
+  - sequences:
+    - enemyTypeId: grunt
+      spawnCount: 6
+      intervalSeconds: 1
+      initialDelaySeconds: 0.5
+    useStrategyOverride: 0
+    strategyOverride: 0
+    useSeedOverride: 0
+    seedOverride: 0
+    gapSeconds: 5
+    waitForClear: 1
+    maxAlive: 0
+  ramp:
+    baseSpawnCount: 6
+    countPerStep: 2
+    stepSize: 2
+    startWave: 1
+    unlocks:
+    - waveIndex: 1
+      tiers:
+      - enemyTypeId: grunt
+        weight: 1
   sequences:
   - enemyTypeId: 
     spawnCount: 0

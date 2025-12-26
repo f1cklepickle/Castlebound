@@ -18,15 +18,16 @@ namespace Castlebound.Tests.PlayMode.Spawning
             // Schedule asset (in-memory).
             var scheduleAsset = ScriptableObject.CreateInstance<EnemySpawnScheduleAsset>();
             var sequencesField = typeof(EnemySpawnScheduleAsset).GetField("sequences", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var sequenceType = typeof(EnemySpawnScheduleAsset).GetNestedType("SpawnSequenceConfig");
-            var listType = typeof(List<>).MakeGenericType(sequenceType);
-            var sequenceList = (IList)System.Activator.CreateInstance(listType);
-            var sequence = System.Activator.CreateInstance(sequenceType);
-            sequenceType.GetField("enemyTypeId").SetValue(sequence, "grunt");
-            sequenceType.GetField("spawnCount").SetValue(sequence, 2);
-            sequenceType.GetField("intervalSeconds").SetValue(sequence, 0.25f);
-            sequenceType.GetField("initialDelaySeconds").SetValue(sequence, 0.1f);
-            sequenceList.Add(sequence);
+            var sequenceList = new List<SpawnSequenceConfig>
+            {
+                new SpawnSequenceConfig
+                {
+                    enemyTypeId = "grunt",
+                    spawnCount = 2,
+                    intervalSeconds = 0.25f,
+                    initialDelaySeconds = 0.1f
+                }
+            };
             sequencesField.SetValue(scheduleAsset, sequenceList);
 
             // Markers.

@@ -233,3 +233,24 @@ All EditMode tests pass.
 - Runner builds spawn points from `SpawnPointMarker` components, reads `EnemySpawnScheduleAsset`, and uses `enemyTypeId` → prefab mappings to instantiate.
 - Round-robin selection guarantees every gate gets spawns before repeating.
 - Future work: barrier approach anchors for reliable barrier contact; optional PlayMode smokes for that flow.
+## 2025-12-19 - feat/spawner-waves-ramp
+
+### Summary
+- Added wave/ramp-based spawner runtime (per-wave strategy, wait-for-clear + gap, maxAlive, shuffle fairness).
+- Added gate auto-ID (GateIdProvider + SpawnPointMarker fallback) and runner auto-find of markers.
+- Added alive-count tracking via lifetime callback and wired MainPrototype gates/runner to the new schedule (authored wave + ramp).
+
+### New or Updated Tests
+**EditMode**
+- `SpawnMarkerOrderBuilderTests` (fair shuffle coverage/determinism; warn when spawnCount < markers)
+- `WaveScheduleRuntimeTests` (per-wave override/defaults)
+- `WaveScheduleRampTests` (count ramp, tier unlocks, weighted selection)
+- `SpawnedEntityLifetimeTests` (callback invoked once on despawn)
+
+**PlayMode**
+- `EnemySpawnerRunnerPlayTests`
+  - `SpawnsEnemiesAtMarkersOverTime` (updated to top-level SpawnSequenceConfig)
+
+### Notes
+- Ramp defaults: base 6, +2 every 2 waves, start wave 1; strategy RoundRobin; wait-for-clear true; gap 5s; maxAlive 0.
+- MainPrototype gates include spawn markers; runner uses auto-find and prefab mapping for `grunt`.
