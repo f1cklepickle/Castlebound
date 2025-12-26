@@ -364,6 +364,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 200
+  playerHitFeedbackChannel: {fileID: 11400000, guid: d20a388de840a2442a233efbf88b515b, type: 2}
 --- !u!114 &-5784453068084145222
 MonoBehaviour:
   m_ObjectHideFlags: 0
