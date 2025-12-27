@@ -90,6 +90,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbfff868dea261e44802d7a99abd02ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerHitEnemyFeedbackChannel: {fileID: 11400000, guid: 80d7fae19fc8c724fb8344818aae2e88, type: 2}
 --- !u!1 &8325390509751579795
 GameObject:
   m_ObjectHideFlags: 0

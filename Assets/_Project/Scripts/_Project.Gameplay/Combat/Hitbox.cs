@@ -7,6 +7,7 @@ public class Hitbox : MonoBehaviour
     Collider2D col;
     bool activeWindow;
     readonly HashSet<Collider2D> hitThisSwing = new HashSet<Collider2D>();
+    [SerializeField] FeedbackEventChannel playerHitEnemyFeedbackChannel;
 
     void Awake()
     {
@@ -33,7 +34,7 @@ public class Hitbox : MonoBehaviour
     }
 
     void OnTriggerEnter2D(Collider2D other) { TryHit(other); }
-    void OnTriggerStay2D(Collider2D other) { TryHit(other); } // catches “already inside” cases
+    void OnTriggerStay2D(Collider2D other) { TryHit(other); } // catches ï¿½already insideï¿½ cases
 
     void TryHit(Collider2D other)
     {
@@ -47,5 +48,12 @@ public class Hitbox : MonoBehaviour
         // Optional: damage interface or Health component
         var health = other.GetComponent<Health>();
         if (health != null) health.TakeDamage(1);
+
+        if (playerHitEnemyFeedbackChannel != null)
+        {
+            int targetId = other.gameObject.GetInstanceID();
+            playerHitEnemyFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.PlayerHitEnemy, other.transform.position, targetId));
+        }
     }
 }
+
