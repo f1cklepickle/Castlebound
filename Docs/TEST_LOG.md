@@ -4,7 +4,24 @@
 
 ---
 
-## 2025-09-25 — Init test log
+## 2025-12-27 - feat/combat-feedback
+
+### Summary
+- Added combat feedback cues for player hit, player hit enemy, and enemy hit barrier.
+- Wired visual feedback: player edge flash, enemy red flash, barrier jitter.
+
+### New or Updated Tests
+**EditMode**
+- `FeedbackEventChannelContractTests`
+- `PlayerHitFeedbackTests`
+- `PlayerHitEnemyFeedbackTests`
+- `EnemyHitBarrierFeedbackTests`
+
+### Notes
+- Feedback cues use a shared event channel; listeners can be stacked.
+- Enemy hit feedback uses target instance ID for precise flashing.
+
+## 2025-09-25 - Init test log
 **Scope:** Foundations  
 **Added:** TEST_LOG.md; no test files yet (EditMode/PlayMode assemblies exist)  
 **Why:** Establish a single place to summarize test intent and outcomes for future PRs  
