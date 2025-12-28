@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class EnemyHitFlash : MonoBehaviour
+public class HitFlashListener : MonoBehaviour
 {
     [SerializeField] FeedbackEventChannel feedbackChannel;
     [SerializeField] SpriteRenderer targetRenderer;
