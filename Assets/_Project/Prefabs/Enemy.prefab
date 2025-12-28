@@ -231,6 +231,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 264
   animator: {fileID: 0}
+  enemyHitBarrierFeedbackChannel: {fileID: 11400000, guid: 70c41c2488baae148bc4ec73d60b720f, type: 2}
   playerLayerName: Player
   attackTriggerName: Attack
 --- !u!114 &4031526577869015660
