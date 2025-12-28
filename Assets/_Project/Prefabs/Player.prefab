@@ -90,6 +90,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbfff868dea261e44802d7a99abd02ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerHitEnemyFeedbackChannel: {fileID: 11400000, guid: 80d7fae19fc8c724fb8344818aae2e88, type: 2}
 --- !u!1 &8325390509751579795
 GameObject:
   m_ObjectHideFlags: 0
@@ -364,6 +365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 200
+  playerHitFeedbackChannel: {fileID: 11400000, guid: d20a388de840a2442a233efbf88b515b, type: 2}
 --- !u!114 &-5784453068084145222
 MonoBehaviour:
   m_ObjectHideFlags: 0

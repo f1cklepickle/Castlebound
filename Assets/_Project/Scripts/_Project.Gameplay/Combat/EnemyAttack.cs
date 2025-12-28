@@ -17,6 +17,7 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
     [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
     [SerializeField] Animator animator;            // optional, can be null
+    [SerializeField] FeedbackEventChannel enemyHitBarrierFeedbackChannel;
     [SerializeField] string playerLayerName = "Player";
     [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
@@ -142,6 +143,11 @@ public class EnemyAttack : MonoBehaviour
         }
 
         target.TakeDamage(Damage);
+
+        if (enemyHitBarrierFeedbackChannel != null && target is BarrierHealth barrier)
+        {
+            enemyHitBarrierFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.EnemyHitBarrier, barrier.transform.position, barrier.gameObject.GetInstanceID()));
+        }
     }
 
     // Barrier damage gate: allow if enemy outside, or enemy inside while player is outside.

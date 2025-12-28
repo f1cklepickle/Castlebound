@@ -5,6 +5,7 @@ using System;
 public class Health : MonoBehaviour, IDamageable
 {
     [SerializeField] int maxHealth = 10;
+    [SerializeField] FeedbackEventChannel playerHitFeedbackChannel;
     int current;
 
     public int Current => current;
@@ -23,6 +24,11 @@ public class Health : MonoBehaviour, IDamageable
         if (current <= 0) return;
         current = Mathf.Max(0, current - amount);
         OnHealthChanged?.Invoke(current, maxHealth);
+
+        if (CompareTag("Player") && playerHitFeedbackChannel != null)
+        {
+            playerHitFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.PlayerHit, transform.position));
+        }
 
         if (current <= 0) Die();
     }
