@@ -5,6 +5,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
 {
     private static readonly List<BarrierHealth> _all = new List<BarrierHealth>();
     public static IReadOnlyList<BarrierHealth> All => _all;
+    private static readonly Collider2D[] _overlapBuffer = new Collider2D[24];
 
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;
@@ -30,6 +31,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         barrierCollider = GetComponent<Collider2D>();
         barrierSprite = GetComponent<SpriteRenderer>();
         UpdateBrokenState();
+        ResolveActiveOverlaps();
 
         if (!_all.Contains(this))
         {
@@ -74,6 +76,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
 
         // Ensure collider + sprite are re-enabled.
         UpdateBrokenState();
+        ResolveActiveOverlaps();
     }
 
     private void UpdateBrokenState()
@@ -98,6 +101,49 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         if (barrierSprite != null)
         {
             barrierSprite.enabled = !broken;
+        }
+    }
+
+    private void ResolveActiveOverlaps()
+    {
+        if (barrierCollider == null || !barrierCollider.enabled)
+        {
+            return;
+        }
+
+        Physics2D.SyncTransforms();
+
+        var player = FindObjectOfType<PlayerController>();
+        if (player != null)
+        {
+            var playerCollider = player.GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                ColliderDistance2D dist = Physics2D.Distance(barrierCollider, playerCollider);
+                if (dist.isOverlapped)
+                {
+                    BarrierOverlapResolver.ResolveOverlap(barrierCollider, playerCollider, true);
+                }
+            }
+        }
+
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = false;
+        filter.useLayerMask = false;
+
+        int count = barrierCollider.OverlapCollider(filter, _overlapBuffer);
+        for (int i = 0; i < count; i++)
+        {
+            var other = _overlapBuffer[i];
+            if (other == null)
+            {
+                continue;
+            }
+
+            if (other.GetComponentInParent<EnemyController2D>() != null)
+            {
+                BarrierOverlapResolver.ResolveOverlap(barrierCollider, other, false);
+            }
         }
     }
 
