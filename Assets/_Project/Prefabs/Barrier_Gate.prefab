@@ -179,6 +179,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 25
   currentHealth: 25
+  enemyPushInDistance: 0.7
 --- !u!114 &3822971309403945246
 MonoBehaviour:
   m_ObjectHideFlags: 0

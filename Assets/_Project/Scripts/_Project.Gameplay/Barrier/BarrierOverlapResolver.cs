@@ -44,10 +44,11 @@ public static class BarrierOverlapResolver
         if (barrier == null || actor == null) return;
 
         Vector2 outward = Vector2.zero;
+        Vector2 anchorPos = Vector2.zero;
         var hold = barrier.GetComponent<EnemyBarrierHoldBehavior>();
         if (hold != null)
         {
-            Vector2 anchorPos = hold.Debug_GetAnchorPosition();
+            anchorPos = hold.Debug_GetAnchorPosition();
             Vector2 barrierPos = barrier.bounds.center;
             Vector2 dir = anchorPos - barrierPos;
             if (dir.sqrMagnitude > 0.0001f)
@@ -58,6 +59,10 @@ public static class BarrierOverlapResolver
 
         bool mostlyInside = IsMostlyInside(barrier, actor);
         bool pushIntoBarrier = isPlayer || mostlyInside;
+        if (!isPlayer && outward.sqrMagnitude > 0.0001f)
+        {
+            pushIntoBarrier = IsEnemyPastAnchorThreshold(barrier, actor, anchorPos, -outward);
+        }
 
         Vector2 desiredDir = outward.sqrMagnitude > 0.0001f
             ? (pushIntoBarrier ? -outward : outward)
@@ -91,32 +96,40 @@ public static class BarrierOverlapResolver
         }
         else
         {
+            if (desiredDir == Vector2.zero)
+            {
+                for (int i = 0; i < maxIterations; i++)
+                {
+                    Physics2D.SyncTransforms();
+
+                    ColliderDistance2D dist = Physics2D.Distance(barrier, actor);
+                    if (!dist.isOverlapped)
+                    {
+                        return;
+                    }
+
+                    Vector2 normal = dist.normal;
+                    Vector2 separation = normal * (-dist.distance + skin);
+                    ApplyDelta(actor, separation);
+                }
+
+                return;
+            }
+
             for (int i = 0; i < maxIterations; i++)
             {
                 Physics2D.SyncTransforms();
-
                 ColliderDistance2D dist = Physics2D.Distance(barrier, actor);
                 if (!dist.isOverlapped)
                 {
                     return;
                 }
 
-                Vector2 normal = dist.normal;
-                Vector2 separation = normal * (-dist.distance + skin);
-                ApplyDelta(actor, separation);
-            }
-
-            if (desiredDir == Vector2.zero)
-            {
-                return;
-            }
-
-            Physics2D.SyncTransforms();
-            ColliderDistance2D postDist = Physics2D.Distance(barrier, actor);
-            if (postDist.isOverlapped)
-            {
-                Vector2 separation = postDist.normal * (-postDist.distance + skin);
-                ApplyDelta(actor, separation);
+                Vector2 dir = desiredDir.normalized;
+                float barrierExtent = Mathf.Abs(Vector2.Dot(barrier.bounds.extents, dir));
+                float actorExtent = Mathf.Abs(Vector2.Dot(actor.bounds.extents, dir));
+                Vector2 target = (Vector2)barrier.bounds.center + dir * (barrierExtent + actorExtent + skin);
+                SetPositionImmediate(actor, target);
             }
         }
     }
@@ -152,5 +165,25 @@ public static class BarrierOverlapResolver
         }
 
         Physics2D.SyncTransforms();
+    }
+
+    private static bool IsEnemyPastAnchorThreshold(
+        Collider2D barrier,
+        Collider2D actor,
+        Vector2 anchorPos,
+        Vector2 inwardDir)
+    {
+        var barrierHealth = barrier.GetComponent<BarrierHealth>();
+        if (barrierHealth == null)
+        {
+            return false;
+        }
+
+        Vector2 dir = inwardDir.normalized;
+        float actorExtent = Mathf.Abs(Vector2.Dot(actor.bounds.extents, dir));
+        float required = barrierHealth.EnemyPushInDistance + actorExtent;
+        float signed = Vector2.Dot((Vector2)actor.bounds.center - anchorPos, dir);
+
+        return signed >= required;
     }
 }

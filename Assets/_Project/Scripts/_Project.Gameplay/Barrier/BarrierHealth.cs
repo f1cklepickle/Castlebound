@@ -9,6 +9,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
 
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;
+    [SerializeField] private float enemyPushInDistance = 0.5f;
     private Collider2D barrierCollider;
     private SpriteRenderer barrierSprite;
 
@@ -25,6 +26,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     }
 
     public bool IsBroken { get; private set; }
+    public float EnemyPushInDistance => enemyPushInDistance;
 
     private void OnEnable()
     {

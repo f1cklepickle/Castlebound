@@ -12,6 +12,7 @@
 
 ### New or Updated Tests
 **EditMode**
+- `BarrierEnemyPushThresholdTests`
 - `BarrierOverlapResolverTests`
 - `BarrierRepairOverlapPushTests`
 - `BarrierRepairOverlapAnchorTests`
