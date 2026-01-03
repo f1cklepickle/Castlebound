@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-01-02 - fix/barrier-repair-overlap
+
+### Summary
+- Resolve player/enemy overlap when barriers are repaired or re-enabled.
+- Player is pushed inward relative to the barrier anchor; enemies push in/out based on overlap.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierEnemyPushThresholdTests`
+- `BarrierOverlapResolverTests`
+- `BarrierRepairOverlapPushTests`
+- `BarrierRepairOverlapAnchorTests`
+- `BarrierOverlapResolverPushInTests`
+
+**PlayMode**
+- `BarrierRepairOverlapIntegrationPlayTests`
+
+### Notes
+- Player placement uses barrier anchor direction to ensure inward push.
+- Overlap resolution runs on repair/enable; EditMode and PlayMode tests pass.
+
 ## 2025-12-27 - feat/combat-feedback
 
 ### Summary
