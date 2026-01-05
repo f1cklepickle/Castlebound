@@ -12,6 +12,7 @@
 ### New or Updated Tests
 **EditMode**
 - `ItemPickupTests`
+- `ItemPickupComponentTests`
 
 ### Notes
 - Auto pickup is allowed only when inventory can accept the item.
