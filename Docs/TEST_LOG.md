@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-01-05 - feat/weapon-equip-attack
+
+### Summary
+- Added PlayerWeaponController and weapon stat mapping from inventory definitions.
+
+### New or Updated Tests
+**EditMode**
+- `PlayerWeaponControllerTests`
+
+### Notes
+- Weapon stats are exposed as a data object for attack integration.
+
 ## 2026-01-04 - feat/item-pickups
 
 ### Summary
