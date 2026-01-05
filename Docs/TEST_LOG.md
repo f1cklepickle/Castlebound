@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-01-04 - feat/inventory-runtime-state
+
+### Summary
+- Added runtime-only InventoryState for 2 weapon slots, potion stack, and gold/xp counters.
+
+### New or Updated Tests
+**EditMode**
+- `InventoryStateTests`
+
+### Notes
+- Inventory uses ID-based items for MVP; assets will follow in the next issue.
+
 ## 2026-01-02 - fix/barrier-repair-overlap
 
 ### Summary
