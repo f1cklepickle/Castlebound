@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-01-04 - feat/item-pickups
+
+### Summary
+- Added pickup pipeline logic for weapons, potions, gold, and xp.
+
+### New or Updated Tests
+**EditMode**
+- `ItemPickupTests`
+
+### Notes
+- Auto pickup is allowed only when inventory can accept the item.
+- Manual pickup swaps the active weapon when slots are full.
+
 ## 2026-01-04 - feat/inventory-item-definitions
 
 ### Summary
