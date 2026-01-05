@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-01-04 - feat/inventory-item-definitions
+
+### Summary
+- Added ItemDefinition, WeaponDefinition, and PotionDefinition ScriptableObjects for inventory items.
+
+### New or Updated Tests
+**EditMode**
+- `ItemDefinitionTests`
+
+### Notes
+- Weapon fields: damage, attack speed, hitbox size, knockback.
+- Potion fields: heal amount, cooldown seconds.
+
 ## 2026-01-04 - feat/inventory-runtime-state
 
 ### Summary
