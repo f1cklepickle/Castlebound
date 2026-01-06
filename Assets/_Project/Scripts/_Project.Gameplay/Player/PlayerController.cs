@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Castlebound.Gameplay.Inventory;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,6 +17,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float repairRadius = 1.5f;
     [SerializeField] private LayerMask barrierMask;
 
+    [Header("Potions")]
+    [SerializeField] private PotionUseController potionUseController;
+
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 lastMoveDirection;
@@ -26,6 +30,7 @@ void Awake() {
     rb = GetComponent<Rigidbody2D>();
     if (animator == null) animator = GetComponent<Animator>();
     mover = GetComponent<PlayerCollisionMove2D>();   // NEW
+    if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
     lastMoveDirection = new Vector2(0, 1);
 }
 
@@ -99,6 +104,14 @@ void Awake() {
             barrier.Repair();
             break; // Repair one barrier per key press.
         }
+    }
+
+    public void OnUsePotion(InputValue value)
+    {
+        if (!value.isPressed)
+            return;
+
+        potionUseController?.TryConsume();
     }
 
 }
