@@ -9,6 +9,8 @@ namespace Castlebound.Gameplay.Inventory
         private readonly IHealable healTarget;
         private float nextUseTime;
 
+        public float CurrentCooldownSeconds { get; private set; }
+
         public PotionConsumeController(IPotionDefinitionResolver resolver, ITimeProvider timeProvider, IHealable healTarget)
         {
             this.resolver = resolver;
@@ -58,7 +60,8 @@ namespace Castlebound.Gameplay.Inventory
             }
 
             healTarget.Heal(definition.HealAmount);
-            nextUseTime = timeProvider.Time + Mathf.Max(0f, definition.CooldownSeconds);
+            CurrentCooldownSeconds = Mathf.Max(0f, definition.CooldownSeconds);
+            nextUseTime = timeProvider.Time + CurrentCooldownSeconds;
             return true;
         }
     }

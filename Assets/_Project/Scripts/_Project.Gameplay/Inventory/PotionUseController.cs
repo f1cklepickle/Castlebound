@@ -38,6 +38,24 @@ namespace Castlebound.Gameplay.Inventory
             return consumeController.TryConsume(inventorySource.State);
         }
 
+        public float CooldownRemaining
+        {
+            get
+            {
+                EnsureController();
+                return consumeController != null ? consumeController.CooldownRemaining : 0f;
+            }
+        }
+
+        public float CurrentCooldownSeconds
+        {
+            get
+            {
+                EnsureController();
+                return consumeController != null ? consumeController.CurrentCooldownSeconds : 0f;
+            }
+        }
+
         public void SetInventorySource(InventoryStateComponent inventory)
         {
             inventorySource = inventory;
