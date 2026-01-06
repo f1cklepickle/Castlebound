@@ -118,6 +118,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UsePotion"",
+                    ""type"": ""Button"",
+                    ""id"": ""5df4a6aa-b11b-4f8e-9c7b-0a7e4d38a5e2"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -197,6 +206,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""Repair"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c2bb3b4b-1c7f-4f2f-9d3a-43a6b6a0b2d1"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""UsePotion"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -208,6 +228,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
         m_Player_Fire = m_Player.FindAction("Fire", throwIfNotFound: true);
         m_Player_Repair = m_Player.FindAction("Repair", throwIfNotFound: true);
+        m_Player_UsePotion = m_Player.FindAction("UsePotion", throwIfNotFound: true);
     }
 
     ~@PlayerControls()
@@ -291,6 +312,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Move;
     private readonly InputAction m_Player_Fire;
     private readonly InputAction m_Player_Repair;
+    private readonly InputAction m_Player_UsePotion;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -314,6 +336,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Repair".
         /// </summary>
         public InputAction @Repair => m_Wrapper.m_Player_Repair;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/UsePotion".
+        /// </summary>
+        public InputAction @UsePotion => m_Wrapper.m_Player_UsePotion;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -349,6 +375,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Repair.started += instance.OnRepair;
             @Repair.performed += instance.OnRepair;
             @Repair.canceled += instance.OnRepair;
+            @UsePotion.started += instance.OnUsePotion;
+            @UsePotion.performed += instance.OnUsePotion;
+            @UsePotion.canceled += instance.OnUsePotion;
         }
 
         /// <summary>
@@ -369,6 +398,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Repair.started -= instance.OnRepair;
             @Repair.performed -= instance.OnRepair;
             @Repair.canceled -= instance.OnRepair;
+            @UsePotion.started -= instance.OnUsePotion;
+            @UsePotion.performed -= instance.OnUsePotion;
+            @UsePotion.canceled -= instance.OnUsePotion;
         }
 
         /// <summary>
@@ -430,5 +462,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRepair(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UsePotion" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUsePotion(InputAction.CallbackContext context);
     }
 }

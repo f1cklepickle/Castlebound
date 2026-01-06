@@ -85,5 +85,40 @@ namespace Castlebound.Tests.Inventory
             Object.DestroyImmediate(playerGo);
             Object.DestroyImmediate(potion);
         }
+
+        [Test]
+        public void TryConsume_SetsCooldownSeconds()
+        {
+            var playerGo = new GameObject("Player");
+            var inventory = playerGo.AddComponent<InventoryStateComponent>();
+            inventory.State.TryAddPotion("potion_basic", 1);
+
+            var healable = playerGo.AddComponent<DummyHealable>();
+
+            var potion = ScriptableObject.CreateInstance<PotionDefinition>();
+            potion.ItemId = "potion_basic";
+            potion.HealAmount = 10;
+            potion.CooldownSeconds = 2.5f;
+
+            var resolverGo = new GameObject("Resolver");
+            var resolver = resolverGo.AddComponent<PotionDefinitionResolverComponent>();
+            resolver.GetType()
+                .GetField("definitions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(resolver, new[] { potion });
+
+            var controller = playerGo.AddComponent<PotionUseController>();
+            controller.SetResolverSource(resolver);
+            controller.SetInventorySource(inventory);
+            controller.SetHealTargetSource(healable);
+
+            var result = controller.TryConsume();
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(2.5f, controller.CurrentCooldownSeconds);
+
+            Object.DestroyImmediate(resolverGo);
+            Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(potion);
+        }
     }
 }
