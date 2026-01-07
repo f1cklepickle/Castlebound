@@ -1,8 +1,9 @@
 // Assets/Scripts/Combat/Health.cs
-using UnityEngine;
 using System;
+using UnityEngine;
+using Castlebound.Gameplay.Inventory;
 
-public class Health : MonoBehaviour, IDamageable
+public class Health : MonoBehaviour, IDamageable, IHealable
 {
     [SerializeField] int maxHealth = 10;
     [SerializeField] FeedbackEventChannel playerHitFeedbackChannel;

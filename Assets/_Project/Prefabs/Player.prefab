@@ -108,6 +108,9 @@ GameObject:
   - component: {fileID: 4501492745676008282}
   - component: {fileID: 2634735562689669640}
   - component: {fileID: -5784453068084145222}
+  - component: {fileID: -4357144976434651652}
+  - component: {fileID: -4056653655764099198}
+  - component: {fileID: -6994024940450972999}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -233,6 +236,7 @@ MonoBehaviour:
   barrierMask:
     serializedVersion: 2
     m_Bits: 256
+  potionUseController: {fileID: 0}
 --- !u!114 &6061923462103248084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,3 +387,44 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 448
   skin: 0.02
+--- !u!114 &-4357144976434651652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c2b38a9f3b9432aa73a6c8f4bce8c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-4056653655764099198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e7f8a9b0c1d4e2f9a0b1c2d3e4f5a6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  definitions:
+  - {fileID: 11400000, guid: cd2861bff7fa4d4f99ca4fe0c314a971, type: 2}
+--- !u!114 &-6994024940450972999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f8a9b0c1d2e4f3a9b0c1d2e3f4a5b6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inventorySource: {fileID: 0}
+  resolverSource: {fileID: 0}
+  healTargetSource: {fileID: 0}
