@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-01-06 - feat/potion-use
+
+### Summary
+- Added potion consume + cooldown + HUD slot, plus pickup prefab and wiring.
+
+### New or Updated Tests
+**EditMode**
+- `PotionConsumeTests`
+- `PotionUseControllerTests`
+
+### Notes
+- Manual: In MainPrototype, pick up potion, verify HUD icon/count updates, use potion to decrement stack, cooldown overlay drains and blocks repeat use until elapsed.
+
 ## 2026-01-05 - feat/weapon-equip-attack
 
 ### Summary
