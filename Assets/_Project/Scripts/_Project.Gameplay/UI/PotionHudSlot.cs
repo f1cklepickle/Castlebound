@@ -22,11 +22,26 @@ public class PotionHudSlot : MonoBehaviour
         if (cooldownOverlay == null) cooldownOverlay = FindChildImage("CooldownOverlay");
     }
 
+    void OnValidate()
+    {
+        if (!Application.isPlaying && cooldownOverlay != null)
+        {
+            cooldownOverlay.enabled = false;
+            cooldownOverlay.fillAmount = 0f;
+        }
+    }
+
     void OnEnable()
     {
         if (inventorySource == null) inventorySource = GetComponentInParent<InventoryStateComponent>();
         if (potionUseController == null) potionUseController = GetComponentInParent<PotionUseController>();
         if (resolverSource == null) resolverSource = GetComponentInParent<PotionDefinitionResolverComponent>();
+
+        if (cooldownOverlay != null)
+        {
+            cooldownOverlay.enabled = false;
+            cooldownOverlay.fillAmount = 0f;
+        }
 
         inventory = inventorySource != null ? inventorySource.State : null;
         if (inventory != null)
@@ -93,6 +108,11 @@ public class PotionHudSlot : MonoBehaviour
     {
         if (cooldownOverlay == null || potionUseController == null)
         {
+            if (cooldownOverlay != null)
+            {
+                cooldownOverlay.enabled = false;
+                cooldownOverlay.fillAmount = 0f;
+            }
             return;
         }
 
@@ -100,11 +120,13 @@ public class PotionHudSlot : MonoBehaviour
         float remaining = potionUseController.CooldownRemaining;
         if (duration <= 0f)
         {
+            cooldownOverlay.enabled = false;
             cooldownOverlay.fillAmount = 0f;
             return;
         }
 
         cooldownOverlay.fillAmount = Mathf.Clamp01(remaining / duration);
+        cooldownOverlay.enabled = remaining > 0f;
     }
 
     private Image FindChildImage(string name)
