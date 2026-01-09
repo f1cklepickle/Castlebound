@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-01-08 - feat/hud-weapon-gold-xp
+
+### Summary
+- Added HUD bindings for weapon slots and gold/xp, plus scene wiring in MainPrototype.
+
+### New or Updated Tests
+**EditMode**
+- `GoldXpHudTests`
+- `WeaponSlotsHudTests`
+
+### Notes
+- Manual: In MainPrototype, verify gold/xp text updates and weapon slot highlight swaps when active slot changes.
+
 ## 2026-01-06 - feat/potion-use
 
 ### Summary
