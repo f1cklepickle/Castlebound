@@ -127,6 +127,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SwapWeaponSlot"",
+                    ""type"": ""Value"",
+                    ""id"": ""4a91eefc-183b-495a-a6c0-94eda43bfa20"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -217,6 +226,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""UsePotion"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fcb41332-fadc-4018-a8c8-6522832b30a3"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SwapWeaponSlot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -229,6 +249,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_Fire = m_Player.FindAction("Fire", throwIfNotFound: true);
         m_Player_Repair = m_Player.FindAction("Repair", throwIfNotFound: true);
         m_Player_UsePotion = m_Player.FindAction("UsePotion", throwIfNotFound: true);
+        m_Player_SwapWeaponSlot = m_Player.FindAction("SwapWeaponSlot", throwIfNotFound: true);
     }
 
     ~@PlayerControls()
@@ -313,6 +334,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Fire;
     private readonly InputAction m_Player_Repair;
     private readonly InputAction m_Player_UsePotion;
+    private readonly InputAction m_Player_SwapWeaponSlot;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -340,6 +362,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/UsePotion".
         /// </summary>
         public InputAction @UsePotion => m_Wrapper.m_Player_UsePotion;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SwapWeaponSlot".
+        /// </summary>
+        public InputAction @SwapWeaponSlot => m_Wrapper.m_Player_SwapWeaponSlot;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -378,6 +404,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @UsePotion.started += instance.OnUsePotion;
             @UsePotion.performed += instance.OnUsePotion;
             @UsePotion.canceled += instance.OnUsePotion;
+            @SwapWeaponSlot.started += instance.OnSwapWeaponSlot;
+            @SwapWeaponSlot.performed += instance.OnSwapWeaponSlot;
+            @SwapWeaponSlot.canceled += instance.OnSwapWeaponSlot;
         }
 
         /// <summary>
@@ -401,6 +430,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @UsePotion.started -= instance.OnUsePotion;
             @UsePotion.performed -= instance.OnUsePotion;
             @UsePotion.canceled -= instance.OnUsePotion;
+            @SwapWeaponSlot.started -= instance.OnSwapWeaponSlot;
+            @SwapWeaponSlot.performed -= instance.OnSwapWeaponSlot;
+            @SwapWeaponSlot.canceled -= instance.OnSwapWeaponSlot;
         }
 
         /// <summary>
@@ -469,5 +501,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnUsePotion(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SwapWeaponSlot" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSwapWeaponSlot(InputAction.CallbackContext context);
     }
 }

@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-01-10 - feat/weapon-slot-switch
+
+### Summary
+- Added scroll-based weapon slot swapping with a short cooldown.
+- Empty slot now represents unarmed state.
+
+### New or Updated Tests
+**EditMode**
+- `InventoryStateTests`
+- `PlayerWeaponControllerTests`
+- `PlayerWeaponSlotSwapInputTests`
+
+### Notes
+- Manual: In MainPrototype, scroll to swap slots; verify HUD highlight and damage updates when switching to empty slot.
+
 ## 2026-01-09 - feat/loot-assets-gold-weapon
 
 ### Summary

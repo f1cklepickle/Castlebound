@@ -82,6 +82,23 @@ namespace Castlebound.Tests.Inventory
         }
 
         [Test]
+        public void SetActiveWeapon_EmptySlot_SetsActive_AndEmitsWeaponChange()
+        {
+            var state = new InventoryState();
+            var recorder = new EventRecorder();
+            state.OnInventoryChanged += recorder.Record;
+
+            state.AddWeapon("weapon_a");
+
+            var changed = state.SetActiveWeaponSlot(1);
+
+            Assert.IsTrue(changed);
+            Assert.AreEqual(1, state.ActiveWeaponSlotIndex);
+            Assert.AreEqual(2, recorder.Count);
+            Assert.AreEqual(InventoryChangeFlags.Weapons, recorder.LastFlags);
+        }
+
+        [Test]
         public void RemoveWeapon_SlotCleared_AndEmitsWeaponChange()
         {
             var state = new InventoryState();
