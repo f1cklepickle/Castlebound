@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-01-09 - feat/loot-assets-gold-weapon
+
+### Summary
+- Added gold + sword item definitions and pickup prefabs; organized item/pickup folders.
+- Wired weapon resolver + damage to reflect weapon definitions.
+
+### New or Updated Tests
+**EditMode**
+- `ItemPickupTests` (event emissions for gold/weapon pickups)
+
+### Notes
+- Manual: In MainPrototype, pick up sword and confirm HUD icon + increased damage; pick up gold and confirm gold count.
+
 ## 2026-01-08 - feat/hud-weapon-gold-xp
 
 ### Summary
