@@ -20,17 +20,25 @@ public class PlayerController : MonoBehaviour
     [Header("Potions")]
     [SerializeField] private PotionUseController potionUseController;
 
+    [Header("Weapons")]
+    [SerializeField] private InventoryStateComponent inventorySource;
+    [SerializeField] private float weaponSlotSwapCooldown = 0.5f;
+
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 lastMoveDirection;
 
   private PlayerCollisionMove2D mover;
+    private float lastWeaponSlotSwapTime = float.NegativeInfinity;
+    private InventoryState inventoryState;
 
 void Awake() {
     rb = GetComponent<Rigidbody2D>();
     if (animator == null) animator = GetComponent<Animator>();
     mover = GetComponent<PlayerCollisionMove2D>();   // NEW
     if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
+    if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
+    inventoryState = inventorySource != null ? inventorySource.State : null;
     lastMoveDirection = new Vector2(0, 1);
 }
 
@@ -114,4 +122,48 @@ void Awake() {
         potionUseController?.TryConsume();
     }
 
+    public void OnSwapWeaponSlot(InputValue value)
+    {
+        var scroll = value.Get<Vector2>().y;
+        HandleWeaponSlotSwap(scroll, Time.time);
+    }
+
+    public void HandleWeaponSlotSwap(float scrollDelta, float time)
+    {
+        if (Mathf.Approximately(scrollDelta, 0f))
+            return;
+
+        if (inventoryState == null)
+        {
+            inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
+            inventoryState = inventorySource != null ? inventorySource.State : null;
+        }
+
+        if (inventoryState == null)
+            return;
+
+        if (time - lastWeaponSlotSwapTime < weaponSlotSwapCooldown)
+            return;
+
+        int nextIndex = inventoryState.ActiveWeaponSlotIndex == 0 ? 1 : 0;
+        if (inventoryState.SetActiveWeaponSlot(nextIndex))
+        {
+            lastWeaponSlotSwapTime = time;
+        }
+    }
+
+    public bool TrySwapWeaponSlotWithoutCooldown()
+    {
+        if (inventoryState == null)
+        {
+            inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
+            inventoryState = inventorySource != null ? inventorySource.State : null;
+        }
+
+        if (inventoryState == null)
+            return false;
+
+        int nextIndex = inventoryState.ActiveWeaponSlotIndex == 0 ? 1 : 0;
+        return inventoryState.SetActiveWeaponSlot(nextIndex);
+    }
 }
