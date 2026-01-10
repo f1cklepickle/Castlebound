@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Castlebound.Gameplay.Combat;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
@@ -8,6 +9,7 @@ public class Hitbox : MonoBehaviour
     bool activeWindow;
     readonly HashSet<Collider2D> hitThisSwing = new HashSet<Collider2D>();
     [SerializeField] FeedbackEventChannel playerHitEnemyFeedbackChannel;
+    PlayerWeaponController weaponController;
 
     void Awake()
     {
@@ -15,6 +17,7 @@ public class Hitbox : MonoBehaviour
         col.isTrigger = true;
         col.enabled = false;        // collider stays off until attack frames
         activeWindow = false;
+        weaponController = GetComponentInParent<PlayerWeaponController>();
     }
 
     // Called by Player (via Animation Event at swing start)
@@ -46,8 +49,14 @@ public class Hitbox : MonoBehaviour
         Debug.Log("Hit enemy: " + other.name);
 
         // Optional: damage interface or Health component
+        int damage = 1;
+        if (weaponController != null)
+        {
+            damage = Mathf.Max(1, weaponController.CurrentWeaponStats.Damage);
+        }
+
         var health = other.GetComponent<Health>();
-        if (health != null) health.TakeDamage(1);
+        if (health != null) health.TakeDamage(damage);
 
         if (playerHitEnemyFeedbackChannel != null)
         {
@@ -56,4 +65,3 @@ public class Hitbox : MonoBehaviour
         }
     }
 }
-
