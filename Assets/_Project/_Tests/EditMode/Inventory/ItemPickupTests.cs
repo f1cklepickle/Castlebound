@@ -5,6 +5,18 @@ namespace Castlebound.Tests.Inventory
 {
     public class ItemPickupTests
     {
+        private class EventRecorder
+        {
+            public int Count { get; private set; }
+            public InventoryChangeFlags LastFlags { get; private set; }
+
+            public void Record(InventoryChangeFlags flags)
+            {
+                Count++;
+                LastFlags = flags;
+            }
+        }
+
         [Test]
         public void WeaponAutoPickup_WhenSlotEmpty_AddsWeapon()
         {
@@ -15,6 +27,22 @@ namespace Castlebound.Tests.Inventory
 
             Assert.IsTrue(result);
             Assert.AreEqual("weapon_basic", inventory.GetWeaponId(0));
+        }
+
+        [Test]
+        public void WeaponAutoPickup_EmitsWeaponChange()
+        {
+            var inventory = new InventoryState();
+            var recorder = new EventRecorder();
+            inventory.OnInventoryChanged += recorder.Record;
+
+            var pickup = ItemPickup.Weapon("weapon_basic");
+
+            var result = pickup.TryAutoPickup(inventory);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(InventoryChangeFlags.Weapons, recorder.LastFlags);
+            Assert.AreEqual(1, recorder.Count);
         }
 
         [Test]
@@ -32,6 +60,25 @@ namespace Castlebound.Tests.Inventory
             Assert.IsFalse(result);
             Assert.AreEqual("weapon_a", inventory.GetWeaponId(0));
             Assert.AreEqual("weapon_b", inventory.GetWeaponId(1));
+        }
+
+        [Test]
+        public void WeaponManualPickup_WhenSlotsFull_SwapsActive_AndEmitsWeaponChange()
+        {
+            var inventory = new InventoryState();
+            var recorder = new EventRecorder();
+            inventory.OnInventoryChanged += recorder.Record;
+            inventory.AddWeapon("weapon_a");
+            inventory.AddWeapon("weapon_b");
+            inventory.SetActiveWeaponSlot(0);
+
+            var pickup = ItemPickup.Weapon("weapon_c");
+
+            var result = pickup.TryManualPickup(inventory);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual("weapon_c", inventory.GetWeaponId(0));
+            Assert.AreEqual(InventoryChangeFlags.Weapons, recorder.LastFlags);
         }
 
         [Test]
@@ -96,6 +143,22 @@ namespace Castlebound.Tests.Inventory
             Assert.IsTrue(xpResult);
             Assert.AreEqual(5, inventory.Gold);
             Assert.AreEqual(3, inventory.Xp);
+        }
+
+        [Test]
+        public void GoldAutoPickup_EmitsCurrencyChange()
+        {
+            var inventory = new InventoryState();
+            var recorder = new EventRecorder();
+            inventory.OnInventoryChanged += recorder.Record;
+
+            var pickup = ItemPickup.Gold(1);
+
+            var result = pickup.TryAutoPickup(inventory);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(InventoryChangeFlags.Currency, recorder.LastFlags);
+            Assert.AreEqual(1, recorder.Count);
         }
     }
 }
