@@ -10,21 +10,28 @@ public class Hitbox : MonoBehaviour
     readonly HashSet<Collider2D> hitThisSwing = new HashSet<Collider2D>();
     [SerializeField] FeedbackEventChannel playerHitEnemyFeedbackChannel;
     PlayerWeaponController weaponController;
+    Vector2 lastHitboxSize = Vector2.zero;
 
     void Awake()
     {
-        col = GetComponent<Collider2D>();
-        col.isTrigger = true;
-        col.enabled = false;        // collider stays off until attack frames
+        EnsureReferences();
+        if (col != null)
+        {
+            col.enabled = false;        // collider stays off until attack frames
+        }
         activeWindow = false;
-        weaponController = GetComponentInParent<PlayerWeaponController>();
     }
 
     // Called by Player (via Animation Event at swing start)
     public void Activate()
     {
         hitThisSwing.Clear();
-        col.enabled = true;
+        EnsureReferences();
+        UpdateColliderSize();
+        if (col != null)
+        {
+            col.enabled = true;
+        }
         activeWindow = true;
     }
 
@@ -32,7 +39,10 @@ public class Hitbox : MonoBehaviour
     public void Deactivate()
     {
         activeWindow = false;
-        col.enabled = false;
+        if (col != null)
+        {
+            col.enabled = false;
+        }
         hitThisSwing.Clear();
     }
 
@@ -62,6 +72,48 @@ public class Hitbox : MonoBehaviour
         {
             int targetId = other.gameObject.GetInstanceID();
             playerHitEnemyFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.PlayerHitEnemy, other.transform.position, targetId));
+        }
+    }
+
+    void UpdateColliderSize()
+    {
+        if (weaponController == null || col == null)
+        {
+            return;
+        }
+
+        var size = weaponController.CurrentWeaponStats.HitboxSize;
+        if (size == Vector2.zero || size == lastHitboxSize)
+        {
+            return;
+        }
+
+        lastHitboxSize = size;
+        if (col is BoxCollider2D box)
+        {
+            box.size = size;
+            box.offset = weaponController.CurrentWeaponStats.HitboxOffset;
+        }
+        else if (col is CircleCollider2D circle)
+        {
+            circle.radius = Mathf.Max(size.x, size.y) * 0.5f;
+        }
+    }
+
+    void EnsureReferences()
+    {
+        if (col == null)
+        {
+            col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+            }
+        }
+
+        if (weaponController == null)
+        {
+            weaponController = GetComponentInParent<PlayerWeaponController>();
         }
     }
 }
