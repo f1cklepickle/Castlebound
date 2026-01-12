@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-01-10 - feat/weapon-hand-sprite
+
+### Summary
+- Added weapon hand socket rendering from weapon definitions.
+- Added weapon hitbox sizing and offset from weapon definitions.
+
+### New or Updated Tests
+**EditMode**
+- `WeaponHandTests`
+- `HitboxSizeTests`
+
+### Notes
+- Manual: In MainPrototype, equip sword; verify hand sprite follows attack socket and hitbox size/offset matches weapon definition during swings.
+
 ## 2026-01-10 - feat/weapon-slot-switch
 
 ### Summary
