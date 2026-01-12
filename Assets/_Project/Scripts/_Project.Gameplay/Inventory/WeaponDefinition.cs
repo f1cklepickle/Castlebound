@@ -9,6 +9,9 @@ namespace Castlebound.Gameplay.Inventory
         [SerializeField] private float attackSpeed = 1f;
         [SerializeField] private Vector2 hitboxSize = new Vector2(1f, 1f);
         [SerializeField] private float knockback = 1f;
+        [SerializeField] private Sprite handSprite;
+        [SerializeField] private Vector2 handleOffset = Vector2.zero;
+        [SerializeField] private Vector2 hitboxOffset = Vector2.zero;
 
         public int Damage
         {
@@ -32,6 +35,24 @@ namespace Castlebound.Gameplay.Inventory
         {
             get => knockback;
             set => knockback = value;
+        }
+
+        public Sprite HandSprite
+        {
+            get => handSprite;
+            set => handSprite = value;
+        }
+
+        public Vector2 HandleOffset
+        {
+            get => handleOffset;
+            set => handleOffset = value;
+        }
+
+        public Vector2 HitboxOffset
+        {
+            get => hitboxOffset;
+            set => hitboxOffset = value;
         }
     }
 }

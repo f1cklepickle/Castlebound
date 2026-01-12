@@ -20,13 +20,14 @@ namespace Castlebound.Gameplay.Combat
             {
                 if (equippedDefinition == null)
                 {
-                    return new WeaponStats(0, 0f, Vector2.zero, 0f);
+                    return new WeaponStats(0, 0f, Vector2.zero, Vector2.zero, 0f);
                 }
 
                 return new WeaponStats(
                     equippedDefinition.Damage,
                     equippedDefinition.AttackSpeed,
                     equippedDefinition.HitboxSize,
+                    equippedDefinition.HitboxOffset,
                     equippedDefinition.Knockback);
             }
         }
