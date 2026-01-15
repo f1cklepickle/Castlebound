@@ -11,6 +11,7 @@ namespace Castlebound.Tests.Inventory
         {
             var playerGo = new GameObject("Player");
             var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
+            var pickupCollider = playerGo.AddComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>();
 
             var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
             weapon.ItemId = "weapon_basic";
@@ -36,6 +37,7 @@ namespace Castlebound.Tests.Inventory
         {
             var playerGo = new GameObject("Player");
             var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
+            var pickupCollider = playerGo.AddComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>();
             inventoryComponent.State.AddWeapon("weapon_a");
             inventoryComponent.State.AddWeapon("weapon_b");
             inventoryComponent.State.SetActiveWeaponSlot(0);
@@ -58,6 +60,36 @@ namespace Castlebound.Tests.Inventory
             Object.DestroyImmediate(pickupGo);
             Object.DestroyImmediate(playerGo);
             Object.DestroyImmediate(weapon);
+        }
+
+        [Test]
+        public void AutoPickup_RespectsPickupDelay()
+        {
+            var playerGo = new GameObject("Player");
+            var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
+            var pickupCollider = playerGo.AddComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>();
+
+            var pickupGo = new GameObject("Pickup");
+            var pickup = pickupGo.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Gold;
+            pickup.Amount = 1;
+
+            pickup.SetPickupDelay(1f);
+
+            var blocked = pickup.TryAutoPickup(inventoryComponent.State);
+
+            Assert.IsFalse(blocked);
+            Assert.IsFalse(pickup.IsConsumed);
+
+            pickup.SetPickupDelay(0f);
+
+            var allowed = pickup.TryAutoPickup(inventoryComponent.State);
+
+            Assert.IsTrue(allowed);
+            Assert.IsTrue(pickup.IsConsumed);
+
+            Object.DestroyImmediate(pickupGo);
+            Object.DestroyImmediate(playerGo);
         }
     }
 }
