@@ -164,3 +164,4 @@ MonoBehaviour:
   kind: 2
   itemDefinition: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
   amount: 1
+  pickupDelaySeconds: 0.3
