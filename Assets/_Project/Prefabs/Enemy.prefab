@@ -280,12 +280,16 @@ MonoBehaviour:
   lootTables:
   - table: {fileID: 11400000, guid: ae5e77863cbe4e8098be50ce36d5847c, type: 2}
     prefab: {fileID: 1000000005, guid: b2c3d4e5f60718293a4b5c6d7e8f90a1, type: 3}
-    maxDrops: 1
+    maxRolls: 1
+    maxSpawns: 1
   - table: {fileID: 11400000, guid: a791a203560d49138ee7f0d0cd5566ba, type: 2}
     prefab: {fileID: 1000000005, guid: e5cbfd3fa273450aab6ccde3681c5ee8, type: 3}
-    maxDrops: 1
+    maxRolls: 1
+    maxSpawns: 1
   - table: {fileID: 11400000, guid: 2592505e3d1e48ddba18747405b6d56a, type: 2}
     prefab: {fileID: 1000000005, guid: a1b2c3d4e5f60718293a4b5c6d7e8f90, type: 3}
-    maxDrops: 1
-  maxDrops: 15
+    maxRolls: 1
+    maxSpawns: 10
+  maxRolls: 1
+  globalMaxTables: 6
   xpAmount: 5
