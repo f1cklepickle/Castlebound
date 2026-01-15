@@ -7,6 +7,9 @@ namespace Castlebound.Gameplay.Inventory
         [SerializeField] private ItemPickupKind kind;
         [SerializeField] private ItemDefinition itemDefinition;
         [SerializeField] private int amount = 1;
+        [SerializeField] private float pickupDelaySeconds = 0f;
+
+        private float pickupDelayRemaining = 0f;
 
         public ItemPickupKind Kind
         {
@@ -28,9 +31,44 @@ namespace Castlebound.Gameplay.Inventory
 
         public bool IsConsumed { get; private set; }
 
+        public void SetPickupDelay(float seconds)
+        {
+            pickupDelayRemaining = Mathf.Max(0f, seconds);
+        }
+
+        private void Awake()
+        {
+            pickupDelayRemaining = Mathf.Max(0f, pickupDelaySeconds);
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (IsConsumed)
+            {
+                return;
+            }
+
+            if (pickupDelayRemaining > 0f)
+            {
+                return;
+            }
+
+            if (!TryGetInventory(other, out InventoryState inventory))
+            {
+                return;
+            }
+
+            TryAutoPickup(inventory);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            if (IsConsumed)
+            {
+                return;
+            }
+
+            if (pickupDelayRemaining > 0f)
             {
                 return;
             }
@@ -46,6 +84,11 @@ namespace Castlebound.Gameplay.Inventory
         public bool TryAutoPickup(InventoryState inventory)
         {
             if (IsConsumed)
+            {
+                return false;
+            }
+
+            if (pickupDelayRemaining > 0f)
             {
                 return false;
             }
@@ -68,6 +111,11 @@ namespace Castlebound.Gameplay.Inventory
         public bool TryManualPickup(InventoryState inventory)
         {
             if (IsConsumed)
+            {
+                return false;
+            }
+
+            if (pickupDelayRemaining > 0f)
             {
                 return false;
             }
@@ -116,6 +164,12 @@ namespace Castlebound.Gameplay.Inventory
 
         private static bool TryGetInventory(Component other, out InventoryState inventory)
         {
+            if (other.GetComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>() == null)
+            {
+                inventory = null;
+                return false;
+            }
+
             InventoryStateComponent component = other.GetComponentInParent<InventoryStateComponent>();
             if (component != null)
             {
@@ -125,6 +179,16 @@ namespace Castlebound.Gameplay.Inventory
 
             inventory = null;
             return false;
+        }
+
+        private void Update()
+        {
+            if (pickupDelayRemaining <= 0f)
+            {
+                return;
+            }
+
+            pickupDelayRemaining = Mathf.Max(0f, pickupDelayRemaining - Time.deltaTime);
         }
 
         private void Consume()
