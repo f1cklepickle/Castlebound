@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63a22525ed6c07c41bee58dbc4b690b3, type: 3}
+  m_Name: LootTable_GoldBasic
+  m_EditorClassIdentifier: 
+  dropChance: 1
+  entries:
+  - item: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
+    minAmount: 1
+    maxAmount: 2
+    weight: 2
+  - item: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
+    minAmount: 3
+    maxAmount: 5
+    weight: 4
+  - item: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
+    minAmount: 6
+    maxAmount: 8
+    weight: 2
+  - item: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
+    minAmount: 9
+    maxAmount: 9
+    weight: 1.5
+  - item: {fileID: 11400000, guid: c1f4b2a3d5e647f8a9b0c1d2e3f4a5b6, type: 2}
+    minAmount: 10
+    maxAmount: 10
+    weight: 0.5

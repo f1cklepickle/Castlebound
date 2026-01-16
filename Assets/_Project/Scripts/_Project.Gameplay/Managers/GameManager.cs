@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = System.Random;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager I { get; private set; }
     [SerializeField] GameObject gameOverUI; // optional canvas element
+
+    public Random LootRng { get; private set; }
 
     bool gameOver;
 
@@ -12,6 +15,7 @@ public class GameManager : MonoBehaviour
     {
         if (I && I != this) { Destroy(gameObject); return; }
         I = this;
+        LootRng = new Random();
     }
 
     public void OnPlayerDied()

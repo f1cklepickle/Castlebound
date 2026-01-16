@@ -355,6 +355,24 @@ All EditMode tests pass.
 - Missing CastleRegionTracker logs a warning and treats enemy/player as outside for barrier gating.
 - Ring manager now caches player; no behavior change expected.
 
+## 2026-01-15 - feat/loot-tables
+
+### Summary
+- Added configurable loot tables with per-table rolls, global cap, and rarity-first selection.
+- Loot drops now split gold into multiple pickups with per-table spawn caps and spill motion away from player.
+- Added pickup delay and restricted pickups to the player body collider.
+
+### New or Updated Tests
+**EditMode**
+- `LootTableRngTests`
+- `LootDropperTests`
+- `ItemPickupComponentTests`
+- `LootSpillMotionTests`
+
+### Notes
+- LootDropper uses table-to-prefab mapping with max rolls and per-table spawn caps.
+- Spill motion uses cone width + distance range tuning; pickups slide with ease-out.
+
 ## 2025-12-XX - fix/barrier-inside-attack-gate
 
 ### Summary

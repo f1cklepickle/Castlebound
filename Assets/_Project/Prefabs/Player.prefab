@@ -114,6 +114,7 @@ GameObject:
   - component: {fileID: 7777777777777777777}
   - component: {fileID: 9150000000000000006}
   - component: {fileID: 9150000000000000007}
+  - component: {fileID: -8459184681864577316}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -478,6 +479,18 @@ MonoBehaviour:
   resolverSource: {fileID: 9150000000000000006}
   spriteRenderer: {fileID: 9150000000000000005}
   handSocket: {fileID: 9150000000000000002}
+--- !u!114 &-8459184681864577316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7b6c5d4e3f2109a8b7c6d5e4f32109, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &9150000000000000001
 GameObject:
   m_ObjectHideFlags: 0

@@ -657,6 +657,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Barrier_Gate_N
       objectReference: {fileID: 0}
+    - target: {fileID: 683792860472063015, guid: dc74549e32466984aa8c05b572869f89, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 738055936485911948, guid: dc74549e32466984aa8c05b572869f89, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.83
