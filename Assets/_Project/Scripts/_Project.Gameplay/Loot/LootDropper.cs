@@ -37,6 +37,11 @@ namespace Castlebound.Gameplay.Loot
         [FormerlySerializedAs("globalMaxDrops")]
         [SerializeField] private int globalMaxTables = 10;
         [SerializeField] private int xpAmount = 0;
+        [SerializeField] private float spillRadius = 0.4f;
+        [SerializeField] private float spillDuration = 0.2f;
+        [SerializeField] private float spillConeWidth = 0.7f;
+        [SerializeField] private float spillDistanceMin = 0.4f;
+        [SerializeField] private float spillDistanceMax = 1.4f;
 
         private LootRollResult[] cachedResults = Array.Empty<LootRollResult>();
         private Health health;
@@ -174,6 +179,7 @@ namespace Castlebound.Gameplay.Loot
             }
 
             var spawned = new ItemPickupComponent[requests.Length];
+            Vector3? playerPosition = TryGetPlayerPosition();
             for (int i = 0; i < requests.Length; i++)
             {
                 var request = requests[i];
@@ -183,6 +189,7 @@ namespace Castlebound.Gameplay.Loot
                 }
 
                 var instance = Instantiate(request.Prefab, position, Quaternion.identity);
+                ApplySpillMotion(instance.transform, position, playerPosition);
                 instance.Kind = request.Kind;
                 instance.ItemDefinition = request.Item;
                 instance.Amount = request.Amount;
@@ -190,6 +197,49 @@ namespace Castlebound.Gameplay.Loot
             }
 
             return spawned;
+        }
+
+        private void ApplySpillMotion(Transform spawnedTransform, Vector3 origin, Vector3? playerPosition)
+        {
+            if (spillDuration <= 0f || spillRadius <= 0f)
+            {
+                return;
+            }
+
+            Vector2 baseDir = Vector2.right;
+            if (playerPosition.HasValue)
+            {
+                Vector2 away = (origin - playerPosition.Value);
+                if (away.sqrMagnitude > 0.0001f)
+                {
+                    baseDir = away.normalized;
+                }
+            }
+
+            Vector2 scatter = UnityEngine.Random.insideUnitCircle;
+            Vector2 cone = (baseDir + scatter * spillConeWidth).normalized;
+            float min = Mathf.Min(spillDistanceMin, spillDistanceMax);
+            float max = Mathf.Max(spillDistanceMin, spillDistanceMax);
+            float distance = spillRadius * UnityEngine.Random.Range(min, max);
+            Vector3 target = origin + new Vector3(cone.x, cone.y, 0f) * distance;
+            var motion = spawnedTransform.gameObject.GetComponent<LootSpillMotion>();
+            if (motion == null)
+            {
+                motion = spawnedTransform.gameObject.AddComponent<LootSpillMotion>();
+            }
+
+            motion.Initialize(target, spillDuration);
+        }
+
+        private static Vector3? TryGetPlayerPosition()
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null)
+            {
+                return null;
+            }
+
+            return player.transform.position;
         }
 
         private void GrantXp()
