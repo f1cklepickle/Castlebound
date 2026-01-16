@@ -293,3 +293,8 @@ MonoBehaviour:
   maxRolls: 1
   globalMaxTables: 6
   xpAmount: 5
+  spillRadius: 1
+  spillDuration: 0.4
+  spillConeWidth: 1
+  spillDistanceMin: 0.2
+  spillDistanceMax: 1.4
