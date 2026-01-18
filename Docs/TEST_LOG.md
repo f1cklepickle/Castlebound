@@ -4,6 +4,19 @@
 
 ---
 
+## (date TBD) - feat/barrier-upgrade-persist
+
+### Summary
+- Added barrier upgrade persistence across wave transitions for shared and local states.
+- Added wave-start event hook to reapply tiered max health without resetting current health.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierUpgradePersistenceTests`
+
+### Notes
+- Shared state assets allow linked upgrades; unassigned state uses per-barrier local tier.
+
 ## (date TBD) - feat/barrier-upgrades
 
 ### Summary
