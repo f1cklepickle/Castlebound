@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,6 +6,8 @@ namespace Castlebound.Gameplay.Spawning
 {
     public class EnemySpawnerRunner : MonoBehaviour
     {
+        public event Action<int> OnWaveStarted;
+
         [System.Serializable]
         private struct EnemyPrefabMapping
         {
@@ -54,10 +57,19 @@ namespace Castlebound.Gameplay.Spawning
             if (hasAuthoredWaves)
             {
                 _waveSpawner = new EnemyWaveSpawner(waveSchedule, spawnPoints);
+                _waveSpawner.OnWaveStarted += HandleWaveStarted;
             }
             else
             {
                 _spawner = new EnemySpawner(scheduleAsset.ToRuntimeSchedule(), spawnPoints);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_waveSpawner != null)
+            {
+                _waveSpawner.OnWaveStarted -= HandleWaveStarted;
             }
         }
 
@@ -73,6 +85,11 @@ namespace Castlebound.Gameplay.Spawning
                 var ready = _spawner.Tick(Time.deltaTime);
                 SpawnReady(ready);
             }
+        }
+
+        private void HandleWaveStarted(int waveIndex)
+        {
+            OnWaveStarted?.Invoke(waveIndex);
         }
 
         private void BuildPrefabMap()
