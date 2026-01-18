@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,6 +7,8 @@ namespace Castlebound.Gameplay.Spawning
 {
     public class EnemyWaveSpawner
     {
+        public event Action<int> OnWaveStarted;
+
         private readonly WaveScheduleRuntime _waveSchedule;
         private readonly List<SpawnPoint> _spawnPoints;
 
@@ -119,6 +122,8 @@ namespace Castlebound.Gameplay.Spawning
             }
 
             _pendingWaveRequests = requests;
+
+            OnWaveStarted?.Invoke(_currentWaveIndex);
         }
 
         private void EnterPostWaveWait()
