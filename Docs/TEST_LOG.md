@@ -4,6 +4,22 @@
 
 ---
 
+## (date TBD) - feat/barrier-upgrade-action
+
+### Summary
+- Added pre-wave upgrade menu with auto-open after the gap and manual U toggle.
+- Added upgrade list UI that auto-discovers upgradeable barriers and updates after upgrades.
+- Added pre-wave gating, feedback cues, and player input pause while the menu is open.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierUpgradeActionTests`
+- `UpgradeMenuControllerTests`
+- `WaveMenuGateTests`
+
+### Notes
+- Upgrade menu opens after the wave gap completes and starts the next wave on close.
+
 ## (date TBD) - feat/barrier-upgrade-persist
 
 ### Summary
