@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
   private PlayerCollisionMove2D mover;
     private float lastWeaponSlotSwapTime = float.NegativeInfinity;
     private InventoryState inventoryState;
+    private bool inputLocked;
 
 void Awake() {
     rb = GetComponent<Rigidbody2D>();
@@ -45,16 +46,31 @@ void Awake() {
 
     public void OnMove(InputValue value)
     {
+        if (inputLocked)
+        {
+            return;
+        }
+
         movementInput = value.Get<Vector2>();
     }
 
     public void OnFire(InputValue value)
     {
+        if (inputLocked)
+        {
+            return;
+        }
+
         animator.SetTrigger("Attack");
     }
 
    void FixedUpdate()
 {
+    if (inputLocked)
+    {
+        return;
+    }
+
     // Pass input to the collision-clamped mover
     if (mover != null)
     {
@@ -86,6 +102,9 @@ void Awake() {
 
     public void OnRepair(InputValue value)
     {
+        if (inputLocked)
+            return;
+
         // We only care about the press event.
         if (!value.isPressed)
             return;
@@ -116,6 +135,9 @@ void Awake() {
 
     public void OnUsePotion(InputValue value)
     {
+        if (inputLocked)
+            return;
+
         if (!value.isPressed)
             return;
 
@@ -124,6 +146,9 @@ void Awake() {
 
     public void OnSwapWeaponSlot(InputValue value)
     {
+        if (inputLocked)
+            return;
+
         var scroll = value.Get<Vector2>().y;
         HandleWeaponSlotSwap(scroll, Time.time);
     }
@@ -165,5 +190,24 @@ void Awake() {
 
         int nextIndex = inventoryState.ActiveWeaponSlotIndex == 0 ? 1 : 0;
         return inventoryState.SetActiveWeaponSlot(nextIndex);
+    }
+
+    public void StopMovement()
+    {
+        movementInput = Vector2.zero;
+        if (mover != null)
+        {
+            mover.SetMoveInput(Vector2.zero);
+        }
+
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+        }
+    }
+
+    public void SetInputLocked(bool locked)
+    {
+        inputLocked = locked;
     }
 }
