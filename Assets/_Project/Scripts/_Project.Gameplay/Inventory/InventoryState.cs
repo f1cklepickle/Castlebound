@@ -134,6 +134,18 @@ namespace Castlebound.Gameplay.Inventory
             return true;
         }
 
+        public bool TrySpendGold(int amount)
+        {
+            if (amount <= 0 || Gold < amount)
+            {
+                return false;
+            }
+
+            Gold -= amount;
+            RaiseChanged(InventoryChangeFlags.Currency);
+            return true;
+        }
+
         public bool AddXp(int amount)
         {
             if (amount <= 0)
