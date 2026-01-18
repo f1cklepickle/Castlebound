@@ -8,6 +8,7 @@ namespace Castlebound.Gameplay.Spawning
     public class EnemyWaveSpawner
     {
         public event Action<int> OnWaveStarted;
+        public event Action OnWaveEnded;
 
         private readonly WaveScheduleRuntime _waveSchedule;
         private readonly List<SpawnPoint> _spawnPoints;
@@ -22,6 +23,8 @@ namespace Castlebound.Gameplay.Spawning
 
         private float _gapTimer;
         private bool _waitingForClear;
+        private bool _requireClear;
+        private bool _waveEndAnnounced;
 
         public EnemyWaveSpawner(WaveScheduleRuntime waveSchedule, IEnumerable<SpawnPoint> spawnPoints)
         {
@@ -50,7 +53,7 @@ namespace Castlebound.Gameplay.Spawning
             // If we are in a wait-for-clear phase before advancing to next wave.
             if (_waitingForClear)
             {
-                if (currentAlive > 0)
+                if (_requireClear && currentAlive > 0)
                 {
                     return ready;
                 }
@@ -61,11 +64,13 @@ namespace Castlebound.Gameplay.Spawning
                     return ready;
                 }
 
-                AdvanceToNextWave();
-                if (_currentWave == null)
+                if (!_waveEndAnnounced)
                 {
-                    return ready;
+                    _waveEndAnnounced = true;
+                    OnWaveEnded?.Invoke();
                 }
+
+                return ready;
             }
 
             if (_pendingWaveRequests == null || _nextSpawnRequestIndex >= _pendingWaveRequests.Count)
@@ -133,15 +138,10 @@ namespace Castlebound.Gameplay.Spawning
                 return;
             }
 
-            if (_currentWave.WaitForClear)
-            {
-                _waitingForClear = true;
-                _gapTimer = _currentWave.GapSeconds;
-                return;
-            }
-
+            _waitingForClear = true;
+            _requireClear = _currentWave.WaitForClear;
             _gapTimer = _currentWave.GapSeconds;
-            AdvanceToNextWaveAfterGap();
+            _waveEndAnnounced = false;
         }
 
         private void AdvanceToNextWaveAfterGap()
@@ -159,6 +159,18 @@ namespace Castlebound.Gameplay.Spawning
         {
             _currentWaveIndex++;
             PrepareWave(_currentWaveIndex);
+        }
+
+        public void AdvanceFromPreWave()
+        {
+            if (!_waitingForClear || !_waveEndAnnounced || _currentWave == null)
+            {
+                return;
+            }
+
+            _waitingForClear = false;
+            _waveEndAnnounced = false;
+            AdvanceToNextWave();
         }
 
         private void UpdateSequenceTimers(float deltaTime)

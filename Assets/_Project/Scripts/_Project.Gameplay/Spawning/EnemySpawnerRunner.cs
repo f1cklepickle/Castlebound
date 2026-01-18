@@ -7,6 +7,7 @@ namespace Castlebound.Gameplay.Spawning
     public class EnemySpawnerRunner : MonoBehaviour
     {
         public event Action<int> OnWaveStarted;
+        public event Action OnWaveEnded;
 
         [System.Serializable]
         private struct EnemyPrefabMapping
@@ -24,6 +25,9 @@ namespace Castlebound.Gameplay.Spawning
         private EnemyWaveSpawner _waveSpawner;
         private int _aliveCount;
         private Dictionary<string, GameObject> _prefabMap;
+        private WavePhaseTracker phaseTracker;
+
+        public WavePhaseTracker PhaseTracker => phaseTracker ??= new WavePhaseTracker();
 
         private void Start()
         {
@@ -58,11 +62,15 @@ namespace Castlebound.Gameplay.Spawning
             {
                 _waveSpawner = new EnemyWaveSpawner(waveSchedule, spawnPoints);
                 _waveSpawner.OnWaveStarted += HandleWaveStarted;
+                _waveSpawner.OnWaveEnded += HandleWaveEnded;
             }
             else
             {
                 _spawner = new EnemySpawner(scheduleAsset.ToRuntimeSchedule(), spawnPoints);
             }
+
+            phaseTracker = phaseTracker ?? new WavePhaseTracker();
+            phaseTracker.SetPhase(WavePhase.InWave);
         }
 
         private void OnDestroy()
@@ -70,11 +78,17 @@ namespace Castlebound.Gameplay.Spawning
             if (_waveSpawner != null)
             {
                 _waveSpawner.OnWaveStarted -= HandleWaveStarted;
+                _waveSpawner.OnWaveEnded -= HandleWaveEnded;
             }
         }
 
         private void Update()
         {
+            if (phaseTracker != null && phaseTracker.CurrentPhase != WavePhase.InWave)
+            {
+                return;
+            }
+
             if (_waveSpawner != null)
             {
                 var ready = _waveSpawner.Tick(Time.deltaTime, _aliveCount);
@@ -90,6 +104,23 @@ namespace Castlebound.Gameplay.Spawning
         private void HandleWaveStarted(int waveIndex)
         {
             OnWaveStarted?.Invoke(waveIndex);
+        }
+
+        private void HandleWaveEnded()
+        {
+            OnWaveEnded?.Invoke();
+            phaseTracker.SetPhase(WavePhase.PreWave);
+        }
+
+        public void StartNextWaveFromMenu()
+        {
+            if (_waveSpawner == null)
+            {
+                return;
+            }
+
+            _waveSpawner.AdvanceFromPreWave();
+            phaseTracker.SetPhase(WavePhase.InWave);
         }
 
         private void BuildPrefabMap()
