@@ -1,7 +1,6 @@
 using System;
 using Castlebound.Gameplay.Spawning;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Castlebound.Gameplay.UI
 {
@@ -136,40 +135,18 @@ namespace Castlebound.Gameplay.UI
 
         private void ApplyMenuState(bool open)
         {
-            EnsureMenuRoot();
             IsMenuOpen = open;
-            if (menuRoot != null)
+            if (menuRoot == null)
+            {
+                Debug.LogWarning("UpgradeMenuController: Menu root is not assigned.", this);
+            }
+            else
             {
                 menuRoot.gameObject.SetActive(open);
             }
 
             SetPlayerPaused(open);
             MenuStateChanged?.Invoke(open);
-        }
-
-        public RectTransform EnsureMenuRoot()
-        {
-            if (menuRoot != null)
-            {
-                return menuRoot;
-            }
-
-            var panel = new GameObject("UpgradeMenuPanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            panel.transform.SetParent(transform, false);
-
-            var rect = panel.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(520f, 260f);
-            rect.anchoredPosition = Vector2.zero;
-
-            var image = panel.GetComponent<Image>();
-            image.color = new Color(0f, 0f, 0f, 0.7f);
-            image.raycastTarget = true;
-
-            menuRoot = rect;
-            return menuRoot;
         }
 
         private void SetPlayerPaused(bool paused)
