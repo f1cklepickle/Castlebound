@@ -2,5 +2,7 @@ public enum FeedbackCueType
 {
     PlayerHit,
     PlayerHitEnemy,
-    EnemyHitBarrier
+    EnemyHitBarrier,
+    UpgradeSuccess,
+    UpgradeDenied
 }

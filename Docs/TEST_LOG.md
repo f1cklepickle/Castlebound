@@ -4,7 +4,24 @@
 
 ---
 
-## (date TBD) - feat/barrier-upgrade-persist
+## 2026-01-21 - feat/barrier-upgrade-action
+
+### Summary
+- Added pre-wave upgrade menu with 5s gap auto-open and manual U toggle.
+- Added upgrade list UI that auto-discovers upgradeable barriers, updates after upgrades, and shows hover/success/denied feedback.
+- Upgrades add current health delta and revive broken barriers once health crosses above 0.
+- Added pre-wave gating and player input pause while the menu is open.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierUpgradeActionTests`
+- `UpgradeMenuControllerTests`
+- `WaveMenuGateTests`
+
+### Notes
+- Upgrade menu opens after the wave gap completes, blocks in-wave toggles, and starts the next wave on close.
+
+## 2026-01-18 - feat/barrier-upgrade-persist
 
 ### Summary
 - Added barrier upgrade persistence across wave transitions for shared and local states.
@@ -17,7 +34,7 @@
 ### Notes
 - Shared state assets allow linked upgrades; unassigned state uses per-barrier local tier.
 
-## (date TBD) - feat/barrier-upgrades
+## 2026-01-18 - feat/barrier-upgrades
 
 ### Summary
 - Added barrier upgrade config, tier state, and purchase flow with gold spend validation.

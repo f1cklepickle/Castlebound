@@ -136,6 +136,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ToggleUpgradeMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""3b1e6b2b-5f3a-4f7d-9f3e-2e3f14c1d8a1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -237,6 +246,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""SwapWeaponSlot"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9e8b2b7e-2f35-4e0c-9c65-bbb2c070f6d2"",
+                    ""path"": ""<Keyboard>/u"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleUpgradeMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -250,6 +270,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_Repair = m_Player.FindAction("Repair", throwIfNotFound: true);
         m_Player_UsePotion = m_Player.FindAction("UsePotion", throwIfNotFound: true);
         m_Player_SwapWeaponSlot = m_Player.FindAction("SwapWeaponSlot", throwIfNotFound: true);
+        m_Player_ToggleUpgradeMenu = m_Player.FindAction("ToggleUpgradeMenu", throwIfNotFound: true);
     }
 
     ~@PlayerControls()
@@ -335,6 +356,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Repair;
     private readonly InputAction m_Player_UsePotion;
     private readonly InputAction m_Player_SwapWeaponSlot;
+    private readonly InputAction m_Player_ToggleUpgradeMenu;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -366,6 +388,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/SwapWeaponSlot".
         /// </summary>
         public InputAction @SwapWeaponSlot => m_Wrapper.m_Player_SwapWeaponSlot;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ToggleUpgradeMenu".
+        /// </summary>
+        public InputAction @ToggleUpgradeMenu => m_Wrapper.m_Player_ToggleUpgradeMenu;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -407,6 +433,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @SwapWeaponSlot.started += instance.OnSwapWeaponSlot;
             @SwapWeaponSlot.performed += instance.OnSwapWeaponSlot;
             @SwapWeaponSlot.canceled += instance.OnSwapWeaponSlot;
+            @ToggleUpgradeMenu.started += instance.OnToggleUpgradeMenu;
+            @ToggleUpgradeMenu.performed += instance.OnToggleUpgradeMenu;
+            @ToggleUpgradeMenu.canceled += instance.OnToggleUpgradeMenu;
         }
 
         /// <summary>
@@ -433,6 +462,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @SwapWeaponSlot.started -= instance.OnSwapWeaponSlot;
             @SwapWeaponSlot.performed -= instance.OnSwapWeaponSlot;
             @SwapWeaponSlot.canceled -= instance.OnSwapWeaponSlot;
+            @ToggleUpgradeMenu.started -= instance.OnToggleUpgradeMenu;
+            @ToggleUpgradeMenu.performed -= instance.OnToggleUpgradeMenu;
+            @ToggleUpgradeMenu.canceled -= instance.OnToggleUpgradeMenu;
         }
 
         /// <summary>
@@ -508,5 +540,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSwapWeaponSlot(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleUpgradeMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleUpgradeMenu(InputAction.CallbackContext context);
     }
 }

@@ -81,6 +81,18 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         ResolveActiveOverlaps();
     }
 
+    public void ReviveIfNeeded()
+    {
+        if (!IsBroken || CurrentHealth <= 0)
+        {
+            return;
+        }
+
+        IsBroken = false;
+        UpdateBrokenState();
+        ResolveActiveOverlaps();
+    }
+
     private void UpdateBrokenState()
     {
         if (barrierCollider == null)
