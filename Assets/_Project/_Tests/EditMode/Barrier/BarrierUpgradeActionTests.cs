@@ -161,5 +161,77 @@ namespace Castlebound.Tests.Barrier
 
             Object.DestroyImmediate(target);
         }
+
+        [Test]
+        public void Upgrade_AddsPurchasedHealth_WhenBarrierIsBroken()
+        {
+            var config = ScriptableObject.CreateInstance<BarrierUpgradeConfig>();
+            config.BaseMaxHealth = 10;
+            config.MaxHealthPerTier = 5;
+            config.BaseCost = 10;
+            config.CostPerTier = 5;
+
+            var phase = new WavePhaseTracker();
+            phase.SetPhase(WavePhase.PreWave);
+
+            var inventory = new InventoryState();
+            inventory.AddGold(20);
+
+            var target = new GameObject("Barrier");
+            var barrierHealth = target.AddComponent<BarrierHealth>();
+            barrierHealth.MaxHealth = 10;
+            barrierHealth.CurrentHealth = 0;
+
+            var controller = target.AddComponent<BarrierUpgradeController>();
+            controller.Config = config;
+            controller.SetInventory(inventory);
+            controller.SetPhaseTracker(phase);
+
+            bool upgraded = controller.TryUpgrade();
+
+            Assert.IsTrue(upgraded, "Upgrade should succeed when pre-wave and gold is sufficient.");
+            Assert.That(barrierHealth.MaxHealth, Is.EqualTo(15), "Upgrade should increase max health.");
+            Assert.That(barrierHealth.CurrentHealth, Is.EqualTo(5), "Upgrade should add purchased health, not full heal.");
+
+            Object.DestroyImmediate(target);
+        }
+
+        [Test]
+        public void Upgrade_RevivesBarrier_WhenHealthBecomesPositive()
+        {
+            var config = ScriptableObject.CreateInstance<BarrierUpgradeConfig>();
+            config.BaseMaxHealth = 10;
+            config.MaxHealthPerTier = 5;
+            config.BaseCost = 10;
+            config.CostPerTier = 5;
+
+            var phase = new WavePhaseTracker();
+            phase.SetPhase(WavePhase.PreWave);
+
+            var inventory = new InventoryState();
+            inventory.AddGold(20);
+
+            var target = new GameObject("Barrier");
+            var collider = target.AddComponent<BoxCollider2D>();
+            var sprite = target.AddComponent<SpriteRenderer>();
+            var barrierHealth = target.AddComponent<BarrierHealth>();
+            barrierHealth.MaxHealth = 10;
+            barrierHealth.CurrentHealth = 0;
+            barrierHealth.TakeDamage(1);
+
+            var controller = target.AddComponent<BarrierUpgradeController>();
+            controller.Config = config;
+            controller.SetInventory(inventory);
+            controller.SetPhaseTracker(phase);
+
+            bool upgraded = controller.TryUpgrade();
+
+            Assert.IsTrue(upgraded, "Upgrade should succeed when pre-wave and gold is sufficient.");
+            Assert.That(barrierHealth.CurrentHealth, Is.GreaterThan(0), "Upgrade should add health.");
+            Assert.IsTrue(collider.enabled, "Barrier collider should be re-enabled when health becomes positive.");
+            Assert.IsTrue(sprite.enabled, "Barrier sprite should be re-enabled when health becomes positive.");
+
+            Object.DestroyImmediate(target);
+        }
     }
 }
