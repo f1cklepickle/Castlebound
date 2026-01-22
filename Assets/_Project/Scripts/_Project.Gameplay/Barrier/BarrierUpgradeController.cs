@@ -91,6 +91,9 @@ namespace Castlebound.Gameplay.Barrier
                 return false;
             }
 
+            var health = Target;
+            int previousMax = config.GetMaxHealthForTier(tier);
+
             if (sharedState != null)
             {
                 sharedState.IncrementTier();
@@ -101,6 +104,15 @@ namespace Castlebound.Gameplay.Barrier
             }
 
             ApplyCurrentTier();
+            if (health != null)
+            {
+                int delta = Mathf.Max(0, health.MaxHealth - previousMax);
+                if (delta > 0)
+                {
+                    health.CurrentHealth = Mathf.Min(health.CurrentHealth + delta, health.MaxHealth);
+                    health.ReviveIfNeeded();
+                }
+            }
             RaiseUpgradeFeedback(FeedbackCueType.UpgradeSuccess);
             return true;
         }
