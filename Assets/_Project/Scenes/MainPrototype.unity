@@ -1859,6 +1859,10 @@ PrefabInstance:
       propertyPath: healTargetSource
       value: 
       objectReference: {fileID: 1979340871}
+    - target: {fileID: -4357144976434651652, guid: e06e1ddcdaf43be41aa35e16ed5590f8, type: 3}
+      propertyPath: startingGold
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2399404202485750931, guid: e06e1ddcdaf43be41aa35e16ed5590f8, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.9820348

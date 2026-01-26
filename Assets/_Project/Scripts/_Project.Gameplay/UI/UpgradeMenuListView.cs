@@ -317,7 +317,7 @@ namespace Castlebound.Gameplay.UI
             public void Refresh()
             {
                 nameText.text = controller.name;
-                detailText.text = $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | Cost {controller.GetUpgradeCost()}";
+            detailText.text = $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | Cost {controller.GetUpgradeCost()}";
             }
 
             public void Dispose()
