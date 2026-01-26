@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-01-26 - feat/barrier-tier-visuals
+
+### Summary
+- Added barrier tier color cycle logic with star carry and capped end state.
+- Added world-space barrier healthbar prefab with border/star visuals and health fill.
+- Added binder to sync tier + health into visuals.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierTierColorCycleTests`
+- `BarrierTierVisualsTests`
+- `BarrierTierVisualsBinderTests`
+
+### Notes
+- Manual: upgrade barriers in `MainPrototype` to verify shade progression and star gating.
+
 ## 2026-01-21 - feat/barrier-upgrade-action
 
 ### Summary
