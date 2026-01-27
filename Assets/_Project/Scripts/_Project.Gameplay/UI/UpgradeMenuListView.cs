@@ -90,6 +90,11 @@ namespace Castlebound.Gameplay.UI
             if (inventorySource == null)
             {
                 inventorySource = FindObjectOfType<InventoryStateComponent>();
+                if (inventorySource == null)
+                {
+                    var player = GameObject.FindGameObjectWithTag("Player");
+                    inventorySource = player != null ? player.GetComponent<InventoryStateComponent>() : null;
+                }
             }
         }
 
