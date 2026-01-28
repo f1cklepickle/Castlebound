@@ -33,9 +33,25 @@ public class PotionHudSlot : MonoBehaviour
 
     void OnEnable()
     {
+        Initialize();
+    }
+
+    public void Initialize()
+    {
         if (inventorySource == null) inventorySource = GetComponentInParent<InventoryStateComponent>();
         if (potionUseController == null) potionUseController = GetComponentInParent<PotionUseController>();
         if (resolverSource == null) resolverSource = GetComponentInParent<PotionDefinitionResolverComponent>();
+
+        if (inventorySource == null || potionUseController == null || resolverSource == null)
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                if (inventorySource == null) inventorySource = player.GetComponent<InventoryStateComponent>();
+                if (potionUseController == null) potionUseController = player.GetComponent<PotionUseController>();
+                if (resolverSource == null) resolverSource = player.GetComponent<PotionDefinitionResolverComponent>();
+            }
+        }
 
         if (cooldownOverlay != null)
         {

@@ -24,6 +24,11 @@ public class WeaponSlotsHud : MonoBehaviour
         if (inventorySource == null)
         {
             inventorySource = GetComponentInParent<InventoryStateComponent>();
+            if (inventorySource == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                inventorySource = player != null ? player.GetComponent<InventoryStateComponent>() : null;
+            }
         }
 
         resolver = resolverSource as IWeaponDefinitionResolver ?? FindResolver();

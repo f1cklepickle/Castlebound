@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-01-26 - feat/barrier-tier-visuals
+
+### Summary
+- Added barrier tier color cycle logic with star carry and capped end state.
+- Added world-space barrier healthbar prefab with border/star visuals and health fill.
+- Added binder to sync tier + health into visuals.
+- Added camera follow auto-assign fallback and HUD inventory fallbacks for Player swaps.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierTierColorCycleTests`
+- `BarrierTierVisualsTests`
+- `BarrierTierVisualsBinderTests`
+- `CameraFollowTests`
+- `HudInventoryFallbackTests`
+
+### Notes
+- Manual: upgrade barriers in `MainPrototype` to verify shade progression and star gating.
+- Manual: verify camera follows Player and HUD updates after swapping Player instance.
+
 ## 2026-01-21 - feat/barrier-upgrade-action
 
 ### Summary

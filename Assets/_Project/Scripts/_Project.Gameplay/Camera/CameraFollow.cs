@@ -9,10 +9,26 @@ public class CameraFollow : MonoBehaviour
     // This ensures the camera moves after the player has moved.
     void LateUpdate()
     {
-        if (target != null)
+        Tick();
+    }
+
+    public void Tick()
+    {
+        if (target == null)
         {
-            // Set the camera's position to the target's position plus the offset
-            transform.position = target.position + offset;
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                target = player.transform;
+            }
         }
+
+        if (target == null)
+        {
+            return;
+        }
+
+        // Set the camera's position to the target's position plus the offset
+        transform.position = target.position + offset;
     }
 }

@@ -90,6 +90,11 @@ namespace Castlebound.Gameplay.UI
             if (inventorySource == null)
             {
                 inventorySource = FindObjectOfType<InventoryStateComponent>();
+                if (inventorySource == null)
+                {
+                    var player = GameObject.FindGameObjectWithTag("Player");
+                    inventorySource = player != null ? player.GetComponent<InventoryStateComponent>() : null;
+                }
             }
         }
 
@@ -317,7 +322,7 @@ namespace Castlebound.Gameplay.UI
             public void Refresh()
             {
                 nameText.text = controller.name;
-                detailText.text = $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | Cost {controller.GetUpgradeCost()}";
+            detailText.text = $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | Cost {controller.GetUpgradeCost()}";
             }
 
             public void Dispose()
