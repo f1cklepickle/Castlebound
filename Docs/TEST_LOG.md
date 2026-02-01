@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-02-01 - feat/castle-pressure-trigger
+
+### Summary
+- Added per-barrier break pressure trigger core with wave-aware reset.
+- Wired barrier break events to pressure tracking and scene wave index provider.
+- Added EditMode tests for trigger rules and barrier break event regression.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierBreakPressureTriggerTests` — third-break trigger and wave reset behavior
+- `BarrierPressureTrackerTests` — per-barrier trigger and wave change reset
+- `BarrierHealthTests` — OnBroken event fires once per break
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Manual: verified trigger fires on 3rd break and resets next wave using temporary debug listener.
+
 ## 2026-01-26 - feat/barrier-tier-visuals
 
 ### Summary
