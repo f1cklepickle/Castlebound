@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 6064208705390008131}
   - component: {fileID: 9213801122334455667}
   - component: {fileID: 2768492068559641570}
+  - component: {fileID: 9123456789012345678}
   m_Layer: 8
   m_Name: Barrier_Gate
   m_TagString: Barrier
@@ -224,7 +225,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   feedbackChannel: {fileID: 11400000, guid: 70c41c2488baae148bc4ec73d60b720f, type: 2}
-  durationSeconds: 0.15
+  durationSeconds: -5.31
   intensity: 0.05
 --- !u!114 &9213801122334455667
 MonoBehaviour:
@@ -259,6 +260,20 @@ MonoBehaviour:
   upgradeController: {fileID: 9213801122334455667}
   health: {fileID: 3476958120085971061}
   visuals: {fileID: 8222313947239876031}
+--- !u!114 &9123456789012345678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683792860472063015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541f379365d6c4b4daef7cafc2912a27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  breaksPerWave: 3
+  waveIndexProvider: {fileID: 0}
 --- !u!1 &1826470595709888173
 GameObject:
   m_ObjectHideFlags: 0

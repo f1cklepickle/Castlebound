@@ -114,5 +114,30 @@ namespace Castlebound.Tests.Gate
 
             Object.DestroyImmediate(go);
         }
+
+        [Test]
+        public void OnBroken_FiresOncePerBreak()
+        {
+            var go = new GameObject("Barrier");
+            var barrier = go.AddComponent<BarrierHealth>();
+
+            barrier.MaxHealth = 2;
+            barrier.CurrentHealth = 2;
+
+            int brokenCount = 0;
+            barrier.OnBroken += () => brokenCount++;
+
+            barrier.TakeDamage(2);
+            barrier.TakeDamage(1);
+
+            Assert.That(brokenCount, Is.EqualTo(1), "OnBroken should fire once per break.");
+
+            barrier.Repair();
+            barrier.TakeDamage(2);
+
+            Assert.That(brokenCount, Is.EqualTo(2), "OnBroken should fire again after repair and re-break.");
+
+            Object.DestroyImmediate(go);
+        }
     }
 }
