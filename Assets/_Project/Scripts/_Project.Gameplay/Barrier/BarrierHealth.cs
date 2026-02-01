@@ -1,11 +1,14 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class BarrierHealth : MonoBehaviour, IDamageable
 {
     private static readonly List<BarrierHealth> _all = new List<BarrierHealth>();
     public static IReadOnlyList<BarrierHealth> All => _all;
     private static readonly Collider2D[] _overlapBuffer = new Collider2D[24];
+
+    public event Action OnBroken;
 
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;
@@ -62,6 +65,11 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         }
 
         UpdateBrokenState();
+
+        if (IsBroken)
+        {
+            OnBroken?.Invoke();
+        }
     }
 
     public void Repair()

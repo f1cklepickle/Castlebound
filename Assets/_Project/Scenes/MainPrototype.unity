@@ -2653,6 +2653,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1166075764}
   - component: {fileID: 1166075763}
+  - component: {fileID: 1166075765}
   m_Layer: 0
   m_Name: EnemySpawnerRunner
   m_TagString: Untagged
@@ -2678,6 +2679,18 @@ MonoBehaviour:
   - enemyTypeId: grunt
     prefab: {fileID: 6394411849047796180, guid: 92ae0aa6b169f3b4a9beb3199ee80614, type: 3}
   autoFindMarkers: 1
+--- !u!114 &1166075765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166075762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ced93c6dddc231f46872f9c0b8af97fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1166075764
 Transform:
   m_ObjectHideFlags: 0
