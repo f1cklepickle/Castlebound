@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-02-04 - refactor-castle-region-events
+
+### Summary
+- Replaced enemy inside/outside polling with event-driven EnemyRegionState caching.
+- CastleRegionTracker now raises enter/exit events and instance-ready signal.
+- Enemy prefab updated to include EnemyRegionState; tests cover region state + PlayMode crossing.
+
+### New or Updated Tests
+**EditMode**
+- CastleRegionTrackerEventsTests — tracker enter/exit events
+- EnemyRegionStateTests — cached state updates and missing-tracker fallback
+- EnemyControllerRegionStateTests — target selection uses cached state
+- EnemyAttackRegionStateTests — attack gating reads cached state
+- EnemyAttackRegionTrackerFallbackTests — warning when region state missing
+
+**PlayMode**
+- EnemyRegionStatePlayTests — crossing region trigger updates inside state
+
+### Notes
+- Manual PlayMode verified enemy behavior.
+
 ## 2026-02-01 - feat/castle-pressure-trigger
 
 ### Summary
