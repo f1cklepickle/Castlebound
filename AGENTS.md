@@ -102,6 +102,7 @@ Test paths:
 
 ### Notes
 - <optional; keep short, or write N/A>
+```
 GitHub Issue Creation (When Requested)
 Rules
 Output ONE issue body in ONE fenced code block.
@@ -144,7 +145,55 @@ Branch name suggestion
 
 Commit message suggestion(s)
 
-PR template (exact format) in ONE fenced code block
+PR template 
+
+---
+
+## Pull Request Template (Required)
+
+When generating PR content, the assistant MUST use the following template
+exactly and output it in ONE fenced code block when the user says:
+
+READY TO COMMIT: <summary>
+
+### Rules
+- All sections must be present.
+- All checklist items must be checked.
+- If an item is not applicable, check it and mark “N/A”.
+- Do NOT omit sections.
+- Do NOT add extra sections.
+
+### Template (copy exactly)
+```md
+# Title
+feat(scope): short summary
+
+## Why
+One or two sentences describing the problem, goal, or motivation.
+
+## What changed
+- Bullet points of the key changes
+- Focus on behavior and structure, not file lists
+
+## How to test
+1. Open the relevant scene or demo (if applicable)
+2. Press Play → verify expected behavior
+3. Run tests:
+   - EditMode
+   - PlayMode (or note manual validation)
+
+## Checklist
+_All items must be checked. If not applicable, check and mark “N/A”._
+
+- [ ] Unit tests (EditMode) added or updated
+- [ ] PlayMode test or manual validation included
+- [ ] Demo scene updated (if player-visible)
+- [ ] Prefab links, tags, and layers validated
+- [ ] README / Docs touched (if applicable)
+
+## Related
+- Closes #<issue> or Refs #<issue> (if applicable)
+```
 
 Suggested labels
 
