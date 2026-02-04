@@ -9,11 +9,8 @@ namespace Castlebound.Tests.Combat
     public class EnemyAttackRegionTrackerFallbackTests
     {
         [Test]
-        public void BarrierGate_TreatsMissingRegionTrackerAsOutside_AndWarns()
+        public void BarrierGate_TreatsMissingRegionStateAsOutside_AndWarns()
         {
-            // Ensure no tracker instance.
-            SetRegionTrackerInstance(null);
-
             var enemy = new GameObject("Enemy");
             enemy.AddComponent<Rigidbody2D>();
             var controller = enemy.AddComponent<EnemyController2D>();
@@ -26,7 +23,7 @@ namespace Castlebound.Tests.Combat
                 ?.SetValue(controller, EnemyTargetType.Barrier);
 
             EnemyAttack.Debug_ResetMissingRegionWarning();
-            LogAssert.Expect(LogType.Warning, "[EnemyAttack] CastleRegionTracker.Instance is missing; treating enemy/player as outside for barrier gating.");
+            LogAssert.Expect(LogType.Warning, "[EnemyAttack] EnemyRegionState is missing; treating enemy/player as outside for barrier gating.");
 
             attack.Debug_GetRegionState(out bool enemyInside, out bool playerInside);
 
@@ -34,20 +31,6 @@ namespace Castlebound.Tests.Combat
             Assert.IsFalse(playerInside, "Missing tracker should default playerInside to false.");
 
             Object.DestroyImmediate(enemy);
-        }
-
-        private static void SetRegionTrackerInstance(CastleRegionTracker value)
-        {
-            var prop = typeof(CastleRegionTracker).GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
-            var backingField = typeof(CastleRegionTracker).GetField("<Instance>k__BackingField", BindingFlags.Static | BindingFlags.NonPublic);
-            if (backingField != null)
-            {
-                backingField.SetValue(null, value);
-            }
-            else if (prop != null && prop.CanWrite)
-            {
-                prop.SetValue(null, value, null);
-            }
         }
     }
 }

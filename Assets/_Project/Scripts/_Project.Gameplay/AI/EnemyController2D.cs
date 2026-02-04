@@ -36,6 +36,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private Transform homeBarrier;      // per-enemy assigned barrier (nearest at spawn)
     [SerializeField] private Transform steerTarget;      // movement target (home barrier outside, player inside)
     [SerializeField] private float passThroughRadius = 0.6f; // distance to consider "at" the barrier opening
+    [SerializeField] private EnemyRegionState regionState;
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float holdRadius = 2.6f;    // R_in
@@ -75,6 +76,10 @@ public class EnemyController2D : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        if (regionState == null)
+        {
+            regionState = GetComponent<EnemyRegionState>();
+        }
 
         // Ensure player reference is valid.
         EnsurePlayerReference();
@@ -120,21 +125,22 @@ public class EnemyController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_rb == null) return;
+        if (_rb == null)
+        {
+            _rb = GetComponent<Rigidbody2D>();
+            if (_rb == null) return;
+        }
 
-        bool enemyInsideCastle = false;
-        bool playerInsideCastle = false;
+        if (regionState == null)
+        {
+            regionState = GetComponent<EnemyRegionState>();
+        }
+
+        bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
+        bool playerInsideCastle = regionState != null && regionState.PlayerInside;
 
         if (player != null)
         {
-            var region = CastleRegionTracker.Instance;
-
-            if (useBarrierTargeting && region != null)
-            {
-                playerInsideCastle = region.PlayerInside;
-                enemyInsideCastle = region.EnemyInside(this);
-            }
-
             var decision = EvaluateTargetDecision(playerInsideCastle, enemyInsideCastle);
             steerTarget = decision.SteerTarget != null ? decision.SteerTarget : player;
             target = decision.AttackTarget != null ? decision.AttackTarget : player;
