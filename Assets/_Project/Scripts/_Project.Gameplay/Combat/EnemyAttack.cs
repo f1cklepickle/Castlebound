@@ -22,21 +22,8 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
     EnemyController2D controller;
-    CastleRegionTracker region;
-
-    private CastleRegionTracker Region
-    {
-        get
-        {
-            if (region == null)
-            {
-                region = CastleRegionTracker.Instance;
-            }
-
-            return region;
-        }
-    }
-    static bool missingRegionTrackerWarningLogged;
+    EnemyRegionState regionState;
+    static bool missingRegionStateWarningLogged;
     bool onCooldown;
 
     static readonly Collider2D[] hits = new Collider2D[4];
@@ -44,6 +31,7 @@ public class EnemyAttack : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<EnemyController2D>();
+        regionState = GetComponent<EnemyRegionState>();
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (targetMask.value == 0) {
             int lm = LayerMask.NameToLayer(playerLayerName);
@@ -161,27 +149,31 @@ public class EnemyAttack : MonoBehaviour
 
     private void GetRegionState(out bool enemyInside, out bool playerInside)
     {
-        var reg = Region;
-        if (reg == null)
+        if (regionState == null)
         {
-            if (!missingRegionTrackerWarningLogged)
+            regionState = GetComponent<EnemyRegionState>();
+        }
+
+        if (regionState == null)
+        {
+            if (!missingRegionStateWarningLogged)
             {
-                Debug.LogWarning("[EnemyAttack] CastleRegionTracker.Instance is missing; treating enemy/player as outside for barrier gating.", this);
-                missingRegionTrackerWarningLogged = true;
+                Debug.LogWarning("[EnemyAttack] EnemyRegionState is missing; treating enemy/player as outside for barrier gating.", this);
+                missingRegionStateWarningLogged = true;
             }
             enemyInside = false;
             playerInside = false;
             return;
         }
 
-        enemyInside = reg.EnemyInside(controller);
-        playerInside = reg.PlayerInside;
+        enemyInside = regionState.EnemyInside;
+        playerInside = regionState.PlayerInside;
     }
 
 #if UNITY_EDITOR
     // Test helpers (Editor-only)
     public void Debug_GetRegionState(out bool enemyInside, out bool playerInside) => GetRegionState(out enemyInside, out playerInside);
-    public static void Debug_ResetMissingRegionWarning() => missingRegionTrackerWarningLogged = false;
+    public static void Debug_ResetMissingRegionWarning() => missingRegionStateWarningLogged = false;
     public void Debug_EnsureTargetMask()
     {
         if (targetMask.value == 0)
