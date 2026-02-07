@@ -88,6 +88,7 @@ namespace Castlebound.Tests.PlayMode.Castle
             enemy.AddComponent<BoxCollider2D>();
             enemy.AddComponent<EnemyController2D>();
             enemy.AddComponent<EnemyRegionState>();
+            enemy.AddComponent<EnemyKnockbackReceiver>();
             return enemy;
         }
 

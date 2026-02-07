@@ -25,7 +25,8 @@ namespace Castlebound.Gameplay.Castle
             pressureTracker = GetComponent<BarrierPressureTracker>();
             if (pulseOrigin == null)
             {
-                pulseOrigin = transform;
+                var originTransform = transform.Find("PulseOrigin");
+                pulseOrigin = originTransform != null ? originTransform : transform;
             }
         }
 
@@ -127,18 +128,18 @@ namespace Castlebound.Gameplay.Castle
                     continue;
                 }
 
-                var rb = enemy.GetComponent<Rigidbody2D>();
-                if (rb == null)
+                var knockback = enemy.GetComponent<EnemyKnockbackReceiver>();
+                if (knockback == null)
                 {
                     continue;
                 }
 
-                Vector2 enemyPos = rb.position;
+                Vector2 enemyPos = enemy.transform.position;
                 float dist = Vector2.Distance(origin, enemyPos);
                 if (dist <= maxRadius && dist > minRadius)
                 {
                     Vector2 dir = (enemyPos - origin).normalized;
-                    rb.AddForce(dir * pulseStrength, ForceMode2D.Impulse);
+                    knockback.AddKnockback(dir * pulseStrength, 6f);
                     pushedEnemies.Add(enemy);
                 }
             }

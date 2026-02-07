@@ -49,11 +49,11 @@ namespace Castlebound.Tests.Castle
 
             Invoke(emitter, "Debug_TickPulse", 0.8f);
 
-            var outsideVel = outsideEnemy.GetComponent<Rigidbody2D>().velocity;
-            var insideVel = insideEnemy.GetComponent<Rigidbody2D>().velocity;
+            var outsideKnockback = outsideEnemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f);
+            var insideKnockback = insideEnemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f);
 
-            Assert.Greater(outsideVel.magnitude, 0.01f, "Outside enemy should receive push.");
-            Assert.Less(insideVel.magnitude, 0.001f, "Inside enemy should not be pushed.");
+            Assert.Greater(outsideKnockback.magnitude, 0.01f, "Outside enemy should receive push.");
+            Assert.Less(insideKnockback.magnitude, 0.001f, "Inside enemy should not be pushed.");
 
             UnityEngine.Object.DestroyImmediate(regionGO);
             UnityEngine.Object.DestroyImmediate(barrier);
@@ -77,17 +77,17 @@ namespace Castlebound.Tests.Castle
             var enemy = CreateEnemy(new Vector2(5f, 0f));
 
             Invoke(emitter, "Debug_TickPulse", 0.4f);
-            var velBefore = enemy.GetComponent<Rigidbody2D>().velocity.magnitude;
+            var before = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
 
             Invoke(emitter, "Debug_TickPulse", 0.2f);
-            var velAtCross = enemy.GetComponent<Rigidbody2D>().velocity.magnitude;
+            var atCross = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
 
             Invoke(emitter, "Debug_TickPulse", 0.4f);
-            var velAfter = enemy.GetComponent<Rigidbody2D>().velocity.magnitude;
+            var after = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
 
-            Assert.That(velBefore, Is.EqualTo(0f).Within(0.001f), "No push before wavefront reaches enemy.");
-            Assert.Greater(velAtCross, 0.01f, "Enemy should be pushed when wavefront crosses.");
-            Assert.That(velAfter, Is.EqualTo(velAtCross).Within(0.001f), "Enemy should not be pushed again after crossing.");
+            Assert.That(before, Is.EqualTo(0f).Within(0.001f), "No push before wavefront reaches enemy.");
+            Assert.Greater(atCross, 0.01f, "Enemy should be pushed when wavefront crosses.");
+            Assert.Less(after, atCross, "Enemy should not be pushed again after crossing.");
 
             UnityEngine.Object.DestroyImmediate(regionGO);
             UnityEngine.Object.DestroyImmediate(barrier);
@@ -111,7 +111,7 @@ namespace Castlebound.Tests.Castle
 
             Invoke(emitter, "Debug_TickPulse", 0.6f);
 
-            var velocity = enemy.GetComponent<Rigidbody2D>().velocity;
+            var velocity = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f);
             var dir = ((Vector2)enemy.transform.position - (Vector2)origin.transform.position).normalized;
             float dot = Vector2.Dot(velocity.normalized, dir);
 
@@ -158,6 +158,7 @@ namespace Castlebound.Tests.Castle
             enemy.AddComponent<BoxCollider2D>();
             enemy.AddComponent<EnemyController2D>();
             enemy.AddComponent<EnemyRegionState>();
+            enemy.AddComponent<EnemyKnockbackReceiver>();
             return enemy;
         }
 
