@@ -47,6 +47,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private float epsilonDist = 0.01f;
     [SerializeField] private float reseatBias = 0.3f;
     [SerializeField] private bool useBarrierTargeting = true;
+    [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
 
     public Transform Target => target;
     private EnemyTargetType _currentTargetType = EnemyTargetType.None;
@@ -76,6 +77,10 @@ public class EnemyController2D : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        if (knockbackReceiver == null)
+        {
+            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
+        }
         if (regionState == null)
         {
             regionState = GetComponent<EnemyRegionState>();
@@ -178,7 +183,8 @@ public class EnemyController2D : MonoBehaviour
             out Vector2 tangent);
 
         float dt = Time.fixedDeltaTime;
-        _rb.MovePosition(pos + (radial + tangent) * dt);
+        Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
+        _rb.MovePosition(pos + (radial + tangent) * dt + knockbackDelta);
     }
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)
