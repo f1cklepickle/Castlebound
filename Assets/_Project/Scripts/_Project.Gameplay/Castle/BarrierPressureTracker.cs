@@ -72,13 +72,13 @@ namespace Castlebound.Gameplay.Castle
 
             breakCount++;
 
-            if (triggeredThisWave || breakCount < breaksPerWave)
-            {
-                return;
-            }
+        if (triggeredThisWave || breakCount < breaksPerWave)
+        {
+            return;
+        }
 
-            triggeredThisWave = true;
-            onPressureTriggered?.Invoke(barrierId);
+        triggeredThisWave = true;
+        onPressureTriggered?.Invoke(barrierId);
         }
 
         private int GetWaveIndex()
