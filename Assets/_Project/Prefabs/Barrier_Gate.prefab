@@ -289,9 +289,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pulseOrigin: {fileID: 1199000000000000002}
-  pulseDuration: 5
-  pulseRadius: 15
-  pulseStrength: 10
+  pulseDuration: 1.5
+  pulseRadius: 3
+  pulseStrength: 5
+  pulseLoopCount: 1
+  pulseInsideThreshold: 1.2
 --- !u!1 &1199000000000000001
 GameObject:
   m_ObjectHideFlags: 0

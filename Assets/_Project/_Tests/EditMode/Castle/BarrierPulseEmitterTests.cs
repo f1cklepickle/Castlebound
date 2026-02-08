@@ -62,7 +62,7 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
-        public void PulseAppliesOnce_WhenWavefrontCrosses()
+        public void PulseContinuesWhileWavefrontIsActive()
         {
             var region = CreateRegionTracker(out var regionGO);
             var barrier = new GameObject("Barrier");
@@ -71,23 +71,19 @@ namespace Castlebound.Tests.Castle
             origin.transform.localPosition = Vector3.zero;
 
             var emitter = AddEmitter(barrier);
-            SetPulseTuning(emitter, origin.transform, 1.0f, 10f, 5f);
+            SetPulseTuning(emitter, origin.transform, 2.0f, 10f, 5f);
             Invoke(emitter, "Debug_StartPulse");
 
             var enemy = CreateEnemy(new Vector2(5f, 0f));
 
-            Invoke(emitter, "Debug_TickPulse", 0.4f);
-            var before = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+            Invoke(emitter, "Debug_TickPulse", 1.0f);
+            var firstPush = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
 
-            Invoke(emitter, "Debug_TickPulse", 0.2f);
-            var atCross = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+            Invoke(emitter, "Debug_TickPulse", 0.1f);
+            var secondPush = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
 
-            Invoke(emitter, "Debug_TickPulse", 0.4f);
-            var after = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
-
-            Assert.That(before, Is.EqualTo(0f).Within(0.001f), "No push before wavefront reaches enemy.");
-            Assert.Greater(atCross, 0.01f, "Enemy should be pushed when wavefront crosses.");
-            Assert.Less(after, atCross, "Enemy should not be pushed again after crossing.");
+            Assert.Greater(firstPush, 0.01f, "Enemy should receive push when wavefront reaches it.");
+            Assert.GreaterOrEqual(secondPush, firstPush * 0.8f, "Enemy should keep receiving strong push while wavefront remains active.");
 
             UnityEngine.Object.DestroyImmediate(regionGO);
             UnityEngine.Object.DestroyImmediate(barrier);
@@ -122,6 +118,69 @@ namespace Castlebound.Tests.Castle
             UnityEngine.Object.DestroyImmediate(enemy);
         }
 
+        [Test]
+        public void StaysActiveAcrossConfiguredLoops()
+        {
+            var barrier = new GameObject("Barrier");
+            var emitter = AddEmitter(barrier);
+            SetPulseTuning(emitter, barrier.transform, 1f, 3f, 5f, 3);
+
+            Invoke(emitter, "Debug_StartPulse");
+
+            Invoke(emitter, "Debug_TickPulse", 1.1f);
+            Assert.IsTrue(GetBoolProperty(emitter, "IsPulseActive"), "Pulse should remain active after first loop.");
+
+            Invoke(emitter, "Debug_TickPulse", 1.1f);
+            Assert.IsTrue(GetBoolProperty(emitter, "IsPulseActive"), "Pulse should remain active after second loop.");
+
+            Invoke(emitter, "Debug_TickPulse", 1.1f);
+            Assert.IsFalse(GetBoolProperty(emitter, "IsPulseActive"), "Pulse should stop after final configured loop.");
+
+            UnityEngine.Object.DestroyImmediate(barrier);
+        }
+
+        [Test]
+        public void RespectsPulseInsideThreshold()
+        {
+            var barrier = new GameObject("Barrier");
+            var barrierCollider = barrier.AddComponent<BoxCollider2D>();
+            barrierCollider.size = new Vector2(2f, 2f);
+            barrier.AddComponent<SpriteRenderer>();
+
+            var hold = barrier.AddComponent<EnemyBarrierHoldBehavior>();
+            var anchor = new GameObject("Anchor");
+            anchor.transform.position = new Vector2(2f, 0f);
+            hold.Debug_SetAnchor(anchor.transform);
+
+            var barrierHealth = barrier.AddComponent<BarrierHealth>();
+            SetPrivateField(barrierHealth, "enemyPushInDistance", 0.5f);
+
+            var origin = new GameObject("Origin");
+            origin.transform.SetParent(barrier.transform, false);
+            origin.transform.localPosition = Vector3.zero;
+
+            var emitter = AddEmitter(barrier);
+            SetPulseTuning(emitter, origin.transform, 1f, 3f, 5f);
+            SetPrivateField(emitter, "pulseInsideThreshold", 0.5f);
+            Invoke(emitter, "Debug_StartPulse");
+
+            var pastThresholdEnemy = CreateEnemy(new Vector2(0.5f, 0f));
+            var outsideEnemy = CreateEnemy(new Vector2(1.8f, 0f));
+
+            Invoke(emitter, "Debug_TickPulse", 1f);
+
+            var pastDisp = pastThresholdEnemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+            var outsideDisp = outsideEnemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+
+            Assert.That(pastDisp, Is.EqualTo(0f).Within(0.001f), "Enemy past barrier threshold should not be pushed.");
+            Assert.Greater(outsideDisp, 0.01f, "Enemy not past threshold should be pushed.");
+
+            UnityEngine.Object.DestroyImmediate(anchor);
+            UnityEngine.Object.DestroyImmediate(pastThresholdEnemy);
+            UnityEngine.Object.DestroyImmediate(outsideEnemy);
+            UnityEngine.Object.DestroyImmediate(barrier);
+        }
+
         private static Component AddEmitter(GameObject barrier)
         {
             var type = ResolveEmitterType();
@@ -134,12 +193,13 @@ namespace Castlebound.Tests.Castle
             return Type.GetType("Castlebound.Gameplay.Castle.BarrierPulseEmitter, _Project.Gameplay");
         }
 
-        private static void SetPulseTuning(Component emitter, Transform origin, float duration, float radius, float strength)
+        private static void SetPulseTuning(Component emitter, Transform origin, float duration, float radius, float strength, int loops = 1)
         {
             SetPrivateField(emitter, "pulseOrigin", origin);
             SetPrivateField(emitter, "pulseDuration", duration);
             SetPrivateField(emitter, "pulseRadius", radius);
             SetPrivateField(emitter, "pulseStrength", strength);
+            SetPrivateField(emitter, "pulseLoopCount", loops);
         }
 
         private static void BreakBarrier(BarrierHealth barrier)

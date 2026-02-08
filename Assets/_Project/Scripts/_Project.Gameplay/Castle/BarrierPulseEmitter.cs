@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Barrier;
 using UnityEngine;
 
 namespace Castlebound.Gameplay.Castle
@@ -9,8 +10,10 @@ namespace Castlebound.Gameplay.Castle
     {
         [SerializeField] private Transform pulseOrigin;
         [SerializeField] private float pulseDuration = 1.5f;
-        [SerializeField] private float pulseRadius = 15f;
+        [SerializeField] private float pulseRadius = 3f;
         [SerializeField] private float pulseStrength = 5f;
+        [SerializeField] private int pulseLoopCount = 1;
+        [SerializeField] private float pulseInsideThreshold = 1.2f;
 
         public bool IsPulseActive => isPulseActive;
 
@@ -18,7 +21,7 @@ namespace Castlebound.Gameplay.Castle
         float elapsed;
         float previousRadius;
         bool isPulseActive;
-        readonly HashSet<EnemyController2D> pushedEnemies = new HashSet<EnemyController2D>();
+        int completedLoops;
 
         void Awake()
         {
@@ -71,7 +74,7 @@ namespace Castlebound.Gameplay.Castle
             isPulseActive = true;
             elapsed = 0f;
             previousRadius = 0f;
-            pushedEnemies.Clear();
+            completedLoops = 0;
         }
 
         void TickPulse(float dt)
@@ -81,17 +84,49 @@ namespace Castlebound.Gameplay.Castle
                 return;
             }
 
-            elapsed += dt;
-            float t = pulseDuration > 0f ? Mathf.Clamp01(elapsed / pulseDuration) : 1f;
-            float currentRadius = pulseRadius * t;
+            if (pulseLoopCount < 1)
+            {
+                pulseLoopCount = 1;
+            }
 
+            float stepDuration = Mathf.Max(0f, pulseDuration);
+
+            if (stepDuration <= 0f)
+            {
+                ApplyWavefront(0f, pulseRadius);
+                completedLoops = pulseLoopCount;
+                isPulseActive = false;
+                return;
+            }
+
+            elapsed += dt;
+
+            while (elapsed >= stepDuration && isPulseActive)
+            {
+                ApplyWavefront(previousRadius, pulseRadius);
+                elapsed -= stepDuration;
+                completedLoops++;
+
+                if (completedLoops >= pulseLoopCount)
+                {
+                    isPulseActive = false;
+                    elapsed = 0f;
+                    previousRadius = pulseRadius;
+                    return;
+                }
+
+                previousRadius = 0f;
+            }
+
+            if (!isPulseActive)
+            {
+                return;
+            }
+
+            float t = Mathf.Clamp01(elapsed / stepDuration);
+            float currentRadius = pulseRadius * t;
             ApplyWavefront(previousRadius, currentRadius);
             previousRadius = currentRadius;
-
-            if (elapsed >= pulseDuration)
-            {
-                isPulseActive = false;
-            }
         }
 
         void ApplyWavefront(float minRadius, float maxRadius)
@@ -118,12 +153,19 @@ namespace Castlebound.Gameplay.Castle
             for (int i = 0; i < count; i++)
             {
                 var enemy = fallback != null ? fallback[i] : allEnemies[i];
-                if (enemy == null || pushedEnemies.Contains(enemy))
+                if (enemy == null)
                 {
                     continue;
                 }
 
-                if (IsEnemyInside(enemy))
+                var enemyCollider = enemy.GetComponent<Collider2D>();
+                if (enemyCollider == null)
+                {
+                    continue;
+                }
+
+                var barrierCollider = GetComponent<Collider2D>();
+                if (barrierCollider != null && BarrierSideClassifier.IsEnemyPastThreshold(barrierCollider, enemyCollider, pulseInsideThreshold))
                 {
                     continue;
                 }
@@ -136,25 +178,47 @@ namespace Castlebound.Gameplay.Castle
 
                 Vector2 enemyPos = enemy.transform.position;
                 float dist = Vector2.Distance(origin, enemyPos);
-                if (dist <= maxRadius && dist > minRadius)
+                // While pulse is active, keep enemies outside the castle from moving
+                // inward past the expanding front by applying outward pressure.
+                if (dist <= maxRadius)
                 {
                     Vector2 dir = (enemyPos - origin).normalized;
                     knockback.AddKnockback(dir * pulseStrength, 6f);
-                    pushedEnemies.Add(enemy);
                 }
             }
         }
 
-        bool IsEnemyInside(EnemyController2D enemy)
+        void OnDrawGizmosSelected()
         {
-            var state = enemy.GetComponent<EnemyRegionState>();
-            if (state != null)
+            var origin = ResolveGizmoOrigin();
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.8f);
+            Gizmos.DrawWireSphere(origin, pulseRadius);
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!Application.isPlaying || !isPulseActive)
             {
-                return state.EnemyInside;
+                return;
             }
 
-            var region = CastleRegionTracker.Instance;
-            return region != null && region.EnemyInside(enemy);
+            var origin = ResolveGizmoOrigin();
+            float stepDuration = Mathf.Max(0f, pulseDuration);
+            float t = stepDuration > 0f ? Mathf.Clamp01(elapsed / stepDuration) : 1f;
+            float liveRadius = pulseRadius * t;
+            Gizmos.color = new Color(1f, 0.6f, 0.1f, 0.9f);
+            Gizmos.DrawWireSphere(origin, liveRadius);
+        }
+
+        Vector3 ResolveGizmoOrigin()
+        {
+            if (pulseOrigin != null)
+            {
+                return pulseOrigin.position;
+            }
+
+            var originTransform = transform.Find("PulseOrigin");
+            return originTransform != null ? originTransform.position : transform.position;
         }
 
 #if UNITY_EDITOR
