@@ -37,6 +37,11 @@ namespace Castlebound.Gameplay.AI
             UnbindRegion();
         }
 
+        void OnDestroy()
+        {
+            CastleRegionTracker.InstanceReady -= HandleRegionReady;
+        }
+
         void BindRegion()
         {
             if (isBound)
@@ -116,6 +121,11 @@ namespace Castlebound.Gameplay.AI
 
         void HandleRegionReady()
         {
+            if (this == null)
+            {
+                return;
+            }
+
             BindRegion();
         }
 

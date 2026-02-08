@@ -47,6 +47,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private float epsilonDist = 0.01f;
     [SerializeField] private float reseatBias = 0.3f;
     [SerializeField] private bool useBarrierTargeting = true;
+    [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
 
     public Transform Target => target;
     private EnemyTargetType _currentTargetType = EnemyTargetType.None;
@@ -76,6 +77,10 @@ public class EnemyController2D : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        if (knockbackReceiver == null)
+        {
+            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
+        }
         if (regionState == null)
         {
             regionState = GetComponent<EnemyRegionState>();
@@ -135,6 +140,10 @@ public class EnemyController2D : MonoBehaviour
         {
             regionState = GetComponent<EnemyRegionState>();
         }
+        if (knockbackReceiver == null)
+        {
+            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
+        }
 
         bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
         bool playerInsideCastle = regionState != null && regionState.PlayerInside;
@@ -152,10 +161,19 @@ public class EnemyController2D : MonoBehaviour
             }
         }
 
-        if (target == null) return;
-        if (steerTarget == null) steerTarget = target;
-
         Vector2 pos = _rb.position;
+        float dt = Time.fixedDeltaTime;
+        Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
+
+        if (target == null)
+        {
+            if (knockbackDelta != Vector2.zero)
+            {
+                _rb.MovePosition(pos + knockbackDelta);
+            }
+            return;
+        }
+        if (steerTarget == null) steerTarget = target;
         EnemyMovement.ComputeMovement(
             pos,
             steerTarget,
@@ -177,8 +195,7 @@ public class EnemyController2D : MonoBehaviour
             out Vector2 radial,
             out Vector2 tangent);
 
-        float dt = Time.fixedDeltaTime;
-        _rb.MovePosition(pos + (radial + tangent) * dt);
+        _rb.MovePosition(pos + (radial + tangent) * dt + knockbackDelta);
     }
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using Castlebound.Gameplay.Spawning;
@@ -81,6 +82,29 @@ namespace Castlebound.Tests.Spawning
                 new[] { "NorthGate", "EastGate", "NorthGate" },
                 emittedGateIds,
                 "Gate selection continues round-robin as spawns continue.");
+        }
+
+        [Test]
+        public void UpdatesWaveIndexProvider_WhenWaveStarts()
+        {
+            var runnerGo = new GameObject("EnemySpawnerRunner");
+            var runner = runnerGo.AddComponent<EnemySpawnerRunner>();
+            var waveProvider = runnerGo.AddComponent<WaveIndexProviderComponent>();
+            waveProvider.CurrentWaveIndex = 1;
+
+            var handleWaveStarted = typeof(EnemySpawnerRunner).GetMethod(
+                "HandleWaveStarted",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            Assert.NotNull(handleWaveStarted, "Expected private HandleWaveStarted(int) method.");
+            handleWaveStarted.Invoke(runner, new object[] { 3 });
+
+            Assert.That(
+                waveProvider.CurrentWaveIndex,
+                Is.EqualTo(3),
+                "Runner should propagate wave starts into WaveIndexProviderComponent for gameplay/UI consumers.");
+
+            Object.DestroyImmediate(runnerGo);
         }
     }
 }

@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-02-08 - feat-castle-pushback-pulse
+
+### Summary
+- Added pulse gating by barrier-side threshold so enemies already past the barrier are not pushed.
+- Added wave-index propagation from spawner to provider so pressure trigger resets and re-fires per wave.
+- Added loop-count pulse behavior and prefab-tuned defaults for duration/radius/threshold.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPulseEmitterTests` — continuous wavefront pressure, loop count active-window behavior, and threshold gating
+- `BarrierPressureTrackerTests` — scene-provider fallback and reset on wave changes
+- `EnemySpawnerTests` — runner updates `WaveIndexProviderComponent` on wave start
+- `BarrierSideClassifierTests` — barrier-side threshold classification contract
+- `EnemyControllerKnockbackTests` — knockback still applies when target is null
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Manual: verified third barrier break triggers pulse, pulse can be loop-configured, and trigger fires again in later waves.
+
 ## 2026-02-04 - refactor-castle-region-events
 
 ### Summary

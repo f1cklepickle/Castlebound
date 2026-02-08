@@ -72,13 +72,13 @@ namespace Castlebound.Gameplay.Castle
 
             breakCount++;
 
-            if (triggeredThisWave || breakCount < breaksPerWave)
-            {
-                return;
-            }
+        if (triggeredThisWave || breakCount < breaksPerWave)
+        {
+            return;
+        }
 
-            triggeredThisWave = true;
-            onPressureTriggered?.Invoke(barrierId);
+        triggeredThisWave = true;
+        onPressureTriggered?.Invoke(barrierId);
         }
 
         private int GetWaveIndex()
@@ -98,12 +98,12 @@ namespace Castlebound.Gameplay.Castle
             return gameObject.name;
         }
 
-        private void EnsureInitialized()
+    private void EnsureInitialized()
+    {
+        if (barrierHealth == null)
         {
-            if (barrierHealth == null)
-            {
-                barrierHealth = GetComponent<BarrierHealth>();
-            }
+            barrierHealth = GetComponent<BarrierHealth>();
+        }
 
             if (waveIndexProvider == null)
             {
@@ -123,9 +123,16 @@ namespace Castlebound.Gameplay.Castle
 
             if (barrierHealth != null && !subscribed)
             {
-                barrierHealth.OnBroken += HandleBarrierBroken;
-                subscribed = true;
-            }
+            barrierHealth.OnBroken += HandleBarrierBroken;
+            subscribed = true;
         }
     }
+
+#if UNITY_EDITOR
+    public void Debug_ForceInitialize()
+    {
+        EnsureInitialized();
+    }
+#endif
+}
 }
