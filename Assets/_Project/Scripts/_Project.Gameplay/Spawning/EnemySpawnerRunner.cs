@@ -26,12 +26,14 @@ namespace Castlebound.Gameplay.Spawning
         private int _aliveCount;
         private Dictionary<string, GameObject> _prefabMap;
         private WavePhaseTracker phaseTracker;
+        private IWaveIndexProvider waveIndexProvider;
 
         public WavePhaseTracker PhaseTracker => phaseTracker ??= new WavePhaseTracker();
 
         private void Start()
         {
             BuildPrefabMap();
+            waveIndexProvider = GetComponent<IWaveIndexProvider>();
 
             if (scheduleAsset == null)
             {
@@ -103,6 +105,13 @@ namespace Castlebound.Gameplay.Spawning
 
         private void HandleWaveStarted(int waveIndex)
         {
+            waveIndexProvider ??= GetComponent<IWaveIndexProvider>();
+
+            if (waveIndexProvider is WaveIndexProviderComponent provider)
+            {
+                provider.CurrentWaveIndex = waveIndex;
+            }
+
             OnWaveStarted?.Invoke(waveIndex);
         }
 

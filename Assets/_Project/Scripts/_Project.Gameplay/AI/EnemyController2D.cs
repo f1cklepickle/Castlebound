@@ -140,6 +140,10 @@ public class EnemyController2D : MonoBehaviour
         {
             regionState = GetComponent<EnemyRegionState>();
         }
+        if (knockbackReceiver == null)
+        {
+            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
+        }
 
         bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
         bool playerInsideCastle = regionState != null && regionState.PlayerInside;
@@ -157,10 +161,19 @@ public class EnemyController2D : MonoBehaviour
             }
         }
 
-        if (target == null) return;
-        if (steerTarget == null) steerTarget = target;
-
         Vector2 pos = _rb.position;
+        float dt = Time.fixedDeltaTime;
+        Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
+
+        if (target == null)
+        {
+            if (knockbackDelta != Vector2.zero)
+            {
+                _rb.MovePosition(pos + knockbackDelta);
+            }
+            return;
+        }
+        if (steerTarget == null) steerTarget = target;
         EnemyMovement.ComputeMovement(
             pos,
             steerTarget,
@@ -182,8 +195,6 @@ public class EnemyController2D : MonoBehaviour
             out Vector2 radial,
             out Vector2 tangent);
 
-        float dt = Time.fixedDeltaTime;
-        Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
         _rb.MovePosition(pos + (radial + tangent) * dt + knockbackDelta);
     }
 
