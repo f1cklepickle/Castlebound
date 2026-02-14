@@ -16,12 +16,18 @@ namespace Castlebound.Gameplay.Castle
         [SerializeField] private float pulseInsideThreshold = 1.2f;
 
         public bool IsPulseActive => isPulseActive;
+        public float CurrentRadius => currentRadius;
+        public float PulseProgress01 => pulseProgress01;
+        public float PulseDuration => pulseDuration;
+        public Vector3 PulseOriginPosition => ResolvePulseOriginPosition();
 
         BarrierPressureTracker pressureTracker;
         float elapsed;
         float previousRadius;
         bool isPulseActive;
         int completedLoops;
+        float currentRadius;
+        float pulseProgress01;
 
         void Awake()
         {
@@ -75,6 +81,8 @@ namespace Castlebound.Gameplay.Castle
             elapsed = 0f;
             previousRadius = 0f;
             completedLoops = 0;
+            currentRadius = 0f;
+            pulseProgress01 = 0f;
         }
 
         void TickPulse(float dt)
@@ -96,6 +104,8 @@ namespace Castlebound.Gameplay.Castle
                 ApplyWavefront(0f, pulseRadius);
                 completedLoops = pulseLoopCount;
                 isPulseActive = false;
+                currentRadius = pulseRadius;
+                pulseProgress01 = 1f;
                 return;
             }
 
@@ -112,10 +122,14 @@ namespace Castlebound.Gameplay.Castle
                     isPulseActive = false;
                     elapsed = 0f;
                     previousRadius = pulseRadius;
+                    currentRadius = pulseRadius;
+                    pulseProgress01 = 1f;
                     return;
                 }
 
                 previousRadius = 0f;
+                currentRadius = 0f;
+                pulseProgress01 = 0f;
             }
 
             if (!isPulseActive)
@@ -124,9 +138,11 @@ namespace Castlebound.Gameplay.Castle
             }
 
             float t = Mathf.Clamp01(elapsed / stepDuration);
-            float currentRadius = pulseRadius * t;
-            ApplyWavefront(previousRadius, currentRadius);
-            previousRadius = currentRadius;
+            float liveRadius = pulseRadius * t;
+            ApplyWavefront(previousRadius, liveRadius);
+            previousRadius = liveRadius;
+            currentRadius = liveRadius;
+            pulseProgress01 = t;
         }
 
         void ApplyWavefront(float minRadius, float maxRadius)
@@ -147,7 +163,7 @@ namespace Castlebound.Gameplay.Castle
                 }
             }
 
-            Vector2 origin = pulseOrigin.position;
+            Vector2 origin = ResolvePulseOriginPosition();
 
             int count = fallback != null ? fallback.Length : allEnemies.Count;
             for (int i = 0; i < count; i++)
@@ -190,7 +206,7 @@ namespace Castlebound.Gameplay.Castle
 
         void OnDrawGizmosSelected()
         {
-            var origin = ResolveGizmoOrigin();
+            var origin = ResolvePulseOriginPosition();
             Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.8f);
             Gizmos.DrawWireSphere(origin, pulseRadius);
         }
@@ -202,7 +218,7 @@ namespace Castlebound.Gameplay.Castle
                 return;
             }
 
-            var origin = ResolveGizmoOrigin();
+            var origin = ResolvePulseOriginPosition();
             float stepDuration = Mathf.Max(0f, pulseDuration);
             float t = stepDuration > 0f ? Mathf.Clamp01(elapsed / stepDuration) : 1f;
             float liveRadius = pulseRadius * t;
@@ -210,7 +226,7 @@ namespace Castlebound.Gameplay.Castle
             Gizmos.DrawWireSphere(origin, liveRadius);
         }
 
-        Vector3 ResolveGizmoOrigin()
+        Vector3 ResolvePulseOriginPosition()
         {
             if (pulseOrigin != null)
             {
@@ -218,7 +234,13 @@ namespace Castlebound.Gameplay.Castle
             }
 
             var originTransform = transform.Find("PulseOrigin");
-            return originTransform != null ? originTransform.position : transform.position;
+            if (originTransform != null)
+            {
+                pulseOrigin = originTransform;
+                return originTransform.position;
+            }
+
+            return transform.position;
         }
 
 #if UNITY_EDITOR

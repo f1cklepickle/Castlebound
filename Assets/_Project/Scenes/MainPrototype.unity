@@ -1498,14 +1498,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -90.041
       objectReference: {fileID: 0}
-    - target: {fileID: 1038297311701369034, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-      propertyPath: gateId
-      value: Barrier_Gate_E
-      objectReference: {fileID: 0}
-    - target: {fileID: 6296148108499927986, guid: dc74549e32466984aa8c05b572869f89, type: 3}
-      propertyPath: gateId
-      value: Barrier_Gate_E
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2679,18 +2671,6 @@ MonoBehaviour:
   - enemyTypeId: grunt
     prefab: {fileID: 6394411849047796180, guid: 92ae0aa6b169f3b4a9beb3199ee80614, type: 3}
   autoFindMarkers: 1
---- !u!114 &1166075765
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1166075762}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ced93c6dddc231f46872f9c0b8af97fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1166075764
 Transform:
   m_ObjectHideFlags: 0
@@ -2706,6 +2686,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1166075765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166075762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ced93c6dddc231f46872f9c0b8af97fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1202776162
 GameObject:
   m_ObjectHideFlags: 0

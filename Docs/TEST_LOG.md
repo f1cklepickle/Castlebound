@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-02-13 - feat-visual-subtle-castle-pulse-cue
+
+### Summary
+- Added ring-only pulse VFX controller driven by barrier pulse runtime state (radius/progress/duration).
+- Synced visual origin to `PulseOrigin` so VFX center and gameplay push origin match.
+- Added flipbook strip animation + seam drift controls and wired pulse cue sprite/prefab scene defaults.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPulseEmitterVisualStateTests` — exposes and updates pulse visual state for VFX followers
+- `BarrierPulseVfxControllerTests` — ring follows active pulse radius/window and uses `PulseOrigin` center
+- `BarrierPulseVfxControllerConfigTests` — ring config contract (alpha/sorting/tile mode/ring-only controls)
+- `BarrierPulseRingFlipbookTests` — flipbook controls, frame advance/loop, and seam drift behavior
+
+**PlayMode**
+- `BarrierPulseVfxPlayTests` — cue activation/teardown, runtime radius tracking, flipbook advance, and third-break flow with VFX attached
+
+### Notes
+- Manual: validated in `MainPrototype` that pulse cue triggers reliably, uses `PulseOrigin`, and current ring behavior is tuned/acceptable.
+
 ## 2026-02-08 - feat-castle-pushback-pulse
 
 ### Summary
