@@ -313,7 +313,7 @@ MonoBehaviour:
   ringStripSprite: {fileID: 21300000, guid: 327ce547469723c4d99b159687fdbef9, type: 3}
   autoCreateVisualComponents: 1
   ringSortingOrder: 10
-  ringAlpha: 0.5
+  ringAlpha: 0.4
   ringFlipbookEnabled: 1
   ringFlipbookTilesX: 8
   ringFlipbookTilesY: 1
@@ -323,7 +323,7 @@ MonoBehaviour:
   minRingSegments: 12
   maxRingSegments: 64
   radiusPerSegment: 0.1
-  ringThicknessWorldUnits: 0.2
+  ringThicknessWorldUnits: 1
   radiusUpdateEpsilon: 0.02
 --- !u!1 &1199000000000000001
 GameObject:
@@ -559,7 +559,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4779098828417277995, guid: a5452920116ff8b44bcaa05bc6b4931e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.8
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4779098828417277995, guid: a5452920116ff8b44bcaa05bc6b4931e, type: 3}
       propertyPath: m_LocalPosition.x
