@@ -18,7 +18,7 @@ namespace Castlebound.Tests.Scale
                 var camera = FindInScene<UnityEngine.Camera>(scene);
                 Assert.NotNull(camera, "Expected a Camera in MainPrototype.");
                 Assert.IsTrue(camera.orthographic, "Main camera must be orthographic for 2D scale baseline.");
-                Assert.That(camera.orthographicSize, Is.GreaterThanOrEqualTo(3f).And.LessThanOrEqualTo(8f),
+                Assert.That(camera.orthographicSize, Is.GreaterThanOrEqualTo(9f).And.LessThanOrEqualTo(12f),
                     "Orthographic size should be in a readable baseline range for PPU=32.");
             }
             finally
