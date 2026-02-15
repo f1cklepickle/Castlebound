@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 5973937774294137451}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.834, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -119,7 +119,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.69, y: 1.002, z: 0}
-  m_LocalScale: {x: 1.0053, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4418641983238910643}
@@ -184,9 +184,9 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.0009070839, y: 0.2821796}
+  m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.27511346
+  m_Radius: 0.87684506
 --- !u!114 &7189814229194096064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -204,16 +204,18 @@ MonoBehaviour:
   barrier: {fileID: 0}
   homeBarrier: {fileID: 0}
   steerTarget: {fileID: 0}
-  passThroughRadius: 0.6
-  speed: 2.2
-  holdRadius: 1.1
-  releaseMargin: 0.6
-  orbitBase: 1.5
+  passThroughRadius: 1.2
+  regionState: {fileID: 0}
+  speed: 8
+  holdRadius: 2.6
+  releaseMargin: 1.2
+  orbitBase: 2.8
   maxTangent: 2
   outrunFrames: 8
   epsilonDist: 0.01
   reseatBias: 1
   useBarrierTargeting: 1
+  knockbackReceiver: {fileID: 0}
 --- !u!114 &5939097710446132315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,7 +254,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 1
-  attackRange: 1.2
+  attackRange: 2.5
   windupSeconds: 0.15
   cooldownSeconds: 0.8
   targetMask:
@@ -320,8 +322,8 @@ MonoBehaviour:
   maxRolls: 1
   globalMaxTables: 6
   xpAmount: 5
-  spillRadius: 1
-  spillDuration: 0.4
+  spillRadius: 1.5
+  spillDuration: 0.5
   spillConeWidth: 1
-  spillDistanceMin: 0.2
-  spillDistanceMax: 1.4
+  spillDistanceMin: 0.4
+  spillDistanceMax: 3.2
