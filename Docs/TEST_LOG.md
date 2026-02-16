@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-02-14 - feat-scale-baseline-ppu32
+
+### Summary
+- Established P3 scale foundation with `MainPrototype` world grid baseline (`Grid` cell size `1x1`) and camera baseline guard (`orthographicSize` range `9..12`).
+- Enforced scoped PPU/import defaults across world + UI art (`PPU=32` for sprites, `Point` filtering, uncompressed textures, mipmaps off for sprites).
+- Retuned scene/prefab geometry and scale fallout for PPU32 migration, including temporary barrier scale exception guard and pulse ring thickness tuning.
+
+### New or Updated Tests
+**EditMode**
+- `CameraScaleBaselineTests` — `MainPrototype` orthographic camera baseline contract for PPU32 readability
+- `WorldGridBaselineTests` — `MainPrototype` authoritative `Grid` presence and `1x1` cell size
+- `PpuImportBaselineTests` — scoped importer contract for PPU/filter/compression/mipmap settings
+- `ScaleCompensationGuardTests` — prefab/root/sprite scale guard with explicit temporary barrier exception
+
+**PlayMode**
+- `ScaleBaselineSmokePlayTests` — `MainPrototype` load + camera/player visibility smoke at baseline scale
+
+### Notes
+- Manual: validated player/items readability at new baseline and retuned barrier/enemy/player scene behavior after PPU32 conversion.
+
 ## 2026-02-13 - feat-visual-subtle-castle-pulse-cue
 
 ### Summary
