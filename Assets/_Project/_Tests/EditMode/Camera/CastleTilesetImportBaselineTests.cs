@@ -10,7 +10,7 @@ namespace Castlebound.Tests.Scale
     {
         private static readonly string[] ScopedFolders =
         {
-            "Assets/_Project/Art/Castle_Assets"
+            "Assets/_Project/Art/Castle_Assets/Tileset"
         };
 
         [Test]
