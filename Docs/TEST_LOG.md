@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-02-14 - feat-import-castle-tileset-baseline-ppu32
+
+### Summary
+- Imported castle tileset baseline assets (walls, corners, floor, barrier set) under `Castle_Assets/Tileset` with palette/tile assets for scene authoring.
+- Added castle tileset import contract coverage and scoped enforcement to the tileset folder.
+- Applied visual scene layout pass using separate castle floor/walls tilemaps and retuned enemy pass-through radius for the updated gate/opening geometry.
+
+### New or Updated Tests
+**EditMode**
+- `CastleTilesetImportBaselineTests` — tileset import contract for PPU32, point filter, uncompressed textures, mipmaps off (sprites), and center pivot consistency
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Manual: verified castle tiles render correctly in `MainPrototype`, floor/walls layering is readable, and enemies can pass into castle after barrier break with updated pass-through tuning.
+
 ## 2026-02-14 - feat-scale-baseline-ppu32
 
 ### Summary

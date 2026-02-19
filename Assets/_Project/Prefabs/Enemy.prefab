@@ -204,7 +204,7 @@ MonoBehaviour:
   barrier: {fileID: 0}
   homeBarrier: {fileID: 0}
   steerTarget: {fileID: 0}
-  passThroughRadius: 1.2
+  passThroughRadius: 2
   regionState: {fileID: 0}
   speed: 8
   holdRadius: 2.6
