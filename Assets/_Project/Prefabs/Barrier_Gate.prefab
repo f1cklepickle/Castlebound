@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 9123456789012345678}
   - component: {fileID: 1199000000000000100}
   - component: {fileID: 1199000000000000300}
+  - component: {fileID: 1199000000000000400}
   m_Layer: 8
   m_Name: Barrier_Gate
   m_TagString: Barrier
@@ -132,7 +133,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0010333061, y: 0.004135549}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -143,7 +144,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2.0001583, y: 2.0156207}
+  m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
 --- !u!50 &1051614195052203920
 Rigidbody2D:
@@ -325,6 +326,23 @@ MonoBehaviour:
   radiusPerSegment: 0.1
   ringThicknessWorldUnits: 1
   radiusUpdateEpsilon: 0.02
+--- !u!114 &1199000000000000400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683792860472063015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a262e41f90967c469110c44bb5f7c69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRenderer: {fileID: 6741045512655291703}
+  northSprite: {fileID: 21300000, guid: 898481d0a3173e846a9e1c9229815b01, type: 3}
+  eastSprite: {fileID: 21300000, guid: e44244f6fdf70e94bbadc426d5890990, type: 3}
+  southSprite: {fileID: 21300000, guid: 084028016209b1c4c8c3420c5c9e7a12, type: 3}
+  westSprite: {fileID: 21300000, guid: cd61d10e4196c1249b8d82de2d2b9784, type: 3}
 --- !u!1 &1199000000000000001
 GameObject:
   m_ObjectHideFlags: 0
