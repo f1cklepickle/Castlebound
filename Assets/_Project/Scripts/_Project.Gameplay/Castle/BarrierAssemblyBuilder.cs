@@ -42,6 +42,13 @@ namespace Castlebound.Gameplay.Castle
 
                 instance.SetParent(parent, true);
                 instance.position = new Vector3(worldPos.x, worldPos.y, instance.position.z);
+
+                var visualBinder = instance.GetComponent<BarrierVisualBinder>();
+                if (visualBinder != null)
+                {
+                    visualBinder.ApplySide(slot.Side);
+                }
+
                 seenIds.Add(slot.Id);
             }
 
