@@ -15,6 +15,14 @@ public class BarrierHitShake : MonoBehaviour
         originalLocalPos = transform.localPosition;
     }
 
+    void OnValidate()
+    {
+        if (durationSeconds < 0f)
+        {
+            durationSeconds = 0f;
+        }
+    }
+
     void OnEnable()
     {
         if (feedbackChannel != null)
@@ -29,13 +37,31 @@ public class BarrierHitShake : MonoBehaviour
 
     void OnFeedbackRaised(FeedbackCue cue)
     {
-        if (cue.Type != FeedbackCueType.EnemyHitBarrier)
+        if (!ShouldRespondToCue(cue))
             return;
+
+        if (durationSeconds <= 0f || intensity <= 0f)
+            return;
+
+        // Capture the runtime baseline at the moment of impact so we don't snap
+        // back to prefab-authored local offsets after dynamic placement.
+        originalLocalPos = transform.localPosition;
 
         if (shakeRoutine != null)
             StopCoroutine(shakeRoutine);
 
         shakeRoutine = StartCoroutine(ShakeRoutine());
+    }
+
+    public bool ShouldRespondToCue(FeedbackCue cue)
+    {
+        if (cue.Type != FeedbackCueType.EnemyHitBarrier)
+            return false;
+
+        if (cue.TargetInstanceId != 0 && cue.TargetInstanceId != gameObject.GetInstanceID())
+            return false;
+
+        return true;
     }
 
     IEnumerator ShakeRoutine()
