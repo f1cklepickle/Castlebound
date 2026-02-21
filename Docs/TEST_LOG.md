@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-02-21 - feat/130-barrier-lattice-static-castle
+
+### Summary
+- Implemented tilemap-driven barrier assembly pipeline with side-mapped visuals, SystemsRoot rotation contract, and root-stable placement.
+- Enforced castle scene collider contracts: wall tilemap blocks, floor tilemap is trigger-region source, and barrier marker tilemap is non-blocking.
+- Added runtime and regression coverage for assembly behavior, prefab contracts, lattice/occupancy rules, and localized barrier hit shake.
+- Fixed bootstrap clear/rebuild race in PlayMode by detaching generated children before deferred destroy.
+
+### New or Updated Tests
+**EditMode**
+- ScaleCompensationGuardTests — removed legacy barrier root scale exception and kept normalized scale guard.
+- BarrierPrefabNormalizationTests — verifies barrier scale/collider normalization baseline.
+- CastleModulePlacementRulesTests — validates 3-unit lattice and occupancy rule decisions.
+- BarrierAssemblyBuilderTests — validates deterministic rebuild behavior and generated-child lifecycle.
+- BarrierAssemblyRunnerTests — validates runner orchestration from layout source to generated instances.
+- BarrierTilemapLayoutSourceTests — validates marker extraction and side mapping from barrier tilemap.
+- BarrierVisualBindingTests — validates side sprite binding and SystemsRoot rotation behavior.
+- BarrierPrefabVisualContractTests — validates side sprites and SystemsRoot ownership of directional/UI children.
+- BarrierPlacementPresentationContractTests — validates marker alignment, marker renderer hiding, and root rotation contract.
+- MainPrototypeBarrierAssemblyIntegrationTests — validates scene bootstrap wiring, generation, slot alignment, and side-rotation contract.
+- CastleWallTilemapColliderContractTests — validates walls as blocking colliders and barrier marker tilemap as non-blocking.
+- CastleFloorRegionContractTests — validates floor trigger collider and CastleRegionTracker region-source contract.
+- BarrierHitShakeTests — validates shake localizes to impacted barrier and baseline restore behavior.
+
+**PlayMode**
+- CastleTilemapRuntimeContractsPlayTests — validates walls/floor runtime collider contracts, barrier break collider disable behavior, and bootstrap rebuild pipeline with generated barrier rotation/sprite/runtime component contracts.
+
+### Notes
+- Manual validation: barriers spawn from marker tilemap, remain in place, and use side-correct visuals with SystemsRoot-driven directional components.
+- Manual validation: wall blocks movement, intact barriers block passage, and broken barriers allow player/enemy passage through openings.
+
 ## 2026-02-14 - feat-import-castle-tileset-baseline-ppu32
 
 ### Summary
