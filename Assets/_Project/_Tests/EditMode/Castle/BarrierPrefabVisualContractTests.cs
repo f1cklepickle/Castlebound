@@ -66,6 +66,30 @@ namespace Castlebound.Tests.Castle
             }
         }
 
+        [Test]
+        public void BarrierPrefab_SystemsRoot_OwnsDirectionalAndUiChildren()
+        {
+            var prefab = PrefabTestUtil.Load(BarrierPrefabPath);
+            try
+            {
+                var binder = prefab.GetComponent<BarrierVisualBinder>();
+                Assert.NotNull(binder, "Barrier prefab must include BarrierVisualBinder.");
+
+                var systemsRoot = GetTransform(binder, "systemsRoot");
+                Assert.NotNull(systemsRoot, "BarrierVisualBinder field 'systemsRoot' must be assigned.");
+
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "SpawnPointMarker");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "HoldAnchor");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "DamageHitbox");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "PulseOrigin");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "BarrierHealthbar");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefab);
+            }
+        }
+
         private static void AssertSpriteAssigned(BarrierVisualBinder binder, string fieldName)
         {
             var sprite = GetSprite(binder, fieldName);
@@ -84,6 +108,33 @@ namespace Castlebound.Tests.Castle
             var field = typeof(BarrierVisualBinder).GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             Assert.NotNull(field, $"Expected BarrierVisualBinder field '{fieldName}'.");
             return field.GetValue(binder) as Sprite;
+        }
+
+        private static Transform GetTransform(BarrierVisualBinder binder, string fieldName)
+        {
+            var field = typeof(BarrierVisualBinder).GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Assert.NotNull(field, $"Expected BarrierVisualBinder field '{fieldName}'.");
+            return field.GetValue(binder) as Transform;
+        }
+
+        private static void AssertIsDescendantOfSystemsRoot(GameObject prefab, Transform systemsRoot, string childName)
+        {
+            var child = FindChildRecursive(prefab.transform, childName);
+            Assert.NotNull(child, $"Barrier prefab missing child '{childName}'.");
+            Assert.IsTrue(child.IsChildOf(systemsRoot), $"'{childName}' should be parented under SystemsRoot for side-rotation behavior.");
+        }
+
+        private static Transform FindChildRecursive(Transform root, string childName)
+        {
+            foreach (var tr in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (tr.name == childName)
+                {
+                    return tr;
+                }
+            }
+
+            return null;
         }
     }
 }

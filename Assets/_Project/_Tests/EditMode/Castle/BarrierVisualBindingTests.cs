@@ -45,6 +45,52 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
+        public void BarrierVisualBinder_ApplySide_RotatesSystemsRoot_WithoutRotatingSpriteRendererTransform()
+        {
+            var binderType = ResolveGameplayType("Castlebound.Gameplay.Castle.BarrierVisualBinder");
+            Assert.NotNull(binderType, "Expected BarrierVisualBinder to exist.");
+
+            var root = new GameObject("Barrier");
+            var spriteRoot = new GameObject("SpriteRoot");
+            var systemsRoot = new GameObject("SystemsRoot");
+            spriteRoot.transform.SetParent(root.transform, false);
+            systemsRoot.transform.SetParent(root.transform, false);
+
+            var renderer = spriteRoot.AddComponent<SpriteRenderer>();
+            var binder = root.AddComponent(binderType);
+
+            var north = CreateSprite("North");
+            var east = CreateSprite("East");
+            var south = CreateSprite("South");
+            var west = CreateSprite("West");
+
+            try
+            {
+                SetMember(binderType, binder, "targetRenderer", renderer);
+                SetMember(binderType, binder, "northSprite", north);
+                SetMember(binderType, binder, "eastSprite", east);
+                SetMember(binderType, binder, "southSprite", south);
+                SetMember(binderType, binder, "westSprite", west);
+                SetMember(binderType, binder, "systemsRoot", systemsRoot.transform);
+
+                var applySide = binderType.GetMethod("ApplySide", BindingFlags.Public | BindingFlags.Instance);
+                Assert.NotNull(applySide, "Expected public ApplySide(BarrierSide).");
+
+                applySide.Invoke(binder, new object[] { BarrierSide.East });
+
+                Assert.That(renderer.sprite, Is.EqualTo(east), "ApplySide(East) should assign eastSprite.");
+                var systemsZ = Mathf.DeltaAngle(0f, systemsRoot.transform.localEulerAngles.z);
+                Assert.That(systemsZ, Is.EqualTo(-90f).Within(0.5f), "SystemsRoot should rotate to East.");
+                var spriteZ = Mathf.DeltaAngle(0f, spriteRoot.transform.localEulerAngles.z);
+                Assert.That(spriteZ, Is.EqualTo(0f).Within(0.5f), "SpriteRoot should remain unrotated.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void BarrierAssemblyBuilder_Rebuild_AppliesSlotSide_ToVisualBinder()
         {
             var binderType = ResolveGameplayType("Castlebound.Gameplay.Castle.BarrierVisualBinder");

@@ -31,7 +31,6 @@ namespace Castlebound.Gameplay.Castle
                     continue;
                 }
 
-                var worldPos = SnapToLattice(slot.Position);
                 if (!existingById.TryGetValue(slot.Id, out var instance))
                 {
                     var spawned = Object.Instantiate(barrierPrefab, parent);
@@ -41,7 +40,7 @@ namespace Castlebound.Gameplay.Castle
                 }
 
                 instance.SetParent(parent, true);
-                instance.position = new Vector3(worldPos.x, worldPos.y, instance.position.z);
+                instance.position = new Vector3(slot.Position.x, slot.Position.y, instance.position.z);
 
                 var visualBinder = instance.GetComponent<BarrierVisualBinder>();
                 if (visualBinder != null)
@@ -59,14 +58,6 @@ namespace Castlebound.Gameplay.Castle
                     Object.DestroyImmediate(kvp.Value.gameObject);
                 }
             }
-        }
-
-        private static Vector2 SnapToLattice(Vector2 worldPosition)
-        {
-            const float step = 3f;
-            return new Vector2(
-                Mathf.Round(worldPosition.x / step) * step,
-                Mathf.Round(worldPosition.y / step) * step);
         }
     }
 }

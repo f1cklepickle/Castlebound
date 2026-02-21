@@ -34,14 +34,11 @@ namespace Castlebound.Gameplay.Castle
                 }
 
                 var world = barrierTilemap.GetCellCenterWorld(pos);
-                var snapped = new Vector2(
-                    Mathf.Round(world.x / 3f) * 3f,
-                    Mathf.Round(world.y / 3f) * 3f);
 
                 yield return new BarrierPlacementSlot
                 {
                     Id = $"barrier_{pos.x}_{pos.y}",
-                    Position = snapped,
+                    Position = world,
                     Side = side
                 };
             }
