@@ -82,7 +82,9 @@ namespace Castlebound.Gameplay.Castle
         {
             for (var i = generatedParent.childCount - 1; i >= 0; i--)
             {
-                var child = generatedParent.GetChild(i).gameObject;
+                var childTransform = generatedParent.GetChild(i);
+                childTransform.SetParent(null, true);
+                var child = childTransform.gameObject;
                 if (Application.isPlaying)
                 {
                     Destroy(child);
