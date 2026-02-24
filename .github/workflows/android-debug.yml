@@ -1,0 +1,73 @@
+name: Android Debug Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches: [ main ]
+
+jobs:
+  build-android:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        contains(github.event.pull_request.labels.*.name, 'apk')
+      )
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          tool-cache: false
+
+      - name: Preflight Unity license secret
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.UNITY_LICENSE_BASE64 }}" ]; then
+            echo "::error::UNITY_LICENSE_BASE64 is not configured."
+            exit 1
+          fi
+
+      - name: Prepare Unity license
+        shell: bash
+        run: |
+          echo "UNITY_LICENSE<<EOF" >> "$GITHUB_ENV"
+          echo "${{ secrets.UNITY_LICENSE_BASE64 }}" | base64 --decode >> "$GITHUB_ENV"
+          echo "" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: android-library-${{ runner.os }}-${{ hashFiles('Packages/manifest.json','ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            android-library-${{ runner.os }}-
+
+      - name: Unity - Build Android (APK)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
+        with:
+          targetPlatform: Android
+          unityVersion: auto
+          androidExportType: androidPackage
+          buildName: castlebound-debug
+          buildsPath: build
+
+      - name: Upload Android build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/Android
+          if-no-files-found: error
+          retention-days: 14
