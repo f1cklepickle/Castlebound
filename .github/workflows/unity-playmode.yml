@@ -47,11 +47,11 @@ jobs:
 
       - name: Activate Unity license (ulf secret)
         env:
-          UNITY_LICENSE_BASE64: ${{ secrets.UNITY_LICENSE_BASE64 }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         shell: pwsh
         run: |
-          if (-not $env:UNITY_LICENSE_BASE64 -or $env:UNITY_LICENSE_BASE64.Trim().Length -eq 0) {
-            Write-Error "[CI] UNITY_LICENSE_BASE64 is required but not set."
+          if (-not $env:UNITY_LICENSE -or $env:UNITY_LICENSE.Trim().Length -eq 0) {
+            Write-Error "[CI] UNITY_LICENSE is required but not set."
             exit 1
           }
           $pv = Get-Content ProjectSettings/ProjectVersion.txt -Raw
@@ -67,8 +67,17 @@ jobs:
           }
           if (-not $unity) { $unity = 'Unity.exe' }
 
-          $bytes = [Convert]::FromBase64String("$env:UNITY_LICENSE_BASE64")
-          [IO.File]::WriteAllBytes("unity.ulf", $bytes)
+          $license = $env:UNITY_LICENSE.Trim()
+          if ($license.StartsWith("<")) {
+            Set-Content -Path "unity.ulf" -Value $license -Encoding UTF8
+          } else {
+            try {
+              $bytes = [Convert]::FromBase64String($license)
+              [IO.File]::WriteAllBytes("unity.ulf", $bytes)
+            } catch {
+              Set-Content -Path "unity.ulf" -Value $license -Encoding UTF8
+            }
+          }
 
           & "$unity" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
           if ($LASTEXITCODE -ne 0) { throw "Unity license activation failed with exit code $LASTEXITCODE" }
