@@ -45,43 +45,6 @@ jobs:
       #     $env:UNITY_EDITOR = "D:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Unity.exe"
       #   if: ${{ env.UNITY_EDITOR == '' }}
 
-      - name: Activate Unity license (ulf secret)
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        shell: pwsh
-        run: |
-          if (-not $env:UNITY_LICENSE -or $env:UNITY_LICENSE.Trim().Length -eq 0) {
-            Write-Error "[CI] UNITY_LICENSE is required but not set."
-            exit 1
-          }
-          $pv = Get-Content ProjectSettings/ProjectVersion.txt -Raw
-          $ver = ($pv | Select-String -Pattern 'm_EditorVersion:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
-          if (-not $ver) {
-            $ver = ($pv | Select-String -Pattern 'm_EditorVersionWithRevision:\s*([0-9]+\.[0-9]+\.[0-9]+[a-z0-9]+)').Matches.Groups[1].Value
-          }
-          $roots = @('C:\\Program Files\\Unity\\Hub\\Editor','D:\\Program Files\\Unity\\Hub\\Editor')
-          $unity = $null
-          foreach ($r in $roots) {
-            $cand = Join-Path (Join-Path $r $ver) 'Editor/Unity.exe'
-            if (Test-Path $cand) { $unity = $cand; break }
-          }
-          if (-not $unity) { $unity = 'Unity.exe' }
-
-          $license = $env:UNITY_LICENSE.Trim()
-          if ($license.StartsWith("<")) {
-            Set-Content -Path "unity.ulf" -Value $license -Encoding UTF8
-          } else {
-            try {
-              $bytes = [Convert]::FromBase64String($license)
-              [IO.File]::WriteAllBytes("unity.ulf", $bytes)
-            } catch {
-              Set-Content -Path "unity.ulf" -Value $license -Encoding UTF8
-            }
-          }
-
-          & "$unity" -batchmode -nographics -quit -manualLicenseFile "unity.ulf" -logFile - 2>&1 | Out-Host
-          if ($LASTEXITCODE -ne 0) { throw "Unity license activation failed with exit code $LASTEXITCODE" }
-
       - name: Verify script revision
         shell: pwsh
         run: |
