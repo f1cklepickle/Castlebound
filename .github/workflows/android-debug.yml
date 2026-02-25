@@ -1,9 +1,6 @@
 name: Android Debug Build
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
   pull_request:
     types: [synchronize, reopened, labeled]
     branches: [ main ]
@@ -15,13 +12,9 @@ concurrency:
 jobs:
   build-android:
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push' ||
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        contains(github.event.pull_request.labels.*.name, 'apk')
-      )
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'apk')
     runs-on: self-hosted
 
     steps:
@@ -31,25 +24,13 @@ jobs:
           clean: true
           fetch-depth: 0
 
-      - name: Preflight Unity license secret
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      - name: Ensure project not locked
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:UNITY_LICENSE)) {
-            Write-Host "::error::UNITY_LICENSE is not configured."
-            exit 1
-          }
-
-      - name: Preflight Unity account credentials
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        shell: pwsh
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:UNITY_EMAIL) -or [string]::IsNullOrWhiteSpace($env:UNITY_PASSWORD)) {
-            Write-Host "::error::UNITY_EMAIL and UNITY_PASSWORD are required."
-            exit 1
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
+            Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
           }
 
       - name: Cache Library
@@ -60,24 +41,14 @@ jobs:
           restore-keys: |
             android-library-${{ runner.os }}-
 
-      - name: Unity - Build Android (APK)
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          targetPlatform: Android
-          unityVersion: 2022.3.62f2
-          versioning: None
-          androidExportType: androidPackage
-          buildName: castlebound-debug
-          buildsPath: build
+      - name: Build Android APK
+        shell: pwsh
+        run: .\ci\run-android-build.ps1
 
       - name: Upload Android build artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/Android
+          path: build/Android/castlebound-debug.apk
           if-no-files-found: error
           retention-days: 14
