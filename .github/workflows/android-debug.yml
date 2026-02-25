@@ -27,27 +27,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@v1.3.0
         with:
-          tool-cache: false
+          clean: true
 
       - name: Preflight Unity license secret
-        shell: bash
+        shell: pwsh
         run: |
-          if [ -z "${{ secrets.UNITY_LICENSE }}" ]; then
-            echo "::error::UNITY_LICENSE is not configured."
+          if ([string]::IsNullOrWhiteSpace("${{ secrets.UNITY_LICENSE }}")) {
+            Write-Host "::error::UNITY_LICENSE is not configured."
             exit 1
-          fi
+          }
 
       - name: Preflight Unity account credentials
-        shell: bash
+        shell: pwsh
         run: |
-          if [ -z "${{ secrets.UNITY_EMAIL }}" ] || [ -z "${{ secrets.UNITY_PASSWORD }}" ]; then
-            echo "::error::UNITY_EMAIL and UNITY_PASSWORD are required."
+          if ([string]::IsNullOrWhiteSpace("${{ secrets.UNITY_EMAIL }}") -or [string]::IsNullOrWhiteSpace("${{ secrets.UNITY_PASSWORD }}")) {
+            Write-Host "::error::UNITY_EMAIL and UNITY_PASSWORD are required."
             exit 1
-          fi
+          }
 
       - name: Cache Library
         uses: actions/cache@v4
@@ -65,7 +62,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: Android
-          unityVersion: auto
+          unityVersion: 2022.3.62f2
           androidExportType: androidPackage
           buildName: castlebound-debug
           buildsPath: build
