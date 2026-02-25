@@ -5,8 +5,12 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [synchronize, reopened, labeled]
     branches: [ main ]
+
+concurrency:
+  group: android-debug-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-android:
