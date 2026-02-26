@@ -20,16 +20,29 @@ if (Test-Path $logPath) { Remove-Item -Force $logPath }
 
 $env:CB_ANDROID_APK_PATH = $apkPath
 
+# Derive Android SDK/NDK/JDK from the Unity installation (bundled with Unity)
+$unityEditorDir   = Split-Path $env:UNITY_EDITOR
+$androidPlayerDir = Join-Path $unityEditorDir "Data\PlaybackEngines\AndroidPlayer"
+$androidSdk       = Join-Path $androidPlayerDir "SDK"
+$androidNdk       = Join-Path $androidPlayerDir "NDK"
+$jdk              = Join-Path $androidPlayerDir "OpenJDK"
+
 Step "Workspace : $ws"
 Step "APK Path   : $apkPath"
 Step "Log Path   : $logPath"
 Step "Unity      : $env:UNITY_EDITOR"
+Step "SDK        : $androidSdk"
+Step "NDK        : $androidNdk"
+Step "JDK        : $jdk"
 
-& "$env:UNITY_EDITOR" -batchmode `
+& "$env:UNITY_EDITOR" -batchmode -nographics `
   -projectPath $ws `
   -buildTarget Android `
   -executeMethod CI.AndroidCiBuildRunner.Run `
-  -logFile $logPath
+  -logFile $logPath `
+  -androidsdk "$androidSdk" `
+  -androidndk "$androidNdk" `
+  -jdk "$jdk"
 $unityCode = $LASTEXITCODE
 
 if ($unityCode -ne 0) {
