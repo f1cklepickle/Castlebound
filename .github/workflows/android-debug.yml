@@ -87,3 +87,11 @@ jobs:
           path: build/Android/castlebound-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Clean up build folder
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path build) {
+            Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+          }
