@@ -24,6 +24,17 @@ namespace CI
                 Directory.CreateDirectory(outDir);
             }
 
+            Debug.Log("[CI][Android] Switching active build target to Android...");
+            var switched = EditorUserBuildSettings.SwitchActiveBuildTarget(
+                BuildTargetGroup.Android, BuildTarget.Android);
+            if (!switched)
+            {
+                Debug.LogError("[CI][Android] Failed to switch build target to Android.");
+                EditorApplication.Exit(1);
+                return;
+            }
+            Debug.Log("[CI][Android] Build target switched to Android.");
+
             var scenes = EditorBuildSettings.scenes
                 .Where(s => s.enabled)
                 .Select(s => s.path)

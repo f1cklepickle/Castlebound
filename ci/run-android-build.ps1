@@ -37,7 +37,6 @@ Step "JDK        : $jdk"
 
 & "$env:UNITY_EDITOR" -batchmode -nographics `
   -projectPath $ws `
-  -buildTarget Android `
   -executeMethod CI.AndroidCiBuildRunner.Run `
   -logFile $logPath `
   -androidsdk "$androidSdk" `
