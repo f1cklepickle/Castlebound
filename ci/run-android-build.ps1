@@ -25,7 +25,7 @@ Step "APK Path   : $apkPath"
 Step "Log Path   : $logPath"
 Step "Unity      : $env:UNITY_EDITOR"
 
-& "$env:UNITY_EDITOR" -batchmode -nographics `
+& "$env:UNITY_EDITOR" -batchmode `
   -projectPath $ws `
   -buildTarget Android `
   -executeMethod CI.AndroidCiBuildRunner.Run `
