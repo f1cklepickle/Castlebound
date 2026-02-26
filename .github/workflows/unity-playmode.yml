@@ -19,10 +19,20 @@ jobs:
         shell: pwsh
 
     steps:
+      - name: Pre-clean workspace
+        shell: pwsh
+        run: |
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue |
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
+          if (Test-Path "$env:GITHUB_WORKSPACE") {
+            Get-ChildItem -Force "$env:GITHUB_WORKSPACE" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          clean: true
+          clean: false
           fetch-depth: 0
 
       # Cache Library/ to speed up imports/compilation; mirror EditMode's key pattern
