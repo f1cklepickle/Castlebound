@@ -68,6 +68,18 @@ if (Test-Path $scriptAssemblies) {
   Step "Cleared Library/ScriptAssemblies to force script recompile from source"
 }
 
+# Delete the stale Android-build ProjectSettings Library artifact before launch.
+# BuildPlayer.PrepareForBuild reads AndroidTargetArchitectures from this specific
+# cached artifact (54320bc...) rather than from the source file on disk. It always
+# contains 0 (None) because a previous SwitchActiveBuildTarget wrote it that way.
+# Deleting the file forces Unity to reimport ProjectSettings from the patched disk
+# file (ARM64=2) when BuildPlayer runs, producing a fresh artifact with the correct value.
+$badArtifact = Join-Path $ws "Library\Artifacts\54\54320bc962bffbb4d33b9c405bfb6b11"
+if (Test-Path $badArtifact) {
+  Remove-Item -Force $badArtifact
+  Step "Deleted stale Android-build ProjectSettings artifact (will reimport from patched source)"
+}
+
 Step "Launching Unity..."
 $proc = Start-Process -FilePath $env:UNITY_EDITOR -ArgumentList $arguments -Wait -PassThru -NoNewWindow
 $unityCode = $proc.ExitCode
