@@ -35,14 +35,20 @@ Step "SDK        : $androidSdk"
 Step "NDK        : $androidNdk"
 Step "JDK        : $jdk"
 
-& "$env:UNITY_EDITOR" -batchmode -nographics `
-  -projectPath $ws `
-  -executeMethod CI.AndroidCiBuildRunner.Run `
-  -logFile $logPath `
-  -androidsdk "$androidSdk" `
-  -androidndk "$androidNdk" `
-  -jdk "$jdk"
-$unityCode = $LASTEXITCODE
+$arguments = @(
+  '-batchmode', '-nographics',
+  '-projectPath', $ws,
+  '-executeMethod', 'CI.AndroidCiBuildRunner.Run',
+  '-logFile', $logPath,
+  '-androidsdk', $androidSdk,
+  '-androidndk', $androidNdk,
+  '-jdk', $jdk
+)
+
+Step "Launching Unity..."
+$proc = Start-Process -FilePath $env:UNITY_EDITOR -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+$unityCode = $proc.ExitCode
+Step "Unity exited with code: $unityCode"
 
 if ($unityCode -ne 0) {
   Write-Error "Unity Android build failed with exit code $unityCode"
