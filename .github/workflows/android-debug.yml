@@ -47,9 +47,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: android-library-${{ runner.os }}-${{ hashFiles('Packages/manifest.json','ProjectSettings/ProjectVersion.txt') }}
+          key: android-library-v2-${{ runner.os }}-${{ hashFiles('Packages/manifest.json','ProjectSettings/ProjectVersion.txt') }}
           restore-keys: |
-            android-library-${{ runner.os }}-
+            android-library-v2-${{ runner.os }}-
 
       - name: Build Android APK
         shell: pwsh
