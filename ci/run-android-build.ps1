@@ -56,6 +56,18 @@ if (Test-Path $settingsPath) {
   Step "Patched AndroidTargetArchitectures to ARM64 (2) in ProjectSettings.asset"
 }
 
+# Force Unity to recompile all C# scripts from source.
+# The Library cache stores Bee's incremental build hashes. When the cache is restored,
+# Bee sees matching hashes and skips recompilation even if the checked-out source files
+# are newer — meaning new/changed CI scripts (like AndroidBuildPreprocessor.cs) are
+# never compiled in. Deleting ScriptAssemblies invalidates Bee's output so Unity
+# always recompiles from the actual repo source on this run.
+$scriptAssemblies = Join-Path $ws "Library\ScriptAssemblies"
+if (Test-Path $scriptAssemblies) {
+  Remove-Item -Recurse -Force $scriptAssemblies
+  Step "Cleared Library/ScriptAssemblies to force script recompile from source"
+}
+
 Step "Launching Unity..."
 $proc = Start-Process -FilePath $env:UNITY_EDITOR -ArgumentList $arguments -Wait -PassThru -NoNewWindow
 $unityCode = $proc.ExitCode
