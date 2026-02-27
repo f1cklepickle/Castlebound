@@ -35,9 +35,11 @@ namespace CI
             }
             Debug.Log("[CI][Android] Build target switched to Android.");
 
-            // Explicitly set ARM64 after platform switch, as SwitchActiveBuildTarget
-            // can reset Android Player Settings back to defaults (None).
+            // SwitchActiveBuildTarget writes ProjectSettings.asset to disk with
+            // AndroidTargetArchitectures = 0 (None). We must set ARM64, save it
+            // to disk, then BuildPlayer will reimport the correct value.
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            AssetDatabase.SaveAssets();
             Debug.Log($"[CI][Android] Target architectures set to: {PlayerSettings.Android.targetArchitectures}");
 
             var scenes = EditorBuildSettings.scenes
