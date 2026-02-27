@@ -25,11 +25,15 @@ namespace CI
             }
 
             // Do NOT call SwitchActiveBuildTarget here — it resets AndroidTargetArchitectures
-            // to 0 (None) on disk regardless of in-memory state, and AssetDatabase.SaveAssets()
-            // does not flush PlayerSettings back to disk. Instead, run-android-build.ps1
-            // pre-patches ProjectSettings.asset to ARM64 (2) before launching Unity, and
-            // BuildPipeline.BuildPlayer handles the implicit platform switch internally.
-            Debug.Log($"[CI][Android] Target architectures: {PlayerSettings.Android.targetArchitectures}");
+            // to 0 (None) and AssetDatabase.SaveAssets() does not flush PlayerSettings to disk.
+            //
+            // Instead, run-android-build.ps1 pre-patches ProjectSettings.asset on disk to ARM64 (2).
+            // We then force-reimport from disk so the Library cache reflects that value BEFORE
+            // BuildPipeline.BuildPlayer runs — BuildPlayer reads architecture from the Library
+            // cache during PrepareForBuild, so the cache must be current or it will see 0.
+            AssetDatabase.ImportAsset("ProjectSettings/ProjectSettings.asset", ImportAssetOptions.ForceUpdate);
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            Debug.Log($"[CI][Android] Target architectures after force reimport: {PlayerSettings.Android.targetArchitectures}");
 
             var scenes = EditorBuildSettings.scenes
                 .Where(s => s.enabled)
