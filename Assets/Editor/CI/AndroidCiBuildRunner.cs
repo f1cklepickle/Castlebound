@@ -24,23 +24,12 @@ namespace CI
                 Directory.CreateDirectory(outDir);
             }
 
-            Debug.Log("[CI][Android] Switching active build target to Android...");
-            var switched = EditorUserBuildSettings.SwitchActiveBuildTarget(
-                BuildTargetGroup.Android, BuildTarget.Android);
-            if (!switched)
-            {
-                Debug.LogError("[CI][Android] Failed to switch build target to Android.");
-                EditorApplication.Exit(1);
-                return;
-            }
-            Debug.Log("[CI][Android] Build target switched to Android.");
-
-            // SwitchActiveBuildTarget writes ProjectSettings.asset to disk with
-            // AndroidTargetArchitectures = 0 (None). We must set ARM64, save it
-            // to disk, then BuildPlayer will reimport the correct value.
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[CI][Android] Target architectures set to: {PlayerSettings.Android.targetArchitectures}");
+            // Do NOT call SwitchActiveBuildTarget here — it resets AndroidTargetArchitectures
+            // to 0 (None) on disk regardless of in-memory state, and AssetDatabase.SaveAssets()
+            // does not flush PlayerSettings back to disk. Instead, run-android-build.ps1
+            // pre-patches ProjectSettings.asset to ARM64 (2) before launching Unity, and
+            // BuildPipeline.BuildPlayer handles the implicit platform switch internally.
+            Debug.Log($"[CI][Android] Target architectures: {PlayerSettings.Android.targetArchitectures}");
 
             var scenes = EditorBuildSettings.scenes
                 .Where(s => s.enabled)

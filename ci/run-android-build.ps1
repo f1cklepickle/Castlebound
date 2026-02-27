@@ -45,6 +45,17 @@ $arguments = @(
   '-jdk', $jdk
 )
 
+# Patch AndroidTargetArchitectures to ARM64 (2) directly in ProjectSettings.asset.
+# SwitchActiveBuildTarget resets this value to 0 regardless of in-memory or disk state.
+# Writing to disk here ensures the correct value survives any reimport during BuildPlayer.
+$settingsPath = Join-Path $ws "ProjectSettings\ProjectSettings.asset"
+if (Test-Path $settingsPath) {
+  $content = Get-Content $settingsPath -Raw
+  $patched  = $content -replace 'AndroidTargetArchitectures:\s*\d+', 'AndroidTargetArchitectures: 2'
+  [System.IO.File]::WriteAllText($settingsPath, $patched)
+  Step "Patched AndroidTargetArchitectures to ARM64 (2) in ProjectSettings.asset"
+}
+
 Step "Launching Unity..."
 $proc = Start-Process -FilePath $env:UNITY_EDITOR -ArgumentList $arguments -Wait -PassThru -NoNewWindow
 $unityCode = $proc.ExitCode
