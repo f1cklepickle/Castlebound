@@ -37,6 +37,8 @@ Step "JDK        : $jdk"
 
 $arguments = @(
   '-batchmode', '-nographics',
+  '-buildTarget', 'Android',   # Unity initialises in Android platform mode so the Library
+                                # rebuild imports ProjectSettings.asset in Android context.
   '-projectPath', $ws,
   '-executeMethod', 'CI.AndroidCiBuildRunner.Run',
   '-logFile', $logPath,
@@ -45,39 +47,22 @@ $arguments = @(
   '-jdk', $jdk
 )
 
-# Patch AndroidTargetArchitectures to ARM64 (2) directly in ProjectSettings.asset.
-# SwitchActiveBuildTarget resets this value to 0 regardless of in-memory or disk state.
-# Writing to disk here ensures the correct value survives any reimport during BuildPlayer.
-$settingsPath = Join-Path $ws "ProjectSettings\ProjectSettings.asset"
-if (Test-Path $settingsPath) {
-  $content = Get-Content $settingsPath -Raw
-  $patched  = $content -replace 'AndroidTargetArchitectures:\s*\d+', 'AndroidTargetArchitectures: 2'
-  [System.IO.File]::WriteAllText($settingsPath, $patched)
-  Step "Patched AndroidTargetArchitectures to ARM64 (2) in ProjectSettings.asset"
-}
-
-# Force Unity to recompile all C# scripts from source.
-# The Library cache stores Bee's incremental build hashes. When the cache is restored,
-# Bee sees matching hashes and skips recompilation even if the checked-out source files
-# are newer — meaning new/changed CI scripts (like AndroidBuildPreprocessor.cs) are
-# never compiled in. Deleting ScriptAssemblies invalidates Bee's output so Unity
-# always recompiles from the actual repo source on this run.
+# Force Unity to recompile all C# scripts from source so that new/changed CI scripts
+# (including AndroidArchitectureInitializer.cs) are always compiled in.
 $scriptAssemblies = Join-Path $ws "Library\ScriptAssemblies"
 if (Test-Path $scriptAssemblies) {
   Remove-Item -Recurse -Force $scriptAssemblies
   Step "Cleared Library/ScriptAssemblies to force script recompile from source"
 }
 
-# Delete the stale Android-build ProjectSettings Library artifact before launch.
-# BuildPlayer.PrepareForBuild reads AndroidTargetArchitectures from this specific
-# cached artifact (54320bc...) rather than from the source file on disk. It always
-# contains 0 (None) because a previous SwitchActiveBuildTarget wrote it that way.
-# Deleting the file forces Unity to reimport ProjectSettings from the patched disk
-# file (ARM64=2) when BuildPlayer runs, producing a fresh artifact with the correct value.
-$badArtifact = Join-Path $ws "Library\Artifacts\54\54320bc962bffbb4d33b9c405bfb6b11"
-if (Test-Path $badArtifact) {
-  Remove-Item -Force $badArtifact
-  Step "Deleted stale Android-build ProjectSettings artifact (will reimport from patched source)"
+# Delete ArtifactDB so the Library rebuilds from the current disk state.
+# ProjectSettings.asset has AndroidTargetArchitectures: 2 on disk (committed value).
+# AndroidArchitectureInitializer [InitializeOnLoad] fires BEFORE InitialRefreshV2 and
+# re-confirms ARM64 in memory, so the 54320bc artifact is created fresh with ARM64=2.
+$artifactDb = Join-Path $ws "Library\ArtifactDB"
+if (Test-Path $artifactDb) {
+  Remove-Item -Force $artifactDb
+  Step "Deleted Library/ArtifactDB to force Library rebuild"
 }
 
 Step "Launching Unity..."
