@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-02-28 - feat/ci-android-apk-v2
+
+### Summary
+- Established Android CI build pipeline via GitHub Actions (workflow, PowerShell runner, `AndroidCiBuildRunner`, `AndroidArchitectureInitializer`, `AndroidBuildPreprocessor`).
+- Switched scripting backend to IL2CPP and target architecture to ARM64, resolving "Target architecture not specified" build failure caused by Unity batchmode serialization bug overwriting the architecture artifact during `PrepareForBuild`.
+- Fixed Active Input Handling from Both → Input System Package (New), removing unsupported-on-Android warning.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- N/A
+
+### Notes
+- Manual validation: APK built successfully via CI pipeline and confirmed loading on a physical Android device.
+- Existing EditMode and PlayMode CI pipelines validated as unaffected by IL2CPP/ARM64/input handling changes.
+
+---
+
 ## 2026-02-21 - feat/130-barrier-lattice-static-castle
 
 ### Summary
