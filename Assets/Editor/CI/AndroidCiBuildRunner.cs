@@ -20,13 +20,14 @@ namespace CI
             if (!string.IsNullOrWhiteSpace(outDir))
                 Directory.CreateDirectory(outDir);
 
-            // AndroidArchitectureInitializer [InitializeOnLoad] already set ARM64 before
-            // InitialRefreshV2. Confirm the value here and re-apply as belt-and-suspenders.
+            // Log current state. AndroidArchitectureInitializer [InitializeOnLoad] already
+            // confirmed ARM64 before InitialRefreshV2 ran and baked 54320bc with ARM64=2.
+            // Set native here as belt-and-suspenders — but do NOT call SaveAssets().
+            // SaveAssets() triggers a reimport that overwrites 54320bc with ARM64=0 due
+            // to a Unity batchmode serialization bug.
             Debug.Log($"[CI][Android] targetArchitectures on entry = {PlayerSettings.Android.targetArchitectures}");
-
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[CI][Android] targetArchitectures after SaveAssets = {PlayerSettings.Android.targetArchitectures}");
+            Debug.Log($"[CI][Android] targetArchitectures after set (no SaveAssets) = {PlayerSettings.Android.targetArchitectures}");
 
             var scenes = EditorBuildSettings.scenes
                 .Where(s => s.enabled)

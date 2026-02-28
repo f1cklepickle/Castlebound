@@ -5,21 +5,15 @@ namespace CI
 {
     /// <summary>
     /// Sets ARM64 as the Android target architecture before Unity's initial asset database
-    /// refresh (InitialRefreshV2). This is the earliest hook available in managed C# code.
+    /// refresh (InitialRefreshV2). Fires after domain reload but before the 262-second
+    /// startup import that creates artifact 54320bc.
     ///
-    /// Initialization order (Unity 2022.3 batchmode):
-    ///   1. Unity native init
-    ///   2. Script compilation (if ScriptAssemblies missing) + domain reload
-    ///   3. [InitializeOnLoad] static constructors  ← we fire here
-    ///   4. InitialRefreshV2 — the 169-second startup asset import that creates artifact
-    ///      54320bc (Android context for ProjectSettings.asset). Reading ARM64 from the
-    ///      native C++ PlayerSettings structure at this point produces ARM64=2.
-    ///   5. -executeMethod (AndroidCiBuildRunner.Run) is called
-    ///
-    /// Without this class, the value baked into 54320bc during step 4 reflects whatever
-    /// AndroidTargetArchitectures was on disk when the Library rebuilt — which could be 0
-    /// from a previous failed run — causing CheckPrerequisites to throw
-    /// "Target architecture not specified".
+    /// IMPORTANT: Do NOT call AssetDatabase.SaveAssets() here.
+    /// SaveAssets() triggers a reimport of ProjectSettings.asset. Unity has a batchmode
+    /// serialization bug where that reimport writes AndroidTargetArchitectures=0 to disk,
+    /// causing a fresh 54320bc to be created with ARM64=0. Instead, just set the native
+    /// value — the startup InitialRefreshV2 reads the correct ARM64=2 from disk and
+    /// bakes it into 54320bc correctly without any SaveAssets() interference.
     /// </summary>
     [InitializeOnLoad]
     public static class AndroidArchitectureInitializer
@@ -28,14 +22,13 @@ namespace CI
         {
             if (PlayerSettings.Android.targetArchitectures == AndroidArchitecture.ARM64)
             {
-                Debug.Log("[CI] AndroidArchitectureInitializer: ARM64 already set, nothing to do.");
+                Debug.Log("[CI] AndroidArchitectureInitializer: ARM64 already set.");
                 return;
             }
 
-            Debug.Log($"[CI] AndroidArchitectureInitializer: arch was {PlayerSettings.Android.targetArchitectures}, forcing ARM64.");
+            Debug.Log($"[CI] AndroidArchitectureInitializer: was {PlayerSettings.Android.targetArchitectures}, setting ARM64.");
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[CI] AndroidArchitectureInitializer: arch after SaveAssets = {PlayerSettings.Android.targetArchitectures}");
+            Debug.Log($"[CI] AndroidArchitectureInitializer: confirmed = {PlayerSettings.Android.targetArchitectures}");
         }
     }
 }
