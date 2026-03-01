@@ -1,5 +1,6 @@
-using UnityEngine.UI;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.UI;
 
@@ -38,7 +39,56 @@ namespace Castlebound.Gameplay.Input
                     _weaponButton = weaponHud.GetComponent<Button>() ?? weaponHud.gameObject.AddComponent<Button>();
             }
 
+            if (_closeButton == null && _upgradeMenuController != null)
+                _closeButton = CreateCloseButton(_upgradeMenuController.MenuRoot);
+
             Initialize();
+        }
+
+        // ── Close button factory ──────────────────────────────────────────────
+
+        private static Button CreateCloseButton(RectTransform parent)
+        {
+            if (parent == null) return null;
+
+            var go = new GameObject("CloseButton",
+                typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+
+            // Top-right corner, 44×44 px, 8 px inset
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot     = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-8f, -8f);
+            rt.sizeDelta = new Vector2(44f, 44f);
+
+            var image = go.GetComponent<Image>();
+            image.color = new Color(0.7f, 0.15f, 0.15f, 0.9f);
+
+            var label = new GameObject("Label",
+                typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            label.transform.SetParent(go.transform, false);
+            var labelRT = label.GetComponent<RectTransform>();
+            labelRT.anchorMin = Vector2.zero;
+            labelRT.anchorMax = Vector2.one;
+            labelRT.offsetMin = Vector2.zero;
+            labelRT.offsetMax = Vector2.zero;
+            var tmp = label.GetComponent<TextMeshProUGUI>();
+            tmp.text      = "×";
+            tmp.fontSize  = 28;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color     = Color.white;
+
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+            var colors = button.colors;
+            colors.normalColor      = new Color(0.7f, 0.15f, 0.15f, 0.9f);
+            colors.highlightedColor = new Color(0.9f, 0.2f,  0.2f,  1.0f);
+            colors.pressedColor     = new Color(0.5f, 0.1f,  0.1f,  1.0f);
+            button.colors = colors;
+
+            return button;
         }
 
         // ── Injection (tests) ─────────────────────────────────────────────────
