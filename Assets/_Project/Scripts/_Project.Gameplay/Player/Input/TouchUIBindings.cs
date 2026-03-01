@@ -7,19 +7,32 @@ namespace Castlebound.Gameplay.Input
 {
     public class TouchUIBindings : MonoBehaviour
     {
+        // Controllers are found automatically at runtime.
+        // Buttons must be assigned in the Inspector (no unique script to find them by).
+        [SerializeField] private Button _potionButton;
+        [SerializeField] private Button _weaponButton;
+        [SerializeField] private Button _closeButton;
+
         private PotionUseController _potionUseController;
         private PlayerController _playerController;
         private UpgradeMenuController _upgradeMenuController;
-        private Button _potionButton;
-        private Button _weaponButton;
-        private Button _closeButton;
+
+        private void Start()
+        {
+            _potionUseController = FindObjectOfType<PotionUseController>();
+            _playerController    = FindObjectOfType<PlayerController>();
+            _upgradeMenuController = FindObjectOfType<UpgradeMenuController>();
+            Initialize();
+        }
+
+        // ── Injection (tests) ─────────────────────────────────────────────────
 
         public void SetPotionUseController(PotionUseController controller) => _potionUseController = controller;
-        public void SetPlayerController(PlayerController controller) => _playerController = controller;
+        public void SetPlayerController(PlayerController controller)       => _playerController = controller;
         public void SetUpgradeMenuController(UpgradeMenuController controller) => _upgradeMenuController = controller;
-        public void SetPotionButton(Button button) => _potionButton = button;
-        public void SetWeaponButton(Button button) => _weaponButton = button;
-        public void SetCloseButton(Button button) => _closeButton = button;
+        public void SetPotionButton(Button button)  => _potionButton  = button;
+        public void SetWeaponButton(Button button)  => _weaponButton  = button;
+        public void SetCloseButton(Button button)   => _closeButton   = button;
 
         public void Initialize()
         {
