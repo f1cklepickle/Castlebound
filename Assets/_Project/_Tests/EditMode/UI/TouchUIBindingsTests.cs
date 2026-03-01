@@ -49,7 +49,7 @@ namespace Castlebound.Tests.UI
             potionController.SetResolverSource(resolver);
             potionController.SetHealTargetSource(healable);
 
-            var button = new GameObject("PotionButton").AddComponent<Button>();
+            var button = new GameObject("PotionButton").AddComponent<TouchOnlyButton>();
             button.transform.SetParent(_root.transform);
 
             var bindings = _root.AddComponent<TouchUIBindings>();
@@ -73,7 +73,7 @@ namespace Castlebound.Tests.UI
             inventory.State.AddWeapon("weapon_b");
             var player = playerGo.AddComponent<PlayerController>();
 
-            var button = new GameObject("WeaponButton").AddComponent<Button>();
+            var button = new GameObject("WeaponButton").AddComponent<TouchOnlyButton>();
             button.transform.SetParent(_root.transform);
 
             var bindings = _root.AddComponent<TouchUIBindings>();

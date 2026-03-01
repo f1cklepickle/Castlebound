@@ -10,9 +10,10 @@ namespace Castlebound.Gameplay.Input
     {
         // All refs found automatically at runtime via FindObjectOfType / GetComponent.
         // [SerializeField] allows Inspector override and keeps the test Set* API intact.
-        [SerializeField] private Button _potionButton;
-        [SerializeField] private Button _weaponButton;
-        [SerializeField] private Button _closeButton;
+        // Potion and weapon use TouchOnlyButton so mouse clicks on PC are ignored.
+        [SerializeField] private TouchOnlyButton _potionButton;
+        [SerializeField] private TouchOnlyButton _weaponButton;
+        [SerializeField] private Button _closeButton;   // mouse-clickable on PC is fine
 
         private PotionUseController _potionUseController;
         private PlayerController _playerController;
@@ -29,14 +30,16 @@ namespace Castlebound.Gameplay.Input
             {
                 var potionHud = FindObjectOfType<PotionHudSlot>();
                 if (potionHud != null)
-                    _potionButton = potionHud.GetComponent<Button>() ?? potionHud.gameObject.AddComponent<Button>();
+                    _potionButton = potionHud.GetComponent<TouchOnlyButton>()
+                                   ?? potionHud.gameObject.AddComponent<TouchOnlyButton>();
             }
 
             if (_weaponButton == null)
             {
                 var weaponHud = FindObjectOfType<WeaponSlotsHud>();
                 if (weaponHud != null)
-                    _weaponButton = weaponHud.GetComponent<Button>() ?? weaponHud.gameObject.AddComponent<Button>();
+                    _weaponButton = weaponHud.GetComponent<TouchOnlyButton>()
+                                    ?? weaponHud.gameObject.AddComponent<TouchOnlyButton>();
             }
 
             if (_closeButton == null && _upgradeMenuController != null)
@@ -96,17 +99,17 @@ namespace Castlebound.Gameplay.Input
         public void SetPotionUseController(PotionUseController controller) => _potionUseController = controller;
         public void SetPlayerController(PlayerController controller)       => _playerController = controller;
         public void SetUpgradeMenuController(UpgradeMenuController controller) => _upgradeMenuController = controller;
-        public void SetPotionButton(Button button)  => _potionButton  = button;
-        public void SetWeaponButton(Button button)  => _weaponButton  = button;
-        public void SetCloseButton(Button button)   => _closeButton   = button;
+        public void SetPotionButton(TouchOnlyButton button) => _potionButton = button;
+        public void SetWeaponButton(TouchOnlyButton button) => _weaponButton = button;
+        public void SetCloseButton(Button button)           => _closeButton  = button;
 
         public void Initialize()
         {
             if (_potionButton != null && _potionUseController != null)
-                _potionButton.onClick.AddListener(() => _potionUseController.TryConsume());
+                _potionButton.onClick.AddListener(_potionUseController.TryConsume);
 
             if (_weaponButton != null && _playerController != null)
-                _weaponButton.onClick.AddListener(() => _playerController.TrySwapWeaponSlotWithoutCooldown());
+                _weaponButton.onClick.AddListener(_playerController.TrySwapWeaponSlotWithoutCooldown);
 
             if (_closeButton != null && _upgradeMenuController != null)
                 _closeButton.onClick.AddListener(() => _upgradeMenuController.CloseMenu());
