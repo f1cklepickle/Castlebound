@@ -1,0 +1,81 @@
+name: Android Debug Build
+
+on:
+  pull_request:
+    types: [synchronize, reopened, labeled]
+    branches: [ main ]
+
+concurrency:
+  group: android-debug-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'apk')
+    runs-on: self-hosted
+
+    steps:
+      - name: Pre-clean workspace
+        shell: pwsh
+        run: |
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue |
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
+          if (Test-Path "$env:GITHUB_WORKSPACE") {
+            Get-ChildItem -Force "$env:GITHUB_WORKSPACE" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          fetch-depth: 0
+
+      - name: Ensure project not locked
+        shell: pwsh
+        run: |
+          Get-Process Unity, UnityHub, UnityPackageManager, UnityCrashHandler64 -ErrorAction SilentlyContinue | `
+            Stop-Process -Force -ErrorAction SilentlyContinue
+          if (Test-Path "$env:GITHUB_WORKSPACE\Temp\UnityLockfile") {
+            Remove-Item -Force "$env:GITHUB_WORKSPACE\Temp\UnityLockfile"
+          }
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: android-library-v2-${{ runner.os }}-${{ hashFiles('Packages/manifest.json','ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            android-library-v2-${{ runner.os }}-
+
+      - name: Build Android APK
+        shell: pwsh
+        run: .\ci\run-android-build.ps1
+
+      - name: Upload Android build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/Android/castlebound-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroidBuildLog
+          path: build/AndroidBuildLog.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Clean up build folder
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path build) {
+            Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+          }
