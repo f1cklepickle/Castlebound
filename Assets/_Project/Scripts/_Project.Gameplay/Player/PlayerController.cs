@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
     private Vector2 movementInput;
+    private Vector2 aimInput;
     private Vector2 lastMoveDirection;
 
   private PlayerCollisionMove2D mover;
@@ -54,6 +55,14 @@ void Awake() {
         movementInput = value.Get<Vector2>();
     }
 
+    public void OnLook(InputValue value)
+    {
+        if (inputLocked)
+            return;
+
+        aimInput = value.Get<Vector2>();
+    }
+
     public void OnFire(InputValue value)
     {
         if (inputLocked)
@@ -79,11 +88,13 @@ void Awake() {
         mover.SetMoveInput(mag < deadZone ? Vector2.zero : movementInput);
     }
 
-    // Aim/rotate same as before
+    // Aim/rotate: prefer explicit aim input (right stick/touch zone) when active,
+    // otherwise fall back to movement direction.
     if (movementInput.magnitude > 0f)
         lastMoveDirection = movementInput;
 
-    Vector2 angleDirection = flipDirection ? -lastMoveDirection : lastMoveDirection;
+    Vector2 facingSource = aimInput.magnitude > deadZone ? aimInput : lastMoveDirection;
+    Vector2 angleDirection = flipDirection ? -facingSource : facingSource;
     float targetAngle = Mathf.Atan2(angleDirection.y, angleDirection.x) * Mathf.Rad2Deg + facingDirectionOffset;
     var targetRotation = Quaternion.Euler(0, 0, targetAngle);
     transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
@@ -98,6 +109,24 @@ void Awake() {
     public void DisableHitbox()
     {
         hitboxObject.GetComponent<Hitbox>()?.Deactivate();
+    }
+
+    /// <summary>
+    /// Returns true if there is at least one broken barrier within repair range.
+    /// Uses the same overlap check as OnRepair so touch UI and keyboard are consistent.
+    /// </summary>
+    public bool HasRepairableBarrierInRange()
+    {
+        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
+        if (hits == null) return false;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            var hit = hits[i];
+            if (!hit) continue;
+            var barrier = hit.GetComponentInParent<BarrierHealth>();
+            if (barrier != null && barrier.IsBroken) return true;
+        }
+        return false;
     }
 
     public void OnRepair(InputValue value)
