@@ -27,8 +27,15 @@ namespace Castlebound.Gameplay.Input
                  "Must be assigned so the virtual gamepad is paired to its InputUser.")]
         [SerializeField] private PlayerInput playerInput;
 
+        [Tooltip("How many times per second the player attacks while the right zone is held " +
+                 "past the deadzone. Weapon attackSpeed will scale this once the combat " +
+                 "stat pipeline is wired (see PlayerController refactor issue).")]
+        [SerializeField] private float baseAttackRate = 1.5f;
+
         private Gamepad _virtualGamepad;
         private bool _pendingRepairPress;
+        private bool _pendingFirePulse;
+        private float _attackTimer;
 
         private void OnEnable()
         {
@@ -79,11 +86,31 @@ namespace Castlebound.Gameplay.Input
             if (movementZone != null)
                 state.leftStick = movementZone.MoveVector;
 
-            // Right stick drives facing direction; right trigger fires when above deadzone.
+            // Right stick drives facing direction.
+            // Right trigger pulses at baseAttackRate while the zone is held past the deadzone,
+            // producing a repeated press-release cycle so OnFire fires on each pulse.
+            // Resetting the timer to zero when not firing ensures the first attack in a new
+            // drag is immediate rather than waiting out the previous interval.
             if (aimAttackZone != null)
             {
                 state.rightStick = aimAttackZone.FacingDirection;
-                state.rightTrigger = aimAttackZone.IsFiring ? 1f : 0f;
+
+                if (aimAttackZone.IsFiring)
+                {
+                    _attackTimer -= Time.deltaTime;
+                    if (_attackTimer <= 0f)
+                    {
+                        _pendingFirePulse = true;
+                        _attackTimer = 1f / Mathf.Max(baseAttackRate, 0.1f);
+                    }
+                }
+                else
+                {
+                    _attackTimer = 0f;
+                }
+
+                state.rightTrigger = _pendingFirePulse ? 1f : 0f;
+                _pendingFirePulse = false;
             }
 
             // One-shot repair press: button is set this frame, absent next frame = released.

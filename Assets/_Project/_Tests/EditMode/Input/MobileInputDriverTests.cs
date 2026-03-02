@@ -18,11 +18,16 @@ namespace Castlebound.Tests.Input
     ///     the PlayerInput user (needs a real PlayerInput component in a live scene).
     ///   - Per-frame QueueStateEvent writing left/right stick values from the touch zones
     ///     and those values reaching PlayerController.OnMove / OnLook / OnFire.
+    ///   - Attack pulse timer: that rightTrigger pulses at baseAttackRate while IsFiring,
+    ///     that the first pulse is immediate (timer reset to 0 on pointer-up), and that
+    ///     Mathf.Max clamps baseAttackRate so zero/negative values do not divide by zero.
     ///
     /// For full pipeline coverage create a PlayMode integration test that:
     ///   1. Loads the gameplay scene (or a minimal stand-in).
     ///   2. Confirms InputSystem.devices contains a Gamepad named "MobileGamepad".
     ///   3. Simulates a drag on TouchMovementZone and asserts PlayerController moved.
+    ///   4. Simulates a right-zone drag past the deadzone and asserts the Attack animator
+    ///      trigger fires repeatedly at approximately baseAttackRate.
     /// </summary>
     public class MobileInputDriverTests
     {

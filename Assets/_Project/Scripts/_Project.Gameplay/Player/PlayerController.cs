@@ -66,9 +66,12 @@ void Awake() {
     public void OnFire(InputValue value)
     {
         if (inputLocked)
-        {
             return;
-        }
+
+        // Guard against the release event: InputSystem calls OnFire for both
+        // performed (press) and canceled (release). Only swing on press.
+        if (!value.isPressed)
+            return;
 
         animator.SetTrigger("Attack");
     }
