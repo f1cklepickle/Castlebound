@@ -92,5 +92,39 @@ namespace Castlebound.Tests.Input
             Assert.LessOrEqual(_zone.MoveVector.magnitude, 1.001f,
                 "MoveVector magnitude should never exceed 1.");
         }
+
+        [Test]
+        public void SimulateDrag_MoveVector_Magnitude_IsProportionalToDragDistance()
+        {
+            // Drag exactly half of the max radius to verify proportional response.
+            _zone.MaxRadius = 100f;
+            _zone.SimulatePointerDown(Vector2.zero);
+            _zone.SimulateDrag(new Vector2(50f, 0f));
+
+            Assert.AreEqual(0.5f, _zone.MoveVector.magnitude, 0.001f,
+                "Dragging half the max radius should produce a move vector of magnitude 0.5.");
+        }
+
+        [Test]
+        public void SimulateDrag_MoveVector_Magnitude_IsOne_AtMaxRadius()
+        {
+            _zone.MaxRadius = 100f;
+            _zone.SimulatePointerDown(Vector2.zero);
+            _zone.SimulateDrag(new Vector2(100f, 0f));
+
+            Assert.AreEqual(1f, _zone.MoveVector.magnitude, 0.001f,
+                "Dragging exactly the max radius should produce a move vector of magnitude 1.");
+        }
+
+        [Test]
+        public void SimulateDrag_MoveVector_Magnitude_IsClamped_BeyondMaxRadius()
+        {
+            _zone.MaxRadius = 100f;
+            _zone.SimulatePointerDown(Vector2.zero);
+            _zone.SimulateDrag(new Vector2(500f, 0f));
+
+            Assert.AreEqual(1f, _zone.MoveVector.magnitude, 0.001f,
+                "Dragging beyond the max radius should still produce a magnitude of exactly 1.");
+        }
     }
 }
