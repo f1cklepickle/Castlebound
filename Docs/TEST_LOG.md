@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-03-02 - feat/android-touch-controls
+
+### Summary
+- Fixed virtual gamepad device pairing via `InputUser.PerformPairingWithDevice` so
+  `PlayerInput` receives input on Android where no physical keyboard exists.
+- Disabled `RaycastTarget` on `PlayerHitFlash` full-screen Image, unblocking pointer
+  events to `TouchMovementZone` and `TouchAimAttackZone`.
+- Fixed `TouchMovementZone.SimulateDrag` analog math: replaced `delta.normalized`
+  (always magnitude 1) with `delta / maxRadius` for proportional 0→1 response.
+- Added attack repeat: `MobileInputDriver` pulses `rightTrigger` 0→1→0 at
+  `baseAttackRate` (1.5/s); `PlayerController.OnFire` guards the release event
+  with `value.isPressed`.
+
+### New or Updated Tests
+**EditMode**
+- `TouchMovementZoneTests` — proportional magnitude at half-radius, full-radius,
+  and clamped-beyond-radius
+- `MobileInputDriverTests` — null-safety: OnEnable/OnDisable without refs, repeated
+  enable/disable cycles; PlayMode gap documented for pulse timer
+- `PlayerAttackInputTests` — PlayerController instantiation, input-lock blocks
+  movement, unlock restores movement
+
+**PlayMode**
+- N/A — device pairing, attack pulse, and isPressed guard require full PlayerInput
+  runtime; manual Device Simulator validation performed: move, attack, repair,
+  weapon swap, and upgrade panel all confirmed working
+
+### Notes
+- Real Android sideload confirmed: move, attack, repair, weapon swap all functional
+  on physical device.
+- `attackSpeed` stat flows `WeaponDefinition` → `WeaponStats` → `PlayerWeaponController`
+  but is not yet consumed; weapon speed scaling deferred to PlayerController refactor.
+
+---
+
 ## 2026-02-28 - feat/ci-android-apk-v2
 
 ### Summary
