@@ -14,8 +14,7 @@ public class PlayerController : MonoBehaviour
     public GameObject hitboxObject;
 
     [Header("Repair")]
-    [SerializeField] private float repairRadius = 1.5f;
-    [SerializeField] private LayerMask barrierMask;
+    [SerializeField] private RepairSensor _repairSensor;
 
     [Header("Potions")]
     [SerializeField] private PotionUseController potionUseController;
@@ -116,20 +115,10 @@ void Awake() {
 
     /// <summary>
     /// Returns true if there is at least one broken barrier within repair range.
-    /// Uses the same overlap check as OnRepair so touch UI and keyboard are consistent.
     /// </summary>
     public bool HasRepairableBarrierInRange()
     {
-        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
-        if (hits == null) return false;
-        for (int i = 0; i < hits.Length; i++)
-        {
-            var hit = hits[i];
-            if (!hit) continue;
-            var barrier = hit.GetComponentInParent<BarrierHealth>();
-            if (barrier != null && barrier.IsBroken) return true;
-        }
-        return false;
+        return _repairSensor.HasRepairableBarrierInRange(transform.position);
     }
 
     public void OnRepair(InputValue value)
@@ -137,32 +126,10 @@ void Awake() {
         if (inputLocked)
             return;
 
-        // We only care about the press event.
         if (!value.isPressed)
             return;
 
-        // Find any barriers within repairRadius on the configured barrierMask.
-        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
-        if (hits == null || hits.Length == 0)
-            return;
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            var hit = hits[i];
-            if (!hit) continue;
-
-            // Look for BarrierHealth on this object or its parent.
-            var barrier = hit.GetComponentInParent<BarrierHealth>();
-            if (barrier == null)
-                continue;
-
-            // Only repair broken barriers.
-            if (!barrier.IsBroken)
-                continue;
-
-            barrier.Repair();
-            break; // Repair one barrier per key press.
-        }
+        _repairSensor.TryRepairNearest(transform.position);
     }
 
     public void OnUsePotion(InputValue value)
