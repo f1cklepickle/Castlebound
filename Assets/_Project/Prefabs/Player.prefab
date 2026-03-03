@@ -245,7 +245,8 @@ MonoBehaviour:
       m_Bits: 256
   potionUseController: {fileID: 0}
   inventorySource: {fileID: 0}
-  weaponSlotSwapCooldown: 0.5
+  weaponSlotSwapHandler:
+    weaponSlotSwapCooldown: 0.5
 --- !u!114 &6061923462103248084
 MonoBehaviour:
   m_ObjectHideFlags: 0
