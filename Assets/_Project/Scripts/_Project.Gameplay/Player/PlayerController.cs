@@ -4,12 +4,6 @@ using Castlebound.Gameplay.Inventory;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public float deadZone = 0.1f;
-    public float rotationSpeed = 720f;
-    public float facingDirectionOffset = -90f;
-    public bool flipDirection = false;
-
     public Animator animator;
     public GameObject hitboxObject;
 
@@ -22,26 +16,28 @@ public class PlayerController : MonoBehaviour
     [Header("Weapons")]
     [SerializeField] private InventoryStateComponent inventorySource;
     [SerializeField] private WeaponSlotSwapHandler weaponSlotSwapHandler = new WeaponSlotSwapHandler();
+    
+    [Header("Movement")]
+    [SerializeField] private PlayerMovementOrchestrator movementOrchestrator = new PlayerMovementOrchestrator();
 
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 aimInput;
-    private Vector2 lastMoveDirection;
-
-  private PlayerCollisionMove2D mover;
+    private PlayerCollisionMove2D mover;
     private InventoryState inventoryState;
     private bool inputLocked;
 
-void Awake() {
-    rb = GetComponent<Rigidbody2D>();
-    if (animator == null) animator = GetComponent<Animator>();
-    mover = GetComponent<PlayerCollisionMove2D>();   // NEW
-    if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
-    if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
-    inventoryState = inventorySource != null ? inventorySource.State : null;
-    if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
-    lastMoveDirection = new Vector2(0, 1);
-}
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        if (animator == null) animator = GetComponent<Animator>();
+        mover = GetComponent<PlayerCollisionMove2D>();
+        if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
+        if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
+        inventoryState = inventorySource != null ? inventorySource.State : null;
+        if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
+        if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
+    }
 
 
     public void OnMove(InputValue value)
@@ -75,32 +71,13 @@ void Awake() {
         animator.SetTrigger("Attack");
     }
 
-   void FixedUpdate()
-{
-    if (inputLocked)
+    void FixedUpdate()
     {
-        return;
+        if (inputLocked)
+            return;
+
+        movementOrchestrator.Tick(mover, transform, movementInput, aimInput, Time.fixedDeltaTime);
     }
-
-    // Pass input to the collision-clamped mover
-    if (mover != null)
-    {
-        // deadzone
-        var mag = movementInput.magnitude;
-        mover.SetMoveInput(mag < deadZone ? Vector2.zero : movementInput);
-    }
-
-    // Aim/rotate: prefer explicit aim input (right stick/touch zone) when active,
-    // otherwise fall back to movement direction.
-    if (movementInput.magnitude > 0f)
-        lastMoveDirection = movementInput;
-
-    Vector2 facingSource = aimInput.magnitude > deadZone ? aimInput : lastMoveDirection;
-    Vector2 angleDirection = flipDirection ? -facingSource : facingSource;
-    float targetAngle = Mathf.Atan2(angleDirection.y, angleDirection.x) * Mathf.Rad2Deg + facingDirectionOffset;
-    var targetRotation = Quaternion.Euler(0, 0, targetAngle);
-    transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
-}
 
 
     public void EnableHitbox()
