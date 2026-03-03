@@ -68,8 +68,8 @@ No code before approval.
   - Add 1 regression guard test.
 
 Test paths:
-- EditMode: `Assets/_Tests/EditMode/<Feature>/...Tests.cs`
-- PlayMode: `Assets/_Tests/PlayMode/<Feature>/...PlayTests.cs`
+- EditMode: `Assets/_Project/_Tests/EditMode/<Feature>/...Tests.cs`
+- PlayMode: `Assets/_Project/_Tests/PlayMode/<Feature>/...PlayTests.cs`
 
 ---
 
