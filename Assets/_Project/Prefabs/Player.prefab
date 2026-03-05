@@ -304,7 +304,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 5abdd081-39a0-451a-8255-e5065b0961ec
-    m_ActionName: Player/Attack[/Mouse/leftButton]
+    m_ActionName: Player/Fire[/Mouse/leftButton]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
