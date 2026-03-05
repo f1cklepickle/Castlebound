@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using System.Linq;
 
 namespace Castlebound.Tests.Player
 {
@@ -37,6 +38,18 @@ namespace Castlebound.Tests.Player
                 "Attack->Idle should keep exit-time flow for this animator graph to avoid one-and-done attack states.");
             Assert.LessOrEqual(attackToIdle.duration, 0.1f,
                 "Attack->Idle transition duration should be short to avoid hard-capping repeat attacks.");
+
+            var clip = attackState.motion as AnimationClip;
+            Assert.IsNotNull(clip, "Knight_Attack state must use an AnimationClip motion.");
+
+            var disableEvent = AnimationUtility.GetAnimationEvents(clip)
+                .FirstOrDefault(e => e.functionName == "DisableHitbox");
+            Assert.IsNotNull(disableEvent,
+                "Knight_Attack clip must include DisableHitbox event to close the hit window.");
+
+            var disableNormalizedTime = disableEvent.time / clip.length;
+            Assert.GreaterOrEqual(attackToIdle.exitTime, disableNormalizedTime,
+                "Attack->Idle exitTime must not start before DisableHitbox event; otherwise hitbox damage can be skipped.");
         }
     }
 }
