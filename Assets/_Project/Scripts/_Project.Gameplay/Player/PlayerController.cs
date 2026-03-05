@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Combat;
+using Castlebound.Gameplay.Input;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,6 +18,9 @@ public class PlayerController : MonoBehaviour
     [Header("Weapons")]
     [SerializeField] private InventoryStateComponent inventorySource;
     [SerializeField] private WeaponSlotSwapHandler weaponSlotSwapHandler = new WeaponSlotSwapHandler();
+    [SerializeField] private PlayerWeaponController playerWeaponController;
+    [SerializeField] private MobileInputDriver mobileInputDriver;
+    [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
     [SerializeField] private PlayerMovementOrchestrator movementOrchestrator = new PlayerMovementOrchestrator();
@@ -26,6 +31,8 @@ public class PlayerController : MonoBehaviour
     private PlayerCollisionMove2D mover;
     private InventoryState inventoryState;
     private bool inputLocked;
+    private readonly PlayerAttackCooldownGate attackCooldownGate = new PlayerAttackCooldownGate();
+    private float appliedMobileAttackRate = -1f;
 
     void Awake()
     {
@@ -34,9 +41,12 @@ public class PlayerController : MonoBehaviour
         mover = GetComponent<PlayerCollisionMove2D>();
         if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
         if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
+        if (playerWeaponController == null) playerWeaponController = GetComponent<PlayerWeaponController>();
+        if (mobileInputDriver == null) mobileInputDriver = FindObjectOfType<MobileInputDriver>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
+        SyncMobileAttackRate();
     }
 
 
@@ -68,6 +78,9 @@ public class PlayerController : MonoBehaviour
         if (!value.isPressed)
             return;
 
+        if (!attackCooldownGate.TryConsume(Time.time, GetEffectiveAttackRate()))
+            return;
+
         animator.SetTrigger("Attack");
     }
 
@@ -77,6 +90,7 @@ public class PlayerController : MonoBehaviour
             return;
 
         movementOrchestrator.Tick(mover, transform, movementInput, aimInput, Time.fixedDeltaTime);
+        SyncMobileAttackRate();
     }
 
 
@@ -172,5 +186,27 @@ public class PlayerController : MonoBehaviour
     public void SetInputLocked(bool locked)
     {
         inputLocked = locked;
+    }
+
+    private float GetEffectiveAttackRate()
+    {
+        var weaponAttackSpeed = playerWeaponController != null
+            ? playerWeaponController.CurrentWeaponStats.AttackSpeed
+            : 1f;
+
+        return PlayerAttackRateCalculator.ComputeEffectiveRate(baseAttackRate, weaponAttackSpeed);
+    }
+
+    private void SyncMobileAttackRate()
+    {
+        if (mobileInputDriver == null)
+            return;
+
+        var rate = GetEffectiveAttackRate();
+        if (Mathf.Approximately(rate, appliedMobileAttackRate))
+            return;
+
+        mobileInputDriver.SetAttackRate(rate);
+        appliedMobileAttackRate = rate;
     }
 }
