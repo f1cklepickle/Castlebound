@@ -127,5 +127,10 @@ namespace Castlebound.Gameplay.Input
         {
             _pendingRepairPress = true;
         }
+
+        public void SetAttackRate(float attacksPerSecond)
+        {
+            baseAttackRate = Mathf.Max(attacksPerSecond, 0.1f);
+        }
     }
 }

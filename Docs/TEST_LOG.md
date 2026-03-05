@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-03-05 - refactor/143-split-player-controller (#145 attack speed wiring)
+
+### Summary
+- Completed `#143` structural split: extracted `RepairSensor`, extracted `WeaponSlotSwapHandler`, and reduced `PlayerController` to orchestrator responsibilities.
+- Implemented `#145` attack-speed wiring: effective rate uses `baseAttackRate * weaponAttackSpeed` and gates real attack cadence (not animation-only speedup).
+- Synced mobile attack repeat rate through `MobileInputDriver.SetAttackRate` and tuned attack return timing so hitbox event windows execute reliably.
+
+### New or Updated Tests
+**EditMode**
+- `MobileInputDriverTests` — `SetAttackRate(float)` API contract and positive-minimum clamping
+- `PlayerAttackRateCalculatorTests` — effective rate math and weapon speed change coverage
+- `PlayerAttackCooldownGateTests` — cooldown consume cadence and reset behavior
+- `AnimatorAttackTransitionContractTests` — attack transition contract (`hasExitTime=true` with short blend duration)
+- `PlayerAttackInputTests` / `PlayerWeaponSlotSwapInputTests` — regression guards remained green through the `#143` split
+
+**PlayMode**
+- `PlayerAttackDamagePlayTests` — attack animation/hitbox path damages enemies on first and consecutive swings (regression guard for no-damage attack states)
+
+### Notes
+- Input debugging note: Device Simulator state caused repeated false negatives for mouse validation during this branch; reliable verification required separate passes (Simulator closed for mouse, open for touch).
+- During investigation, several temporary input/debug experiments were intentionally rolled back; final branch state keeps only validated behavior changes.
+- Regression note: a short-blend + early normalized attack exit configuration suppressed hitbox damage; guarded by animator contract and PlayMode damage tests.
+- Manual validation confirmed PC and Android attack paths both work with reasonable attack-speed values.
+- Follow-up enhancements (mouse hold auto-swing and extreme-rate support) deferred to separate issues.
+
 ## 2026-03-02 - feat/android-touch-controls
 
 ### Summary

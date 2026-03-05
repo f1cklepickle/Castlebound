@@ -1,48 +1,53 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Combat;
+using Castlebound.Gameplay.Input;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public float deadZone = 0.1f;
-    public float rotationSpeed = 720f;
-    public float facingDirectionOffset = -90f;
-    public bool flipDirection = false;
-
     public Animator animator;
     public GameObject hitboxObject;
 
     [Header("Repair")]
-    [SerializeField] private float repairRadius = 1.5f;
-    [SerializeField] private LayerMask barrierMask;
+    [SerializeField] private RepairSensor _repairSensor;
 
     [Header("Potions")]
     [SerializeField] private PotionUseController potionUseController;
 
     [Header("Weapons")]
     [SerializeField] private InventoryStateComponent inventorySource;
-    [SerializeField] private float weaponSlotSwapCooldown = 0.5f;
+    [SerializeField] private WeaponSlotSwapHandler weaponSlotSwapHandler = new WeaponSlotSwapHandler();
+    [SerializeField] private PlayerWeaponController playerWeaponController;
+    [SerializeField] private MobileInputDriver mobileInputDriver;
+    [SerializeField] private float baseAttackRate = 1.5f;
+    
+    [Header("Movement")]
+    [SerializeField] private PlayerMovementOrchestrator movementOrchestrator = new PlayerMovementOrchestrator();
 
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 aimInput;
-    private Vector2 lastMoveDirection;
-
-  private PlayerCollisionMove2D mover;
-    private float lastWeaponSlotSwapTime = float.NegativeInfinity;
+    private PlayerCollisionMove2D mover;
     private InventoryState inventoryState;
     private bool inputLocked;
+    private readonly PlayerAttackCooldownGate attackCooldownGate = new PlayerAttackCooldownGate();
+    private float appliedMobileAttackRate = -1f;
 
-void Awake() {
-    rb = GetComponent<Rigidbody2D>();
-    if (animator == null) animator = GetComponent<Animator>();
-    mover = GetComponent<PlayerCollisionMove2D>();   // NEW
-    if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
-    if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
-    inventoryState = inventorySource != null ? inventorySource.State : null;
-    lastMoveDirection = new Vector2(0, 1);
-}
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        if (animator == null) animator = GetComponent<Animator>();
+        mover = GetComponent<PlayerCollisionMove2D>();
+        if (potionUseController == null) potionUseController = GetComponent<PotionUseController>();
+        if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
+        if (playerWeaponController == null) playerWeaponController = GetComponent<PlayerWeaponController>();
+        if (mobileInputDriver == null) mobileInputDriver = FindObjectOfType<MobileInputDriver>();
+        inventoryState = inventorySource != null ? inventorySource.State : null;
+        if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
+        if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
+        SyncMobileAttackRate();
+    }
 
 
     public void OnMove(InputValue value)
@@ -73,35 +78,20 @@ void Awake() {
         if (!value.isPressed)
             return;
 
+        if (!attackCooldownGate.TryConsume(Time.time, GetEffectiveAttackRate()))
+            return;
+
         animator.SetTrigger("Attack");
     }
 
-   void FixedUpdate()
-{
-    if (inputLocked)
+    void FixedUpdate()
     {
-        return;
+        if (inputLocked)
+            return;
+
+        movementOrchestrator.Tick(mover, transform, movementInput, aimInput, Time.fixedDeltaTime);
+        SyncMobileAttackRate();
     }
-
-    // Pass input to the collision-clamped mover
-    if (mover != null)
-    {
-        // deadzone
-        var mag = movementInput.magnitude;
-        mover.SetMoveInput(mag < deadZone ? Vector2.zero : movementInput);
-    }
-
-    // Aim/rotate: prefer explicit aim input (right stick/touch zone) when active,
-    // otherwise fall back to movement direction.
-    if (movementInput.magnitude > 0f)
-        lastMoveDirection = movementInput;
-
-    Vector2 facingSource = aimInput.magnitude > deadZone ? aimInput : lastMoveDirection;
-    Vector2 angleDirection = flipDirection ? -facingSource : facingSource;
-    float targetAngle = Mathf.Atan2(angleDirection.y, angleDirection.x) * Mathf.Rad2Deg + facingDirectionOffset;
-    var targetRotation = Quaternion.Euler(0, 0, targetAngle);
-    transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
-}
 
 
     public void EnableHitbox()
@@ -116,20 +106,10 @@ void Awake() {
 
     /// <summary>
     /// Returns true if there is at least one broken barrier within repair range.
-    /// Uses the same overlap check as OnRepair so touch UI and keyboard are consistent.
     /// </summary>
     public bool HasRepairableBarrierInRange()
     {
-        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
-        if (hits == null) return false;
-        for (int i = 0; i < hits.Length; i++)
-        {
-            var hit = hits[i];
-            if (!hit) continue;
-            var barrier = hit.GetComponentInParent<BarrierHealth>();
-            if (barrier != null && barrier.IsBroken) return true;
-        }
-        return false;
+        return _repairSensor.HasRepairableBarrierInRange(transform.position);
     }
 
     public void OnRepair(InputValue value)
@@ -137,32 +117,10 @@ void Awake() {
         if (inputLocked)
             return;
 
-        // We only care about the press event.
         if (!value.isPressed)
             return;
 
-        // Find any barriers within repairRadius on the configured barrierMask.
-        var hits = Physics2D.OverlapCircleAll(transform.position, repairRadius, barrierMask);
-        if (hits == null || hits.Length == 0)
-            return;
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            var hit = hits[i];
-            if (!hit) continue;
-
-            // Look for BarrierHealth on this object or its parent.
-            var barrier = hit.GetComponentInParent<BarrierHealth>();
-            if (barrier == null)
-                continue;
-
-            // Only repair broken barriers.
-            if (!barrier.IsBroken)
-                continue;
-
-            barrier.Repair();
-            break; // Repair one barrier per key press.
-        }
+        _repairSensor.TryRepairNearest(transform.position);
     }
 
     public void OnUsePotion(InputValue value)
@@ -187,41 +145,28 @@ void Awake() {
 
     public void HandleWeaponSlotSwap(float scrollDelta, float time)
     {
-        if (Mathf.Approximately(scrollDelta, 0f))
+        if (!TryEnsureInventoryState())
             return;
 
-        if (inventoryState == null)
-        {
-            inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
-            inventoryState = inventorySource != null ? inventorySource.State : null;
-        }
-
-        if (inventoryState == null)
-            return;
-
-        if (time - lastWeaponSlotSwapTime < weaponSlotSwapCooldown)
-            return;
-
-        int nextIndex = inventoryState.ActiveWeaponSlotIndex == 0 ? 1 : 0;
-        if (inventoryState.SetActiveWeaponSlot(nextIndex))
-        {
-            lastWeaponSlotSwapTime = time;
-        }
+        weaponSlotSwapHandler.HandleWeaponSlotSwap(scrollDelta, time, inventoryState);
     }
 
     public bool TrySwapWeaponSlotWithoutCooldown()
     {
-        if (inventoryState == null)
-        {
-            inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
-            inventoryState = inventorySource != null ? inventorySource.State : null;
-        }
-
-        if (inventoryState == null)
+        if (!TryEnsureInventoryState())
             return false;
 
-        int nextIndex = inventoryState.ActiveWeaponSlotIndex == 0 ? 1 : 0;
-        return inventoryState.SetActiveWeaponSlot(nextIndex);
+        return weaponSlotSwapHandler.TrySwapWeaponSlotWithoutCooldown(inventoryState);
+    }
+
+    private bool TryEnsureInventoryState()
+    {
+        if (inventoryState != null)
+            return true;
+
+        inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
+        inventoryState = inventorySource != null ? inventorySource.State : null;
+        return inventoryState != null;
     }
 
     public void StopMovement()
@@ -241,5 +186,27 @@ void Awake() {
     public void SetInputLocked(bool locked)
     {
         inputLocked = locked;
+    }
+
+    private float GetEffectiveAttackRate()
+    {
+        var weaponAttackSpeed = playerWeaponController != null
+            ? playerWeaponController.CurrentWeaponStats.AttackSpeed
+            : 1f;
+
+        return PlayerAttackRateCalculator.ComputeEffectiveRate(baseAttackRate, weaponAttackSpeed);
+    }
+
+    private void SyncMobileAttackRate()
+    {
+        if (mobileInputDriver == null)
+            return;
+
+        var rate = GetEffectiveAttackRate();
+        if (Mathf.Approximately(rate, appliedMobileAttackRate))
+            return;
+
+        mobileInputDriver.SetAttackRate(rate);
+        appliedMobileAttackRate = rate;
     }
 }

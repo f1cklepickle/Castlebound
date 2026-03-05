@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 using Castlebound.Gameplay.Input;
+using System.Reflection;
 
 namespace Castlebound.Tests.Input
 {
@@ -99,6 +100,39 @@ namespace Castlebound.Tests.Input
                 _go.SetActive(true);
                 _go.SetActive(false);
             }, "Repeated enable/disable cycles should not throw.");
+        }
+
+        [Test]
+        public void SetAttackRate_MethodExists_AsPublicApiContract()
+        {
+            var method = typeof(MobileInputDriver).GetMethod(
+                "SetAttackRate",
+                BindingFlags.Instance | BindingFlags.Public);
+
+            Assert.IsNotNull(method,
+                "MobileInputDriver must expose public SetAttackRate(float) so attack cadence can be wired from weapon stats.");
+        }
+
+        [Test]
+        public void SetAttackRate_ClampsToPositiveMinimum()
+        {
+            _driver = _go.AddComponent<MobileInputDriver>();
+
+            var method = typeof(MobileInputDriver).GetMethod(
+                "SetAttackRate",
+                BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(method, "SetAttackRate(float) must exist.");
+
+            method.Invoke(_driver, new object[] { 0f });
+
+            var baseRateField = typeof(MobileInputDriver).GetField(
+                "baseAttackRate",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(baseRateField, "baseAttackRate field was not found.");
+
+            var storedRate = (float)baseRateField.GetValue(_driver);
+            Assert.Greater(storedRate, 0f,
+                "SetAttackRate(0) should clamp to a positive minimum to avoid divide-by-zero.");
         }
     }
 }
