@@ -7,6 +7,8 @@ namespace Castlebound.Tests.Input
     {
         private const string InputActionsPath = "Assets/_Project/Settings/Input/PlayerControls.inputactions";
         private const string PlayerControllerPath = "Assets/_Project/Scripts/_Project.Gameplay/Player/PlayerController.cs";
+        private const string AimResolverPath =
+            "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAimInputResolver.cs";
 
         [Test]
         public void FireAction_HasMouseLeftButtonBinding()
@@ -31,24 +33,35 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
-        public void PlayerController_UsesMouseScreenPositionToDriveFacing()
+        public void PlayerController_DelegatesAimResolution_ToDedicatedComponent()
         {
             var source = File.ReadAllText(PlayerControllerPath);
 
-            StringAssert.Contains("Mouse.current.position", source,
-                "PlayerController should read mouse screen position for PC aiming.");
-            StringAssert.Contains("ScreenToWorldPoint", source,
-                "PlayerController should convert mouse screen position to world-space facing.");
+            StringAssert.Contains("PlayerAimInputResolver", source,
+                "PlayerController should delegate aim responsibility to PlayerAimInputResolver.");
+            StringAssert.Contains("aimInputResolver.Resolve", source,
+                "PlayerController should use PlayerAimInputResolver to compute facing input.");
         }
 
         [Test]
-        public void PlayerController_PrioritizesStickLookInput_OverMouseAim()
+        public void AimResolver_UsesMouseScreenPositionToDriveFacing()
         {
-            var source = File.ReadAllText(PlayerControllerPath);
+            var source = File.ReadAllText(AimResolverPath);
 
-            StringAssert.Contains("if (aimInput.sqrMagnitude > 0.0001f", source,
-                "PlayerController should prefer stick/virtual-stick look vectors when present.");
-            StringAssert.Contains("return aimInput;", source,
+            StringAssert.Contains("Mouse.current.position", source,
+                "PlayerAimInputResolver should read mouse screen position for PC aiming.");
+            StringAssert.Contains("ScreenToWorldPoint", source,
+                "PlayerAimInputResolver should convert mouse screen position to world-space facing.");
+        }
+
+        [Test]
+        public void AimResolver_PrioritizesStickLookInput_OverMouseAim()
+        {
+            var source = File.ReadAllText(AimResolverPath);
+
+            StringAssert.Contains("stickAimInput.sqrMagnitude > stickDeadZone", source,
+                "PlayerAimInputResolver should prefer stick/virtual-stick look vectors when present.");
+            StringAssert.Contains("return stickAimInput;", source,
                 "Stick/virtual-stick look should not be overridden by mouse aiming.");
         }
     }
