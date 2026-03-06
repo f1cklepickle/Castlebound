@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Castlebound.Gameplay.Input;
 
 namespace Castlebound.Tests.Input
@@ -137,6 +138,30 @@ namespace Castlebound.Tests.Input
 
             Assert.AreEqual(75f, _zone.AttackDeadzone,
                 "AttackDeadzone should be readable and writable for inspector tuning.");
+        }
+
+        [Test]
+        public void MousePointerEvents_AreIgnored_ByRuntimeHandlers()
+        {
+            var eventSystemGo = new GameObject("EventSystem");
+            eventSystemGo.AddComponent<EventSystem>();
+            eventSystemGo.AddComponent<StandaloneInputModule>();
+
+            var pointerData = new PointerEventData(EventSystem.current)
+            {
+                pointerId = -1, // Mouse pointer IDs are negative.
+                position = new Vector2(300f, 300f)
+            };
+
+            _zone.OnPointerDown(pointerData);
+            _zone.OnDrag(pointerData);
+
+            Assert.AreEqual(Vector2.zero, _zone.FacingDirection,
+                "Mouse pointer events should not drive touch aim direction.");
+            Assert.IsFalse(_zone.IsFiring,
+                "Mouse pointer events should not trigger touch-fire state.");
+
+            Object.DestroyImmediate(eventSystemGo);
         }
     }
 }
