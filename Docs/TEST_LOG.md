@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-03-05 - feat(ui): death-screen tappable restart button (#139)
+
+### Summary
+- Replaced spacebar-only death prompt with touch-friendly restart messaging on the game-over screen.
+- Added `GameOverScreenController` so death-screen UI (restart button + label) is owned by canvas UI, while `GameManager` keeps restart flow/state orchestration.
+- Preserved keyboard restart behavior by supporting `Space` via both Input System and legacy input fallback.
+
+### New or Updated Tests
+**EditMode**
+- `GameOverRestartContractsTests` — verifies shared UI restart entrypoint contract and touch-friendly death-screen copy in scenes.
+- `GameManagerKeyboardRestartContractsTests` — verifies `Space` restart code path remains present for Input System and legacy input.
+
+**PlayMode**
+- `DeathScreenRestartPlayTests` — verifies game-over UI appears on death and includes a tappable restart button.
+
+### Notes
+- Manual validation confirmed restart button works on death screen and `Space` restart works on PC after input-backend fallback update.
+
 ## 2026-03-05 - refactor/143-split-player-controller (#145 attack speed wiring)
 
 ### Summary
