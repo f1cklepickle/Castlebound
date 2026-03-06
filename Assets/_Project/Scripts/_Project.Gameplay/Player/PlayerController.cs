@@ -20,6 +20,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private WeaponSlotSwapHandler weaponSlotSwapHandler = new WeaponSlotSwapHandler();
     [SerializeField] private PlayerWeaponController playerWeaponController;
     [SerializeField] private MobileInputDriver mobileInputDriver;
+    [SerializeField] private PlayerFireInputController fireInputController;
+    [SerializeField] private PlayerAimInputResolver aimInputResolver;
     [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
@@ -43,9 +45,13 @@ public class PlayerController : MonoBehaviour
         if (inventorySource == null) inventorySource = GetComponent<InventoryStateComponent>();
         if (playerWeaponController == null) playerWeaponController = GetComponent<PlayerWeaponController>();
         if (mobileInputDriver == null) mobileInputDriver = FindObjectOfType<MobileInputDriver>();
+        if (fireInputController == null) fireInputController = GetComponent<PlayerFireInputController>();
+        if (aimInputResolver == null) aimInputResolver = GetComponent<PlayerAimInputResolver>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
+        if (fireInputController != null)
+            fireInputController.Configure(TryTriggerAttack);
         SyncMobileAttackRate();
     }
 
@@ -71,23 +77,25 @@ public class PlayerController : MonoBehaviour
     public void OnFire(InputValue value)
     {
         if (inputLocked)
+        {
+            fireInputController?.ClearHeldFire();
             return;
+        }
 
-        // Guard against the release event: InputSystem calls OnFire for both
-        // performed (press) and canceled (release). Only swing on press.
+        fireInputController?.OnFirePressedStateChanged(value.isPressed);
+
         if (!value.isPressed)
             return;
 
-        if (!attackCooldownGate.TryConsume(Time.time, GetEffectiveAttackRate()))
-            return;
-
-        animator.SetTrigger("Attack");
+        TryTriggerAttack();
     }
 
     void FixedUpdate()
     {
         if (inputLocked)
             return;
+
+        fireInputController?.Tick();
 
         movementOrchestrator.Tick(mover, transform, movementInput, ResolveAimInput(), Time.fixedDeltaTime);
         SyncMobileAttackRate();
@@ -186,6 +194,8 @@ public class PlayerController : MonoBehaviour
     public void SetInputLocked(bool locked)
     {
         inputLocked = locked;
+        if (locked)
+            fireInputController?.ClearHeldFire();
     }
 
     private float GetEffectiveAttackRate()
@@ -210,26 +220,22 @@ public class PlayerController : MonoBehaviour
         appliedMobileAttackRate = rate;
     }
 
+    private bool TryTriggerAttack()
+    {
+        if (!attackCooldownGate.TryConsume(Time.time, GetEffectiveAttackRate()))
+            return false;
+
+        animator.SetTrigger("Attack");
+        return true;
+    }
+
     private Vector2 ResolveAimInput()
     {
-        // Prioritize stick-style look input (gamepad / virtual touch right stick).
-        // This avoids mouse-position aim overriding touch simulator look vectors.
-        if (aimInput.sqrMagnitude > 0.0001f && aimInput.sqrMagnitude <= 1.21f)
-            return aimInput;
+        if (aimInputResolver == null)
+            aimInputResolver = GetComponent<PlayerAimInputResolver>();
 
-        var mouse = Mouse.current;
-        var camera = Camera.main;
-        if (mouse != null && camera != null)
-        {
-            var mouseScreenPosition = Mouse.current.position.ReadValue();
-            var mouseWorldPosition = camera.ScreenToWorldPoint(
-                new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, camera.nearClipPlane));
-
-            var mouseAim = (Vector2)(mouseWorldPosition - transform.position);
-            if (mouseAim.sqrMagnitude > 0.0001f)
-                return mouseAim.normalized;
-        }
-
-        return aimInput;
+        return aimInputResolver != null
+            ? aimInputResolver.Resolve(transform.position, aimInput)
+            : aimInput;
     }
 }
