@@ -2327,6 +2327,7 @@ GameObject:
   - component: {fileID: 904751786}
   - component: {fileID: 904751788}
   - component: {fileID: 904751787}
+  - component: {fileID: 904751789}
   m_Layer: 5
   m_Name: GameOver
   m_TagString: Untagged
@@ -2379,7 +2380,7 @@ MonoBehaviour:
 
 
 
-    Press Space - Restart'
+    Tap Restart (Press Space)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2393,8 +2394,8 @@ MonoBehaviour:
   m_enableVertexGradient: 1
   m_colorMode: 3
   m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
+    topLeft: {r: 0, g: 0, b: 0, a: 0.87058824}
+    topRight: {r: 0.8113208, g: 0.16456035, b: 0.16456035, a: 1}
     bottomLeft: {r: 0.4528302, g: 0.41651833, b: 0.41651833, a: 1}
     bottomRight: {r: 0.5188679, g: 0.5017355, b: 0.5017355, a: 1}
   m_fontColorGradientPreset: {fileID: 0}
@@ -2456,6 +2457,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 904751785}
   m_CullTransparentMesh: 1
+--- !u!114 &904751789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 904751785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf6ef566c2404d7caf4f7f8838fd3e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  restartButton: {fileID: 0}
+  restartButtonSprite: {fileID: 21300000, guid: b2831b7f6899ee944a13fa562e3b84df, type: 3}
+  restartButtonText: Rise Again
+  restartButtonTextColor: {r: 0.84, g: 0.95, b: 1, a: 1}
 --- !u!1 &977390122
 GameObject:
   m_ObjectHideFlags: 0
@@ -3787,8 +3804,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.8018868, g: 0.22316661, b: 0.22316661, a: 0}
   m_RaycastTarget: 0
@@ -4694,6 +4711,8 @@ MonoBehaviour:
   movementZone: {fileID: 3001000004}
   aimAttackZone: {fileID: 3002000004}
   repairButton: {fileID: 3003000004}
+  playerInput: {fileID: 0}
+  baseAttackRate: 1.5
 --- !u!114 &3000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4797,6 +4816,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7f83b5a6c1a8934d915b999993b5326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxRadius: 75
 --- !u!1 &3002000000
 GameObject:
   m_ObjectHideFlags: 0

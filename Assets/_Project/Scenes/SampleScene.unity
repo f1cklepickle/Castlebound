@@ -1259,6 +1259,7 @@ GameObject:
   - component: {fileID: 904751786}
   - component: {fileID: 904751788}
   - component: {fileID: 904751787}
+  - component: {fileID: 904751789}
   m_Layer: 5
   m_Name: GameOver
   m_TagString: Untagged
@@ -1311,7 +1312,7 @@ MonoBehaviour:
 
 
 
-    Press Space - Restart'
+    Tap Restart (Space also works)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1388,6 +1389,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 904751785}
   m_CullTransparentMesh: 1
+--- !u!114 &904751789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 904751785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf6ef566c2404d7caf4f7f8838fd3e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  restartButton: {fileID: 0}
+  restartButtonSprite: {fileID: 0}
+  restartButtonText: Rise Again
+  restartButtonTextColor: {r: 0.84, g: 0.95, b: 1, a: 1}
 --- !u!1 &969171467
 GameObject:
   m_ObjectHideFlags: 0
@@ -3207,3 +3224,4 @@ SceneRoots:
   - {fileID: 833814061}
   - {fileID: 1027969717}
   - {fileID: 751719342}
+
