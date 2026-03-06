@@ -89,7 +89,7 @@ public class PlayerController : MonoBehaviour
         if (inputLocked)
             return;
 
-        movementOrchestrator.Tick(mover, transform, movementInput, aimInput, Time.fixedDeltaTime);
+        movementOrchestrator.Tick(mover, transform, movementInput, ResolveAimInput(), Time.fixedDeltaTime);
         SyncMobileAttackRate();
     }
 
@@ -208,5 +208,28 @@ public class PlayerController : MonoBehaviour
 
         mobileInputDriver.SetAttackRate(rate);
         appliedMobileAttackRate = rate;
+    }
+
+    private Vector2 ResolveAimInput()
+    {
+        // Prioritize stick-style look input (gamepad / virtual touch right stick).
+        // This avoids mouse-position aim overriding touch simulator look vectors.
+        if (aimInput.sqrMagnitude > 0.0001f && aimInput.sqrMagnitude <= 1.21f)
+            return aimInput;
+
+        var mouse = Mouse.current;
+        var camera = Camera.main;
+        if (mouse != null && camera != null)
+        {
+            var mouseScreenPosition = Mouse.current.position.ReadValue();
+            var mouseWorldPosition = camera.ScreenToWorldPoint(
+                new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, camera.nearClipPlane));
+
+            var mouseAim = (Vector2)(mouseWorldPosition - transform.position);
+            if (mouseAim.sqrMagnitude > 0.0001f)
+                return mouseAim.normalized;
+        }
+
+        return aimInput;
     }
 }
