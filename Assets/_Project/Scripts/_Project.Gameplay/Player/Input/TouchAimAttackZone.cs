@@ -15,17 +15,26 @@ namespace Castlebound.Gameplay.Input
 
         public void OnPointerDown(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             SimulatePointerDown(eventData.position);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             // Compute delta from where the thumb landed, not from last frame.
             SimulateAimInput(eventData.position - _touchAnchor);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             SimulatePointerUp();
         }
 
@@ -50,6 +59,11 @@ namespace Castlebound.Gameplay.Input
         {
             FacingDirection = Vector2.zero;
             IsFiring = false;
+        }
+
+        private static bool IsTouchPointer(PointerEventData eventData)
+        {
+            return eventData != null && eventData.pointerId >= 0;
         }
     }
 }

@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-03-06 - feat(input): pc mouse aim + hold-fire cadence (#140/#141)
+
+### Summary
+- Implemented PC mouse look binding with world-space aim resolution and left-click attack flow while preserving existing cooldown-gated attack authority.
+- Extracted fire/aim responsibilities from `PlayerController` into `PlayerFireInputController` and `PlayerAimInputResolver`, then wired components on `Player.prefab`.
+- Fixed editor touchzone bleed so mouse no longer drives virtual mobile sticks in normal PC play, while keeping simulator/touch behavior functional.
+
+### New or Updated Tests
+**EditMode**
+- `PcMouseAimContractsTests` — verifies mouse look binding and delegated aim resolver contract.
+- `PlayerHoldFireContractsTests` — verifies `PlayerController` delegates hold-fire lifecycle to `PlayerFireInputController`.
+- `PlayerFireInputControllerTests` — verifies hold-state transitions, tick attack attempts, and release fallback clear behavior.
+- `TouchMovementZoneTests` / `TouchAimAttackZoneTests` — verifies runtime handlers ignore mouse pointer events.
+- `MobileInputDriverEditorGatingContractsTests` — verifies editor gating contract for simulator touch enable behavior.
+
+**PlayMode**
+- `PlayerHoldFireCadencePlayTests` — verifies held fire repeats attack attempts across frames and stops after release.
+
+### Notes
+- Manual validation confirmed PC left-click hold starts repeated attacks and release stops immediately.
+
 ## 2026-03-05 - feat(ui): death-screen tappable restart button (#139)
 
 ### Summary

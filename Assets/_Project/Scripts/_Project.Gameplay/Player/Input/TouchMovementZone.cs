@@ -23,16 +23,25 @@ namespace Castlebound.Gameplay.Input
 
         public void OnPointerDown(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             SimulatePointerDown(eventData.position);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             SimulateDrag(eventData.position);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            if (!IsTouchPointer(eventData))
+                return;
+
             SimulatePointerUp();
         }
 
@@ -58,6 +67,11 @@ namespace Castlebound.Gameplay.Input
         {
             MoveVector = Vector2.zero;
             AnchorPosition = Vector2.zero;
+        }
+
+        private static bool IsTouchPointer(PointerEventData eventData)
+        {
+            return eventData != null && eventData.pointerId >= 0;
         }
     }
 }

@@ -32,6 +32,9 @@ namespace Castlebound.Gameplay.Input
                  "stat pipeline is wired (see PlayerController refactor issue).")]
         [SerializeField] private float baseAttackRate = 1.5f;
 
+        [Tooltip("Editor override. If enabled, virtual touch controls run in Editor regardless of detected devices.")]
+        [SerializeField] private bool enableInEditor;
+
         private Gamepad _virtualGamepad;
         private bool _pendingRepairPress;
         private bool _pendingFirePulse;
@@ -39,6 +42,9 @@ namespace Castlebound.Gameplay.Input
 
         private void OnEnable()
         {
+            if (!ShouldEnableVirtualGamepad())
+                return;
+
             _virtualGamepad = InputSystem.AddDevice<Gamepad>("MobileGamepad");
 
             // Prefer the explicitly-assigned reference; fall back to scene search
@@ -61,6 +67,20 @@ namespace Castlebound.Gameplay.Input
 
             if (repairButton != null)
                 repairButton.OnRepairRequested += HandleRepairRequested;
+        }
+
+        private bool ShouldEnableVirtualGamepad()
+        {
+#if UNITY_EDITOR
+            if (enableInEditor)
+                return true;
+
+            // Auto-enable in editor when a touch device is present (for simulator/touch testing),
+            // while staying off during normal mouse/keyboard play.
+            return Touchscreen.current != null;
+#else
+            return Application.isMobilePlatform;
+#endif
         }
 
         private void OnDisable()

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Castlebound.Gameplay.Input;
 
 namespace Castlebound.Tests.Input
@@ -125,6 +126,30 @@ namespace Castlebound.Tests.Input
 
             Assert.AreEqual(1f, _zone.MoveVector.magnitude, 0.001f,
                 "Dragging beyond the max radius should still produce a magnitude of exactly 1.");
+        }
+
+        [Test]
+        public void MousePointerEvents_AreIgnored_ByRuntimeHandlers()
+        {
+            var eventSystemGo = new GameObject("EventSystem");
+            eventSystemGo.AddComponent<EventSystem>();
+            eventSystemGo.AddComponent<StandaloneInputModule>();
+
+            var pointerData = new PointerEventData(EventSystem.current)
+            {
+                pointerId = -1, // Mouse pointer IDs are negative.
+                position = new Vector2(200f, 100f)
+            };
+
+            _zone.OnPointerDown(pointerData);
+            _zone.OnDrag(pointerData);
+
+            Assert.AreEqual(Vector2.zero, _zone.MoveVector,
+                "Mouse pointer events should not drive touch movement vectors.");
+            Assert.AreEqual(Vector2.zero, _zone.AnchorPosition,
+                "Mouse pointer down should not set a touch anchor.");
+
+            Object.DestroyImmediate(eventSystemGo);
         }
     }
 }
