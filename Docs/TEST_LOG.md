@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-03-06 - feat(input): movement-first facing with conditional aim override (#153)
+
+### Summary
+- Added a dedicated `PlayerFacingPolicyResolver` to enforce movement-first facing with explicit aim override intent.
+- Kept `PlayerController` orchestration thin by delegating facing-source selection through policy resolution.
+- Added EditMode and PlayMode coverage for PC/Android source switching, hysteresis thresholds, and no-movement facing fallback.
+
+### New or Updated Tests
+**EditMode**
+- `PlayerFacingPolicyContractsTests` — verifies delegated facing-policy contract, tunable thresholds, and source-selection boundaries.
+- `PlayerFacingPolicyResolverTests` — verifies PC aim-intent override, Android right-stick hysteresis enter/hold/exit, and no-movement facing preservation.
+
+**PlayMode**
+- `PlayerFacingPolicyPlayTests` — verifies runtime movement-facing <-> aim-facing switching for PC and Android policy paths.
+
+### Notes
+- Hold-fire cadence and editor touch-zone mouse-bleed regression suites remained green during facing-policy validation.
+
 ## 2026-03-06 - feat(input): pc mouse aim + hold-fire cadence (#140/#141)
 
 ### Summary

@@ -134,5 +134,46 @@ namespace Castlebound.Tests.Input
             Assert.Greater(storedRate, 0f,
                 "SetAttackRate(0) should clamp to a positive minimum to avoid divide-by-zero.");
         }
+
+        [Test]
+        public void SetRightStickAttackDeadzone_MethodExists_AsPublicApiContract()
+        {
+            var method = typeof(MobileInputDriver).GetMethod(
+                "SetRightStickAttackDeadzone",
+                BindingFlags.Instance | BindingFlags.Public);
+
+            Assert.IsNotNull(method,
+                "MobileInputDriver must expose SetRightStickAttackDeadzone(float) for Android attack deadzone tuning.");
+        }
+
+        [Test]
+        public void SetRightStickAttackDeadzone_ClampsToZero_AndAppliesToAimZone()
+        {
+            _driver = _go.AddComponent<MobileInputDriver>();
+
+            var aimZoneGo = new GameObject("AimZone");
+            var aimZone = aimZoneGo.AddComponent<TouchAimAttackZone>();
+
+            var aimZoneField = typeof(MobileInputDriver).GetField(
+                "aimAttackZone",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(aimZoneField, "aimAttackZone field was not found.");
+            aimZoneField.SetValue(_driver, aimZone);
+
+            var method = typeof(MobileInputDriver).GetMethod(
+                "SetRightStickAttackDeadzone",
+                BindingFlags.Instance | BindingFlags.Public);
+            Assert.IsNotNull(method, "SetRightStickAttackDeadzone(float) must exist.");
+
+            method.Invoke(_driver, new object[] { -10f });
+            Assert.AreEqual(0f, aimZone.AttackDeadzone, 0.001f,
+                "Negative deadzone values should clamp to zero and propagate to TouchAimAttackZone.");
+
+            method.Invoke(_driver, new object[] { 95f });
+            Assert.AreEqual(95f, aimZone.AttackDeadzone, 0.001f,
+                "Configured deadzone should propagate to TouchAimAttackZone.");
+
+            Object.DestroyImmediate(aimZoneGo);
+        }
     }
 }

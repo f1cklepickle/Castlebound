@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private MobileInputDriver mobileInputDriver;
     [SerializeField] private PlayerFireInputController fireInputController;
     [SerializeField] private PlayerAimInputResolver aimInputResolver;
+    [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
     [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
@@ -47,6 +48,7 @@ public class PlayerController : MonoBehaviour
         if (mobileInputDriver == null) mobileInputDriver = FindObjectOfType<MobileInputDriver>();
         if (fireInputController == null) fireInputController = GetComponent<PlayerFireInputController>();
         if (aimInputResolver == null) aimInputResolver = GetComponent<PlayerAimInputResolver>();
+        if (facingPolicyResolver == null) facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
@@ -97,7 +99,7 @@ public class PlayerController : MonoBehaviour
 
         fireInputController?.Tick();
 
-        movementOrchestrator.Tick(mover, transform, movementInput, ResolveAimInput(), Time.fixedDeltaTime);
+        movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
         SyncMobileAttackRate();
     }
 
@@ -237,5 +239,25 @@ public class PlayerController : MonoBehaviour
         return aimInputResolver != null
             ? aimInputResolver.Resolve(transform.position, aimInput)
             : aimInput;
+    }
+
+    private Vector2 ResolveFacingInput()
+    {
+        var resolvedAimInput = ResolveAimInput();
+        if (facingPolicyResolver == null)
+            facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
+
+        if (facingPolicyResolver == null)
+            return resolvedAimInput;
+
+        var aimIntentActive = fireInputController != null && fireInputController.IsFireHeld;
+        var currentFacing = movementOrchestrator != null ? movementOrchestrator.LastMoveDirection : (Vector2)transform.up;
+        return facingPolicyResolver.ResolveFacing(
+            currentFacing,
+            movementInput,
+            resolvedAimInput,
+            aimInput,
+            aimIntentActive,
+            Time.fixedDeltaTime);
     }
 }
