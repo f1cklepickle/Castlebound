@@ -4713,6 +4713,8 @@ MonoBehaviour:
   repairButton: {fileID: 3003000004}
   playerInput: {fileID: 0}
   baseAttackRate: 1.5
+  rightStickAttackDeadzone: 160
+  enableInEditor: 0
 --- !u!114 &3000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
