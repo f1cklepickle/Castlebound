@@ -118,6 +118,7 @@ GameObject:
   - component: {fileID: 9150000000000000100}
   - component: {fileID: 9150000000000000201}
   - component: {fileID: 9150000000000000202}
+  - component: {fileID: 9150000000000000203}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -248,39 +249,13 @@ MonoBehaviour:
   mobileInputDriver: {fileID: 0}
   fireInputController: {fileID: 9150000000000000201}
   aimInputResolver: {fileID: 9150000000000000202}
+  facingPolicyResolver: {fileID: 9150000000000000203}
   baseAttackRate: 1.5
   movementOrchestrator:
     deadZone: 0.1
     rotationSpeed: 720
     facingDirectionOffset: 90
     flipDirection: 0
---- !u!114 &9150000000000000201
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8325390509751579795}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6430bca95d64ded995de7a9d4e90b03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useReleaseFallbackPolling: 1
---- !u!114 &9150000000000000202
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8325390509751579795}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a123fed8f4f4317b4ff8507cb6db48a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stickDeadZone: 0.0001
-  stickMagnitudeMax: 1.1
 --- !u!114 &6061923462103248084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -542,6 +517,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   menuController: {fileID: 0}
+--- !u!114 &9150000000000000201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6430bca95d64ded995de7a9d4e90b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useReleaseFallbackPolling: 1
+--- !u!114 &9150000000000000202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a123fed8f4f4317b4ff8507cb6db48a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stickDeadZone: 0.0001
+  stickMagnitudeMax: 1.1
+--- !u!114 &9150000000000000203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a463690c6d665a40a814e84d0b9208c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aimEnterThreshold: 0.25
+  aimExitThreshold: 0.2
+  movementMeaningfulThreshold: 0.1
+  returnToMovementFacingSpeed: 720
+  stickMagnitudeMax: 1.1
 --- !u!1 &9150000000000000001
 GameObject:
   m_ObjectHideFlags: 0

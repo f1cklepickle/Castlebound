@@ -31,6 +31,9 @@ namespace Castlebound.Gameplay.Input
                  "past the deadzone. Weapon attackSpeed will scale this once the combat " +
                  "stat pipeline is wired (see PlayerController refactor issue).")]
         [SerializeField] private float baseAttackRate = 1.5f;
+        [Tooltip("Minimum right-zone drag distance before attack pulses begin. " +
+                 "Higher values make look-only thumb movement less likely to trigger swings.")]
+        [SerializeField] private float rightStickAttackDeadzone = 65f;
 
         [Tooltip("Editor override. If enabled, virtual touch controls run in Editor regardless of detected devices.")]
         [SerializeField] private bool enableInEditor;
@@ -67,6 +70,8 @@ namespace Castlebound.Gameplay.Input
 
             if (repairButton != null)
                 repairButton.OnRepairRequested += HandleRepairRequested;
+
+            ApplyRightStickAttackDeadzone();
         }
 
         private bool ShouldEnableVirtualGamepad()
@@ -97,6 +102,8 @@ namespace Castlebound.Gameplay.Input
 
         private void Update()
         {
+            ApplyRightStickAttackDeadzone();
+
             if (_virtualGamepad == null)
                 return;
 
@@ -151,6 +158,18 @@ namespace Castlebound.Gameplay.Input
         public void SetAttackRate(float attacksPerSecond)
         {
             baseAttackRate = Mathf.Max(attacksPerSecond, 0.1f);
+        }
+
+        public void SetRightStickAttackDeadzone(float deadzone)
+        {
+            rightStickAttackDeadzone = Mathf.Max(deadzone, 0f);
+            ApplyRightStickAttackDeadzone();
+        }
+
+        private void ApplyRightStickAttackDeadzone()
+        {
+            if (aimAttackZone != null)
+                aimAttackZone.AttackDeadzone = Mathf.Max(rightStickAttackDeadzone, 0f);
         }
     }
 }
