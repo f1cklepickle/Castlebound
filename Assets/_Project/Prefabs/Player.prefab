@@ -245,14 +245,14 @@ MonoBehaviour:
   inventorySource: {fileID: 0}
   weaponSlotSwapHandler:
     weaponSlotSwapCooldown: 0.5
-  playerWeaponController: {fileID: 0}
+  playerWeaponController: {fileID: 9150000000000000006}
   mobileInputDriver: {fileID: 0}
   fireInputController: {fileID: 9150000000000000201}
   aimInputResolver: {fileID: 9150000000000000202}
   facingPolicyResolver: {fileID: 9150000000000000203}
   baseAttackRate: 1.5
   movementOrchestrator:
-    deadZone: 0.3
+    deadZone: 0.1
     rotationSpeed: 720
     facingDirectionOffset: 90
     flipDirection: 0
