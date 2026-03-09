@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerFireInputController fireInputController;
     [SerializeField] private PlayerAimInputResolver aimInputResolver;
     [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
+    [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
     [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
@@ -49,6 +50,7 @@ public class PlayerController : MonoBehaviour
         if (fireInputController == null) fireInputController = GetComponent<PlayerFireInputController>();
         if (aimInputResolver == null) aimInputResolver = GetComponent<PlayerAimInputResolver>();
         if (facingPolicyResolver == null) facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
+        if (attackAnimationDriver == null) attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
@@ -101,6 +103,7 @@ public class PlayerController : MonoBehaviour
 
         movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
         SyncMobileAttackRate();
+        SyncAttackAnimationSpeed();
     }
 
 
@@ -220,6 +223,17 @@ public class PlayerController : MonoBehaviour
 
         mobileInputDriver.SetAttackRate(rate);
         appliedMobileAttackRate = rate;
+    }
+
+    private void SyncAttackAnimationSpeed()
+    {
+        if (attackAnimationDriver == null)
+            attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
+
+        if (attackAnimationDriver == null)
+            return;
+
+        attackAnimationDriver.ApplyAttackSpeed(animator, GetEffectiveAttackRate(), baseAttackRate);
     }
 
     private bool TryTriggerAttack()

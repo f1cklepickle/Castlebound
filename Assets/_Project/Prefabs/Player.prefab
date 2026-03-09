@@ -119,6 +119,7 @@ GameObject:
   - component: {fileID: 9150000000000000201}
   - component: {fileID: 9150000000000000202}
   - component: {fileID: 9150000000000000203}
+  - component: {fileID: 9150000000000000204}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -250,6 +251,7 @@ MonoBehaviour:
   fireInputController: {fileID: 9150000000000000201}
   aimInputResolver: {fileID: 9150000000000000202}
   facingPolicyResolver: {fileID: 9150000000000000203}
+  attackAnimationDriver: {fileID: 9150000000000000204}
   baseAttackRate: 1.5
   movementOrchestrator:
     deadZone: 0.1
@@ -561,6 +563,21 @@ MonoBehaviour:
   movementMeaningfulThreshold: 0.1
   returnToMovementFacingSpeed: 720
   stickMagnitudeMax: 1.1
+--- !u!114 &9150000000000000204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d39325ab6ac94d30afb94b328d6021cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackSpeedParameter: AttackSpeedMultiplier
+  minAttackSpeedMultiplier: 0.25
+  maxAttackSpeedMultiplier: 3
 --- !u!1 &9150000000000000001
 GameObject:
   m_ObjectHideFlags: 0
