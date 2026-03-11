@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerAimInputResolver aimInputResolver;
     [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
     [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
+    [SerializeField] private PlayerAttackLoop attackLoop;
     [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
@@ -51,11 +52,12 @@ public class PlayerController : MonoBehaviour
         if (aimInputResolver == null) aimInputResolver = GetComponent<PlayerAimInputResolver>();
         if (facingPolicyResolver == null) facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
         if (attackAnimationDriver == null) attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
+        if (attackLoop == null) attackLoop = GetComponent<PlayerAttackLoop>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
         if (fireInputController != null)
-            fireInputController.Configure(TryTriggerAttack);
+            fireInputController.Configure(null);
         SyncMobileAttackRate();
     }
 
@@ -87,11 +89,6 @@ public class PlayerController : MonoBehaviour
         }
 
         fireInputController?.OnFirePressedStateChanged(value.isPressed);
-
-        if (!value.isPressed)
-            return;
-
-        TryTriggerAttack();
     }
 
     void FixedUpdate()
@@ -101,6 +98,19 @@ public class PlayerController : MonoBehaviour
 
         fireInputController?.Tick();
 
+        if (attackLoop == null)
+            attackLoop = GetComponent<PlayerAttackLoop>();
+
+        var effectiveAttackRate = GetEffectiveAttackRate();
+        var isFireHeld = fireInputController != null && fireInputController.IsFireHeld;
+        if (attackLoop != null)
+            attackLoop.Tick(
+                Time.fixedDeltaTime,
+                effectiveAttackRate,
+                isFireHeld,
+                TryTriggerAttack,
+                SetHitWindowActive);
+
         movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
         SyncMobileAttackRate();
         SyncAttackAnimationSpeed();
@@ -109,11 +119,17 @@ public class PlayerController : MonoBehaviour
 
     public void EnableHitbox()
     {
+        if (hitboxObject == null)
+            return;
+
         hitboxObject.GetComponent<Hitbox>()?.Activate();
     }
 
     public void DisableHitbox()
     {
+        if (hitboxObject == null)
+            return;
+
         hitboxObject.GetComponent<Hitbox>()?.Deactivate();
     }
 
@@ -200,7 +216,11 @@ public class PlayerController : MonoBehaviour
     {
         inputLocked = locked;
         if (locked)
+        {
             fireInputController?.ClearHeldFire();
+            SetHitWindowActive(false);
+            attackLoop?.ResetLoopState();
+        }
     }
 
     private float GetEffectiveAttackRate()
@@ -233,16 +253,31 @@ public class PlayerController : MonoBehaviour
         if (attackAnimationDriver == null)
             return;
 
-        attackAnimationDriver.ApplyAttackSpeed(animator, GetEffectiveAttackRate(), baseAttackRate);
+        var rate = GetEffectiveAttackRate();
+        var isSwingActive = attackLoop != null && attackLoop.IsPresentationActive;
+        var normalizedSwingProgress = attackLoop != null ? attackLoop.NormalizedSwingProgress : 0f;
+        attackAnimationDriver.ApplyLoopPresentation(
+            animator,
+            isSwingActive,
+            normalizedSwingProgress,
+            rate,
+            baseAttackRate);
     }
 
     private bool TryTriggerAttack()
     {
-        if (!attackCooldownGate.TryConsume(Time.time, GetEffectiveAttackRate()))
+        if (!attackCooldownGate.TryConsume(Time.fixedTime, GetEffectiveAttackRate()))
             return false;
 
-        animator.SetTrigger("Attack");
         return true;
+    }
+
+    private void SetHitWindowActive(bool active)
+    {
+        if (active)
+            EnableHitbox();
+        else
+            DisableHitbox();
     }
 
     private Vector2 ResolveAimInput()
