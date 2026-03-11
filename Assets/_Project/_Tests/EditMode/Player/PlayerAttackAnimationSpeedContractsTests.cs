@@ -17,8 +17,8 @@ namespace Castlebound.Tests.Player
 
             StringAssert.Contains("PlayerAttackAnimationDriver", source,
                 "PlayerController should delegate animator attack-speed updates to a dedicated component.");
-            StringAssert.Contains("attackAnimationDriver.ApplyAttackSpeed", source,
-                "PlayerController should invoke attackAnimationDriver.ApplyAttackSpeed(...) each frame/tick path.");
+            StringAssert.Contains("attackAnimationDriver.ApplyLoopPresentation", source,
+                "PlayerController should invoke attackAnimationDriver.ApplyLoopPresentation(...) each frame/tick path.");
         }
 
         [Test]
