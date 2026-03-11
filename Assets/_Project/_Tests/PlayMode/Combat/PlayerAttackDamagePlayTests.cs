@@ -22,9 +22,9 @@ namespace Castlebound.Tests.PlayMode.Combat
             Assert.NotNull(health, "Spawned enemy must have Health.");
 
             var before = health.Current;
-
-            player.animator.SetTrigger("Attack");
+            SetHeldFire(player, true);
             yield return WaitForDamageOrTimeout(player, enemy, health, before, 1.2f);
+            SetHeldFire(player, false);
 
             Assert.Less(health.Current, before,
                 "Attack animation should fire hitbox events and reduce enemy health.");
@@ -45,8 +45,9 @@ namespace Castlebound.Tests.PlayMode.Combat
             var firstHealth = firstEnemy.GetComponent<Health>();
             var firstBefore = firstHealth.Current;
 
-            player.animator.SetTrigger("Attack");
+            SetHeldFire(player, true);
             yield return WaitForDamageOrTimeout(player, firstEnemy, firstHealth, firstBefore, 1.2f);
+            SetHeldFire(player, false);
 
             Assert.Less(firstHealth.Current, firstBefore,
                 "First swing should damage the first enemy.");
@@ -56,8 +57,9 @@ namespace Castlebound.Tests.PlayMode.Combat
             var secondHealth = secondEnemy.GetComponent<Health>();
             var secondBefore = secondHealth.Current;
 
-            player.animator.SetTrigger("Attack");
+            SetHeldFire(player, true);
             yield return WaitForDamageOrTimeout(player, secondEnemy, secondHealth, secondBefore, 1.2f);
+            SetHeldFire(player, false);
 
             Assert.Less(secondHealth.Current, secondBefore,
                 "Second swing should still damage a new enemy (regression guard for one-and-done attack states).");
@@ -120,6 +122,15 @@ namespace Castlebound.Tests.PlayMode.Combat
 
                 yield return null;
             }
+        }
+
+        private static void SetHeldFire(PlayerController player, bool isHeld)
+        {
+            var fireInput = player.GetComponent<PlayerFireInputController>();
+            Assert.NotNull(fireInput, "Player must include PlayerFireInputController.");
+            if (isHeld)
+                fireInput.Configure(null, () => true);
+            fireInput.OnFirePressedStateChanged(isHeld);
         }
     }
 }
