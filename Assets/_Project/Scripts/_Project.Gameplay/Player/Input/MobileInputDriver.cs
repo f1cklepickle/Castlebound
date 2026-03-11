@@ -40,8 +40,6 @@ namespace Castlebound.Gameplay.Input
 
         private Gamepad _virtualGamepad;
         private bool _pendingRepairPress;
-        private bool _pendingFirePulse;
-        private float _attackTimer;
 
         private void OnEnable()
         {
@@ -114,30 +112,12 @@ namespace Castlebound.Gameplay.Input
                 state.leftStick = movementZone.MoveVector;
 
             // Right stick drives facing direction.
-            // Right trigger pulses at baseAttackRate while the zone is held past the deadzone,
-            // producing a repeated press-release cycle so OnFire fires on each pulse.
-            // Resetting the timer to zero when not firing ensures the first attack in a new
-            // drag is immediate rather than waiting out the previous interval.
+            // Right trigger remains held while the right zone is firing.
+            // Cadence authority lives in PlayerAttackLoop / cooldown gate.
             if (aimAttackZone != null)
             {
                 state.rightStick = aimAttackZone.FacingDirection;
-
-                if (aimAttackZone.IsFiring)
-                {
-                    _attackTimer -= Time.deltaTime;
-                    if (_attackTimer <= 0f)
-                    {
-                        _pendingFirePulse = true;
-                        _attackTimer = 1f / Mathf.Max(baseAttackRate, 0.1f);
-                    }
-                }
-                else
-                {
-                    _attackTimer = 0f;
-                }
-
-                state.rightTrigger = _pendingFirePulse ? 1f : 0f;
-                _pendingFirePulse = false;
+                state.rightTrigger = aimAttackZone.IsFiring ? 1f : 0f;
             }
 
             // One-shot repair press: button is set this frame, absent next frame = released.
