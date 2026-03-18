@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -66,6 +67,32 @@ namespace Castlebound.Tests.PlayMode.Combat
             Object.Destroy(secondEnemy);
         }
 
+        [UnityTest]
+        public IEnumerator HighRateHeldFire_StillDealsRepeatedDamage_WhenSwingIsShorterThanFixedStep()
+        {
+            yield return LoadMainPrototype();
+
+            var player = Object.FindObjectOfType<PlayerController>();
+            Assert.NotNull(player, "Expected PlayerController in MainPrototype.");
+
+            SetPlayerBaseAttackRate(player, 30f);
+
+            var enemy = SpawnEnemyAtPlayerHitbox(player);
+            var health = enemy.GetComponent<Health>();
+            Assert.NotNull(health, "Spawned enemy must have Health.");
+
+            var before = health.Current;
+            SetHeldFire(player, true);
+            yield return WaitForDamageAmountOrTimeout(player, enemy, health, before, 2, 0.5f);
+            SetHeldFire(player, false);
+
+            Assert.LessOrEqual(health.Current, before - 2,
+                "High-rate held fire should still apply repeated damage even when a full swing compresses below one fixed step.");
+
+            Object.Destroy(enemy);
+        }
+
+
         private static IEnumerator LoadMainPrototype()
         {
             var load = SceneManager.LoadSceneAsync("MainPrototype", LoadSceneMode.Single);
@@ -124,6 +151,34 @@ namespace Castlebound.Tests.PlayMode.Combat
             }
         }
 
+        private static IEnumerator WaitForDamageAmountOrTimeout(
+            PlayerController player,
+            GameObject enemy,
+            Health enemyHealth,
+            int initialHealth,
+            int requiredDamage,
+            float timeoutSeconds)
+        {
+            var hitbox = player.GetComponentInChildren<Hitbox>(true);
+            Assert.NotNull(hitbox, "Player must have a Hitbox child.");
+
+            var end = Time.realtimeSinceStartup + timeoutSeconds;
+            while (Time.realtimeSinceStartup < end)
+            {
+                if (enemy != null)
+                {
+                    enemy.transform.position = hitbox.transform.position;
+                    Physics2D.SyncTransforms();
+                }
+
+                if (enemyHealth != null && initialHealth - enemyHealth.Current >= requiredDamage)
+                    yield break;
+
+                yield return null;
+            }
+        }
+
+
         private static void SetHeldFire(PlayerController player, bool isHeld)
         {
             var fireInput = player.GetComponent<PlayerFireInputController>();
@@ -131,6 +186,14 @@ namespace Castlebound.Tests.PlayMode.Combat
             if (isHeld)
                 fireInput.Configure(null, () => true);
             fireInput.OnFirePressedStateChanged(isHeld);
+        }
+
+        private static void SetPlayerBaseAttackRate(PlayerController player, float attackRate)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var field = typeof(PlayerController).GetField("baseAttackRate", flags);
+            Assert.NotNull(field, "PlayerController.baseAttackRate field was not found.");
+            field.SetValue(player, attackRate);
         }
     }
 }
