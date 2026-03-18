@@ -5,25 +5,29 @@ namespace Castlebound.Tests.Player
 {
     public class PlayerAttackCadenceClockContractsTests
     {
-        private const string PlayerControllerPath =
-            "Assets/_Project/Scripts/_Project.Gameplay/Player/PlayerController.cs";
+        private const string PlayerAttackLoopPath =
+            "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackLoop.cs";
 
         [Test]
-        public void PlayerController_UsesFixedStepClock_ForCooldownAuthority()
+        public void PlayerAttackLoop_UsesInternalElapsedClock_ForCooldownAuthority()
         {
-            var source = File.ReadAllText(PlayerControllerPath);
+            var source = File.ReadAllText(PlayerAttackLoopPath);
 
-            StringAssert.Contains("attackCooldownGate.TryConsume(Time.fixedTime", source,
-                "Cooldown authority should use fixed-step time when attacks are processed from FixedUpdate.");
+            StringAssert.Contains("elapsedTime += deltaTime", source,
+                "Loop-owned cooldown authority should advance from the loop runtime clock.");
+            StringAssert.Contains("attackCooldownGate.TryConsume(elapsedTime", source,
+                "Cooldown authority should consume against the loop's internal elapsed clock.");
         }
 
         [Test]
-        public void PlayerController_DoesNotUseFrameClock_ForCooldownAuthority()
+        public void PlayerAttackLoop_DoesNotDependOnControllerTimeSources_ForCooldownAuthority()
         {
-            var source = File.ReadAllText(PlayerControllerPath);
+            var source = File.ReadAllText(PlayerAttackLoopPath);
 
-            StringAssert.DoesNotContain("attackCooldownGate.TryConsume(Time.time", source,
-                "Using frame clock in FixedUpdate attack authority can drop high-rate attempts under frame hitching.");
+            StringAssert.DoesNotContain("Time.fixedTime", source,
+                "Loop-owned cadence should not depend on controller-owned fixed time.");
+            StringAssert.DoesNotContain("Time.time", source,
+                "Loop-owned cadence should not depend on frame time sources.");
         }
     }
 }

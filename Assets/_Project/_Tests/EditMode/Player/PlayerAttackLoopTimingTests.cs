@@ -71,33 +71,28 @@ namespace Castlebound.Tests.Player
         }
 
         [Test]
-        public void HeldIntent_DoesNotDropLoopActive_WhenCooldownTemporarilyDenied()
+        public void HeldIntent_RemainsActive_AcrossChainBoundary()
         {
-            loop.Tick(0f, 5f, true, () => true, null);
+            loop.Tick(0f, 5f, true);
             var firstSwingDuration = loop.CurrentSwingDuration;
 
-            // Complete one swing while start of next is denied.
-            loop.Tick(firstSwingDuration + 0.001f, 5f, true, () => false, null);
+            loop.Tick(firstSwingDuration + 0.001f, 5f, true);
 
             Assert.IsTrue(loop.IsSwingActive,
-                "Loop should remain active while held even if next swing cannot start on this tick.");
+                "Loop should remain active while held across chained swing boundaries.");
+            Assert.GreaterOrEqual(loop.CompletedSwingCount, 1,
+                "Held cadence should complete at least one swing before continuing into the next.");
         }
 
         [Test]
-        public void HeldIntent_RecoversWithoutIdlePulse_WhenStartBecomesAvailable()
+        public void HeldIntent_ContinuesWithoutIdlePulse_OverMultipleTicks()
         {
-            loop.Tick(0f, 5f, true, () => true, null);
-            var firstSwingDuration = loop.CurrentSwingDuration;
+            loop.Tick(0f, 5f, true);
+            for (var i = 0; i < 8; i++)
+                loop.Tick(0.05f, 5f, true);
 
-            // First attempt to chain is denied.
-            loop.Tick(firstSwingDuration + 0.001f, 5f, true, () => false, null);
             Assert.IsTrue(loop.IsSwingActive,
-                "Loop should stay active during temporary denial.");
-
-            // Next tick allows chaining; should continue active without idle pulse.
-            loop.Tick(0.01f, 5f, true, () => true, null);
-            Assert.IsTrue(loop.IsSwingActive,
-                "Loop should continue active once chaining is available again.");
+                "Loop should continue active across multiple ticks while held.");
         }
 
     }

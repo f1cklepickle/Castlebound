@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class PlayerAttackLoop : MonoBehaviour
@@ -18,16 +17,20 @@ public class PlayerAttackLoop : MonoBehaviour
     }
 
     private AttackPhase phase = AttackPhase.Idle;
+    private readonly PlayerAttackCooldownGate attackCooldownGate = new PlayerAttackCooldownGate();
     private float phaseRemaining;
     private float swingElapsed;
+    private float elapsedTime;
     private float currentWindupDuration;
     private float currentActiveDuration;
     private float currentRecoveryDuration;
     private int completedSwingCount;
+    private bool hitWindowActiveThisStep;
 
     public bool IsSwingActive => phase != AttackPhase.Idle;
     public bool IsPresentationActive => phase == AttackPhase.Windup || phase == AttackPhase.Active;
     public bool IsHitWindowOpen => phase == AttackPhase.Active;
+    public bool ShouldKeepHitboxActiveThisStep => hitWindowActiveThisStep;
     public int CompletedSwingCount => completedSwingCount;
     public float CurrentWindupDuration => currentWindupDuration;
     public float CurrentActiveDuration => currentActiveDuration;
@@ -39,20 +42,17 @@ public class PlayerAttackLoop : MonoBehaviour
 
     public void Tick(float deltaTime, float effectiveAttackRate, bool isHeld)
     {
-        Tick(deltaTime, effectiveAttackRate, isHeld, null, null);
-    }
+        hitWindowActiveThisStep = IsHitWindowOpen;
 
-    public void Tick(
-        float deltaTime,
-        float effectiveAttackRate,
-        bool isHeld,
-        Func<bool> tryStartSwing,
-        Action<bool> setHitWindowActive)
-    {
         if (phase == AttackPhase.Idle && isHeld)
-            TryStartSwing(effectiveAttackRate, tryStartSwing);
+            TryStartSwing(effectiveAttackRate);
 
-        if (deltaTime <= 0f || phase == AttackPhase.Idle)
+        if (deltaTime <= 0f)
+            return;
+
+        elapsedTime += deltaTime;
+
+        if (phase == AttackPhase.Idle)
             return;
 
         float remainingDelta = deltaTime;
@@ -67,7 +67,7 @@ public class PlayerAttackLoop : MonoBehaviour
                     break;
                 }
 
-                if (!TryStartSwing(effectiveAttackRate, tryStartSwing))
+                if (!TryStartSwing(effectiveAttackRate))
                     break;
 
                 continue;
@@ -81,7 +81,7 @@ public class PlayerAttackLoop : MonoBehaviour
             if (phaseRemaining > 0f)
                 break;
 
-            AdvancePhase(effectiveAttackRate, isHeld, tryStartSwing, setHitWindowActive);
+            AdvancePhase(effectiveAttackRate, isHeld);
         }
     }
 
@@ -94,11 +94,14 @@ public class PlayerAttackLoop : MonoBehaviour
         currentActiveDuration = 0f;
         currentRecoveryDuration = 0f;
         completedSwingCount = 0;
+        elapsedTime = 0f;
+        hitWindowActiveThisStep = false;
+        attackCooldownGate.Reset();
     }
 
-    private bool TryStartSwing(float effectiveAttackRate, Func<bool> tryStartSwing)
+    private bool TryStartSwing(float effectiveAttackRate)
     {
-        if (tryStartSwing != null && !tryStartSwing.Invoke())
+        if (!attackCooldownGate.TryConsume(elapsedTime, effectiveAttackRate))
             return false;
 
         ComputeScaledDurations(effectiveAttackRate);
@@ -110,27 +113,24 @@ public class PlayerAttackLoop : MonoBehaviour
 
     private void AdvancePhase(
         float effectiveAttackRate,
-        bool isHeld,
-        Func<bool> tryStartSwing,
-        Action<bool> setHitWindowActive)
+        bool isHeld)
     {
         switch (phase)
         {
             case AttackPhase.Windup:
                 phase = AttackPhase.Active;
                 phaseRemaining = currentActiveDuration;
-                setHitWindowActive?.Invoke(true);
+                hitWindowActiveThisStep = true;
                 break;
             case AttackPhase.Active:
                 phase = AttackPhase.Recovery;
                 phaseRemaining = currentRecoveryDuration;
-                setHitWindowActive?.Invoke(false);
                 break;
             case AttackPhase.Recovery:
                 completedSwingCount++;
                 if (isHeld)
                 {
-                    if (!TryStartSwing(effectiveAttackRate, tryStartSwing))
+                    if (!TryStartSwing(effectiveAttackRate))
                     {
                         phase = AttackPhase.AwaitingChain;
                         phaseRemaining = 0f;

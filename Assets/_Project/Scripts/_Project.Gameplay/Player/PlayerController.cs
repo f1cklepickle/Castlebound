@@ -36,8 +36,6 @@ public class PlayerController : MonoBehaviour
     private PlayerCollisionMove2D mover;
     private InventoryState inventoryState;
     private bool inputLocked;
-    private readonly PlayerAttackCooldownGate attackCooldownGate = new PlayerAttackCooldownGate();
-    private float appliedMobileAttackRate = -1f;
 
     void Awake()
     {
@@ -58,7 +56,6 @@ public class PlayerController : MonoBehaviour
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
         if (fireInputController != null)
             fireInputController.Configure(null);
-        SyncMobileAttackRate();
     }
 
 
@@ -104,15 +101,11 @@ public class PlayerController : MonoBehaviour
         var effectiveAttackRate = GetEffectiveAttackRate();
         var isFireHeld = fireInputController != null && fireInputController.IsFireHeld;
         if (attackLoop != null)
-            attackLoop.Tick(
-                Time.fixedDeltaTime,
-                effectiveAttackRate,
-                isFireHeld,
-                TryTriggerAttack,
-                SetHitWindowActive);
+            attackLoop.Tick(Time.fixedDeltaTime, effectiveAttackRate, isFireHeld);
+
+        ApplyAttackRuntimeState();
 
         movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
-        SyncMobileAttackRate();
         SyncAttackAnimationSpeed();
     }
 
@@ -218,8 +211,8 @@ public class PlayerController : MonoBehaviour
         if (locked)
         {
             fireInputController?.ClearHeldFire();
-            SetHitWindowActive(false);
             attackLoop?.ResetLoopState();
+            ApplyAttackRuntimeState();
         }
     }
 
@@ -230,19 +223,6 @@ public class PlayerController : MonoBehaviour
             : 1f;
 
         return PlayerAttackRateCalculator.ComputeEffectiveRate(baseAttackRate, weaponAttackSpeed);
-    }
-
-    private void SyncMobileAttackRate()
-    {
-        if (mobileInputDriver == null)
-            return;
-
-        var rate = GetEffectiveAttackRate();
-        if (Mathf.Approximately(rate, appliedMobileAttackRate))
-            return;
-
-        mobileInputDriver.SetAttackRate(rate);
-        appliedMobileAttackRate = rate;
     }
 
     private void SyncAttackAnimationSpeed()
@@ -264,17 +244,10 @@ public class PlayerController : MonoBehaviour
             baseAttackRate);
     }
 
-    private bool TryTriggerAttack()
+    private void ApplyAttackRuntimeState()
     {
-        if (!attackCooldownGate.TryConsume(Time.fixedTime, GetEffectiveAttackRate()))
-            return false;
-
-        return true;
-    }
-
-    private void SetHitWindowActive(bool active)
-    {
-        if (active)
+        var shouldKeepHitboxActive = attackLoop != null && attackLoop.ShouldKeepHitboxActiveThisStep;
+        if (shouldKeepHitboxActive)
             EnableHitbox();
         else
             DisableHitbox();

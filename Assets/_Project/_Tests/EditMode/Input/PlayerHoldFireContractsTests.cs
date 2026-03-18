@@ -48,12 +48,14 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
-        public void PlayerController_KeepsCooldownGateAsAttackAuthority()
+        public void PlayerController_KeepsAttackAuthorityDelegated_ToAttackLoop()
         {
             var source = File.ReadAllText(PlayerControllerPath);
 
-            StringAssert.Contains("attackCooldownGate.TryConsume", source,
-                "Attack cadence should remain authoritative through PlayerAttackCooldownGate.");
+            StringAssert.Contains("attackLoop.Tick(", source,
+                "PlayerController should continue delegating held-fire cadence progression to PlayerAttackLoop.");
+            StringAssert.DoesNotContain("attackCooldownGate.TryConsume", source,
+                "PlayerController should no longer own direct cooldown consumption.");
         }
     }
 }
