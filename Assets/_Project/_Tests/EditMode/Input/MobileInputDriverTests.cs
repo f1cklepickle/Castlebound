@@ -19,16 +19,15 @@ namespace Castlebound.Tests.Input
     ///     the PlayerInput user (needs a real PlayerInput component in a live scene).
     ///   - Per-frame QueueStateEvent writing left/right stick values from the touch zones
     ///     and those values reaching PlayerController.OnMove / OnLook / OnFire.
-    ///   - Attack pulse timer: that rightTrigger pulses at baseAttackRate while IsFiring,
-    ///     that the first pulse is immediate (timer reset to 0 on pointer-up), and that
-    ///     Mathf.Max clamps baseAttackRate so zero/negative values do not divide by zero.
+    ///   - Held-fire routing: that rightTrigger remains held while IsFiring and releases
+    ///     when the touch aim zone exits its firing threshold.
     ///
     /// For full pipeline coverage create a PlayMode integration test that:
     ///   1. Loads the gameplay scene (or a minimal stand-in).
     ///   2. Confirms InputSystem.devices contains a Gamepad named "MobileGamepad".
     ///   3. Simulates a drag on TouchMovementZone and asserts PlayerController moved.
-    ///   4. Simulates a right-zone drag past the deadzone and asserts the Attack animator
-    ///      trigger fires repeatedly at approximately baseAttackRate.
+    ///   4. Simulates a right-zone drag past the deadzone and asserts held-fire intent
+    ///      reaches PlayerController through the virtual gamepad path.
     /// </summary>
     public class MobileInputDriverTests
     {
@@ -100,39 +99,6 @@ namespace Castlebound.Tests.Input
                 _go.SetActive(true);
                 _go.SetActive(false);
             }, "Repeated enable/disable cycles should not throw.");
-        }
-
-        [Test]
-        public void SetAttackRate_MethodExists_AsPublicApiContract()
-        {
-            var method = typeof(MobileInputDriver).GetMethod(
-                "SetAttackRate",
-                BindingFlags.Instance | BindingFlags.Public);
-
-            Assert.IsNotNull(method,
-                "MobileInputDriver must expose public SetAttackRate(float) so attack cadence can be wired from weapon stats.");
-        }
-
-        [Test]
-        public void SetAttackRate_ClampsToPositiveMinimum()
-        {
-            _driver = _go.AddComponent<MobileInputDriver>();
-
-            var method = typeof(MobileInputDriver).GetMethod(
-                "SetAttackRate",
-                BindingFlags.Instance | BindingFlags.Public);
-            Assert.IsNotNull(method, "SetAttackRate(float) must exist.");
-
-            method.Invoke(_driver, new object[] { 0f });
-
-            var baseRateField = typeof(MobileInputDriver).GetField(
-                "baseAttackRate",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(baseRateField, "baseAttackRate field was not found.");
-
-            var storedRate = (float)baseRateField.GetValue(_driver);
-            Assert.Greater(storedRate, 0f,
-                "SetAttackRate(0) should clamp to a positive minimum to avoid divide-by-zero.");
         }
 
         [Test]
