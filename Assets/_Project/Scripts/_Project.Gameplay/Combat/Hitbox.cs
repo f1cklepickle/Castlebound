@@ -25,6 +25,11 @@ public class Hitbox : MonoBehaviour
     // Called by Player (via Animation Event at swing start)
     public void Activate()
     {
+        if (activeWindow)
+        {
+            return;
+        }
+
         hitThisSwing.Clear();
         EnsureReferences();
         UpdateColliderSize();

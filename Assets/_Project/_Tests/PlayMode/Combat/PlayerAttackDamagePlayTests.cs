@@ -92,6 +92,30 @@ namespace Castlebound.Tests.PlayMode.Combat
             Object.Destroy(enemy);
         }
 
+        [UnityTest]
+        public IEnumerator SingleSwing_OnlyDamagesOverlappingEnemyOnce()
+        {
+            yield return LoadMainPrototype();
+
+            var player = Object.FindObjectOfType<PlayerController>();
+            Assert.NotNull(player, "Expected PlayerController in MainPrototype.");
+
+            var enemy = SpawnEnemyAtPlayerHitbox(player);
+            var health = enemy.GetComponent<Health>();
+            Assert.NotNull(health, "Spawned enemy must have Health.");
+
+            var before = health.Current;
+            SetHeldFire(player, true);
+            yield return WaitForDamageAmountOrTimeout(player, enemy, health, before, 1, 0.6f);
+            SetHeldFire(player, false);
+
+            yield return HoldEnemyInHitboxForDuration(player, enemy, 0.25f);
+
+            Assert.AreEqual(before - 1, health.Current,
+                "One sustained overlap during a single swing should only apply one hit to the same enemy.");
+
+            Object.Destroy(enemy);
+        }
 
         private static IEnumerator LoadMainPrototype()
         {
@@ -178,6 +202,26 @@ namespace Castlebound.Tests.PlayMode.Combat
             }
         }
 
+        private static IEnumerator HoldEnemyInHitboxForDuration(
+            PlayerController player,
+            GameObject enemy,
+            float durationSeconds)
+        {
+            var hitbox = player.GetComponentInChildren<Hitbox>(true);
+            Assert.NotNull(hitbox, "Player must have a Hitbox child.");
+
+            var end = Time.realtimeSinceStartup + durationSeconds;
+            while (Time.realtimeSinceStartup < end)
+            {
+                if (enemy != null)
+                {
+                    enemy.transform.position = hitbox.transform.position;
+                    Physics2D.SyncTransforms();
+                }
+
+                yield return null;
+            }
+        }
 
         private static void SetHeldFire(PlayerController player, bool isHeld)
         {
