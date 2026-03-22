@@ -9,9 +9,9 @@ namespace Castlebound.Tests.Player
     /// The full OnFire(InputValue) path — including the value.isPressed guard
     /// added to prevent double-trigger on release — requires Input System fixtures
     /// and should be covered in a PlayMode test. Specifically verify:
-    ///   - SetTrigger("Attack") fires exactly once per pulse (not on release).
+    ///   - Held-fire intent is ignored while inputLocked is true.
     ///   - No attack when inputLocked is true.
-    ///   - Attack rate matches MobileInputDriver.baseAttackRate over several seconds.
+    ///   - Android held-fire intent remains active while the virtual right trigger is held.
     /// </summary>
     public class PlayerAttackInputTests
     {

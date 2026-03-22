@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-03-18 - feat(combat): high-rate cadence contracts (#148/#149/#150)
+
+### Summary
+- Moved attack cadence authority into `PlayerAttackLoop` so `PlayerController` remains orchestration-focused.
+- Preserved hit delivery for compressed high-rate swings and fixed the same-swing multi-hit regression on overlapping enemies.
+- Removed stale mobile attack-rate wiring so Android input now forwards held intent only while combat runtime owns cadence.
+
+### New or Updated Tests
+**EditMode**
+- `PlayerAttackAuthorityOwnershipContractsTests` — verifies attack cooldown authority moved out of `PlayerController` and into `PlayerAttackLoop`.
+- `PlayerAttackCadenceClockContractsTests` — verifies loop-owned cadence uses internal elapsed time instead of controller time sources.
+- `PlayerHoldFireContractsTests` — verifies `PlayerController` keeps held-fire intent delegated through `PlayerFireInputController` and into `PlayerAttackLoop`.
+- `PlayerAttackLoopTimingTests` — verifies chained swing timing, release behavior, and no-idle chaining across sustained held fire.
+- `MobileInputDriverOwnershipContractsTests` — verifies `MobileInputDriver` no longer exposes attack-rate APIs and `PlayerController` no longer syncs cadence into mobile input.
+
+**PlayMode**
+- `PlayerHighRateCadenceConsistencyPlayTests` — verifies stable loop cadence across sustained high-rate attack windows.
+- `PlayerAttackDamagePlayTests` — verifies compressed high-rate swings still deal repeated damage across swings without allowing same-swing multi-hit overlap.
+- `PlayerAttackLoopIdleFlickerPlayTests` — verifies held attack presentation does not pulse to idle between chained swings.
+
+### Notes
+- Manual validation confirmed PC and Android hold-fire paths still function, high-rate attacks remain responsive, and unarmed attacks return to one damage per swing.
+
 ## 2026-03-06 - feat(input): movement-first facing with conditional aim override (#153)
 
 ### Summary

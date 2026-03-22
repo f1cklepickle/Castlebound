@@ -22,9 +22,14 @@ public class Hitbox : MonoBehaviour
         activeWindow = false;
     }
 
-    // Called by Player (via Animation Event at swing start)
+    // Called by PlayerController while the current swing's hit window is active.
     public void Activate()
     {
+        if (activeWindow)
+        {
+            return;
+        }
+
         hitThisSwing.Clear();
         EnsureReferences();
         UpdateColliderSize();
@@ -35,7 +40,7 @@ public class Hitbox : MonoBehaviour
         activeWindow = true;
     }
 
-    // Called by Player (via Animation Event at swing end)
+    // Called by PlayerController once the current swing's hit window closes.
     public void Deactivate()
     {
         activeWindow = false;

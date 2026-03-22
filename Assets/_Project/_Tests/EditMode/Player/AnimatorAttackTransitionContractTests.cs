@@ -9,7 +9,7 @@ namespace Castlebound.Tests.Player
     public class AnimatorAttackTransitionContractTests
     {
         [Test]
-        public void PlayerAttackTransition_UsesExitTimeWithShortBlend()
+        public void PlayerAttackTransition_UsesLoopActiveConditionWithShortBlend()
         {
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(
                 "Assets/_Project/Art/Knight_Assets/Player.controller");
@@ -34,22 +34,14 @@ namespace Castlebound.Tests.Player
 
             var attackToIdle = attackState.transitions[0];
 
-            Assert.IsTrue(attackToIdle.hasExitTime,
-                "Attack->Idle should keep exit-time flow for this animator graph to avoid one-and-done attack states.");
+            Assert.IsFalse(attackToIdle.hasExitTime,
+                "Loop-era attack should not rely on exit-time gate for Attack->Idle transitions.");
             Assert.LessOrEqual(attackToIdle.duration, 0.1f,
                 "Attack->Idle transition duration should be short to avoid hard-capping repeat attacks.");
 
-            var clip = attackState.motion as AnimationClip;
-            Assert.IsNotNull(clip, "Knight_Attack state must use an AnimationClip motion.");
-
-            var disableEvent = AnimationUtility.GetAnimationEvents(clip)
-                .FirstOrDefault(e => e.functionName == "DisableHitbox");
-            Assert.IsNotNull(disableEvent,
-                "Knight_Attack clip must include DisableHitbox event to close the hit window.");
-
-            var disableNormalizedTime = disableEvent.time / clip.length;
-            Assert.GreaterOrEqual(attackToIdle.exitTime, disableNormalizedTime,
-                "Attack->Idle exitTime must not start before DisableHitbox event; otherwise hitbox damage can be skipped.");
+            Assert.IsTrue(
+                attackToIdle.conditions.Any(c => c.parameter == "AttackLoopActive" && c.mode == AnimatorConditionMode.IfNot),
+                "Attack->Idle should be driven by AttackLoopActive=false in loop-era presentation.");
         }
     }
 }

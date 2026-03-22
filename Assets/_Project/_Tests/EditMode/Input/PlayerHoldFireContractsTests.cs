@@ -20,7 +20,7 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
-        public void PlayerController_DelegatesPressedState_AndTick_ToFireInputController()
+        public void PlayerController_DelegatesPressedState_ToFireInputController_AndTicksAttackLoop()
         {
             var source = File.ReadAllText(PlayerControllerPath);
 
@@ -30,11 +30,9 @@ namespace Castlebound.Tests.Input
             Assert.IsTrue(forwardsPressedState,
                 "PlayerController should forward pressed state updates to PlayerFireInputController.");
 
-            var ticksFireInput =
-                source.Contains("fireInputController.Tick()") ||
-                source.Contains("fireInputController?.Tick()");
-            Assert.IsTrue(ticksFireInput,
-                "PlayerController should tick PlayerFireInputController from FixedUpdate.");
+            var ticksAttackLoop = source.Contains("attackLoop.Tick(");
+            Assert.IsTrue(ticksAttackLoop,
+                "PlayerController should tick PlayerAttackLoop from FixedUpdate.");
         }
 
         [Test]
@@ -50,12 +48,14 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
-        public void PlayerController_KeepsCooldownGateAsAttackAuthority()
+        public void PlayerController_KeepsAttackAuthorityDelegated_ToAttackLoop()
         {
             var source = File.ReadAllText(PlayerControllerPath);
 
-            StringAssert.Contains("attackCooldownGate.TryConsume", source,
-                "Attack cadence should remain authoritative through PlayerAttackCooldownGate.");
+            StringAssert.Contains("attackLoop.Tick(", source,
+                "PlayerController should continue delegating held-fire cadence progression to PlayerAttackLoop.");
+            StringAssert.DoesNotContain("attackCooldownGate.TryConsume", source,
+                "PlayerController should no longer own direct cooldown consumption.");
         }
     }
 }

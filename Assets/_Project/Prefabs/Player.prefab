@@ -119,6 +119,8 @@ GameObject:
   - component: {fileID: 9150000000000000201}
   - component: {fileID: 9150000000000000202}
   - component: {fileID: 9150000000000000203}
+  - component: {fileID: 9150000000000000204}
+  - component: {fileID: 9150000000000000205}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -245,11 +247,13 @@ MonoBehaviour:
   inventorySource: {fileID: 0}
   weaponSlotSwapHandler:
     weaponSlotSwapCooldown: 0.5
-  playerWeaponController: {fileID: 9150000000000000006}
+  playerWeaponController: {fileID: 0}
   mobileInputDriver: {fileID: 0}
   fireInputController: {fileID: 9150000000000000201}
   aimInputResolver: {fileID: 9150000000000000202}
   facingPolicyResolver: {fileID: 9150000000000000203}
+  attackAnimationDriver: {fileID: 9150000000000000204}
+  attackLoop: {fileID: 9150000000000000205}
   baseAttackRate: 1.5
   movementOrchestrator:
     deadZone: 0.1
@@ -530,6 +534,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useReleaseFallbackPolling: 1
+  autoChainHoldThresholdSeconds: 0.08
 --- !u!114 &9150000000000000202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -561,6 +566,39 @@ MonoBehaviour:
   movementMeaningfulThreshold: 0.1
   returnToMovementFacingSpeed: 720
   stickMagnitudeMax: 1.1
+--- !u!114 &9150000000000000204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d39325ab6ac94d30afb94b328d6021cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackSpeedParameter: AttackSpeedMultiplier
+  normalizedProgressParameter: AttackProgress
+  loopActiveParameter: AttackLoopActive
+  minAttackSpeedMultiplier: 0.25
+  maxAttackSpeedMultiplier: 12
+--- !u!114 &9150000000000000205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c94724e17d343a6a1b398fbed4b5146, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  windupDuration: 0.14
+  activeDuration: 0.02
+  recoveryDuration: 0.01
+  minSwingDuration: 0.03
 --- !u!1 &9150000000000000001
 GameObject:
   m_ObjectHideFlags: 0
