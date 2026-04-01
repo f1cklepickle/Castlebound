@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-03-25 - feat(tower): prefab + core runtime
+
+### Summary
+- Added a minimal `TowerRuntime` that owns tower core state only: health bounds plus cached hierarchy references for future tower systems.
+- Introduced `Tower.prefab` with the locked stationary-root contract: root collider/runtime, `AimPivot`, `TowerVisual`, and `PlatformVisual`.
+- Added EditMode and PlayMode tower contract coverage while keeping targeting, firing, projectiles, and build integration out of this PR.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` — verifies `Tower.prefab` exists, stays normalized, includes runtime/collider state, and preserves the approved child hierarchy contract.
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` — verifies a spawned tower initializes runtime state and resolves the required hierarchy references at runtime.
+
+### Notes
+- EditMode suite passed via `ci/run-editmode.ps1`. Tower PlayMode coverage was validated manually in the Unity editor after fixing runtime reference resolution for dynamic construction order.
+
 ## 2026-03-18 - feat(combat): high-rate cadence contracts (#148/#149/#150)
 
 ### Summary
