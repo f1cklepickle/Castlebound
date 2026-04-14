@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-14 - feat(tower): prefab asset contract coverage
+
+### Summary
+- Added stronger tower shell regression coverage around the real prefab asset rather than only synthetic runtime construction.
+- Locked the serialized `TowerRuntime` child bindings to the approved `AimPivot`, `TowerVisual`, and `PlatformVisual` nodes.
+- Added a PlayMode smoke that instantiates the actual `Tower.prefab` and verifies the runtime shell contract survives asset instantiation.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies `TowerRuntime` serialized references bind to the intended prefab children.
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` - instantiates the real `Tower.prefab` and verifies root collider/runtime plus hierarchy reference contract.
+
+### Notes
+- Manual validation still recommended in the Unity editor before merging `#158`.
+
 ## 2026-03-25 - feat(tower): prefab + core runtime
 
 ### Summary

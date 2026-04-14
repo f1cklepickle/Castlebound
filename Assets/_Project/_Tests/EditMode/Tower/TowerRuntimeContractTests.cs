@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Castlebound.Gameplay.Tower;
 using UnityEngine;
 
 namespace Castlebound.Tests.Tower
@@ -44,6 +45,30 @@ namespace Castlebound.Tests.Tower
                 var platformVisual = FindChildRecursive(prefabRoot.transform, "PlatformVisual");
                 Assert.NotNull(platformVisual, "Tower prefab must include a PlatformVisual child.");
                 Assert.AreEqual(prefabRoot.transform, platformVisual.parent, "PlatformVisual should remain directly under the tower root.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_SerializesRuntimeReferences_ToApprovedChildren()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var runtime = prefabRoot.GetComponent<TowerRuntime>();
+                Assert.NotNull(runtime, "Tower prefab must include TowerRuntime.");
+
+                var aimPivot = FindChildRecursive(prefabRoot.transform, "AimPivot");
+                var towerVisual = FindChildRecursive(prefabRoot.transform, "TowerVisual");
+                var platformVisual = FindChildRecursive(prefabRoot.transform, "PlatformVisual");
+
+                Assert.AreSame(aimPivot, runtime.AimPivot, "TowerRuntime AimPivot should serialize to the AimPivot child.");
+                Assert.AreSame(towerVisual, runtime.TowerVisual, "TowerRuntime TowerVisual should serialize to the TowerVisual child.");
+                Assert.AreSame(platformVisual, runtime.PlatformVisual, "TowerRuntime PlatformVisual should serialize to the PlatformVisual child.");
             }
             finally
             {
