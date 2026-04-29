@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-04-29 - feat(ui): barrier tower build rows
+
+### Summary
+- Extended the between-wave upgrade list to render barrier-owned tower plot child rows beneath each barrier upgrade row.
+- Kept tower build spending and spawning delegated to `TowerBuildController` while the UI only renders plot state and invokes actions.
+- Added occupied plot presentation so built tower slots stay visible but cannot be repurchased.
+- Wired `MainPrototype` to a scene-level `TowerBuildController` and `TowerBuildConfig` so tower rows appear in normal gameplay.
+- Tightened tower row text and indentation so child plot rows fit inside the existing menu and read as subordinate barrier actions.
+- Replaced shorthand currency copy with game-facing `Gold` labels.
+- Enlarged `UpgradeMenuPanel` in `MainPrototype` so the barrier-owned tower rows fit in the authored menu.
+- Widened row columns and added barrier-group spacing so buttons do not cover text and each barrier block reads separately.
+- Increased the gap before row buttons and between barrier groups for clearer menu scanning.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies barrier upgrade rows, tower child rows, build invocation, occupied plot disabling, existing barrier upgrade action behavior, and MainPrototype tower build wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
 ## 2026-04-29 - feat(gameplay): tower build orchestration
 
 ### Summary

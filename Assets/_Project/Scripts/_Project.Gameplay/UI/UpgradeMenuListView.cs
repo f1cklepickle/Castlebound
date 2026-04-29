@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using Castlebound.Gameplay.Barrier;
+using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Tower;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,8 +25,9 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private FeedbackEventChannel feedbackChannel;
         [SerializeField] private InventoryStateComponent inventorySource;
+        [SerializeField] private TowerBuildController towerBuildController;
 
-        private readonly List<Row> rows = new List<Row>();
+        private readonly List<ActionRow> rows = new List<ActionRow>();
 
         private void OnEnable()
         {
@@ -76,8 +79,19 @@ namespace Castlebound.Gameplay.UI
                     controller.SetFeedbackChannel(feedbackChannel);
                 }
 
-                rows.Add(CreateRow(controller));
+                rows.Add(CreateBarrierUpgradeRow(controller));
+                CreateTowerPlotRows(controller);
             }
+        }
+
+        public void SetContentRoot(RectTransform root)
+        {
+            contentRoot = root;
+        }
+
+        public void SetTowerBuildController(TowerBuildController controller)
+        {
+            towerBuildController = controller;
         }
 
         private void ResolveReferences()
@@ -95,6 +109,11 @@ namespace Castlebound.Gameplay.UI
                     var player = GameObject.FindGameObjectWithTag("Player");
                     inventorySource = player != null ? player.GetComponent<InventoryStateComponent>() : null;
                 }
+            }
+
+            if (towerBuildController == null)
+            {
+                towerBuildController = FindObjectOfType<TowerBuildController>();
             }
         }
 
@@ -136,7 +155,7 @@ namespace Castlebound.Gameplay.UI
                 layout = contentRoot.gameObject.AddComponent<VerticalLayoutGroup>();
             }
 
-            layout.spacing = 8f;
+            layout.spacing = 6f;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
 
@@ -150,13 +169,111 @@ namespace Castlebound.Gameplay.UI
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
         }
 
-        private Row CreateRow(BarrierUpgradeController controller)
+        private ActionRow CreateBarrierUpgradeRow(BarrierUpgradeController controller)
         {
             var rowObject = new GameObject("UpgradeRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
             rowObject.transform.SetParent(contentRoot, false);
+            ConfigureRowLayout(rowObject, 0f, 28f);
 
+            var nameText = CreateText("Name", rowObject.transform, 18, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 150f, 0f);
+
+            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 340f, 0f);
+            var button = CreateButton("UpgradeButton", rowObject.transform, "Upgrade", 96f);
+
+            var row = new ActionRow(
+                rowObject,
+                nameText,
+                detailText,
+                button,
+                () => controller.name,
+                () => $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | {controller.GetUpgradeCost()} Gold",
+                () => "Upgrade",
+                () => true,
+                () => controller.TryUpgrade(),
+                Refresh,
+                FlashButton);
+            row.Refresh();
+            return row;
+        }
+
+        private void CreateTowerPlotRows(BarrierUpgradeController controller)
+        {
+            if (towerBuildController == null)
+            {
+                return;
+            }
+
+            var plots = controller.GetComponent<BarrierTowerPlotCollection>();
+            if (plots == null || plots.PlotCount == 0)
+            {
+                return;
+            }
+
+            if (inventorySource != null)
+            {
+                towerBuildController.SetInventory(inventorySource.State);
+            }
+
+            if (feedbackChannel != null)
+            {
+                towerBuildController.SetFeedbackChannel(feedbackChannel);
+            }
+
+            for (int i = 0; i < plots.PlotCount; i++)
+            {
+                var plot = plots.Plots[i];
+                if (plot == null)
+                {
+                    continue;
+                }
+
+                rows.Add(CreateTowerPlotRow(plot, i, i == plots.PlotCount - 1));
+            }
+        }
+
+        private ActionRow CreateTowerPlotRow(TowerPlot plot, int plotIndex, bool endsBarrierGroup)
+        {
+            var rowObject = new GameObject("TowerPlotRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            rowObject.transform.SetParent(contentRoot, false);
+            if (endsBarrierGroup)
+            {
+                var groupSpacing = rowObject.AddComponent<LayoutElement>();
+                groupSpacing.minHeight = 48f;
+                groupSpacing.preferredHeight = 48f;
+            }
+
+            ConfigureRowLayout(rowObject, 42f, 28f);
+
+            var nameText = CreateText("Name", rowObject.transform, 13, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 120f, 0f);
+
+            var detailText = CreateText("Details", rowObject.transform, 13, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 340f, 0f);
+            var button = CreateButton("BuildButton", rowObject.transform, "Build", 80f);
+
+            var row = new ActionRow(
+                rowObject,
+                nameText,
+                detailText,
+                button,
+                () => $"- {GetPlotLabel(plotIndex)}",
+                () => GetTowerPlotDetails(plot),
+                () => plot.IsOccupied ? "Occupied" : "Build",
+                () => !plot.IsOccupied,
+                () => towerBuildController.TryBuild(plot) == TowerBuildResult.Success,
+                Refresh,
+                FlashButton);
+            row.Refresh();
+            return row;
+        }
+
+        private static void ConfigureRowLayout(GameObject rowObject, float leftPadding, float spacing)
+        {
             var layout = rowObject.GetComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8f;
+            layout.padding.left = Mathf.RoundToInt(leftPadding);
+            layout.spacing = spacing;
             layout.childAlignment = TextAnchor.MiddleLeft;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = false;
@@ -164,21 +281,49 @@ namespace Castlebound.Gameplay.UI
             var fitter = rowObject.GetComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        }
 
-            var nameText = CreateText("Name", rowObject.transform, 18, TextAlignmentOptions.Left);
-            var nameLayout = nameText.gameObject.AddComponent<LayoutElement>();
-            nameLayout.preferredWidth = 140f;
-            nameLayout.flexibleWidth = 0f;
+        private static void ConfigureLayoutElement(GameObject target, float preferredWidth, float flexibleWidth)
+        {
+            var layout = target.AddComponent<LayoutElement>();
+            layout.preferredWidth = preferredWidth;
+            layout.minWidth = preferredWidth;
+            layout.flexibleWidth = flexibleWidth;
+        }
 
-            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
-            var detailLayout = detailText.gameObject.AddComponent<LayoutElement>();
-            detailLayout.preferredWidth = 260f;
-            detailLayout.flexibleWidth = 1f;
-            var button = CreateButton("UpgradeButton", rowObject.transform);
+        private string GetTowerPlotDetails(TowerPlot plot)
+        {
+            var config = towerBuildController != null ? towerBuildController.Config : null;
+            string towerName = config != null && config.TowerPrefab != null ? config.TowerPrefab.name : "Tower";
+            int maxHealth = config != null ? config.BaseMaxHealth : 0;
+            int damage = config != null ? config.BaseDamage : 0;
+            int buildCost = config != null ? config.BuildCost : 0;
+            int upgradeCost = config != null ? config.BaseUpgradeCost : 0;
 
-            var row = new Row(controller, rowObject, nameText, detailText, button, Refresh, FlashButton);
-            row.Refresh();
-            return row;
+            if (plot != null && plot.IsOccupied)
+            {
+                var runtime = plot.OccupantInstance != null ? plot.OccupantInstance.GetComponent<TowerRuntime>() : null;
+                int currentHealth = runtime != null ? runtime.CurrentHealth : maxHealth;
+                int occupiedMaxHealth = runtime != null ? runtime.MaxHealth : maxHealth;
+                return $"{towerName} | HP {currentHealth}/{occupiedMaxHealth} | DMG {damage} | Upg {upgradeCost} Gold";
+            }
+
+            return $"{towerName} | HP {maxHealth} | DMG {damage} | Build {buildCost} Gold";
+        }
+
+        private static string GetPlotLabel(int plotIndex)
+        {
+            if (plotIndex == 0)
+            {
+                return "Left Plot";
+            }
+
+            if (plotIndex == 1)
+            {
+                return "Right Plot";
+            }
+
+            return $"Plot {plotIndex + 1}";
         }
 
         private TextMeshProUGUI CreateText(string name, Transform parent, int fontSize, TextAlignmentOptions alignment)
@@ -196,18 +341,14 @@ namespace Castlebound.Gameplay.UI
             return text;
         }
 
-        private Button CreateButton(string name, Transform parent)
+        private Button CreateButton(string name, Transform parent, string label, float width)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
 
             var image = go.GetComponent<Image>();
-            if (buttonSprite == null)
-            {
-                buttonSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-            }
             image.sprite = buttonSprite;
-            image.type = Image.Type.Sliced;
+            image.type = buttonSprite != null ? Image.Type.Sliced : Image.Type.Simple;
             image.color = normalButtonColor;
 
             var button = go.GetComponent<Button>();
@@ -222,12 +363,12 @@ namespace Castlebound.Gameplay.UI
             button.colors = colors;
 
             var text = CreateText("Label", go.transform, 16, TextAlignmentOptions.Center);
-            text.text = "Upgrade";
+            text.text = label;
 
             var rect = go.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(90f, 28f);
+            rect.sizeDelta = new Vector2(width, 28f);
             var layout = go.AddComponent<LayoutElement>();
-            layout.preferredWidth = 90f;
+            layout.preferredWidth = width;
             layout.preferredHeight = 28f;
             layout.flexibleWidth = 0f;
             layout.flexibleHeight = 0f;
@@ -238,6 +379,12 @@ namespace Castlebound.Gameplay.UI
         private void FlashButton(Button button, bool success, System.Action onComplete)
         {
             if (button == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            if (!Application.isPlaying)
             {
                 onComplete?.Invoke();
                 return;
@@ -289,61 +436,87 @@ namespace Castlebound.Gameplay.UI
             rows.Clear();
         }
 
-        private class Row
+        private class ActionRow
         {
-            private readonly BarrierUpgradeController controller;
             private readonly GameObject root;
             private readonly TextMeshProUGUI nameText;
             private readonly TextMeshProUGUI detailText;
-            private readonly Button upgradeButton;
+            private readonly Button actionButton;
+            private readonly System.Func<string> getName;
+            private readonly System.Func<string> getDetails;
+            private readonly System.Func<string> getButtonLabel;
+            private readonly System.Func<bool> canInvoke;
+            private readonly System.Func<bool> invoke;
             private readonly System.Action refreshAll;
             private readonly System.Action<Button, bool, System.Action> flashButton;
 
-            public Row(
-                BarrierUpgradeController controller,
+            public ActionRow(
                 GameObject root,
                 TextMeshProUGUI nameText,
                 TextMeshProUGUI detailText,
-                Button upgradeButton,
+                Button actionButton,
+                System.Func<string> getName,
+                System.Func<string> getDetails,
+                System.Func<string> getButtonLabel,
+                System.Func<bool> canInvoke,
+                System.Func<bool> invoke,
                 System.Action refreshAll,
                 System.Action<Button, bool, System.Action> flashButton)
             {
-                this.controller = controller;
                 this.root = root;
                 this.nameText = nameText;
                 this.detailText = detailText;
-                this.upgradeButton = upgradeButton;
+                this.actionButton = actionButton;
+                this.getName = getName;
+                this.getDetails = getDetails;
+                this.getButtonLabel = getButtonLabel;
+                this.canInvoke = canInvoke;
+                this.invoke = invoke;
                 this.refreshAll = refreshAll;
                 this.flashButton = flashButton;
 
-                upgradeButton.onClick.AddListener(OnUpgradeClicked);
+                actionButton.onClick.AddListener(OnClicked);
             }
 
             public void Refresh()
             {
-                nameText.text = controller.name;
-            detailText.text = $"Tier {controller.GetCurrentTier()} | HP {controller.GetCurrentHealth()}/{controller.GetCurrentMaxHealth()} | Cost {controller.GetUpgradeCost()}";
+                nameText.text = getName != null ? getName.Invoke() : string.Empty;
+                detailText.text = getDetails != null ? getDetails.Invoke() : string.Empty;
+                actionButton.interactable = canInvoke == null || canInvoke.Invoke();
+
+                var label = actionButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (label != null)
+                {
+                    label.text = getButtonLabel != null ? getButtonLabel.Invoke() : string.Empty;
+                }
             }
 
             public void Dispose()
             {
-                if (upgradeButton != null)
+                if (actionButton != null)
                 {
-                    upgradeButton.onClick.RemoveListener(OnUpgradeClicked);
+                    actionButton.onClick.RemoveListener(OnClicked);
                 }
 
                 if (root != null)
                 {
-                    Object.Destroy(root);
+                    if (Application.isPlaying)
+                    {
+                        Object.Destroy(root);
+                    }
+                    else
+                    {
+                        Object.DestroyImmediate(root);
+                    }
                 }
             }
 
-            private void OnUpgradeClicked()
+            private void OnClicked()
             {
-                bool upgraded = controller.TryUpgrade();
+                bool succeeded = invoke != null && invoke.Invoke();
                 if (flashButton != null)
                 {
-                    flashButton.Invoke(upgradeButton, upgraded, refreshAll);
+                    flashButton.Invoke(actionButton, succeeded, refreshAll);
                 }
                 else
                 {

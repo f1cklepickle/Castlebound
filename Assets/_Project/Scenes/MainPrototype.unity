@@ -1124,7 +1124,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: -260}
+  m_SizeDelta: {x: 0, y: -620}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &545022179
 MonoBehaviour:
@@ -1384,6 +1384,7 @@ MonoBehaviour:
   contentRoot: {fileID: 545022178}
   feedbackChannel: {fileID: 11400000, guid: 1f9f2f0a7b2a4d0a9a2d6e11a6a0d1f6, type: 2}
   inventorySource: {fileID: 0}
+  towerBuildController: {fileID: 2300000002}
 --- !u!114 &676673187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2219,7 +2220,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 520, y: 260}
+  m_SizeDelta: {x: 980, y: 620}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &774867746
 MonoBehaviour:
@@ -4663,6 +4664,55 @@ Grid:
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
+--- !u!1 &2300000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2300000001}
+  - component: {fileID: 2300000002}
+  m_Layer: 0
+  m_Name: TowerBuildSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2300000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2300000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2300000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2300000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7044ac758d5347b1a7b5dc581c7a9abf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config: {fileID: 11400000, guid: b467e19c0a744a1a8f96bf3d650e58b6, type: 2}
+  inventorySource: {fileID: 0}
+  waveRunner: {fileID: 1166075763}
+  feedbackChannel: {fileID: 11400000, guid: 1f9f2f0a7b2a4d0a9a2d6e11a6a0d1f6, type: 2}
+  towerParent: {fileID: 0}
 --- !u!1 &3000000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -4712,7 +4762,6 @@ MonoBehaviour:
   aimAttackZone: {fileID: 3002000004}
   repairButton: {fileID: 3003000004}
   playerInput: {fileID: 0}
-  baseAttackRate: 1.5
   rightStickAttackDeadzone: 160
   enableInEditor: 0
 --- !u!114 &3000000003
@@ -5016,3 +5065,4 @@ SceneRoots:
   - {fileID: 2200000001}
   - {fileID: 2200000011}
   - {fileID: 3000000001}
+  - {fileID: 2300000001}
