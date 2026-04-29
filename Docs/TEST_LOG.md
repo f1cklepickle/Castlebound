@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-27 - feat(castle): tower plot contract
+
+### Summary
+- Added a reusable `TowerPlot` contract that owns plot anchor and occupancy state without taking on build or UI responsibilities.
+- Added `BarrierTowerPlotCollection` so barriers reference a collection of plots instead of fixed left/right slot fields.
+- Added EditMode coverage for empty/occupied plot lifecycle, collection-based barrier linkage, and plug-and-play normalization of null/duplicate plot wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerPlotContractTests` - verifies plot anchor fallback, occupant lifecycle, collection-based barrier linkage, and reusable multi-plot authoring behavior.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Step 1 intentionally stops at plot contract/state only; build orchestration and authored plot placement follow in later PR slices.
+
 ## 2026-04-14 - feat(tower): prefab asset contract coverage
 
 ### Summary
