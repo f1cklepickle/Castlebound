@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-29 - feat(gameplay): tower build orchestration
+
+### Summary
+- Added a `TowerBuildConfig` asset contract for tower prefab, build cost, and visible future stat fields.
+- Added a focused `TowerBuildController` that gates builds to pre-wave, validates plot availability, spends gold once, spawns the configured tower, and assigns it to the plot.
+- Reused upgrade success/denied feedback cues so the existing menu flash colors can support tower build outcomes.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBuildControllerTests` - verifies successful build, invalid prerequisite rejection, occupied plot rejection, insufficient gold rejection, feedback reuse, and config value clamping.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
 ## 2026-04-29 - feat(castle): authored barrier flank tower plots
 
 ### Summary
