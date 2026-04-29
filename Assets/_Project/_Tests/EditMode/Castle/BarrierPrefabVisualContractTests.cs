@@ -83,6 +83,36 @@ namespace Castlebound.Tests.Castle
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "DamageHitbox");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "PulseOrigin");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "BarrierHealthbar");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "TowerPlotLeftFlank");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "TowerPlotRightFlank");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefab);
+            }
+        }
+
+        [Test]
+        public void BarrierPrefab_ProvidesTwoDistinctTowerPlots_OnFlankingOffsets()
+        {
+            var prefab = PrefabTestUtil.Load(BarrierPrefabPath);
+            try
+            {
+                var collection = prefab.GetComponent<BarrierTowerPlotCollection>();
+                Assert.NotNull(collection, "Barrier prefab must include BarrierTowerPlotCollection.");
+                Assert.That(collection.PlotCount, Is.EqualTo(2), "Barrier prefab should expose two flanking tower plots.");
+
+                var plots = collection.Plots;
+                Assert.NotNull(plots[0], "Left flanking plot should be assigned.");
+                Assert.NotNull(plots[1], "Right flanking plot should be assigned.");
+                Assert.AreNotSame(plots[0], plots[1], "Barrier prefab tower plots must be distinct instances.");
+
+                Assert.That(plots[0].transform.localPosition, Is.EqualTo(new Vector3(-3f, 0f, 0f)));
+                Assert.That(plots[1].transform.localPosition, Is.EqualTo(new Vector3(3f, 0f, 0f)));
+                Assert.AreSame(plots[0].transform, plots[0].Anchor, "Tower plot should default anchor to its own transform.");
+                Assert.AreSame(plots[1].transform, plots[1].Anchor, "Tower plot should default anchor to its own transform.");
+                Assert.IsFalse(plots[0].IsOccupied, "Tower plots should start empty on the prefab.");
+                Assert.IsFalse(plots[1].IsOccupied, "Tower plots should start empty on the prefab.");
             }
             finally
             {

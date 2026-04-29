@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-04-29 - feat(castle): authored barrier flank tower plots
+
+### Summary
+- Authored two reusable tower plot anchors on the barrier prefab so generated barriers inherit left/right flank slots automatically.
+- Kept tower plot ownership on `BarrierTowerPlotCollection` while letting `SystemsRoot` rotation carry plot orientation per barrier side.
+- Added prefab and generated-barrier integration coverage for two-slot plot wiring and lattice-aligned plot anchors.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - verifies the barrier prefab exposes two distinct flank plots under `SystemsRoot`.
+- `MainPrototypeBarrierAssemblyIntegrationTests` - verifies generated barriers inherit two linked tower plots with lattice-aligned anchors.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Future handoff note: a tile-driven plot-generation pipeline may be added later, but this commit intentionally authors the first flank slots on the barrier prefab itself.
+
 ## 2026-04-27 - feat(castle): tower plot contract
 
 ### Summary

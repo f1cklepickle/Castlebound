@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 1199000000000000100}
   - component: {fileID: 1199000000000000300}
   - component: {fileID: 1199000000000000400}
+  - component: {fileID: 1199000000000000600}
   m_Layer: 8
   m_Name: Barrier_Gate
   m_TagString: Barrier
@@ -340,6 +341,21 @@ MonoBehaviour:
   eastSprite: {fileID: 21300000, guid: e44244f6fdf70e94bbadc426d5890990, type: 3}
   southSprite: {fileID: 21300000, guid: 084028016209b1c4c8c3420c5c9e7a12, type: 3}
   westSprite: {fileID: 21300000, guid: cd61d10e4196c1249b8d82de2d2b9784, type: 3}
+--- !u!114 &1199000000000000600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683792860472063015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78f5e520a8794409a07dd9f63ec2ad2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  plots:
+  - {fileID: 1199000000000000702}
+  - {fileID: 1199000000000000802}
 --- !u!1 &1199000000000000500
 GameObject:
   m_ObjectHideFlags: 0
@@ -374,6 +390,8 @@ Transform:
   - {fileID: 7704152403565933767}
   - {fileID: 1199000000000000002}
   - {fileID: 3461197392837539735}
+  - {fileID: 1199000000000000701}
+  - {fileID: 1199000000000000801}
   m_Father: {fileID: 738055936485911948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1199000000000000001
@@ -560,6 +578,98 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gateId: Barrier_Gate
+--- !u!1 &1199000000000000700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1199000000000000701}
+  - component: {fileID: 1199000000000000702}
+  m_Layer: 8
+  m_Name: TowerPlotLeftFlank
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1199000000000000701
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199000000000000700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1199000000000000501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1199000000000000702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199000000000000700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a53f956a8b094dd69428f9671f9194fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchor: {fileID: 0}
+  occupantInstance: {fileID: 0}
+--- !u!1 &1199000000000000800
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1199000000000000801}
+  - component: {fileID: 1199000000000000802}
+  m_Layer: 8
+  m_Name: TowerPlotRightFlank
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1199000000000000801
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199000000000000800}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1199000000000000501}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1199000000000000802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199000000000000800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a53f956a8b094dd69428f9671f9194fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchor: {fileID: 0}
+  occupantInstance: {fileID: 0}
 --- !u!1001 &8240005810329671612
 PrefabInstance:
   m_ObjectHideFlags: 0
