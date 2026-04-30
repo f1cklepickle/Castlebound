@@ -101,10 +101,35 @@ namespace Castlebound.Tests.Castle
                     Assert.NotNull(child.GetComponent<BarrierHealth>(), $"Generated barrier '{child.name}' missing BarrierHealth.");
                     Assert.NotNull(child.GetComponent<BoxCollider2D>(), $"Generated barrier '{child.name}' missing BoxCollider2D.");
                     Assert.NotNull(child.GetComponent<BarrierVisualBinder>(), $"Generated barrier '{child.name}' missing BarrierVisualBinder.");
+                    var towerPlots = child.GetComponent<BarrierTowerPlotCollection>();
+                    Assert.NotNull(towerPlots, $"Generated barrier '{child.name}' missing BarrierTowerPlotCollection.");
+                    Assert.That(towerPlots.PlotCount, Is.EqualTo(2), $"Generated barrier '{child.name}' should expose two linked tower plots.");
 
                     var renderer = child.GetComponent<SpriteRenderer>();
                     Assert.NotNull(renderer, $"Generated barrier '{child.name}' missing SpriteRenderer.");
                     Assert.NotNull(renderer.sprite, $"Generated barrier '{child.name}' missing assigned side sprite.");
+
+                    foreach (var plot in towerPlots.Plots)
+                    {
+                        Assert.NotNull(plot, $"Generated barrier '{child.name}' includes a null tower plot reference.");
+                        Assert.NotNull(plot.Anchor, $"Generated barrier '{child.name}' tower plot '{plot.name}' must expose an anchor.");
+                    }
+
+                    var firstAnchorOffset = towerPlots.Plots[0].Anchor.position - child.position;
+                    var secondAnchorOffset = towerPlots.Plots[1].Anchor.position - child.position;
+
+                    Assert.That(firstAnchorOffset.magnitude, Is.EqualTo(3f).Within(0.05f),
+                        $"Generated barrier '{child.name}' first tower plot should sit one wall tile from the barrier center.");
+                    Assert.That(secondAnchorOffset.magnitude, Is.EqualTo(3f).Within(0.05f),
+                        $"Generated barrier '{child.name}' second tower plot should sit one wall tile from the barrier center.");
+
+                    var normalizedDot = Vector3.Dot(firstAnchorOffset.normalized, secondAnchorOffset.normalized);
+                    Assert.That(normalizedDot, Is.EqualTo(-1f).Within(0.01f),
+                        $"Generated barrier '{child.name}' tower plots should occupy opposite flanks.");
+
+                    var cross = Vector3.Cross(firstAnchorOffset.normalized, secondAnchorOffset.normalized).magnitude;
+                    Assert.That(cross, Is.EqualTo(0f).Within(0.01f),
+                        $"Generated barrier '{child.name}' tower plot flanks should stay collinear across barrier rotation.");
                 }
             }
             finally

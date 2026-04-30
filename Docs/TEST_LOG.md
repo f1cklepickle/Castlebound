@@ -4,6 +4,115 @@
 
 ---
 
+## 2026-04-30 - fix(tower): allow zero-cost builds
+
+### Summary
+- Fixed tower build orchestration so `BuildCost` values of `0` skip the spend call instead of being rejected as insufficient gold.
+- Kept normal positive-cost spending and rollback behavior unchanged.
+- Added regression coverage for successful zero-cost tower builds with no gold.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBuildControllerTests` - verifies zero-cost tower builds succeed without changing gold.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-04-29 - test(playmode): tower build vertical slice
+
+### Summary
+- Added a MainPrototype PlayMode smoke for the real between-wave upgrade menu tower build path.
+- Verified a menu Build action spends gold once, spawns the configured Tower prefab, and assigns the spawned runtime to a barrier tower plot.
+- Verified occupied plot rows stay visible but disabled and duplicate build attempts do not spend or spawn again.
+
+### New or Updated Tests
+**EditMode**
+- N/A - N/A
+
+**PlayMode**
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - verifies the integrated barrier plot tower build path through the upgrade menu and duplicate purchase rejection.
+
+### Notes
+- N/A
+
+## 2026-04-29 - feat(ui): barrier tower build rows
+
+### Summary
+- Extended the between-wave upgrade list to render barrier-owned tower plot child rows beneath each barrier upgrade row.
+- Kept tower build spending and spawning delegated to `TowerBuildController` while the UI only renders plot state and invokes actions.
+- Added occupied plot presentation so built tower slots stay visible but cannot be repurchased.
+- Wired `MainPrototype` to a scene-level `TowerBuildController` and `TowerBuildConfig` so tower rows appear in normal gameplay.
+- Tightened tower row text and indentation so child plot rows fit inside the existing menu and read as subordinate barrier actions.
+- Replaced shorthand currency copy with game-facing `Gold` labels.
+- Enlarged `UpgradeMenuPanel` in `MainPrototype` so the barrier-owned tower rows fit in the authored menu.
+- Widened row columns and added barrier-group spacing so buttons do not cover text and each barrier block reads separately.
+- Increased the gap before row buttons and between barrier groups for clearer menu scanning.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies barrier upgrade rows, tower child rows, build invocation, occupied plot disabling, existing barrier upgrade action behavior, and MainPrototype tower build wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-04-29 - feat(gameplay): tower build orchestration
+
+### Summary
+- Added a `TowerBuildConfig` asset contract for tower prefab, build cost, and visible future stat fields.
+- Added a focused `TowerBuildController` that gates builds to pre-wave, validates plot availability, spends gold once, spawns the configured tower, and assigns it to the plot.
+- Reused upgrade success/denied feedback cues so the existing menu flash colors can support tower build outcomes.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBuildControllerTests` - verifies successful build, invalid prerequisite rejection, occupied plot rejection, insufficient gold rejection, feedback reuse, and config value clamping.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-04-29 - feat(castle): authored barrier flank tower plots
+
+### Summary
+- Authored two reusable tower plot anchors on the barrier prefab so generated barriers inherit left/right flank slots automatically.
+- Kept tower plot ownership on `BarrierTowerPlotCollection` while letting `SystemsRoot` rotation carry plot orientation per barrier side.
+- Added prefab and generated-barrier integration coverage for two-slot plot wiring and lattice-aligned plot anchors.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - verifies the barrier prefab exposes two distinct flank plots under `SystemsRoot`.
+- `MainPrototypeBarrierAssemblyIntegrationTests` - verifies generated barriers inherit two linked tower plots with lattice-aligned anchors.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Future handoff note: a tile-driven plot-generation pipeline may be added later, but this commit intentionally authors the first flank slots on the barrier prefab itself.
+
+## 2026-04-27 - feat(castle): tower plot contract
+
+### Summary
+- Added a reusable `TowerPlot` contract that owns plot anchor and occupancy state without taking on build or UI responsibilities.
+- Added `BarrierTowerPlotCollection` so barriers reference a collection of plots instead of fixed left/right slot fields.
+- Added EditMode coverage for empty/occupied plot lifecycle, collection-based barrier linkage, and plug-and-play normalization of null/duplicate plot wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerPlotContractTests` - verifies plot anchor fallback, occupant lifecycle, collection-based barrier linkage, and reusable multi-plot authoring behavior.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Step 1 intentionally stops at plot contract/state only; build orchestration and authored plot placement follow in later PR slices.
+
 ## 2026-04-14 - feat(tower): prefab asset contract coverage
 
 ### Summary
