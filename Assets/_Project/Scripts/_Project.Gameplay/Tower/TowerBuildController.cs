@@ -38,7 +38,7 @@ namespace Castlebound.Gameplay.Tower
             }
 
             int cost = config.BuildCost;
-            if (!source.TrySpendGold(cost))
+            if (cost > 0 && !source.TrySpendGold(cost))
             {
                 result = TowerBuildResult.InsufficientGold;
                 RaiseFeedback(result, plot, anchor);
@@ -49,7 +49,10 @@ namespace Castlebound.Gameplay.Tower
             if (!plot.TryAssignOccupant(instance))
             {
                 DestroySpawnedTower(instance);
-                source.AddGold(cost);
+                if (cost > 0)
+                {
+                    source.AddGold(cost);
+                }
                 result = TowerBuildResult.Occupied;
                 RaiseFeedback(result, plot, anchor);
                 return result;

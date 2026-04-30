@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-30 - fix(tower): allow zero-cost builds
+
+### Summary
+- Fixed tower build orchestration so `BuildCost` values of `0` skip the spend call instead of being rejected as insufficient gold.
+- Kept normal positive-cost spending and rollback behavior unchanged.
+- Added regression coverage for successful zero-cost tower builds with no gold.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBuildControllerTests` - verifies zero-cost tower builds succeed without changing gold.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
 ## 2026-04-29 - test(playmode): tower build vertical slice
 
 ### Summary

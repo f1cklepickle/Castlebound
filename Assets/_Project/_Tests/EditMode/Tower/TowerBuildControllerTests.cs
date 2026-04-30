@@ -114,6 +114,27 @@ namespace Castlebound.Tests.Tower
         }
 
         [Test]
+        public void TryBuild_WithZeroCost_AllowsBuildWithoutSpendingGold()
+        {
+            var context = CreateContext(startingGold: 0, buildCost: 0);
+
+            try
+            {
+                var result = context.Controller.TryBuild(context.Plot);
+
+                Assert.That(result, Is.EqualTo(TowerBuildResult.Success));
+                Assert.That(context.Inventory.Gold, Is.EqualTo(0), "Zero-cost builds should not call the spend path or change gold.");
+                Assert.IsTrue(context.Plot.IsOccupied, "Zero-cost builds should still occupy the plot.");
+                Assert.NotNull(context.Plot.OccupantInstance, "Zero-cost builds should still spawn and assign a tower.");
+                Assert.That(context.TowerParent.childCount, Is.EqualTo(1), "Zero-cost builds should spawn exactly one tower.");
+            }
+            finally
+            {
+                context.Destroy();
+            }
+        }
+
+        [Test]
         public void TryBuild_RaisesSuccessAndDeniedFeedback_ForMenuFlashReuse()
         {
             var context = CreateContext(startingGold: 75, buildCost: 50);
