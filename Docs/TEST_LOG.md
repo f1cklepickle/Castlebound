@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-29 - test(playmode): tower build vertical slice
+
+### Summary
+- Added a MainPrototype PlayMode smoke for the real between-wave upgrade menu tower build path.
+- Verified a menu Build action spends gold once, spawns the configured Tower prefab, and assigns the spawned runtime to a barrier tower plot.
+- Verified occupied plot rows stay visible but disabled and duplicate build attempts do not spend or spawn again.
+
+### New or Updated Tests
+**EditMode**
+- N/A - N/A
+
+**PlayMode**
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - verifies the integrated barrier plot tower build path through the upgrade menu and duplicate purchase rejection.
+
+### Notes
+- N/A
+
 ## 2026-04-29 - feat(ui): barrier tower build rows
 
 ### Summary

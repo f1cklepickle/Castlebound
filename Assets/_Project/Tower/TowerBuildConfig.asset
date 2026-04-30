@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f19e9fbfa74ba096e2a5f458d0813c, type: 3}
   m_Name: TowerBuildConfig
   m_EditorClassIdentifier:
-  towerPrefab: {fileID: 683792860472063015, guid: ec470124d4d042388418a66cedd418c1, type: 3}
+  towerPrefab: {fileID: 2000000000, guid: ec470124d4d042388418a66cedd418c1, type: 3}
   buildCost: 50
   baseMaxHealth: 10
   baseDamage: 3
