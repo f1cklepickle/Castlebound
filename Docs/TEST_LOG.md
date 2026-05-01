@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-30 - feat(tower): targeting acquisition contract
+
+### Summary
+- Added a tower targeting profile contract for prefab-specific min range, max range, scan interval, target layers, and nearest/farthest selection.
+- Added a tower targeting controller that acquires targets with a reusable non-alloc 2D physics buffer.
+- Covered mortar-style dead zones, oil-style close range, nearest targeting, farthest targeting, and target clearing behavior.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies no-target, min/max range filtering, nearest/farthest selection, and current target clearing.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-04-30 - fix(tower): allow zero-cost builds
 
 ### Summary
