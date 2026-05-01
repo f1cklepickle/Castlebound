@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-01 - feat(tower): wire targeting prefab contract
+
+### Summary
+- Added a base tower targeting profile asset for the default tower prefab.
+- Wired `Tower.prefab` with `TowerTargetingController` and the base targeting profile.
+- Added prefab contract coverage for targeting profile assignment, range settings, scan interval, nearest selection, and Enemies layer targeting.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes the base targeting controller and profile contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-04-30 - feat(tower): targeting acquisition contract
 
 ### Summary
