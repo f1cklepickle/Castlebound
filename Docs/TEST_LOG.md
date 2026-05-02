@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-02 - feat(tower): filter inside castle targets
+
+### Summary
+- Updated tower targeting so enemies marked inside the castle region are ignored.
+- Kept enemies without region state targetable for simple tests and future non-enemy target dummies.
+- Added regression coverage for selecting the next outside enemy and clearing a target that enters the castle.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies inside-castle enemies are ignored, outside enemies remain targetable, and current targets clear after entering the castle.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-05-01 - feat(tower): add optional aim tracking
 
 ### Summary

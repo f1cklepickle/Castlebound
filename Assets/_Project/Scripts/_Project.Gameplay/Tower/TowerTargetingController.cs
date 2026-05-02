@@ -1,4 +1,5 @@
 using UnityEngine;
+using Castlebound.Gameplay.AI;
 
 namespace Castlebound.Gameplay.Tower
 {
@@ -109,6 +110,12 @@ namespace Castlebound.Gameplay.Tower
             }
 
             if (candidateCollider.transform == transform || candidateCollider.transform.IsChildOf(transform))
+            {
+                return false;
+            }
+
+            var regionState = candidateCollider.GetComponentInParent<EnemyRegionState>();
+            if (regionState != null && regionState.EnemyInside)
             {
                 return false;
             }

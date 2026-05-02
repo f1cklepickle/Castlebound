@@ -1,3 +1,5 @@
+using System.Reflection;
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Tower;
 using NUnit.Framework;
 using UnityEngine;
@@ -107,6 +109,33 @@ namespace Castlebound.Tests.Tower
         }
 
         [Test]
+        public void AcquireTargetNow_IgnoresEnemyInsideCastleRegion()
+        {
+            var insideEnemy = CreateEnemy("Enemy_Inside", new Vector2(2f, 0f), true);
+            Physics2D.SyncTransforms();
+
+            var target = targetingController.AcquireTargetNow();
+
+            Assert.AreNotSame(insideEnemy.transform, target);
+            Assert.IsNull(target);
+            Assert.IsNull(targetingController.CurrentTarget);
+        }
+
+        [Test]
+        public void AcquireTargetNow_SelectsNextOutsideEnemy_WhenNearestEnemyIsInsideCastleRegion()
+        {
+            var insideEnemy = CreateEnemy("Enemy_Inside", new Vector2(1f, 0f), true);
+            var outsideEnemy = CreateEnemy("Enemy_Outside", new Vector2(3f, 0f));
+            Physics2D.SyncTransforms();
+
+            var target = targetingController.AcquireTargetNow();
+
+            Assert.AreNotSame(insideEnemy.transform, target);
+            Assert.AreSame(outsideEnemy.transform, target);
+            Assert.AreSame(outsideEnemy.transform, targetingController.CurrentTarget);
+        }
+
+        [Test]
         public void AcquireTargetNow_ClearsCurrentTarget_WhenTargetLeavesRange()
         {
             targetingProfile.MaxRange = 3f;
@@ -123,7 +152,23 @@ namespace Castlebound.Tests.Tower
             Assert.IsNull(targetingController.CurrentTarget);
         }
 
-        private static GameObject CreateEnemy(string objectName, Vector2 position)
+        [Test]
+        public void AcquireTargetNow_ClearsCurrentTarget_WhenTargetEntersCastleRegion()
+        {
+            var enemy = CreateEnemy("Enemy_Target", new Vector2(2f, 0f));
+            var regionState = enemy.AddComponent<EnemyRegionState>();
+            Physics2D.SyncTransforms();
+
+            targetingController.AcquireTargetNow();
+            SetEnemyInside(regionState, true);
+
+            var target = targetingController.AcquireTargetNow();
+
+            Assert.IsNull(target);
+            Assert.IsNull(targetingController.CurrentTarget);
+        }
+
+        private static GameObject CreateEnemy(string objectName, Vector2 position, bool enemyInside = false)
         {
             var enemy = new GameObject(objectName)
             {
@@ -131,7 +176,20 @@ namespace Castlebound.Tests.Tower
             };
             enemy.transform.position = position;
             enemy.AddComponent<CircleCollider2D>();
+            if (enemyInside)
+            {
+                SetEnemyInside(enemy.AddComponent<EnemyRegionState>(), true);
+            }
+
             return enemy;
+        }
+
+        private static void SetEnemyInside(EnemyRegionState regionState, bool enemyInside)
+        {
+            var enemyInsideField = typeof(EnemyRegionState).GetField(
+                "enemyInside",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            enemyInsideField.SetValue(regionState, enemyInside);
         }
     }
 }
