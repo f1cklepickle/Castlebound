@@ -4,6 +4,59 @@
 
 ---
 
+## 2026-05-02 - fix(tower): align projectile spawn with aim
+
+### Summary
+- Added one-shot projectile rotation so arrows visually follow their launch direction.
+- Added a FirePoint under the tower AimPivot so projectile spawn position follows tower aim.
+- Added a -45 degree projectile visual offset for the diagonal arrow sprite.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAttackControllerTests` - verifies projectile rotation aligns to launch direction with visual offset.
+- `TowerRuntimeContractTests` - verifies FirePoint parenting, attack fire point assignment, and arrow visual offset.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; user will run tests manually in Unity and CI before merge.
+
+## 2026-05-02 - feat(tower): wire projectile attack prefab
+
+### Summary
+- Wired the base Tower prefab with the tested tower attack controller.
+- Assigned the reusable arrow projectile prefab, AimPivot fire point, per-tower attack stats, and Enemies target mask.
+- Added prefab contract coverage for base arrow tower attack wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes attack controller, targeting reference, projectile prefab, fire point, attack stats, and Enemies target mask.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passed per user in Unity.
+- Manual play validated towers fire projectiles and damage enemies; projectile spawn/aim alignment remains a follow-up fix.
+
+## 2026-05-02 - feat(tower): add projectile attack controller
+
+### Summary
+- Added a tower attack controller that fires reusable projectiles at the current tower target.
+- Kept attack stats on the tower instance for per-tower damage, cooldown, projectile speed, lifetime, and target layer tuning.
+- Added a lightweight fire event for future presentation hooks.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAttackControllerTests` - verifies no-target behavior, valid target firing, cooldown gating, and projectile launch values.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passed per user in Unity.
+
 ## 2026-05-02 - feat(projectile): add reusable projectile runtime
 
 ### Summary

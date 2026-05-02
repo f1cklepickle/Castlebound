@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Castlebound.Gameplay.Projectile;
 using Castlebound.Gameplay.Tower;
 using UnityEngine;
 
@@ -37,6 +38,10 @@ namespace Castlebound.Tests.Tower
 
                 var aimPivot = FindChildRecursive(prefabRoot.transform, "AimPivot");
                 Assert.NotNull(aimPivot, "Tower prefab must include an AimPivot child.");
+
+                var firePoint = FindChildRecursive(prefabRoot.transform, "FirePoint");
+                Assert.NotNull(firePoint, "Tower prefab must include a FirePoint child.");
+                Assert.IsTrue(firePoint.IsChildOf(aimPivot), "FirePoint should be parented under AimPivot so projectile spawn follows tower aim.");
 
                 var towerVisual = FindChildRecursive(prefabRoot.transform, "TowerVisual");
                 Assert.NotNull(towerVisual, "Tower prefab must include a TowerVisual child.");
@@ -129,6 +134,43 @@ namespace Castlebound.Tests.Tower
                 Assert.IsTrue(aimController.ReturnToIdleWhenNoTarget, "Base arrow tower should return to forward aim when no target is available.");
                 Assert.That(aimController.IdleLocalAngleDegrees, Is.EqualTo(0f), "Base arrow tower idle aim should match the authored forward rest angle.");
                 Assert.That(aimController.IdleReturnSpeedDegrees, Is.GreaterThan(0f), "Base arrow tower idle return speed must be above zero.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_SerializesAttackContract_ForBaseArrowTower()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var targetingController = prefabRoot.GetComponent<TowerTargetingController>();
+                var attackController = prefabRoot.GetComponent<TowerAttackController>();
+                var firePoint = FindChildRecursive(prefabRoot.transform, "FirePoint");
+
+                Assert.NotNull(targetingController, "Tower prefab must include TowerTargetingController.");
+                Assert.NotNull(attackController, "Base arrow tower prefab must include TowerAttackController.");
+                Assert.AreSame(targetingController, attackController.TargetingController, "TowerAttackController should read from the prefab targeting controller.");
+                Assert.NotNull(attackController.ProjectilePrefab, "TowerAttackController must reference a projectile prefab.");
+                Assert.IsInstanceOf<ProjectileRuntime>(attackController.ProjectilePrefab, "TowerAttackController projectile prefab must be a ProjectileRuntime.");
+                Assert.NotNull(firePoint, "Tower prefab must include a FirePoint child.");
+                Assert.AreSame(firePoint, attackController.FirePoint, "TowerAttackController should spawn projectiles from the FirePoint child.");
+                Assert.That(attackController.Damage, Is.GreaterThan(0), "Base arrow tower damage must be above zero.");
+                Assert.That(attackController.CooldownSeconds, Is.GreaterThan(0f), "Base arrow tower cooldown must be above zero.");
+                Assert.That(attackController.ProjectileSpeed, Is.GreaterThan(0f), "Base arrow tower projectile speed must be above zero.");
+                Assert.That(attackController.ProjectileLifetime, Is.GreaterThan(0f), "Base arrow tower projectile lifetime must be above zero.");
+                Assert.That(attackController.ProjectileVisualAngleOffsetDegrees, Is.EqualTo(-45f), "Base arrow tower should offset the diagonal arrow sprite by -45 degrees.");
+
+                var enemiesLayer = LayerMask.NameToLayer("Enemies");
+                Assert.That(enemiesLayer, Is.GreaterThanOrEqualTo(0), "Project must define the Enemies layer.");
+                Assert.That(
+                    attackController.TargetLayerMask.value & (1 << enemiesLayer),
+                    Is.Not.Zero,
+                    "Base arrow tower attack target mask must include the Enemies layer.");
             }
             finally
             {
