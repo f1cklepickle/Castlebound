@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-02 - feat(projectile): add reusable projectile runtime
+
+### Summary
+- Added a source-agnostic projectile runtime and launch context.
+- Created the `Projectile_Arrow` prefab from the imported arrow sprite.
+- Added a focused prefab contract test for the reusable projectile setup.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileArrowPrefabContractTests` - verifies the arrow projectile prefab has runtime, trigger collider, and sprite wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passed per user in Unity.
+
 ## 2026-05-02 - feat(tower): return aim to idle
 
 ### Summary
