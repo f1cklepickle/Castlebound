@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-02 - feat(tower): wire projectile attack prefab
+
+### Summary
+- Wired the base Tower prefab with the tested tower attack controller.
+- Assigned the reusable arrow projectile prefab, AimPivot fire point, per-tower attack stats, and Enemies target mask.
+- Added prefab contract coverage for base arrow tower attack wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes attack controller, targeting reference, projectile prefab, fire point, attack stats, and Enemies target mask.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passed per user in Unity.
+- Manual play validated towers fire projectiles and damage enemies; projectile spawn/aim alignment remains a follow-up fix.
+
 ## 2026-05-02 - feat(tower): add projectile attack controller
 
 ### Summary
