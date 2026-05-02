@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Castlebound.Gameplay.Projectile
 {
     [RequireComponent(typeof(Collider2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public class ProjectileRuntime : MonoBehaviour
     {
         [SerializeField] private float defaultSpeed = 8f;
@@ -11,6 +12,7 @@ namespace Castlebound.Gameplay.Projectile
         [SerializeField] private LayerMask defaultTargetLayerMask;
 
         private Collider2D projectileCollider;
+        private Rigidbody2D projectileBody;
         private Transform owner;
         private Vector2 direction = Vector2.right;
         private float speed;
@@ -22,12 +24,12 @@ namespace Castlebound.Gameplay.Projectile
         private void Reset()
         {
             NormalizeDefaults();
-            EnsureCollider();
+            EnsurePhysics();
         }
 
         private void Awake()
         {
-            EnsureCollider();
+            EnsurePhysics();
         }
 
         private void OnValidate()
@@ -105,7 +107,7 @@ namespace Castlebound.Gameplay.Projectile
             return damageable != null;
         }
 
-        private void EnsureCollider()
+        private void EnsurePhysics()
         {
             if (projectileCollider == null)
             {
@@ -115,6 +117,17 @@ namespace Castlebound.Gameplay.Projectile
             if (projectileCollider != null)
             {
                 projectileCollider.isTrigger = true;
+            }
+
+            if (projectileBody == null)
+            {
+                projectileBody = GetComponent<Rigidbody2D>();
+            }
+
+            if (projectileBody != null)
+            {
+                projectileBody.bodyType = RigidbodyType2D.Kinematic;
+                projectileBody.gravityScale = 0f;
             }
         }
 

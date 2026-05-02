@@ -10,10 +10,11 @@
 - Added a source-agnostic projectile runtime and launch context.
 - Created the `Projectile_Arrow` prefab from the imported arrow sprite.
 - Added a focused prefab contract test for the reusable projectile setup.
+- Updated the arrow projectile contract with a kinematic Rigidbody2D and polygon trigger collider.
 
 ### New or Updated Tests
 **EditMode**
-- `ProjectileArrowPrefabContractTests` - verifies the arrow projectile prefab has runtime, trigger collider, and sprite wiring.
+- `ProjectileArrowPrefabContractTests` - verifies the arrow projectile prefab has runtime, polygon trigger collider, kinematic Rigidbody2D, and sprite wiring.
 
 **PlayMode**
 - N/A - N/A
