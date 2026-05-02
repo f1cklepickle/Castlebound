@@ -4,6 +4,93 @@
 
 ---
 
+## 2026-05-02 - feat(tower): return aim to idle
+
+### Summary
+- Added optional idle aim return so towers rotate back to their forward rest angle when no valid target exists.
+- Wired the base Tower prefab to return to forward aim when its target is lost, destroyed, or no longer valid.
+- Kept idle return visual-only and bypassed whenever a valid current target exists.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAimControllerTests` - verifies idle return, disabled idle return, destroyed-target return, and valid-target priority over idle return.
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes idle aim return settings for the base arrow tower.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
+## 2026-05-02 - feat(tower): filter inside castle targets
+
+### Summary
+- Updated tower targeting so enemies marked inside the castle region are ignored.
+- Kept enemies without region state targetable for simple tests and future non-enemy target dummies.
+- Added regression coverage for selecting the next outside enemy and clearing a target that enters the castle.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies inside-castle enemies are ignored, outside enemies remain targetable, and current targets clear after entering the castle.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
+## 2026-05-01 - feat(tower): add optional aim tracking
+
+### Summary
+- Added an optional tower aim controller that rotates a configured aim pivot toward the acquired target.
+- Wired the base Tower prefab as the arrow tower with aiming enabled by default.
+- Added coverage for enabled aim, disabled aim, moving target tracking, no-target safety, smooth rotation, and prefab aim wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAimControllerTests` - verifies aim rotation, disabled aim behavior, no-target safety, and smooth rotate-toward behavior.
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes the base arrow tower aim contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
+## 2026-05-01 - feat(tower): wire targeting prefab contract
+
+### Summary
+- Added a base tower targeting profile asset for the default tower prefab.
+- Wired `Tower.prefab` with `TowerTargetingController` and the base targeting profile.
+- Added prefab contract coverage for targeting profile assignment, range settings, scan interval, nearest selection, and Enemies layer targeting.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes the base targeting controller and profile contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
+## 2026-04-30 - feat(tower): targeting acquisition contract
+
+### Summary
+- Added a tower targeting profile contract for prefab-specific min range, max range, scan interval, target layers, and nearest/farthest selection.
+- Added a tower targeting controller that acquires targets with a reusable non-alloc 2D physics buffer.
+- Covered mortar-style dead zones, oil-style close range, nearest targeting, farthest targeting, and target clearing behavior.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies no-target, min/max range filtering, nearest/farthest selection, and current target clearing.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-04-30 - fix(tower): allow zero-cost builds
 
 ### Summary
