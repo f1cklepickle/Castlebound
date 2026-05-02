@@ -13,6 +13,7 @@ namespace Castlebound.Gameplay.Tower
         [SerializeField] private float cooldownSeconds = 1f;
         [SerializeField] private float projectileSpeed = 8f;
         [SerializeField] private float projectileLifetime = 3f;
+        [SerializeField] private float projectileVisualAngleOffsetDegrees = -45f;
         [SerializeField] private LayerMask targetLayerMask;
 
         private float nextFireTime;
@@ -61,6 +62,12 @@ namespace Castlebound.Gameplay.Tower
             set => projectileLifetime = Mathf.Max(0f, value);
         }
 
+        public float ProjectileVisualAngleOffsetDegrees
+        {
+            get => projectileVisualAngleOffsetDegrees;
+            set => projectileVisualAngleOffsetDegrees = value;
+        }
+
         public LayerMask TargetLayerMask
         {
             get => targetLayerMask;
@@ -104,10 +111,11 @@ namespace Castlebound.Gameplay.Tower
             }
 
             var origin = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
-            var projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
-            var context = ProjectileLaunchContext.TowardPoint(
+            var direction = ResolveLaunchDirection(origin, target.position);
+            var projectile = Instantiate(projectilePrefab, origin, CreateProjectileRotation(direction));
+            var context = ProjectileLaunchContext.Directional(
                 origin,
-                target.position,
+                direction,
                 transform,
                 projectileSpeed,
                 damage,
@@ -134,6 +142,23 @@ namespace Castlebound.Gameplay.Tower
             cooldownSeconds = Mathf.Max(0f, cooldownSeconds);
             projectileSpeed = Mathf.Max(0f, projectileSpeed);
             projectileLifetime = Mathf.Max(0f, projectileLifetime);
+        }
+
+        private Vector2 ResolveLaunchDirection(Vector2 origin, Vector2 targetPoint)
+        {
+            var targetDirection = targetPoint - origin;
+            if (targetDirection.sqrMagnitude > 0f)
+            {
+                return targetDirection.normalized;
+            }
+
+            return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
+        }
+
+        private Quaternion CreateProjectileRotation(Vector2 launchDirection)
+        {
+            var angle = Mathf.Atan2(launchDirection.y, launchDirection.x) * Mathf.Rad2Deg;
+            return Quaternion.Euler(0f, 0f, angle + projectileVisualAngleOffsetDegrees);
         }
     }
 }

@@ -103,6 +103,28 @@ namespace Castlebound.Tests.Tower
             }
         }
 
+        [Test]
+        public void TryFire_RotatesProjectileToLaunchDirection_WithVisualOffset()
+        {
+            var fixture = CreateFixture();
+            var target = CreateTarget("Enemy", new Vector2(0f, 3f));
+
+            try
+            {
+                fixture.TargetingController.AcquireTargetNow();
+
+                var projectile = fixture.AttackController.TryFire(0f);
+
+                Assert.NotNull(projectile, "Precondition: tower should fire at the acquired target.");
+                Assert.That(projectile.transform.eulerAngles.z, Is.EqualTo(45f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(target);
+                fixture.Destroy();
+            }
+        }
+
         private static TowerAttackFixture CreateFixture()
         {
             var tower = new GameObject("Tower");
@@ -127,6 +149,7 @@ namespace Castlebound.Tests.Tower
             attack.CooldownSeconds = 1f;
             attack.ProjectileSpeed = 7f;
             attack.ProjectileLifetime = 2.5f;
+            attack.ProjectileVisualAngleOffsetDegrees = -45f;
             attack.TargetLayerMask = 1 << EnemyLayer();
 
             var fixture = new TowerAttackFixture(tower, firePoint, profile, attack.ProjectilePrefab, targeting, attack);

@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-02 - fix(tower): align projectile spawn with aim
+
+### Summary
+- Added one-shot projectile rotation so arrows visually follow their launch direction.
+- Added a FirePoint under the tower AimPivot so projectile spawn position follows tower aim.
+- Added a -45 degree projectile visual offset for the diagonal arrow sprite.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAttackControllerTests` - verifies projectile rotation aligns to launch direction with visual offset.
+- `TowerRuntimeContractTests` - verifies FirePoint parenting, attack fire point assignment, and arrow visual offset.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; user will run tests manually in Unity and CI before merge.
+
 ## 2026-05-02 - feat(tower): wire projectile attack prefab
 
 ### Summary
