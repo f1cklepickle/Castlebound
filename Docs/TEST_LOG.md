@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-01 - feat(tower): add optional aim tracking
+
+### Summary
+- Added an optional tower aim controller that rotates a configured aim pivot toward the acquired target.
+- Wired the base Tower prefab as the arrow tower with aiming enabled by default.
+- Added coverage for enabled aim, disabled aim, moving target tracking, no-target safety, smooth rotation, and prefab aim wiring.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAimControllerTests` - verifies aim rotation, disabled aim behavior, no-target safety, and smooth rotate-toward behavior.
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes the base arrow tower aim contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-05-01 - feat(tower): wire targeting prefab contract
 
 ### Summary

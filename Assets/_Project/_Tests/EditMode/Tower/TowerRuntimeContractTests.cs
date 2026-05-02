@@ -91,6 +91,7 @@ namespace Castlebound.Tests.Tower
                 Assert.That(profile.MinRange, Is.GreaterThanOrEqualTo(0f), "Tower targeting min range must be non-negative.");
                 Assert.That(profile.MaxRange, Is.GreaterThan(profile.MinRange), "Tower targeting max range must exceed min range.");
                 Assert.That(profile.ScanInterval, Is.GreaterThan(0f), "Tower targeting scan interval must be above zero.");
+                Assert.That(profile.ScanInterval, Is.LessThanOrEqualTo(0.1f), "Base arrow tower should acquire targets responsively.");
                 Assert.That(profile.SelectionMode, Is.EqualTo(TowerTargetSelectionMode.Nearest), "Base tower should acquire the nearest valid enemy.");
 
                 var enemiesLayer = LayerMask.NameToLayer("Enemies");
@@ -99,6 +100,32 @@ namespace Castlebound.Tests.Tower
                     profile.TargetLayers.value & (1 << enemiesLayer),
                     Is.Not.Zero,
                     "Base tower targeting profile must include the Enemies layer.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_SerializesAimContract_ForBaseArrowTower()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var runtime = prefabRoot.GetComponent<TowerRuntime>();
+                var targetingController = prefabRoot.GetComponent<TowerTargetingController>();
+                var aimController = prefabRoot.GetComponent<TowerAimController>();
+
+                Assert.NotNull(runtime, "Tower prefab must include TowerRuntime.");
+                Assert.NotNull(targetingController, "Tower prefab must include TowerTargetingController.");
+                Assert.NotNull(aimController, "Base arrow tower prefab must include TowerAimController.");
+                Assert.IsTrue(aimController.AimEnabled, "Base arrow tower should aim at acquired targets by default.");
+                Assert.AreSame(targetingController, aimController.TargetingController, "TowerAimController should read from the prefab targeting controller.");
+                Assert.AreSame(runtime.AimPivot, aimController.AimPivot, "TowerAimController should rotate the TowerRuntime AimPivot.");
+                Assert.That(aimController.AimMode, Is.EqualTo(TowerAimMode.Instant), "Base arrow tower should snap aim until attack presentation needs smoothing.");
+                Assert.That(aimController.RotationSpeedDegrees, Is.GreaterThanOrEqualTo(0f), "Tower aim rotation speed must be non-negative.");
             }
             finally
             {

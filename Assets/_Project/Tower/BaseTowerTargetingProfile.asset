@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   minRange: 0
   maxRange: 5
-  scanInterval: 0.2
+  scanInterval: 0.1
   targetLayers:
     serializedVersion: 2
     m_Bits: 128
