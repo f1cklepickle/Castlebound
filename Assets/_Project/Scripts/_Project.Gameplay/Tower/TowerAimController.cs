@@ -11,6 +11,9 @@ namespace Castlebound.Gameplay.Tower
         [SerializeField] private TowerAimMode aimMode;
         [SerializeField] private float rotationSpeedDegrees = 720f;
         [SerializeField] private float aimOffsetDegrees;
+        [SerializeField] private bool returnToIdleWhenNoTarget;
+        [SerializeField] private float idleLocalAngleDegrees;
+        [SerializeField] private float idleReturnSpeedDegrees = 360f;
 
         public bool AimEnabled
         {
@@ -56,6 +59,24 @@ namespace Castlebound.Gameplay.Tower
             set => aimOffsetDegrees = value;
         }
 
+        public bool ReturnToIdleWhenNoTarget
+        {
+            get => returnToIdleWhenNoTarget;
+            set => returnToIdleWhenNoTarget = value;
+        }
+
+        public float IdleLocalAngleDegrees
+        {
+            get => idleLocalAngleDegrees;
+            set => idleLocalAngleDegrees = value;
+        }
+
+        public float IdleReturnSpeedDegrees
+        {
+            get => idleReturnSpeedDegrees;
+            set => idleReturnSpeedDegrees = Mathf.Max(0f, value);
+        }
+
         private void Reset()
         {
             EnsureReferences();
@@ -65,11 +86,13 @@ namespace Castlebound.Gameplay.Tower
         {
             EnsureReferences();
             rotationSpeedDegrees = Mathf.Max(0f, rotationSpeedDegrees);
+            idleReturnSpeedDegrees = Mathf.Max(0f, idleReturnSpeedDegrees);
         }
 
         private void OnValidate()
         {
             rotationSpeedDegrees = Mathf.Max(0f, rotationSpeedDegrees);
+            idleReturnSpeedDegrees = Mathf.Max(0f, idleReturnSpeedDegrees);
             EnsureReferences();
         }
 
@@ -87,8 +110,14 @@ namespace Castlebound.Gameplay.Tower
 
             EnsureReferences();
 
-            if (targetingController == null || aimPivot == null || targetingController.CurrentTarget == null)
+            if (targetingController == null || aimPivot == null)
             {
+                return;
+            }
+
+            if (targetingController.CurrentTarget == null)
+            {
+                ReturnToIdle(deltaTime);
                 return;
             }
 
@@ -114,6 +143,20 @@ namespace Castlebound.Gameplay.Tower
         private float GetTargetAngle(Vector3 direction)
         {
             return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f + aimOffsetDegrees;
+        }
+
+        private void ReturnToIdle(float deltaTime)
+        {
+            if (!returnToIdleWhenNoTarget)
+            {
+                return;
+            }
+
+            var idleRotation = Quaternion.Euler(0f, 0f, idleLocalAngleDegrees);
+            aimPivot.localRotation = Quaternion.RotateTowards(
+                aimPivot.localRotation,
+                idleRotation,
+                idleReturnSpeedDegrees * Mathf.Max(0f, deltaTime));
         }
 
         private void EnsureReferences()

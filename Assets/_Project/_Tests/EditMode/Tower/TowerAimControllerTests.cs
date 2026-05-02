@@ -84,6 +84,30 @@ namespace Castlebound.Tests.Tower
         }
 
         [Test]
+        public void ApplyAimNow_ReturnsTowardIdle_WhenNoTargetExistsAndIdleReturnEnabled()
+        {
+            aimController.ReturnToIdleWhenNoTarget = true;
+            aimController.IdleLocalAngleDegrees = 0f;
+            aimController.IdleReturnSpeedDegrees = 90f;
+            aimPivot.localRotation = Quaternion.Euler(0f, 0f, 90f);
+
+            aimController.ApplyAimNow(0.5f);
+
+            Assert.That(Mathf.DeltaAngle(aimPivot.localEulerAngles.z, 45f), Is.EqualTo(0f).Within(0.01f));
+        }
+
+        [Test]
+        public void ApplyAimNow_DoesNotReturnToIdle_WhenIdleReturnIsDisabled()
+        {
+            aimController.ReturnToIdleWhenNoTarget = false;
+            aimPivot.localRotation = Quaternion.Euler(0f, 0f, 90f);
+
+            aimController.ApplyAimNow(0.5f);
+
+            Assert.That(Mathf.DeltaAngle(aimPivot.localEulerAngles.z, 90f), Is.EqualTo(0f).Within(0.01f));
+        }
+
+        [Test]
         public void ApplyAimNow_TracksMovingCurrentTarget_WithoutReacquiring()
         {
             var enemy = CreateEnemy("Enemy_Moving", new Vector2(2f, 0f));
@@ -96,6 +120,39 @@ namespace Castlebound.Tests.Tower
             aimController.ApplyAimNow(0f);
 
             Assert.That(Mathf.DeltaAngle(aimPivot.eulerAngles.z, 0f), Is.EqualTo(0f).Within(0.01f));
+        }
+
+        [Test]
+        public void ApplyAimNow_AimsAtCurrentTargetInsteadOfReturningToIdle()
+        {
+            aimController.ReturnToIdleWhenNoTarget = true;
+            aimController.IdleLocalAngleDegrees = 0f;
+            aimController.IdleReturnSpeedDegrees = 90f;
+            aimPivot.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            CreateEnemy("Enemy_Right", new Vector2(2f, 0f));
+            Physics2D.SyncTransforms();
+            targetingController.AcquireTargetNow();
+
+            aimController.ApplyAimNow(0.5f);
+
+            Assert.That(Mathf.DeltaAngle(aimPivot.eulerAngles.z, -90f), Is.EqualTo(0f).Within(0.01f));
+        }
+
+        [Test]
+        public void ApplyAimNow_ReturnsTowardIdle_WhenCurrentTargetIsDestroyed()
+        {
+            aimController.ReturnToIdleWhenNoTarget = true;
+            aimController.IdleLocalAngleDegrees = 0f;
+            aimController.IdleReturnSpeedDegrees = 90f;
+            aimPivot.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            var enemy = CreateEnemy("Enemy_Destroyed", new Vector2(2f, 0f));
+            Physics2D.SyncTransforms();
+            targetingController.AcquireTargetNow();
+            Object.DestroyImmediate(enemy);
+
+            aimController.ApplyAimNow(0.5f);
+
+            Assert.That(Mathf.DeltaAngle(aimPivot.localEulerAngles.z, 45f), Is.EqualTo(0f).Within(0.01f));
         }
 
         [Test]

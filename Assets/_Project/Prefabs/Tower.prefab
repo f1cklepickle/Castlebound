@@ -131,6 +131,9 @@ MonoBehaviour:
   aimMode: 0
   rotationSpeedDegrees: 720
   aimOffsetDegrees: 0
+  returnToIdleWhenNoTarget: 1
+  idleLocalAngleDegrees: 0
+  idleReturnSpeedDegrees: 360
 --- !u!1 &2000000010
 GameObject:
   m_ObjectHideFlags: 0

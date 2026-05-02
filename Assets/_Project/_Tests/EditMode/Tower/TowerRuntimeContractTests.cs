@@ -126,6 +126,9 @@ namespace Castlebound.Tests.Tower
                 Assert.AreSame(runtime.AimPivot, aimController.AimPivot, "TowerAimController should rotate the TowerRuntime AimPivot.");
                 Assert.That(aimController.AimMode, Is.EqualTo(TowerAimMode.Instant), "Base arrow tower should snap aim until attack presentation needs smoothing.");
                 Assert.That(aimController.RotationSpeedDegrees, Is.GreaterThanOrEqualTo(0f), "Tower aim rotation speed must be non-negative.");
+                Assert.IsTrue(aimController.ReturnToIdleWhenNoTarget, "Base arrow tower should return to forward aim when no target is available.");
+                Assert.That(aimController.IdleLocalAngleDegrees, Is.EqualTo(0f), "Base arrow tower idle aim should match the authored forward rest angle.");
+                Assert.That(aimController.IdleReturnSpeedDegrees, Is.GreaterThan(0f), "Base arrow tower idle return speed must be above zero.");
             }
             finally
             {

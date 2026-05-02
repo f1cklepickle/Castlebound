@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-02 - feat(tower): return aim to idle
+
+### Summary
+- Added optional idle aim return so towers rotate back to their forward rest angle when no valid target exists.
+- Wired the base Tower prefab to return to forward aim when its target is lost, destroyed, or no longer valid.
+- Kept idle return visual-only and bypassed whenever a valid current target exists.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAimControllerTests` - verifies idle return, disabled idle return, destroyed-target return, and valid-target priority over idle return.
+- `TowerRuntimeContractTests` - verifies the Tower prefab serializes idle aim return settings for the base arrow tower.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user before commit.
+
 ## 2026-05-02 - feat(tower): filter inside castle targets
 
 ### Summary
