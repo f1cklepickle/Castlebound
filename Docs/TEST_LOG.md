@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-02 - feat(tower): add projectile attack controller
+
+### Summary
+- Added a tower attack controller that fires reusable projectiles at the current tower target.
+- Kept attack stats on the tower instance for per-tower damage, cooldown, projectile speed, lifetime, and target layer tuning.
+- Added a lightweight fire event for future presentation hooks.
+
+### New or Updated Tests
+**EditMode**
+- `TowerAttackControllerTests` - verifies no-target behavior, valid target firing, cooldown gating, and projectile launch values.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passed per user in Unity.
+
 ## 2026-05-02 - feat(projectile): add reusable projectile runtime
 
 ### Summary
