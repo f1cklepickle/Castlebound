@@ -4,6 +4,128 @@
 
 ---
 
+## 2026-05-06 - feat(weapon): add reusable crossbow fire animation
+
+### Summary
+- Moved the crossbow fire sheet into shared weapon art and sliced it into six 64x64 frames.
+- Added a reusable sprite-frame weapon fire animation player with cooldown-scaled playback speed.
+- Wired the base tower to trigger the shared crossbow fire animation from TowerAttackController.Fired.
+
+### New or Updated Tests
+**EditMode**
+- `WeaponFireAnimationPlayerTests` - verifies cooldown-based animation playback speed scaling and clamps.
+- `TowerRuntimeContractTests` - verifies Tower prefab crossbow fire animation wiring and six assigned frames.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - fix(projectile): tune arrow embed distance
+
+### Summary
+- Increased Projectile_Arrow impact embed distance so hits visibly connect with enemies.
+- Kept the existing arrow impact linger and shared enemy hit flash behavior.
+- Updated prefab contract coverage to protect the tuned embed threshold.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileArrowPrefabContractTests` - verifies Projectile_Arrow has at least 0.45 world units of impact embed distance.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - fix(projectile): embed arrows on impact
+
+### Summary
+- Added opt-in projectile impact embed distance so arrows nudge forward when they hit.
+- Increased Projectile_Arrow impact linger so enemy hits remain readable.
+- Kept projectile damage and hit flash behavior unchanged.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileRuntimeTests` - verifies impact embed moves a projectile forward along its launch direction.
+- `ProjectileArrowPrefabContractTests` - verifies Projectile_Arrow has nonzero impact embed and linger tuning.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - fix(projectile): flash enemies on arrow hit
+
+### Summary
+- Reused the existing PlayerHitEnemy feedback cue when projectiles damage enemies.
+- Wired Projectile_Arrow to the shared enemy hit flash feedback channel.
+- Added a short Projectile_Arrow impact linger so hits read more clearly.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileRuntimeTests` - verifies projectile hits damage a target and raise the shared PlayerHitEnemy feedback cue.
+- `ProjectileArrowPrefabContractTests` - verifies Projectile_Arrow is wired to enemy hit flash feedback and has a short impact linger.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - fix(projectile): render arrows above tower
+
+### Summary
+- Raised the arrow projectile sorting order so fired arrows render above the crossbow tower top.
+- Preserved the tower foundation and crossbow sorting order from the base tower visual pass.
+- Added prefab contract coverage for arrow projectile render layering.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileArrowPrefabContractTests` - verifies `Projectile_Arrow` renders above the base tower crossbow top.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - fix(tower): render foundation above wall
+
+### Summary
+- Raised the base tower foundation sorting order so it renders on top of the castle wall.
+- Raised the crossbow tower top sorting order so it remains above the foundation baseplate.
+- Updated prefab contract coverage to protect the foundation and tower top layering.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower foundation renders above the barrier wall baseline and the arrow top renders above the foundation.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
+## 2026-05-03 - feat(tower): assign base tower sprites
+
+### Summary
+- Assigned the base tower prefab to the authored arrow tower top sprite.
+- Assigned the base tower prefab to the authored tower foundation sprite.
+- Added prefab contract coverage for the approved base tower sprites and aligned fire point.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - verifies the Tower prefab uses `Tower_Arrow`, uses `Tower_Foundation`, rotates the arrow art to local forward, and keeps FirePoint forward on the aim axis.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity EditMode tests should be run in the editor.
+
 ## 2026-05-02 - fix(tower): align projectile spawn with aim
 
 ### Summary

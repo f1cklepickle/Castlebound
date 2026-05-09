@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Projectile;
 using Castlebound.Gameplay.Tower;
 using UnityEngine;
@@ -74,6 +75,72 @@ namespace Castlebound.Tests.Tower
                 Assert.AreSame(aimPivot, runtime.AimPivot, "TowerRuntime AimPivot should serialize to the AimPivot child.");
                 Assert.AreSame(towerVisual, runtime.TowerVisual, "TowerRuntime TowerVisual should serialize to the TowerVisual child.");
                 Assert.AreSame(platformVisual, runtime.PlatformVisual, "TowerRuntime PlatformVisual should serialize to the PlatformVisual child.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_UsesApprovedBaseTowerSprites_AndAlignedFirePoint()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var towerVisual = FindChildRecursive(prefabRoot.transform, "TowerVisual");
+                var platformVisual = FindChildRecursive(prefabRoot.transform, "PlatformVisual");
+                var firePoint = FindChildRecursive(prefabRoot.transform, "FirePoint");
+
+                Assert.NotNull(towerVisual, "Tower prefab must include a TowerVisual child.");
+                Assert.NotNull(platformVisual, "Tower prefab must include a PlatformVisual child.");
+                Assert.NotNull(firePoint, "Tower prefab must include a FirePoint child.");
+
+                var towerRenderer = towerVisual.GetComponent<SpriteRenderer>();
+                var platformRenderer = platformVisual.GetComponent<SpriteRenderer>();
+
+                Assert.NotNull(towerRenderer, "TowerVisual must include a SpriteRenderer.");
+                Assert.NotNull(platformRenderer, "PlatformVisual must include a SpriteRenderer.");
+                Assert.NotNull(towerRenderer.sprite, "TowerVisual must use the authored arrow tower sprite.");
+                Assert.NotNull(platformRenderer.sprite, "PlatformVisual must use the authored tower foundation sprite.");
+                Assert.That(towerRenderer.sprite.name, Is.EqualTo("Tower_Arrow"), "Base tower top must use the approved arrow tower sprite.");
+                Assert.That(platformRenderer.sprite.name, Is.EqualTo("Tower_Foundation"), "Base tower platform must use the approved foundation sprite.");
+                Assert.That(towerVisual.localEulerAngles.z, Is.EqualTo(45f).Within(0.01f), "Tower_Arrow art should be rotated so its diagonal bow faces local up.");
+                Assert.That(firePoint.localPosition.y, Is.GreaterThan(0f), "FirePoint should sit forward of the aim pivot.");
+                Assert.That(platformRenderer.sortingOrder, Is.GreaterThan(1), "Tower foundation should render above the barrier wall base sorting order.");
+                Assert.That(towerRenderer.sortingOrder, Is.GreaterThan(platformRenderer.sortingOrder), "Tower arrow top should render above its foundation baseplate.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_WiresReusableCrossbowFireAnimation()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var attackController = prefabRoot.GetComponent<TowerAttackController>();
+                var binder = prefabRoot.GetComponent<TowerWeaponFireAnimationBinder>();
+                var towerVisual = FindChildRecursive(prefabRoot.transform, "TowerVisual");
+                var animationPlayer = towerVisual != null ? towerVisual.GetComponent<WeaponFireAnimationPlayer>() : null;
+
+                Assert.NotNull(attackController, "Tower prefab must include TowerAttackController.");
+                Assert.NotNull(binder, "Tower prefab must include TowerWeaponFireAnimationBinder.");
+                Assert.NotNull(animationPlayer, "TowerVisual must include reusable WeaponFireAnimationPlayer.");
+                Assert.AreSame(attackController, binder.AttackController, "Tower animation binder should listen to the tower attack controller.");
+                Assert.AreSame(animationPlayer, binder.AnimationPlayer, "Tower animation binder should trigger the visual fire animation player.");
+                Assert.That(animationPlayer.FireFrames, Is.Not.Null);
+                Assert.That(animationPlayer.FireFrames.Length, Is.EqualTo(6), "Crossbow fire sheet should provide six fire animation frames.");
+                foreach (var frame in animationPlayer.FireFrames)
+                {
+                    Assert.NotNull(frame, "Crossbow fire animation frame references must be assigned.");
+                    Assert.That(frame.name, Does.StartWith("Crossbow_Fire_"));
+                }
             }
             finally
             {
