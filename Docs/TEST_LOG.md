@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-10 - fix(projectile): prevent lingering arrow double hits
+
+### Summary
+- Guarded projectile trigger handling after impact so lingering arrows cannot hit again.
+- Preserved arrow linger and embed visuals without changing launch or damage contracts.
+- Added regression coverage for queued trigger callbacks after impact.
+
+### New or Updated Tests
+**EditMode**
+- `ProjectileRuntimeTests` - verifies impacted projectiles ignore later trigger callbacks without damage or feedback.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; CI should be rerun after runner Unity account reactivation.
+
 ## 2026-05-06 - feat(weapon): add reusable crossbow fire animation
 
 ### Summary

@@ -95,6 +95,50 @@ namespace Castlebound.Tests.Projectile
             }
         }
 
+        [Test]
+        public void OnTriggerEnter_IgnoresCallbacksAfterProjectileImpacted()
+        {
+            var channel = ScriptableObject.CreateInstance<FeedbackEventChannel>();
+            var projectileObject = new GameObject("Projectile");
+            var projectileCollider = projectileObject.AddComponent<BoxCollider2D>();
+            projectileCollider.isTrigger = true;
+            projectileObject.AddComponent<Rigidbody2D>();
+            var projectile = projectileObject.AddComponent<ProjectileRuntime>();
+            SetPrivate(projectile, "hitFeedbackChannel", channel);
+
+            var target = new GameObject("Enemy");
+            target.layer = EnemyLayer();
+            var targetCollider = target.AddComponent<BoxCollider2D>();
+            var damageable = target.AddComponent<DummyDamageable>();
+
+            int raisedCount = 0;
+            channel.Raised += _ => raisedCount++;
+
+            try
+            {
+                projectile.Launch(ProjectileLaunchContext.Directional(
+                    Vector2.zero,
+                    Vector2.right,
+                    null,
+                    1f,
+                    3,
+                    1f,
+                    1 << EnemyLayer()));
+                SetPrivate(projectile, "impacted", true);
+
+                InvokeTrigger(projectile, targetCollider);
+
+                Assert.That(damageable.DamageTaken, Is.EqualTo(0));
+                Assert.That(raisedCount, Is.EqualTo(0));
+            }
+            finally
+            {
+                Object.DestroyImmediate(projectileObject);
+                Object.DestroyImmediate(target);
+                Object.DestroyImmediate(channel);
+            }
+        }
+
         private static int EnemyLayer()
         {
             var layer = LayerMask.NameToLayer("Enemies");

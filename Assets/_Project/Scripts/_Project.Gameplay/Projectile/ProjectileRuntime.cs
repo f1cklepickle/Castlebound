@@ -59,7 +59,7 @@ namespace Castlebound.Gameplay.Projectile
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!launched || other == null || ShouldIgnore(other) || !IsInTargetLayer(other.gameObject.layer))
+            if (!launched || impacted || other == null || ShouldIgnore(other) || !IsInTargetLayer(other.gameObject.layer))
             {
                 return;
             }
