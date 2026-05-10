@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-10 - feat(ui): add wave count HUD indicator
+
+### Summary
+- Added a focused WaveCountHud binder for displaying the current wave index.
+- Wired the HUD to initialize from IWaveIndexProvider and refresh from EnemySpawnerRunner wave-start events.
+- Added the MainPrototype wave counter HUD beside the potion slot using the pixel frame, subtle dark backing, and BoldPixels font.
+
+### New or Updated Tests
+**EditMode**
+- `WaveCountHudTests` - verifies provider initialization, wave-start updates, missing-provider fallback, and MainPrototype HUD wiring.
+
+**PlayMode**
+- `WaveCountHudPlayTests` - verifies the HUD refreshes when the runner starts a new wave.
+
+### Notes
+- N/A
+
 ## 2026-05-10 - fix(projectile): prevent lingering arrow double hits
 
 ### Summary
