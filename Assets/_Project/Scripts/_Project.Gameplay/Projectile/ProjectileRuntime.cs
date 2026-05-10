@@ -10,6 +10,9 @@ namespace Castlebound.Gameplay.Projectile
         [SerializeField] private int defaultDamage = 1;
         [SerializeField] private float defaultLifetime = 3f;
         [SerializeField] private LayerMask defaultTargetLayerMask;
+        [SerializeField] private FeedbackEventChannel hitFeedbackChannel;
+        [SerializeField] private float impactLingerSeconds;
+        [SerializeField] private float impactEmbedDistance;
 
         private Collider2D projectileCollider;
         private Rigidbody2D projectileBody;
@@ -20,6 +23,7 @@ namespace Castlebound.Gameplay.Projectile
         private float remainingLifetime;
         private LayerMask targetLayerMask;
         private bool launched;
+        private bool impacted;
 
         private void Reset()
         {
@@ -39,7 +43,7 @@ namespace Castlebound.Gameplay.Projectile
 
         private void Update()
         {
-            if (!launched)
+            if (!launched || impacted)
             {
                 return;
             }
@@ -55,7 +59,7 @@ namespace Castlebound.Gameplay.Projectile
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!launched || other == null || ShouldIgnore(other) || !IsInTargetLayer(other.gameObject.layer))
+            if (!launched || impacted || other == null || ShouldIgnore(other) || !IsInTargetLayer(other.gameObject.layer))
             {
                 return;
             }
@@ -63,9 +67,10 @@ namespace Castlebound.Gameplay.Projectile
             if (damage > 0 && TryGetDamageable(other, out var damageable))
             {
                 damageable.TakeDamage(damage);
+                RaiseHitFeedback(other, damageable);
             }
 
-            Expire();
+            Impact();
         }
 
         public void Launch(ProjectileLaunchContext context)
@@ -78,6 +83,7 @@ namespace Castlebound.Gameplay.Projectile
             remainingLifetime = context.Lifetime > 0f ? context.Lifetime : defaultLifetime;
             targetLayerMask = context.TargetLayerMask.value != 0 ? context.TargetLayerMask : defaultTargetLayerMask;
             launched = true;
+            impacted = false;
         }
 
         private bool ShouldIgnore(Collider2D other)
@@ -105,6 +111,22 @@ namespace Castlebound.Gameplay.Projectile
 
             damageable = other.GetComponentInParent<IDamageable>();
             return damageable != null;
+        }
+
+        private void RaiseHitFeedback(Collider2D other, IDamageable damageable)
+        {
+            if (hitFeedbackChannel == null || other == null)
+            {
+                return;
+            }
+
+            int targetId = other.gameObject.GetInstanceID();
+            if (damageable is Component component)
+            {
+                targetId = component.gameObject.GetInstanceID();
+            }
+
+            hitFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.PlayerHitEnemy, other.transform.position, targetId));
         }
 
         private void EnsurePhysics()
@@ -145,11 +167,42 @@ namespace Castlebound.Gameplay.Projectile
             }
         }
 
+        private void Impact()
+        {
+            impacted = true;
+            ApplyImpactEmbed();
+
+            if (projectileCollider != null)
+            {
+                projectileCollider.enabled = false;
+            }
+
+            if (impactLingerSeconds > 0f && Application.isPlaying)
+            {
+                Destroy(gameObject, impactLingerSeconds);
+                return;
+            }
+
+            Expire();
+        }
+
+        private void ApplyImpactEmbed()
+        {
+            if (impactEmbedDistance <= 0f)
+            {
+                return;
+            }
+
+            transform.position += (Vector3)(direction * impactEmbedDistance);
+        }
+
         private void NormalizeDefaults()
         {
             defaultSpeed = Mathf.Max(0f, defaultSpeed);
             defaultDamage = Mathf.Max(0, defaultDamage);
             defaultLifetime = Mathf.Max(0f, defaultLifetime);
+            impactLingerSeconds = Mathf.Max(0f, impactLingerSeconds);
+            impactEmbedDistance = Mathf.Max(0f, impactEmbedDistance);
         }
     }
 }

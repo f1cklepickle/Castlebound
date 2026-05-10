@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2000000004}
   - component: {fileID: 2000000005}
   - component: {fileID: 2000000006}
+  - component: {fileID: 2000000007}
   m_Layer: 0
   m_Name: Tower
   m_TagString: Untagged
@@ -158,6 +159,20 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 128
+--- !u!114 &2000000007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7feb45db0c854414a6efddf0efb4302e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  attackController: {fileID: 2000000006}
+  animationPlayer: {fileID: 2000000023}
 --- !u!1 &2000000010
 GameObject:
   m_ObjectHideFlags: 0
@@ -183,44 +198,13 @@ Transform:
   m_GameObject: {fileID: 2000000010}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.3, z: 0}
+  m_LocalPosition: {x: 0.046, y: -0.109, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2000000041}
   - {fileID: 2000000021}
   m_Father: {fileID: 2000000001}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2000000040
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2000000041}
-  m_Layer: 0
-  m_Name: FirePoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2000000041
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2000000040}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.05, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2000000011}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2000000020
 GameObject:
@@ -232,6 +216,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2000000021}
   - component: {fileID: 2000000022}
+  - component: {fileID: 2000000023}
   m_Layer: 0
   m_Name: TowerVisual
   m_TagString: Untagged
@@ -247,13 +232,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000000020}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.75, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0.38268343, w: 0.92387956}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2000000011}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 45}
 --- !u!212 &2000000022
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -294,8 +279,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: a85120fb50560e4448e516b378dec303, type: 3}
+  m_SortingOrder: 3
+  m_Sprite: {fileID: 21300000, guid: c13cd8dbe66593649992f03da8644161, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -306,6 +291,31 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2000000023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d7c66457d314c17b21fc7a145e77d80, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  targetRenderer: {fileID: 2000000022}
+  idleSprite: {fileID: 21300000, guid: c13cd8dbe66593649992f03da8644161, type: 3}
+  fireFrames:
+  - {fileID: -6100100000000000001, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  - {fileID: -6100100000000000002, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  - {fileID: -6100100000000000003, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  - {fileID: -6100100000000000004, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  - {fileID: -6100100000000000005, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  - {fileID: -6100100000000000006, guid: f60331a665d6a294d990e72933819cf8, type: 3}
+  baseDurationSeconds: 0.25
+  referenceCooldownSeconds: 1
+  minPlaybackSpeed: 0.5
+  maxPlaybackSpeed: 3
 --- !u!1 &2000000030
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,7 +343,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.15, z: 0}
-  m_LocalScale: {x: 2.2, y: 2.2, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2000000001}
@@ -378,8 +388,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 9bb08e864bf06a248aa24eaadea88105, type: 3}
+  m_SortingOrder: 2
+  m_Sprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -390,3 +400,34 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &2000000040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2000000041}
+  m_Layer: 0
+  m_Name: FirePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2000000041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.045, y: 0.089, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2000000011}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

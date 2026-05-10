@@ -1,5 +1,6 @@
 using Castlebound.Gameplay.Projectile;
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 
 namespace Castlebound.Tests.Projectile
@@ -30,11 +31,24 @@ namespace Castlebound.Tests.Projectile
                 var spriteRenderer = prefabRoot.GetComponent<SpriteRenderer>();
                 Assert.NotNull(spriteRenderer, "Projectile_Arrow must include a SpriteRenderer.");
                 Assert.NotNull(spriteRenderer.sprite, "Projectile_Arrow must reference the imported arrow sprite.");
+                Assert.That(spriteRenderer.sortingOrder, Is.GreaterThan(3), "Projectile_Arrow should render above the base tower crossbow top.");
+
+                var runtime = prefabRoot.GetComponent<ProjectileRuntime>();
+                Assert.NotNull(GetPrivate<FeedbackEventChannel>(runtime, "hitFeedbackChannel"), "Projectile_Arrow should raise the shared enemy hit flash feedback channel.");
+                Assert.That(GetPrivate<float>(runtime, "impactLingerSeconds"), Is.GreaterThan(0f), "Projectile_Arrow should linger briefly on impact so hits read visually.");
+                Assert.That(GetPrivate<float>(runtime, "impactEmbedDistance"), Is.GreaterThanOrEqualTo(0.45f), "Projectile_Arrow should nudge far enough forward on impact to visibly connect with enemies.");
             }
             finally
             {
                 PrefabTestUtil.Unload(prefabRoot);
             }
+        }
+
+        private static T GetPrivate<T>(object instance, string fieldName)
+        {
+            var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field, $"{instance.GetType().Name} should define private field '{fieldName}'.");
+            return (T)field.GetValue(instance);
         }
     }
 }
