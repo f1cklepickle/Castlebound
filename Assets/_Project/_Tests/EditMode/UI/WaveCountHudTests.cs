@@ -89,7 +89,8 @@ namespace Castlebound.Tests.UI
             var waveRect = waveHud.GetComponent<RectTransform>();
             var potionRect = potionHud.GetComponent<RectTransform>();
             Assert.That(waveRect.anchoredPosition.x, Is.GreaterThan(potionRect.anchoredPosition.x), "Wave counter should sit beside the potion slot on the bottom-left HUD.");
-            Assert.That(waveRect.anchoredPosition.y, Is.EqualTo(potionRect.anchoredPosition.y), "Wave counter should align with the potion slot baseline.");
+            Assert.That(waveRect.anchorMin, Is.EqualTo(potionRect.anchorMin), "Wave counter should share the potion slot's bottom-left HUD anchor.");
+            Assert.That(waveRect.anchorMax, Is.EqualTo(potionRect.anchorMax), "Wave counter should share the potion slot's bottom-left HUD anchor.");
         }
 
         private static TextMeshProUGUI CreateText(string name, Transform parent)
