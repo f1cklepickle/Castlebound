@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2000000005}
   - component: {fileID: 2000000006}
   - component: {fileID: 2000000007}
+  - component: {fileID: 2000000008}
   m_Layer: 0
   m_Name: Tower
   m_TagString: Untagged
@@ -175,6 +176,25 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   attackController: {fileID: 2000000006}
   animationPlayer: {fileID: 2000000023}
+--- !u!114 &2000000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8f70d3d4dd1450bb26cd688a9ef0db2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  config: {fileID: 11400000, guid: 0daf27b4fb724eff9a337b66c8ac73fa, type: 2}
+  runtime: {fileID: 2000000003}
+  attackController: {fileID: 2000000006}
+  targetingController: {fileID: 2000000004}
+  waveRunner: {fileID: 0}
+  feedbackChannel: {fileID: 0}
+  inventorySource: {fileID: 0}
 --- !u!1 &2000000010
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,8 +10,21 @@ namespace Castlebound.Gameplay.Tower
         [SerializeField] private Transform towerVisual;
         [SerializeField] private Transform platformVisual;
 
-        public int MaxHealth => maxHealth;
-        public int CurrentHealth => currentHealth;
+        public int MaxHealth
+        {
+            get => maxHealth;
+            set
+            {
+                maxHealth = Mathf.Max(1, value);
+                currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+            }
+        }
+
+        public int CurrentHealth
+        {
+            get => currentHealth;
+            set => currentHealth = Mathf.Clamp(value, 0, maxHealth);
+        }
         public Transform AimPivot
         {
             get
@@ -61,7 +74,7 @@ namespace Castlebound.Gameplay.Tower
         private void NormalizeState()
         {
             maxHealth = Mathf.Max(1, maxHealth);
-            currentHealth = Mathf.Clamp(currentHealth, 1, maxHealth);
+            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         }
 
         private void EnsureReferences()

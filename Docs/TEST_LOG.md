@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-15 - feat(tower): add per-instance upgrade tracks
+
+### Summary
+- Added per-prefab tower upgrade configs with independent damage, fire-rate, health, and range tracks.
+- Added per-instance tower upgrade state and controller purchase/application flow.
+- Wired the base tower prefab to authored upgrade rules.
+
+### New or Updated Tests
+**EditMode**
+- `TowerUpgradeControllerTests` - verifies track purchases, formulas, limits, pre-wave gating, feedback, and per-instance divergence.
+- `TowerRuntimeContractTests` - verifies the base tower prefab includes upgrade controller/config wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
 ## 2026-05-15 - refactor(tower): move targeting range to instances
 
 ### Summary

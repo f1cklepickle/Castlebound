@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 682fba094b0745448d86184a775da6de, type: 3}
+  m_Name: BaseTowerUpgradeConfig
+  m_EditorClassIdentifier:
+  damage:
+    enabled: 1
+    maxLevel: 5
+    baseValue: 1
+    valuePerLevel: 1
+    minValue: 0
+    maxValue: 9999
+    baseCost: 75
+    costPerLevel: 25
+  fireRate:
+    enabled: 1
+    maxLevel: 4
+    baseValue: 1
+    valuePerLevel: -0.1
+    minValue: 0.45
+    maxValue: 9999
+    baseCost: 85
+    costPerLevel: 30
+  health:
+    enabled: 1
+    maxLevel: 3
+    baseValue: 10
+    valuePerLevel: 3
+    minValue: 1
+    maxValue: 9999
+    baseCost: 60
+    costPerLevel: 20
+  range:
+    enabled: 1
+    maxLevel: 3
+    baseValue: 5
+    valuePerLevel: 0.5
+    minValue: 0
+    maxValue: 9999
+    baseCost: 80
+    costPerLevel: 25

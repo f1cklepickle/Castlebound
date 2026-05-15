@@ -245,6 +245,38 @@ namespace Castlebound.Tests.Tower
             }
         }
 
+        [Test]
+        public void TowerPrefab_SerializesUpgradeContract_ForBaseArrowTower()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var runtime = prefabRoot.GetComponent<TowerRuntime>();
+                var attackController = prefabRoot.GetComponent<TowerAttackController>();
+                var targetingController = prefabRoot.GetComponent<TowerTargetingController>();
+                var upgradeController = prefabRoot.GetComponent<TowerUpgradeController>();
+
+                Assert.NotNull(upgradeController, "Tower prefab must include TowerUpgradeController.");
+                Assert.NotNull(upgradeController.Config, "TowerUpgradeController must reference a tower upgrade config.");
+                Assert.IsTrue(upgradeController.Config.Damage.Enabled, "Base arrow tower should support damage upgrades.");
+                Assert.IsTrue(upgradeController.Config.FireRate.Enabled, "Base arrow tower should support fire-rate upgrades.");
+                Assert.IsTrue(upgradeController.Config.Health.Enabled, "Base arrow tower should support health upgrades.");
+                Assert.IsTrue(upgradeController.Config.Range.Enabled, "Base arrow tower should support range upgrades.");
+
+                upgradeController.ApplyCurrentUpgrades();
+
+                Assert.That(attackController.Damage, Is.EqualTo(upgradeController.Config.GetDamage(upgradeController.State)));
+                Assert.That(attackController.CooldownSeconds, Is.EqualTo(upgradeController.Config.GetCooldownSeconds(upgradeController.State)).Within(0.001f));
+                Assert.That(runtime.MaxHealth, Is.EqualTo(upgradeController.Config.GetMaxHealth(upgradeController.State)));
+                Assert.That(targetingController.MaxRange, Is.EqualTo(upgradeController.Config.GetMaxRange(upgradeController.State)).Within(0.001f));
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
         private static Transform FindChildRecursive(Transform root, string childName)
         {
             foreach (var child in root.GetComponentsInChildren<Transform>(true))
