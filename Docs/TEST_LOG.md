@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-15 - feat(ui): expose tower upgrade track actions
+
+### Summary
+- Replaced occupied tower plot rows with per-track tower upgrade actions.
+- Added compact DMG, RATE, HP, and RNG buttons for supported tower upgrade tracks.
+- Refreshed occupied tower details from live tower runtime, attack, and targeting values.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies occupied tower rows expose track buttons and invoke the tower upgrade controller.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
 ## 2026-05-15 - feat(tower): add per-instance upgrade tracks
 
 ### Summary

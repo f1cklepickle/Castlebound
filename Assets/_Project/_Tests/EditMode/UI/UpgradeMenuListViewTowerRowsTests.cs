@@ -63,11 +63,10 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void Refresh_RendersOccupiedPlotAsUnavailableWithoutHidingBarrier()
+        public void Refresh_RendersOccupiedPlotUpgradeTracksWithoutHidingBarrier()
         {
             var context = CreateContext();
-            var existingTower = new GameObject("ArcherTower_Instance");
-            existingTower.AddComponent<TowerRuntime>();
+            var existingTower = CreateUpgradeableTower(context.Inventory, context.Phase, out var upgradeConfig);
             context.LeftPlot.TryAssignOccupant(existingTower);
 
             try
@@ -75,10 +74,12 @@ namespace Castlebound.Tests.UI
                 context.View.Refresh();
 
                 AssertTextExists(context.ContentRoot, "North Barrier");
-                AssertTextExists(context.ContentRoot, "ArcherTower | HP 10/10 | DMG 3 | Upg 75 Gold");
+                AssertTextExists(context.ContentRoot, "ArcherTower | HP 10/10 | DMG 3 | RATE 1 | RNG 5");
 
-                var occupiedButton = FindButtonByLabel(context.ContentRoot, "Occupied");
-                Assert.IsFalse(occupiedButton.interactable, "Occupied tower plots should render as unavailable.");
+                Assert.NotNull(FindButtonByLabel(context.ContentRoot, "DMG 10"));
+                Assert.NotNull(FindButtonByLabel(context.ContentRoot, "RATE 20"));
+                Assert.NotNull(FindButtonByLabel(context.ContentRoot, "HP 15"));
+                Assert.NotNull(FindButtonByLabel(context.ContentRoot, "RNG 25"));
 
                 var buildButtons = FindButtonsByLabel(context.ContentRoot, "Build");
                 Assert.That(buildButtons.Length, Is.EqualTo(1), "Only the remaining empty plot should expose a build action.");
@@ -86,6 +87,35 @@ namespace Castlebound.Tests.UI
             finally
             {
                 Object.DestroyImmediate(existingTower);
+                Object.DestroyImmediate(upgradeConfig);
+                context.Destroy();
+            }
+        }
+
+        [Test]
+        public void TowerUpgradeButton_UpgradesOccupiedTowerInstance()
+        {
+            var context = CreateContext();
+            var existingTower = CreateUpgradeableTower(context.Inventory, context.Phase, out var upgradeConfig);
+            context.LeftPlot.TryAssignOccupant(existingTower);
+
+            try
+            {
+                context.View.Refresh();
+                var damageButton = FindButtonByLabel(context.ContentRoot, "DMG 10");
+
+                damageButton.onClick.Invoke();
+
+                var attack = existingTower.GetComponent<TowerAttackController>();
+                var upgrade = existingTower.GetComponent<TowerUpgradeController>();
+                Assert.That(attack.Damage, Is.EqualTo(5));
+                Assert.That(upgrade.GetLevel(TowerUpgradeTrack.Damage), Is.EqualTo(1));
+                Assert.That(context.Inventory.Gold, Is.EqualTo(90));
+            }
+            finally
+            {
+                Object.DestroyImmediate(existingTower);
+                Object.DestroyImmediate(upgradeConfig);
                 context.Destroy();
             }
         }
@@ -212,7 +242,60 @@ namespace Castlebound.Tests.UI
                 towerConfig,
                 towerPrefab,
                 towerParent,
-                inventory);
+                inventory,
+                phase);
+        }
+
+        private static GameObject CreateUpgradeableTower(
+            InventoryState inventory,
+            WavePhaseTracker phase,
+            out TowerUpgradeConfig config)
+        {
+            var tower = new GameObject("ArcherTower_Instance");
+            var runtime = tower.AddComponent<TowerRuntime>();
+            runtime.MaxHealth = 10;
+            runtime.CurrentHealth = 10;
+
+            var attack = tower.AddComponent<TowerAttackController>();
+            attack.Damage = 3;
+            attack.CooldownSeconds = 1f;
+
+            var targeting = tower.AddComponent<TowerTargetingController>();
+            targeting.MaxRange = 5f;
+
+            config = ScriptableObject.CreateInstance<TowerUpgradeConfig>();
+            Configure(config.Damage, enabled: true, maxLevel: 2, baseValue: 3f, valuePerLevel: 2f, baseCost: 10, costPerLevel: 5);
+            Configure(config.FireRate, enabled: true, maxLevel: 2, baseValue: 1f, valuePerLevel: -0.1f, baseCost: 20, costPerLevel: 5, minValue: 0.5f);
+            Configure(config.Health, enabled: true, maxLevel: 2, baseValue: 10f, valuePerLevel: 4f, baseCost: 15, costPerLevel: 5, minValue: 1f);
+            Configure(config.Range, enabled: true, maxLevel: 2, baseValue: 5f, valuePerLevel: 1f, baseCost: 25, costPerLevel: 5);
+
+            var upgrade = tower.AddComponent<TowerUpgradeController>();
+            upgrade.Config = config;
+            upgrade.SetInventory(inventory);
+            upgrade.SetPhaseTracker(phase);
+            upgrade.ApplyCurrentUpgrades();
+
+            return tower;
+        }
+
+        private static void Configure(
+            TowerUpgradeTrackConfig track,
+            bool enabled,
+            int maxLevel,
+            float baseValue,
+            float valuePerLevel,
+            int baseCost,
+            int costPerLevel,
+            float minValue = 0f)
+        {
+            track.Enabled = enabled;
+            track.MaxLevel = maxLevel;
+            track.BaseValue = baseValue;
+            track.ValuePerLevel = valuePerLevel;
+            track.MinValue = minValue;
+            track.MaxValue = 9999f;
+            track.BaseCost = baseCost;
+            track.CostPerLevel = costPerLevel;
         }
 
         private static TowerPlot CreatePlot(string name, Transform parent, Vector3 position)
@@ -299,7 +382,8 @@ namespace Castlebound.Tests.UI
                 TowerBuildConfig towerConfig,
                 GameObject towerPrefab,
                 Transform towerParent,
-                InventoryState inventory)
+                InventoryState inventory,
+                WavePhaseTracker phase)
             {
                 this.viewRoot = viewRoot;
                 this.contentRoot = contentRoot;
@@ -313,6 +397,7 @@ namespace Castlebound.Tests.UI
                 this.towerPrefab = towerPrefab;
                 TowerParent = towerParent;
                 Inventory = inventory;
+                Phase = phase;
             }
 
             public UpgradeMenuListView View => viewRoot.GetComponent<UpgradeMenuListView>();
@@ -322,6 +407,7 @@ namespace Castlebound.Tests.UI
             public TowerPlot RightPlot { get; }
             public Transform TowerParent { get; }
             public InventoryState Inventory { get; }
+            public WavePhaseTracker Phase { get; }
 
             public void Destroy()
             {
@@ -366,5 +452,6 @@ namespace Castlebound.Tests.UI
                 }
             }
         }
+
     }
 }

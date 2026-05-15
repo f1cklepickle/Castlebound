@@ -61,6 +61,7 @@ namespace Castlebound.Gameplay.Tower
 
         public bool CanUpgrade(TowerUpgradeTrack track)
         {
+            EnsureReferences();
             return IsInPreWave() && config != null && config.CanUpgrade(track, state) && HasRequiredTarget(track);
         }
 

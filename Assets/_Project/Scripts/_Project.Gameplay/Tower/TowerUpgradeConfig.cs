@@ -33,6 +33,12 @@ namespace Castlebound.Gameplay.Tower
             return trackConfig != null && state != null && trackConfig.CanUpgrade(state.GetLevel(track));
         }
 
+        public bool IsTrackEnabled(TowerUpgradeTrack track)
+        {
+            var trackConfig = GetTrack(track);
+            return trackConfig != null && trackConfig.Enabled;
+        }
+
         public int GetCost(TowerUpgradeTrack track, TowerUpgradeState state)
         {
             var trackConfig = GetTrack(track);
