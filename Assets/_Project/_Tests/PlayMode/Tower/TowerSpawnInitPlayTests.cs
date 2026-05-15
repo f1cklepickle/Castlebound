@@ -46,9 +46,19 @@ namespace Castlebound.Tests.PlayMode.Tower
 
             var runtime = tower.GetComponent<TowerRuntime>();
             Assert.NotNull(runtime, "Instantiated Tower prefab must include TowerRuntime.");
+            var attack = tower.GetComponent<TowerAttackController>();
+            var targeting = tower.GetComponent<TowerTargetingController>();
+            var upgrade = tower.GetComponent<TowerUpgradeController>();
             Assert.NotNull(tower.GetComponent<Collider2D>(), "Instantiated Tower prefab must include a Collider2D on the root.");
+            Assert.NotNull(attack, "Instantiated Tower prefab must include TowerAttackController.");
+            Assert.NotNull(targeting, "Instantiated Tower prefab must include TowerTargetingController.");
+            Assert.NotNull(upgrade, "Instantiated Tower prefab must include TowerUpgradeController.");
+            Assert.NotNull(upgrade.Config, "Instantiated Tower prefab upgrade controller must reference upgrade config.");
             Assert.That(runtime.MaxHealth, Is.GreaterThan(0), "Tower runtime must initialize with positive max health.");
             Assert.That(runtime.CurrentHealth, Is.EqualTo(runtime.MaxHealth), "Tower runtime should initialize at full health.");
+            Assert.That(runtime.MaxHealth, Is.EqualTo(upgrade.Config.GetMaxHealth(upgrade.State)), "Tower runtime health should match base upgrade config.");
+            Assert.That(attack.Damage, Is.EqualTo(upgrade.Config.GetDamage(upgrade.State)), "Tower attack damage should match base upgrade config.");
+            Assert.That(targeting.MaxRange, Is.EqualTo(upgrade.Config.GetMaxRange(upgrade.State)).Within(0.001f), "Tower targeting range should match base upgrade config.");
             Assert.NotNull(runtime.AimPivot, "Tower prefab instance must expose AimPivot.");
             Assert.NotNull(runtime.TowerVisual, "Tower prefab instance must expose TowerVisual.");
             Assert.NotNull(runtime.PlatformVisual, "Tower prefab instance must expose PlatformVisual.");
@@ -57,6 +67,38 @@ namespace Castlebound.Tests.PlayMode.Tower
             Assert.AreEqual("PlatformVisual", runtime.PlatformVisual.name, "Tower runtime should bind to the prefab PlatformVisual child.");
             Assert.AreEqual(runtime.AimPivot, runtime.TowerVisual.parent, "TowerVisual should remain parented under AimPivot.");
             Assert.AreEqual(tower.transform, runtime.PlatformVisual.parent, "PlatformVisual should remain parented under the tower root.");
+
+            Object.Destroy(tower);
+#else
+            Assert.Fail("Tower prefab PlayMode smoke requires the Unity editor.");
+            yield break;
+#endif
+        }
+
+        [UnityTest]
+        public IEnumerator TowerPrefab_InstantiatesWithUpgradeSupport()
+        {
+#if UNITY_EDITOR
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(TowerPrefabPath);
+            Assert.NotNull(prefab, "Expected Tower prefab asset to be loadable in PlayMode.");
+
+            var tower = Object.Instantiate(prefab);
+
+            yield return null;
+
+            var runtime = tower.GetComponent<TowerRuntime>();
+            var attack = tower.GetComponent<TowerAttackController>();
+            var targeting = tower.GetComponent<TowerTargetingController>();
+            var upgrade = tower.GetComponent<TowerUpgradeController>();
+
+            Assert.NotNull(runtime, "Instantiated Tower prefab must include TowerRuntime.");
+            Assert.NotNull(attack, "Instantiated Tower prefab must include TowerAttackController.");
+            Assert.NotNull(targeting, "Instantiated Tower prefab must include TowerTargetingController.");
+            Assert.NotNull(upgrade, "Instantiated Tower prefab must include TowerUpgradeController.");
+            Assert.NotNull(upgrade.Config, "Instantiated Tower prefab upgrade controller must reference upgrade config.");
+            Assert.That(runtime.MaxHealth, Is.EqualTo(upgrade.Config.GetMaxHealth(upgrade.State)), "Tower runtime health should match base upgrade config.");
+            Assert.That(attack.Damage, Is.EqualTo(upgrade.Config.GetDamage(upgrade.State)), "Tower attack damage should match base upgrade config.");
+            Assert.That(targeting.MaxRange, Is.EqualTo(upgrade.Config.GetMaxRange(upgrade.State)).Within(0.001f), "Tower targeting range should match base upgrade config.");
 
             Object.Destroy(tower);
 #else

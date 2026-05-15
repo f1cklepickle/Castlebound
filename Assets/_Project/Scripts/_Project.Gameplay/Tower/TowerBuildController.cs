@@ -22,6 +22,8 @@ namespace Castlebound.Gameplay.Tower
             set => config = value;
         }
 
+        public WavePhaseTracker PhaseTracker => phaseTracker;
+
         public Transform TowerParent
         {
             get => towerParent;

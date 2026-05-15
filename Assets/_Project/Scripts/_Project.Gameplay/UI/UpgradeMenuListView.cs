@@ -310,6 +310,11 @@ namespace Castlebound.Gameplay.UI
                 {
                     upgradeController.SetFeedbackChannel(feedbackChannel);
                 }
+
+                if (towerBuildController != null && towerBuildController.PhaseTracker != null)
+                {
+                    upgradeController.SetPhaseTracker(towerBuildController.PhaseTracker);
+                }
             }
 
             foreach (var track in TowerUpgradeTracks)

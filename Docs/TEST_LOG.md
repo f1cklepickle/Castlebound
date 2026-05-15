@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-15 - test(tower): cover upgrade flow and scene wiring
+
+### Summary
+- Added PlayMode smoke coverage for Tower prefab upgrade controller/config runtime initialization.
+- Updated the MainPrototype tower build vertical slice to upgrade a built tower through the menu.
+- Kept duplicate-build regression coverage after tower upgrade actions are exposed.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` - verifies instantiated Tower prefab includes upgrade support and base config values apply.
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - verifies menu build flow exposes and invokes a built tower damage upgrade.
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
 ## 2026-05-15 - feat(ui): expose tower upgrade track actions
 
 ### Summary

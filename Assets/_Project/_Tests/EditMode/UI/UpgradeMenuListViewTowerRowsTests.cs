@@ -121,6 +121,28 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
+        public void Refresh_UsesBuildControllerPhase_ForTowerUpgradeButtons()
+        {
+            var context = CreateContext();
+            var existingTower = CreateUpgradeableTower(context.Inventory, null, out var upgradeConfig);
+            context.LeftPlot.TryAssignOccupant(existingTower);
+
+            try
+            {
+                context.View.Refresh();
+
+                var damageButton = FindButtonByLabel(context.ContentRoot, "DMG 10");
+                Assert.IsTrue(damageButton.interactable, "Tower upgrade buttons should use the build controller pre-wave tracker.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(existingTower);
+                Object.DestroyImmediate(upgradeConfig);
+                context.Destroy();
+            }
+        }
+
+        [Test]
         public void BarrierUpgradeButton_StillInvokesExistingUpgradeFlow()
         {
             var context = CreateContext();
@@ -272,7 +294,10 @@ namespace Castlebound.Tests.UI
             var upgrade = tower.AddComponent<TowerUpgradeController>();
             upgrade.Config = config;
             upgrade.SetInventory(inventory);
-            upgrade.SetPhaseTracker(phase);
+            if (phase != null)
+            {
+                upgrade.SetPhaseTracker(phase);
+            }
             upgrade.ApplyCurrentUpgrades();
 
             return tower;
