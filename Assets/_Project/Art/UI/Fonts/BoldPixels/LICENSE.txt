@@ -1,0 +1,13 @@
+BoldPixels Font by Yuki
+Source: https://yukipixels.itch.io/boldpixels
+Author link: https://linktr.ee/YukiPixels
+
+License: Creative Commons Attribution-ShareAlike 4.0 International
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+The BoldPixels itch.io page states:
+- Released under the Creative Commons Attribution Share Alike 4.0 License.
+- Credit requested: "BoldPixels Font by Yuki (@YukiPixels)".
+- Free for both personal and commercial use.
+
+Used unmodified as a UI font in Castlebound: Siege Eternal.
