@@ -160,8 +160,8 @@ namespace Castlebound.Tests.Tower
 
                 var profile = targetingController.TargetingProfile;
                 Assert.NotNull(profile, "TowerTargetingController must reference a targeting profile.");
-                Assert.That(profile.MinRange, Is.GreaterThanOrEqualTo(0f), "Tower targeting min range must be non-negative.");
-                Assert.That(profile.MaxRange, Is.GreaterThan(profile.MinRange), "Tower targeting max range must exceed min range.");
+                Assert.That(targetingController.MinRange, Is.GreaterThanOrEqualTo(0f), "Tower targeting min range must be non-negative.");
+                Assert.That(targetingController.MaxRange, Is.GreaterThan(targetingController.MinRange), "Tower targeting max range must exceed min range.");
                 Assert.That(profile.ScanInterval, Is.GreaterThan(0f), "Tower targeting scan interval must be above zero.");
                 Assert.That(profile.ScanInterval, Is.LessThanOrEqualTo(0.1f), "Base arrow tower should acquire targets responsively.");
                 Assert.That(profile.SelectionMode, Is.EqualTo(TowerTargetSelectionMode.Nearest), "Base tower should acquire the nearest valid enemy.");

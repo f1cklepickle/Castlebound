@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-15 - refactor(tower): move targeting range to instances
+
+### Summary
+- Moved tower min/max targeting range onto TowerTargetingController instance state.
+- Kept TowerTargetingProfile focused on shared targeting rules.
+- Added regression coverage for towers sharing a profile while using different instance ranges.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies instance-owned range, min/max filtering, and shared-profile range independence.
+- `TowerRuntimeContractTests` - verifies the base tower prefab serializes valid instance targeting range.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
 ## 2026-05-10 - feat(ui): add wave count HUD indicator
 
 ### Summary

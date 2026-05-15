@@ -133,13 +133,13 @@ namespace Castlebound.Tests.Tower
             firePoint.position = Vector3.zero;
 
             var profile = ScriptableObject.CreateInstance<TowerTargetingProfile>();
-            profile.MinRange = 0f;
-            profile.MaxRange = 5f;
             profile.TargetLayers = 1 << EnemyLayer();
             profile.SelectionMode = TowerTargetSelectionMode.Nearest;
 
             var targeting = tower.AddComponent<TowerTargetingController>();
             targeting.TargetingProfile = profile;
+            targeting.MinRange = 0f;
+            targeting.MaxRange = 5f;
 
             var attack = tower.AddComponent<TowerAttackController>();
             attack.TargetingController = targeting;

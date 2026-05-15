@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06d7787f81f746c0a7119dc098e046c1, type: 3}
   m_Name: BaseTowerTargetingProfile
   m_EditorClassIdentifier:
-  minRange: 0
-  maxRange: 5
   scanInterval: 0.1
   targetLayers:
     serializedVersion: 2

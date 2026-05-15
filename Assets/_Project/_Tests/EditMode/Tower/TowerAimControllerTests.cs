@@ -23,9 +23,9 @@ namespace Castlebound.Tests.Tower
 
             targetingController = towerObject.AddComponent<TowerTargetingController>();
             targetingProfile = ScriptableObject.CreateInstance<TowerTargetingProfile>();
-            targetingProfile.MaxRange = 5f;
             targetingProfile.TargetLayers = 1 << TargetLayer;
             targetingController.TargetingProfile = targetingProfile;
+            targetingController.MaxRange = 5f;
 
             aimController = towerObject.AddComponent<TowerAimController>();
             aimController.TargetingController = targetingController;
