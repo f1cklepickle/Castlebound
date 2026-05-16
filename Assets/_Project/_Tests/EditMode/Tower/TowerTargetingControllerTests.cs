@@ -20,12 +20,12 @@ namespace Castlebound.Tests.Tower
             towerObject = new GameObject("Tower");
             targetingController = towerObject.AddComponent<TowerTargetingController>();
             targetingProfile = ScriptableObject.CreateInstance<TowerTargetingProfile>();
-            targetingProfile.MinRange = 0f;
-            targetingProfile.MaxRange = 5f;
             targetingProfile.ScanInterval = 0.2f;
             targetingProfile.TargetLayers = 1 << TargetLayer;
             targetingProfile.SelectionMode = TowerTargetSelectionMode.Nearest;
             targetingController.TargetingProfile = targetingProfile;
+            targetingController.MinRange = 0f;
+            targetingController.MaxRange = 5f;
         }
 
         [TearDown]
@@ -55,8 +55,8 @@ namespace Castlebound.Tests.Tower
         [Test]
         public void AcquireTargetNow_IgnoresEnemyInsideMinimumRange()
         {
-            targetingProfile.MinRange = 2f;
-            targetingProfile.MaxRange = 5f;
+            targetingController.MinRange = 2f;
+            targetingController.MaxRange = 5f;
             var closeEnemy = CreateEnemy("Enemy_Close", new Vector2(1f, 0f));
             CreateEnemy("Enemy_Valid", new Vector2(3f, 0f));
             Physics2D.SyncTransforms();
@@ -70,7 +70,7 @@ namespace Castlebound.Tests.Tower
         [Test]
         public void AcquireTargetNow_IgnoresEnemyOutsideMaximumRange()
         {
-            targetingProfile.MaxRange = 3f;
+            targetingController.MaxRange = 3f;
             CreateEnemy("Enemy_Far", new Vector2(4f, 0f));
             Physics2D.SyncTransforms();
 
@@ -138,7 +138,7 @@ namespace Castlebound.Tests.Tower
         [Test]
         public void AcquireTargetNow_ClearsCurrentTarget_WhenTargetLeavesRange()
         {
-            targetingProfile.MaxRange = 3f;
+            targetingController.MaxRange = 3f;
             var enemy = CreateEnemy("Enemy_Target", new Vector2(2f, 0f));
             Physics2D.SyncTransforms();
 
@@ -150,6 +150,37 @@ namespace Castlebound.Tests.Tower
 
             Assert.IsNull(target);
             Assert.IsNull(targetingController.CurrentTarget);
+        }
+
+        [Test]
+        public void AcquireTargetNow_UsesInstanceRange_WhenControllersShareProfile()
+        {
+            var nearTowerObject = new GameObject("Tower_NearRange");
+            var nearRangeController = nearTowerObject.AddComponent<TowerTargetingController>();
+            nearRangeController.TargetingProfile = targetingProfile;
+            nearRangeController.MaxRange = 2f;
+
+            var farTowerObject = new GameObject("Tower_FarRange");
+            var farRangeController = farTowerObject.AddComponent<TowerTargetingController>();
+            farRangeController.TargetingProfile = targetingProfile;
+            farRangeController.MaxRange = 8f;
+
+            var enemy = CreateEnemy("Enemy_SharedProfileRange", new Vector2(6f, 0f));
+            Physics2D.SyncTransforms();
+
+            try
+            {
+                var nearTarget = nearRangeController.AcquireTargetNow();
+                var farTarget = farRangeController.AcquireTargetNow();
+
+                Assert.IsNull(nearTarget, "Short-range tower should not acquire a target outside its instance range.");
+                Assert.AreSame(enemy.transform, farTarget, "Long-range tower should acquire using its own instance range.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(nearTowerObject);
+                Object.DestroyImmediate(farTowerObject);
+            }
         }
 
         [Test]

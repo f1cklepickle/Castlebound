@@ -4,6 +4,77 @@
 
 ---
 
+## 2026-05-15 - test(tower): cover upgrade flow and scene wiring
+
+### Summary
+- Added PlayMode smoke coverage for Tower prefab upgrade controller/config runtime initialization.
+- Updated the MainPrototype tower build vertical slice to upgrade a built tower through the menu.
+- Kept duplicate-build regression coverage after tower upgrade actions are exposed.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` - verifies instantiated Tower prefab includes upgrade support and base config values apply.
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - verifies menu build flow exposes and invokes a built tower damage upgrade.
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
+## 2026-05-15 - feat(ui): expose tower upgrade track actions
+
+### Summary
+- Replaced occupied tower plot rows with per-track tower upgrade actions.
+- Added compact DMG, RATE, HP, and RNG buttons for supported tower upgrade tracks.
+- Refreshed occupied tower details from live tower runtime, attack, and targeting values.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies occupied tower rows expose track buttons and invoke the tower upgrade controller.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
+## 2026-05-15 - feat(tower): add per-instance upgrade tracks
+
+### Summary
+- Added per-prefab tower upgrade configs with independent damage, fire-rate, health, and range tracks.
+- Added per-instance tower upgrade state and controller purchase/application flow.
+- Wired the base tower prefab to authored upgrade rules.
+
+### New or Updated Tests
+**EditMode**
+- `TowerUpgradeControllerTests` - verifies track purchases, formulas, limits, pre-wave gating, feedback, and per-instance divergence.
+- `TowerRuntimeContractTests` - verifies the base tower prefab includes upgrade controller/config wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
+## 2026-05-15 - refactor(tower): move targeting range to instances
+
+### Summary
+- Moved tower min/max targeting range onto TowerTargetingController instance state.
+- Kept TowerTargetingProfile focused on shared targeting rules.
+- Added regression coverage for towers sharing a profile while using different instance ranges.
+
+### New or Updated Tests
+**EditMode**
+- `TowerTargetingControllerTests` - verifies instance-owned range, min/max filtering, and shared-profile range independence.
+- `TowerRuntimeContractTests` - verifies the base tower prefab serializes valid instance targeting range.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Not run locally; Unity batchmode could not connect to the local licensing client and produced no NUnit XML.
+
 ## 2026-05-10 - feat(ui): add wave count HUD indicator
 
 ### Summary

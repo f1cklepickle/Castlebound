@@ -84,10 +84,6 @@ namespace Castlebound.Tests.PlayMode.Tower
             int goldAfterBuild = inventorySource.State.Gold;
             int towerCountAfterBuild = Object.FindObjectsOfType<TowerRuntime>().Length;
 
-            var occupiedButton = FindActiveButtonWithLabel("Occupied");
-            Assert.NotNull(occupiedButton, "Occupied plot should remain visible in the menu as a blocked row.");
-            Assert.IsFalse(occupiedButton.interactable, "Occupied plot row should not allow repeat purchase.");
-
             var duplicateResult = buildController.TryBuild(occupiedPlot);
             yield return null;
 
@@ -99,6 +95,73 @@ namespace Castlebound.Tests.PlayMode.Tower
             {
                 Assert.That(inventorySource.State.Gold, Is.EqualTo(buildController.Config.BuildCost), "Test setup should leave only the second grant after one successful purchase.");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator MainPrototype_UpgradeMenu_UpgradesBuiltTowerInstance()
+        {
+            yield return LoadMainPrototype();
+
+            var menu = FindInActiveScene<UpgradeMenuController>();
+            var listView = FindInActiveScene<UpgradeMenuListView>();
+            var buildController = FindInActiveScene<TowerBuildController>();
+            var inventorySource = FindInActiveScene<InventoryStateComponent>();
+            Assert.NotNull(menu, "Expected MainPrototype to include UpgradeMenuController.");
+            Assert.NotNull(listView, "Expected MainPrototype to include UpgradeMenuListView.");
+            Assert.NotNull(buildController, "Expected MainPrototype to include TowerBuildController.");
+            Assert.NotNull(buildController.Config, "TowerBuildController must have a build config.");
+            Assert.NotNull(buildController.Config.TowerPrefab, "TowerBuildConfig must reference the real tower prefab.");
+            Assert.NotNull(buildController.Config.TowerPrefab.GetComponent<TowerUpgradeController>(), "Tower prefab must include upgrade support.");
+            Assert.NotNull(inventorySource, "Expected MainPrototype to expose an inventory source for upgrade purchases.");
+
+            var tracker = new WavePhaseTracker();
+            menu.SetPhaseTracker(tracker);
+            buildController.SetPhaseTracker(tracker);
+            buildController.SetInventory(inventorySource.State);
+            listView.SetTowerBuildController(buildController);
+
+            inventorySource.State.AddGold(buildController.Config.BuildCost + 200);
+
+            var plots = FindPlots();
+            Assert.That(plots.Any(plot => !plot.IsOccupied), Is.True, "Expected at least one empty tower plot before building.");
+            menu.ToggleMenu();
+            yield return null;
+
+            var buildButton = FindActiveButtonWithLabel("Build");
+            Assert.NotNull(buildButton, "Expected the upgrade menu to expose a Build button for an empty tower plot.");
+
+            var eventSystem = EventSystem.current;
+            if (eventSystem == null)
+            {
+                eventSystem = new GameObject("TestEventSystem").AddComponent<EventSystem>();
+            }
+
+            ExecuteEvents.Execute(buildButton.gameObject, new PointerEventData(eventSystem), ExecuteEvents.pointerClickHandler);
+            yield return null;
+            yield return new WaitForSeconds(0.2f);
+
+            var occupiedPlot = FindPlots().Single(plot => plot.IsOccupied);
+            var tower = occupiedPlot.OccupantInstance;
+            var upgradeController = tower.GetComponent<TowerUpgradeController>();
+            var attackController = tower.GetComponent<TowerAttackController>();
+            Assert.NotNull(upgradeController, "Built tower should include upgrade support.");
+            Assert.NotNull(upgradeController.Config, "Built tower upgrade controller should reference upgrade config.");
+            Assert.NotNull(attackController, "Built tower should include attack controller.");
+
+            int goldBeforeUpgrade = inventorySource.State.Gold;
+            int damageBeforeUpgrade = attackController.Damage;
+            int damageUpgradeCost = upgradeController.GetUpgradeCost(TowerUpgradeTrack.Damage);
+            var damageButton = FindActiveButtonWithLabel($"DMG {damageUpgradeCost}");
+            Assert.NotNull(damageButton, "Occupied plot should expose a damage upgrade action.");
+            Assert.IsTrue(damageButton.interactable, "Damage upgrade should be interactable during pre-wave.");
+
+            ExecuteEvents.Execute(damageButton.gameObject, new PointerEventData(eventSystem), ExecuteEvents.pointerClickHandler);
+            yield return null;
+            yield return new WaitForSeconds(0.2f);
+
+            Assert.That(upgradeController.GetLevel(TowerUpgradeTrack.Damage), Is.EqualTo(1), "Menu damage upgrade should advance only the built tower instance.");
+            Assert.That(attackController.Damage, Is.GreaterThan(damageBeforeUpgrade), "Damage upgrade should apply to the tower attack controller.");
+            Assert.That(inventorySource.State.Gold, Is.EqualTo(goldBeforeUpgrade - damageUpgradeCost), "Damage upgrade should spend gold exactly once.");
         }
 
         private static IEnumerator LoadMainPrototype()
@@ -124,7 +187,7 @@ namespace Castlebound.Tests.PlayMode.Tower
         private static Button FindActiveButtonWithLabel(string label)
         {
             return Object.FindObjectsOfType<Button>()
-                .Where(button => button.gameObject.activeInHierarchy && button.name == "BuildButton")
+                .Where(button => button.gameObject.activeInHierarchy)
                 .FirstOrDefault(button =>
                 {
                     foreach (var component in button.GetComponentsInChildren<Component>())

@@ -160,8 +160,8 @@ namespace Castlebound.Tests.Tower
 
                 var profile = targetingController.TargetingProfile;
                 Assert.NotNull(profile, "TowerTargetingController must reference a targeting profile.");
-                Assert.That(profile.MinRange, Is.GreaterThanOrEqualTo(0f), "Tower targeting min range must be non-negative.");
-                Assert.That(profile.MaxRange, Is.GreaterThan(profile.MinRange), "Tower targeting max range must exceed min range.");
+                Assert.That(targetingController.MinRange, Is.GreaterThanOrEqualTo(0f), "Tower targeting min range must be non-negative.");
+                Assert.That(targetingController.MaxRange, Is.GreaterThan(targetingController.MinRange), "Tower targeting max range must exceed min range.");
                 Assert.That(profile.ScanInterval, Is.GreaterThan(0f), "Tower targeting scan interval must be above zero.");
                 Assert.That(profile.ScanInterval, Is.LessThanOrEqualTo(0.1f), "Base arrow tower should acquire targets responsively.");
                 Assert.That(profile.SelectionMode, Is.EqualTo(TowerTargetSelectionMode.Nearest), "Base tower should acquire the nearest valid enemy.");
@@ -238,6 +238,38 @@ namespace Castlebound.Tests.Tower
                     attackController.TargetLayerMask.value & (1 << enemiesLayer),
                     Is.Not.Zero,
                     "Base arrow tower attack target mask must include the Enemies layer.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefabRoot);
+            }
+        }
+
+        [Test]
+        public void TowerPrefab_SerializesUpgradeContract_ForBaseArrowTower()
+        {
+            var prefabRoot = PrefabTestUtil.Load(TowerPrefabPath);
+
+            try
+            {
+                var runtime = prefabRoot.GetComponent<TowerRuntime>();
+                var attackController = prefabRoot.GetComponent<TowerAttackController>();
+                var targetingController = prefabRoot.GetComponent<TowerTargetingController>();
+                var upgradeController = prefabRoot.GetComponent<TowerUpgradeController>();
+
+                Assert.NotNull(upgradeController, "Tower prefab must include TowerUpgradeController.");
+                Assert.NotNull(upgradeController.Config, "TowerUpgradeController must reference a tower upgrade config.");
+                Assert.IsTrue(upgradeController.Config.Damage.Enabled, "Base arrow tower should support damage upgrades.");
+                Assert.IsTrue(upgradeController.Config.FireRate.Enabled, "Base arrow tower should support fire-rate upgrades.");
+                Assert.IsTrue(upgradeController.Config.Health.Enabled, "Base arrow tower should support health upgrades.");
+                Assert.IsTrue(upgradeController.Config.Range.Enabled, "Base arrow tower should support range upgrades.");
+
+                upgradeController.ApplyCurrentUpgrades();
+
+                Assert.That(attackController.Damage, Is.EqualTo(upgradeController.Config.GetDamage(upgradeController.State)));
+                Assert.That(attackController.CooldownSeconds, Is.EqualTo(upgradeController.Config.GetCooldownSeconds(upgradeController.State)).Within(0.001f));
+                Assert.That(runtime.MaxHealth, Is.EqualTo(upgradeController.Config.GetMaxHealth(upgradeController.State)));
+                Assert.That(targetingController.MaxRange, Is.EqualTo(upgradeController.Config.GetMaxRange(upgradeController.State)).Within(0.001f));
             }
             finally
             {

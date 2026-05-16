@@ -8,6 +8,8 @@ namespace Castlebound.Gameplay.Tower
         private const int MinTargetBufferSize = 1;
 
         [SerializeField] private TowerTargetingProfile targetingProfile;
+        [SerializeField] private float minRange;
+        [SerializeField] private float maxRange = 5f;
         [SerializeField] private int targetBufferSize = 16;
 
         private Collider2D[] targetBuffer;
@@ -17,6 +19,22 @@ namespace Castlebound.Gameplay.Tower
         {
             get => targetingProfile;
             set => targetingProfile = value;
+        }
+
+        public float MinRange
+        {
+            get => minRange;
+            set
+            {
+                minRange = Mathf.Max(0f, value);
+                maxRange = Mathf.Max(minRange, maxRange);
+            }
+        }
+
+        public float MaxRange
+        {
+            get => maxRange;
+            set => maxRange = Mathf.Max(minRange, value);
         }
 
         public Transform CurrentTarget { get; private set; }
@@ -33,11 +51,13 @@ namespace Castlebound.Gameplay.Tower
 
         private void Awake()
         {
+            NormalizeRanges();
             EnsureTargetBuffer();
         }
 
         private void OnValidate()
         {
+            NormalizeRanges();
             targetBufferSize = Mathf.Max(MinTargetBufferSize, targetBufferSize);
         }
 
@@ -57,7 +77,7 @@ namespace Castlebound.Gameplay.Tower
             EnsureTargetBuffer();
             CurrentTarget = null;
 
-            if (targetingProfile == null || targetingProfile.MaxRange <= 0f)
+            if (targetingProfile == null || maxRange <= 0f)
             {
                 return null;
             }
@@ -65,12 +85,12 @@ namespace Castlebound.Gameplay.Tower
             var origin = (Vector2)transform.position;
             var hitCount = Physics2D.OverlapCircleNonAlloc(
                 origin,
-                targetingProfile.MaxRange,
+                maxRange,
                 targetBuffer,
                 targetingProfile.TargetLayers);
 
-            var minRangeSqr = targetingProfile.MinRange * targetingProfile.MinRange;
-            var maxRangeSqr = targetingProfile.MaxRange * targetingProfile.MaxRange;
+            var minRangeSqr = minRange * minRange;
+            var maxRangeSqr = maxRange * maxRange;
             var bestScore = targetingProfile.SelectionMode == TowerTargetSelectionMode.Nearest
                 ? float.PositiveInfinity
                 : float.NegativeInfinity;
@@ -142,6 +162,12 @@ namespace Castlebound.Gameplay.Tower
             {
                 targetBuffer = new Collider2D[targetBufferSize];
             }
+        }
+
+        private void NormalizeRanges()
+        {
+            minRange = Mathf.Max(0f, minRange);
+            maxRange = Mathf.Max(minRange, maxRange);
         }
     }
 }
