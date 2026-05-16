@@ -452,6 +452,12 @@ namespace Castlebound.Gameplay.UI
 
             var text = CreateText("Label", go.transform, fontSize, TextAlignmentOptions.Center);
             text.text = label;
+            text.raycastTarget = false;
+            var textRect = text.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
 
             var rect = go.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(width, 28f);
