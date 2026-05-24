@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-20 - refactor(balance): introduce central tuning station
+
+### Summary
+- Added a typed GameBalanceStation ScriptableObject for category balance table references.
+- Added empty category table assets for tower, barrier, wave, enemy, player, and economy tuning.
+- Added EditMode coverage for assigned references, partial station setup, and ScriptableObject table contracts.
+
+### New or Updated Tests
+**EditMode**
+- `GameBalanceStationTests` - verifies typed category references, optional missing tables, and ScriptableObject table contracts.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode tests passed in Unity editor validation.
+
 ## 2026-05-15 - test(tower): cover upgrade flow and scene wiring
 
 ### Summary
