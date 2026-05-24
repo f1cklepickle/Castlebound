@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-24 - refactor(tower): add tower balance table defaults
+
+### Summary
+- Added authored tower build, combat, and upgrade-track tuning fields to TowerBalanceTable.
+- Mirrored current tower build cost, health, damage, cooldown, range, and base upgrade track defaults.
+- Added EditMode coverage for tower table defaults, clamping, track lookup, and resolved base values.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBalanceTableTests` - verifies current tower defaults, scalar clamping, track contracts, and base resolved values.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode tests passed in Unity editor validation.
+
 ## 2026-05-20 - refactor(balance): introduce central tuning station
 
 ### Summary
