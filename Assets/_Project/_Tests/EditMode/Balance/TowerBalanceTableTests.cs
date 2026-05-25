@@ -1,12 +1,18 @@
 using Castlebound.Gameplay.Balance;
 using Castlebound.Gameplay.Tower;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace Castlebound.Tests.Balance
 {
     public class TowerBalanceTableTests
     {
+        private const string BalanceStationPath = "Assets/_Project/Balance/GameBalanceStation.asset";
+        private const string TowerBalanceTablePath = "Assets/_Project/Balance/TowerBalanceTable.asset";
+        private const string TowerBuildConfigPath = "Assets/_Project/Tower/TowerBuildConfig.asset";
+        private const string TowerUpgradeConfigPath = "Assets/_Project/Tower/BaseTowerUpgradeConfig.asset";
+
         [Test]
         public void Defaults_MirrorCurrentTowerBuildAndRuntimeTuning()
         {
@@ -107,6 +113,24 @@ namespace Castlebound.Tests.Balance
             {
                 Object.DestroyImmediate(table);
             }
+        }
+
+        [Test]
+        public void ProjectAssets_WireTowerConfigsThroughCentralBalanceStation()
+        {
+            var station = AssetDatabase.LoadAssetAtPath<GameBalanceStation>(BalanceStationPath);
+            var table = AssetDatabase.LoadAssetAtPath<TowerBalanceTable>(TowerBalanceTablePath);
+            var buildConfig = AssetDatabase.LoadAssetAtPath<TowerBuildConfig>(TowerBuildConfigPath);
+            var upgradeConfig = AssetDatabase.LoadAssetAtPath<TowerUpgradeConfig>(TowerUpgradeConfigPath);
+
+            Assert.NotNull(station, "Central GameBalanceStation asset must exist.");
+            Assert.NotNull(table, "TowerBalanceTable asset must exist.");
+            Assert.NotNull(buildConfig, "TowerBuildConfig asset must exist.");
+            Assert.NotNull(upgradeConfig, "BaseTowerUpgradeConfig asset must exist.");
+            Assert.AreSame(table, station.Tower, "Central station should reference the authored tower table.");
+            Assert.AreSame(station, buildConfig.BalanceStation, "Tower build config should resolve through the central station.");
+            Assert.AreSame(station, upgradeConfig.BalanceStation, "Tower upgrade config should resolve through the central station.");
+            Assert.NotNull(table.TowerPrefab, "Tower table should reference the buildable tower prefab.");
         }
 
         private static void AssertTrack(

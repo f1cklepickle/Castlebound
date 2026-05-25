@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.Balance;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
 using Castlebound.Gameplay.Tower;
@@ -177,6 +178,40 @@ namespace Castlebound.Tests.Tower
             Assert.That(config.GetCostForLevel(2), Is.EqualTo(0));
             config.MaxLevel = 4;
             Assert.That(config.GetValueForLevel(3), Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void TryUpgrade_UsesBalanceStationTowerTable_WhenAssigned()
+        {
+            var config = ScriptableObject.CreateInstance<TowerUpgradeConfig>();
+            var station = ScriptableObject.CreateInstance<GameBalanceStation>();
+            var table = ScriptableObject.CreateInstance<TowerBalanceTable>();
+            Configure(table.Damage, enabled: true, maxLevel: 2, baseValue: 4f, valuePerLevel: 3f, baseCost: 12, costPerLevel: 5);
+            Configure(table.FireRate, enabled: true, maxLevel: 2, baseValue: 0.8f, valuePerLevel: -0.1f, baseCost: 20, costPerLevel: 5, minValue: 0.4f);
+            Configure(table.Health, enabled: true, maxLevel: 2, baseValue: 12f, valuePerLevel: 4f, baseCost: 15, costPerLevel: 5, minValue: 1f);
+            Configure(table.Range, enabled: true, maxLevel: 2, baseValue: 6f, valuePerLevel: 1.5f, baseCost: 25, costPerLevel: 5);
+            station.Tower = table;
+            config.BalanceStation = station;
+            var fixture = CreateFixture(config);
+
+            try
+            {
+                Assert.That(fixture.Attack.Damage, Is.EqualTo(4));
+                Assert.That(fixture.Attack.CooldownSeconds, Is.EqualTo(0.8f).Within(0.001f));
+                Assert.That(fixture.Runtime.MaxHealth, Is.EqualTo(12));
+                Assert.That(fixture.Targeting.MaxRange, Is.EqualTo(6f).Within(0.001f));
+
+                Assert.IsTrue(fixture.Controller.TryUpgrade(TowerUpgradeTrack.Damage));
+
+                Assert.That(fixture.Inventory.Gold, Is.EqualTo(88));
+                Assert.That(fixture.Attack.Damage, Is.EqualTo(7));
+            }
+            finally
+            {
+                fixture.Destroy();
+                Object.DestroyImmediate(table);
+                Object.DestroyImmediate(station);
+            }
         }
 
         private static TowerUpgradeFixture CreateFixture(int startingGold = 100)

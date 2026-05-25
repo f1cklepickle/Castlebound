@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.Balance;
 using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
@@ -184,6 +185,51 @@ namespace Castlebound.Tests.Tower
             }
             finally
             {
+                Object.DestroyImmediate(config);
+            }
+        }
+
+        [Test]
+        public void TowerBuildConfig_UsesBalanceStationTowerTable_WhenAssigned()
+        {
+            var config = ScriptableObject.CreateInstance<TowerBuildConfig>();
+            var station = ScriptableObject.CreateInstance<GameBalanceStation>();
+            var table = ScriptableObject.CreateInstance<TowerBalanceTable>();
+            var legacyPrefab = new GameObject("LegacyTower");
+            var tablePrefab = new GameObject("TableTower");
+
+            try
+            {
+                config.TowerPrefab = legacyPrefab;
+                config.BuildCost = 50;
+                config.BaseMaxHealth = 10;
+                config.BaseDamage = 1;
+                config.BaseUpgradeCost = 75;
+
+                table.TowerPrefab = tablePrefab;
+                table.BuildCost = 35;
+                table.BaseMaxHealth = 12;
+                table.BaseDamage = 4;
+                table.BaseUpgradeCost = 90;
+                table.BaseCooldownSeconds = 0.75f;
+                table.BaseMaxRange = 6.5f;
+                station.Tower = table;
+                config.BalanceStation = station;
+
+                Assert.AreSame(tablePrefab, config.TowerPrefab);
+                Assert.That(config.BuildCost, Is.EqualTo(35));
+                Assert.That(config.BaseMaxHealth, Is.EqualTo(12));
+                Assert.That(config.BaseDamage, Is.EqualTo(4));
+                Assert.That(config.BaseUpgradeCost, Is.EqualTo(90));
+                Assert.That(config.BaseCooldownSeconds, Is.EqualTo(0.75f).Within(0.001f));
+                Assert.That(config.BaseMaxRange, Is.EqualTo(6.5f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(tablePrefab);
+                Object.DestroyImmediate(legacyPrefab);
+                Object.DestroyImmediate(table);
+                Object.DestroyImmediate(station);
                 Object.DestroyImmediate(config);
             }
         }
