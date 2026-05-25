@@ -9,10 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 682fba094b0745448d86184a775da6de, type: 3}
-  m_Name: BaseTowerUpgradeConfig
-  m_EditorClassIdentifier:
-  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
+  m_Script: {fileID: 11500000, guid: 5b4e38af7ec44ae9ac9c3ccd65e2d48e, type: 3}
+  m_Name: TowerBalanceTable
+  m_EditorClassIdentifier: 
+  towerPrefab: {fileID: 2000000000, guid: ec470124d4d042388418a66cedd418c1, type: 3}
+  buildCost: 50
+  baseMaxHealth: 10
+  baseDamage: 1
+  baseUpgradeCost: 75
+  baseCooldownSeconds: 1
+  baseMaxRange: 5
   damage:
     enabled: 1
     maxLevel: 5

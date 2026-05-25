@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-05-24 - refactor(tower): route tower tuning through balance tables
+
+### Summary
+- Added authored tower build, combat, and upgrade-track tuning fields to TowerBalanceTable.
+- Mirrored current tower build cost, health, damage, cooldown, range, and base upgrade track defaults.
+- Added EditMode coverage for tower table defaults, clamping, track lookup, and resolved base values.
+- Routed tower build and upgrade configs through GameBalanceStation tower tables when assigned.
+- Added central GameBalanceStation and TowerBalanceTable assets for authored tower tuning.
+
+### New or Updated Tests
+**EditMode**
+- `TowerBalanceTableTests` - verifies current tower defaults, scalar clamping, track contracts, base resolved values, and project asset wiring.
+- `TowerBuildControllerTests` - verifies build config resolves authored values from the station tower table.
+- `TowerUpgradeControllerTests` - verifies tower upgrades apply station table tracks to runtime stats and costs.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode tests passed in Unity editor validation on 2026-05-25.
+
 ## 2026-05-20 - refactor(balance): introduce central tuning station
 
 ### Summary

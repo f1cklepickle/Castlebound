@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c34a4cdb5e84223bea98f02f71a7031, type: 3}
+  m_Name: GameBalanceStation
+  m_EditorClassIdentifier: 
+  tower: {fileID: 11400000, guid: 1d03794e8d2c4c53a6de599e33d4f8fe, type: 2}
+  barrier: {fileID: 0}
+  wave: {fileID: 0}
+  enemy: {fileID: 0}
+  player: {fileID: 0}
+  economy: {fileID: 0}
