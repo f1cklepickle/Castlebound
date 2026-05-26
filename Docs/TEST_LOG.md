@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-25 - refactor(barrier): route barrier tuning through balance tables
+
+### Summary
+- Added authored barrier health and upgrade-cost fields to BarrierBalanceTable.
+- Routed BarrierUpgradeConfig through GameBalanceStation barrier tables when assigned.
+- Added a BarrierBalanceTable asset wired through the central station while preserving current barrier asset tuning.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierBalanceTableTests` — verifies default table values, clamping, tier formulas, and project asset wiring.
+- `BarrierUpgradeTests` — verifies barrier health, upgrade costs, and purchase spending resolve through the assigned balance table.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- EditMode tests passed in Unity editor validation on 2026-05-25.
+
 ## 2026-05-24 - refactor(tower): route tower tuning through balance tables
 
 ### Summary
