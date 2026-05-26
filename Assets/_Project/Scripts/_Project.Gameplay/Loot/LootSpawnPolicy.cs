@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Castlebound.Gameplay.Inventory;
 using UnityEngine;
@@ -40,6 +41,11 @@ namespace Castlebound.Gameplay.Loot
                     continue;
                 }
 
+                if (!IsGoldReward(result.Item))
+                {
+                    continue;
+                }
+
                 int spawnCap = ResolveSpawnCap(result, mappings);
                 int splitCount = spawnCap > 0 ? Mathf.Min(result.Amount, spawnCap) : result.Amount;
                 if (splitCount <= 0)
@@ -62,6 +68,16 @@ namespace Castlebound.Gameplay.Loot
             }
 
             return requests.Count == 0 ? System.Array.Empty<LootSpawnRequest>() : requests.ToArray();
+        }
+
+        private static bool IsGoldReward(ItemDefinition item)
+        {
+            if (item is GoldDefinition)
+            {
+                return true;
+            }
+
+            return item != null && item.ItemId != null && item.ItemId.StartsWith("gold_", StringComparison.Ordinal);
         }
 
         private static ItemPickupComponent ResolvePrefab(LootRollResult result, LootDropper.LootTableMapping[] mappings)
