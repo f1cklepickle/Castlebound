@@ -134,7 +134,7 @@ namespace Castlebound.Tests.Loot
         [Test]
         public void SpawnDrops_SplitsGoldIntoMultiplePickups_WithCap()
         {
-            var goldItem = ScriptableObject.CreateInstance<ItemDefinition>();
+            var goldItem = ScriptableObject.CreateInstance<GoldDefinition>();
             goldItem.ItemId = "gold_test";
             var goldTable = ScriptableObject.CreateInstance<LootTable>();
             goldTable.Entries = new[]
