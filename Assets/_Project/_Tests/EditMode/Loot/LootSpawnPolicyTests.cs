@@ -1,6 +1,7 @@
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Loot;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -8,6 +9,17 @@ namespace Castlebound.Tests.Loot
 {
     public class LootSpawnPolicyTests
     {
+        private const string GoldDefinitionPath = "Assets/_Project/Items/Definitions/Gold_1.asset";
+
+        [Test]
+        public void AuthoredGoldAsset_LoadsAsGoldDefinition()
+        {
+            var gold = AssetDatabase.LoadAssetAtPath<GoldDefinition>(GoldDefinitionPath);
+
+            Assert.NotNull(gold, "Authored gold reward item should use the explicit GoldDefinition type.");
+            Assert.That(gold.ItemId, Is.EqualTo("gold_1"));
+        }
+
         [Test]
         public void BuildRequests_WithWeaponEntry_CreatesWeaponPickup()
         {

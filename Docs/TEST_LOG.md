@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-26 - fix(loot): clarify reward item handling and enemy drops
+
+### Summary
+- Added an explicit GoldDefinition type for currency reward items.
+- Updated loot spawn classification so unsupported generic items no longer become gold pickups.
+- Migrated the authored Gold_1 reward asset to GoldDefinition while preserving existing loot table references.
+
+### New or Updated Tests
+**EditMode**
+- `LootSpawnPolicyTests` - verifies weapon, potion, gold, legacy gold, unsupported generic item, and authored gold asset classification.
+- `LootDropperTests` - verifies gold splitting uses the explicit gold reward type.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode tests passed in Unity editor validation on 2026-05-26.
+
 ## 2026-05-25 - refactor(barrier): route barrier tuning through balance tables
 
 ### Summary
