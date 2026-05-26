@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameBalanceStation
   m_EditorClassIdentifier: 
   tower: {fileID: 11400000, guid: 1d03794e8d2c4c53a6de599e33d4f8fe, type: 2}
-  barrier: {fileID: 0}
+  barrier: {fileID: 11400000, guid: 64e791ca8c294529bc6393d439d743c9, type: 2}
   wave: {fileID: 0}
   enemy: {fileID: 0}
   player: {fileID: 0}

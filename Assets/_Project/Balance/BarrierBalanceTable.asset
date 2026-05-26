@@ -9,10 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9edabc177a4bfeb448438e60bf5d341c, type: 3}
-  m_Name: BarrierUpgradeConfig
+  m_Script: {fileID: 11500000, guid: 979638481b694a77b65c64a2c6912131, type: 3}
+  m_Name: BarrierBalanceTable
   m_EditorClassIdentifier: 
-  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
   baseMaxHealth: 25
   maxHealthPerTier: 5
   baseCost: 10
