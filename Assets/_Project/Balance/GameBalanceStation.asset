@@ -17,4 +17,4 @@ MonoBehaviour:
   wave: {fileID: 0}
   enemy: {fileID: 0}
   player: {fileID: 0}
-  economy: {fileID: 0}
+  economy: {fileID: 11400000, guid: 33e3c7ab33304f10aaff7086767de14c, type: 2}

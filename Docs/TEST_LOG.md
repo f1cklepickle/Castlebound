@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-26 - refactor(economy): add reward and cost tuning table
+
+### Summary
+- Added authored starting currency fields to EconomyBalanceTable.
+- Added the EconomyBalanceTable project asset and wired it through GameBalanceStation.
+- Routed InventoryStateComponent starting currency through the economy table when assigned.
+
+### New or Updated Tests
+**EditMode**
+- `EconomyBalanceTableTests` - verifies defaults, clamping, inventory starting currency routing, fallback behavior, and project asset wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode tests passed per user on 2026-05-26.
+
 ## 2026-05-26 - fix(loot): clarify reward item handling and enemy drops
 
 ### Summary
