@@ -2665,6 +2665,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scheduleAsset: {fileID: 11400000, guid: b8131ce0d2d210540bc4d0b4535b89b8, type: 2}
+  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
   spawnMarkers: []
   prefabMappings:
   - enemyTypeId: grunt

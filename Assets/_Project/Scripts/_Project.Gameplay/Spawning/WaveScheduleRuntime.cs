@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Castlebound.Gameplay.Balance;
 
 namespace Castlebound.Gameplay.Spawning
 {
@@ -30,14 +31,55 @@ namespace Castlebound.Gameplay.Spawning
         private readonly List<WaveConfig> _waves;
         private readonly RampConfig _ramp;
         private readonly System.Random _rng;
+        private readonly float _defaultGapSeconds;
+        private readonly bool _defaultWaitForClear;
+        private readonly int _defaultMaxAlive;
+        private readonly WaveGenerationBuild _generationBuild;
 
         public WaveScheduleRuntime(SpawnMarkerStrategy defaultStrategy, int defaultSeed, IEnumerable<WaveConfig> waves, RampConfig ramp)
+            : this(defaultStrategy, defaultSeed, waves, ramp, 5f, true, 0)
+        {
+        }
+
+        public WaveScheduleRuntime(
+            SpawnMarkerStrategy defaultStrategy,
+            int defaultSeed,
+            IEnumerable<WaveConfig> waves,
+            RampConfig ramp,
+            float defaultGapSeconds,
+            bool defaultWaitForClear,
+            int defaultMaxAlive)
+            : this(
+                defaultStrategy,
+                defaultSeed,
+                waves,
+                ramp,
+                defaultGapSeconds,
+                defaultWaitForClear,
+                defaultMaxAlive,
+                null)
+        {
+        }
+
+        public WaveScheduleRuntime(
+            SpawnMarkerStrategy defaultStrategy,
+            int defaultSeed,
+            IEnumerable<WaveConfig> waves,
+            RampConfig ramp,
+            float defaultGapSeconds,
+            bool defaultWaitForClear,
+            int defaultMaxAlive,
+            WaveGenerationBuild generationBuild)
         {
             _defaultStrategy = defaultStrategy;
             _defaultSeed = defaultSeed;
             _waves = waves?.ToList() ?? new List<WaveConfig>();
             _ramp = ramp;
             _rng = new System.Random(_defaultSeed);
+            _defaultGapSeconds = defaultGapSeconds < 0f ? 0f : defaultGapSeconds;
+            _defaultWaitForClear = defaultWaitForClear;
+            _defaultMaxAlive = defaultMaxAlive < 0 ? 0 : defaultMaxAlive;
+            _generationBuild = generationBuild != null && generationBuild.Enabled ? generationBuild : null;
         }
 
         public bool HasAuthoredWaves => _waves.Count > 0;
@@ -68,9 +110,9 @@ namespace Castlebound.Gameplay.Spawning
                 sequences: new List<SpawnSequenceConfig>(),
                 strategy: _defaultStrategy,
                 seed: _defaultSeed,
-                gapSeconds: 5f,
-                waitForClear: true,
-                maxAlive: 0);
+                gapSeconds: _defaultGapSeconds,
+                waitForClear: _defaultWaitForClear,
+                maxAlive: _defaultMaxAlive);
         }
 
         private WaveConfig GetAuthoredWaveConfig(int waveIndex)
@@ -96,20 +138,7 @@ namespace Castlebound.Gameplay.Spawning
                 return null;
             }
 
-            var count = _ramp.baseSpawnCount;
-            if (_ramp.stepSize > 0 && _ramp.countPerStep != 0)
-            {
-                var steps = (waveIndex - _ramp.startWave) / _ramp.stepSize;
-                if (steps > 0)
-                {
-                    count += steps * _ramp.countPerStep;
-                }
-            }
-
-            if (count < _ramp.baseSpawnCount)
-            {
-                count = _ramp.baseSpawnCount;
-            }
+            var count = ResolveGeneratedSpawnCount(waveIndex);
 
             var pool = BuildTierPool(waveIndex);
             if (pool.Count == 0)
@@ -123,17 +152,42 @@ namespace Castlebound.Gameplay.Spawning
             {
                 enemyTypeId = chosenType,
                 spawnCount = count,
-                intervalSeconds = 1f,
-                initialDelaySeconds = 0f
+                intervalSeconds = _generationBuild != null ? _generationBuild.IntervalSeconds : 1f,
+                initialDelaySeconds = _generationBuild != null ? _generationBuild.InitialDelaySeconds : 0f
             };
 
             return new WaveRuntime(
                 sequences: new List<SpawnSequenceConfig> { sequence },
                 strategy: _defaultStrategy,
                 seed: _defaultSeed,
-                gapSeconds: 5f,
-                waitForClear: true,
-                maxAlive: 0);
+                gapSeconds: _defaultGapSeconds,
+                waitForClear: _defaultWaitForClear,
+                maxAlive: _defaultMaxAlive);
+        }
+
+        private int ResolveGeneratedSpawnCount(int waveIndex)
+        {
+            if (_generationBuild != null)
+            {
+                return _generationBuild.GetSpawnCountForWave(waveIndex);
+            }
+
+            var rampCount = _ramp.baseSpawnCount;
+            if (_ramp.stepSize > 0 && _ramp.countPerStep != 0)
+            {
+                var steps = (waveIndex - _ramp.startWave) / _ramp.stepSize;
+                if (steps > 0)
+                {
+                    rampCount += steps * _ramp.countPerStep;
+                }
+            }
+
+            if (rampCount < _ramp.baseSpawnCount)
+            {
+                rampCount = _ramp.baseSpawnCount;
+            }
+
+            return rampCount;
         }
 
         private List<RampTier> BuildTierPool(int waveIndex)
