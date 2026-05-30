@@ -9,12 +9,12 @@ namespace Castlebound.Gameplay.Balance
         [SerializeField] private string buildId = "default";
         [SerializeField] private bool enabled = true;
         [SerializeField] private int baseSpawnCount = 5;
-        [SerializeField] private int spawnCountPerStep = 10;
+        [SerializeField] private int spawnCountPerStep = 3;
         [SerializeField] private int spawnCountStepSize = 1;
         [SerializeField] private int spawnCountStartWave = 1;
         [Tooltip("0 means no cap")]
         [SerializeField] private int maxSpawnCount = 0;
-        [SerializeField] private float intervalSeconds = 1f;
+        [SerializeField] private float intervalSeconds = 0.5f;
         [SerializeField] private float initialDelaySeconds = 0f;
 
         public string BuildId

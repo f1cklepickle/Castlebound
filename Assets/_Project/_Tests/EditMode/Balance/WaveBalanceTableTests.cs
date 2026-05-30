@@ -31,11 +31,11 @@ namespace Castlebound.Tests.Balance
                 Assert.That(table.ActiveBuild.BuildId, Is.EqualTo("default"));
                 Assert.IsTrue(table.ActiveBuild.Enabled);
                 Assert.That(table.ActiveBuild.BaseSpawnCount, Is.EqualTo(5));
-                Assert.That(table.ActiveBuild.SpawnCountPerStep, Is.EqualTo(10));
+                Assert.That(table.ActiveBuild.SpawnCountPerStep, Is.EqualTo(3));
                 Assert.That(table.ActiveBuild.SpawnCountStepSize, Is.EqualTo(1));
                 Assert.That(table.ActiveBuild.SpawnCountStartWave, Is.EqualTo(1));
                 Assert.That(table.ActiveBuild.MaxSpawnCount, Is.EqualTo(0));
-                Assert.That(table.ActiveBuild.IntervalSeconds, Is.EqualTo(1f).Within(0.001f));
+                Assert.That(table.ActiveBuild.IntervalSeconds, Is.EqualTo(0.5f).Within(0.001f));
                 Assert.That(table.ActiveBuild.InitialDelaySeconds, Is.EqualTo(0f).Within(0.001f));
             }
             finally
@@ -139,7 +139,7 @@ namespace Castlebound.Tests.Balance
             Assert.That(table.DefaultMaxAlive, Is.EqualTo(0));
             Assert.NotNull(table.ActiveBuild);
             Assert.That(table.ActiveBuild.BaseSpawnCount, Is.EqualTo(5));
-            Assert.That(table.ActiveBuild.SpawnCountPerStep, Is.EqualTo(10));
+            Assert.That(table.ActiveBuild.SpawnCountPerStep, Is.EqualTo(3));
             Assert.That(table.ActiveBuild.SpawnCountStepSize, Is.EqualTo(1));
             Assert.That(table.ActiveBuild.SpawnCountStartWave, Is.EqualTo(1));
             Assert.That(table.ActiveBuild.MaxSpawnCount, Is.EqualTo(0));
