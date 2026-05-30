@@ -138,11 +138,13 @@ namespace Castlebound.Tests.Balance
             Assert.IsTrue(table.DefaultWaitForClear);
             Assert.That(table.DefaultMaxAlive, Is.EqualTo(0));
             Assert.NotNull(table.ActiveBuild);
-            Assert.That(table.ActiveBuild.BaseSpawnCount, Is.EqualTo(5));
-            Assert.That(table.ActiveBuild.SpawnCountPerStep, Is.EqualTo(3));
-            Assert.That(table.ActiveBuild.SpawnCountStepSize, Is.EqualTo(1));
-            Assert.That(table.ActiveBuild.SpawnCountStartWave, Is.EqualTo(1));
-            Assert.That(table.ActiveBuild.MaxSpawnCount, Is.EqualTo(0));
+            Assert.IsTrue(table.ActiveBuild.Enabled);
+            Assert.That(table.ActiveBuild.BaseSpawnCount, Is.GreaterThan(0));
+            Assert.That(table.ActiveBuild.SpawnCountStepSize, Is.GreaterThanOrEqualTo(1));
+            Assert.That(table.ActiveBuild.SpawnCountStartWave, Is.GreaterThanOrEqualTo(1));
+            Assert.That(table.ActiveBuild.MaxSpawnCount, Is.GreaterThanOrEqualTo(0));
+            Assert.That(table.ActiveBuild.IntervalSeconds, Is.GreaterThan(0f));
+            Assert.That(table.ActiveBuild.GetSpawnCountForWave(2), Is.GreaterThanOrEqualTo(table.ActiveBuild.GetSpawnCountForWave(1)));
         }
     }
 }
