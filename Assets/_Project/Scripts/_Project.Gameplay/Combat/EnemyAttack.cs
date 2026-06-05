@@ -15,6 +15,12 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] float attackRange = 1.2f;     // should be >= stopDistance
     [SerializeField] float windupSeconds = 0.15f;  // time before damage applies
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
+    public float CooldownSeconds
+    {
+        get => cooldownSeconds;
+        set => cooldownSeconds = Mathf.Max(0f, value);
+    }
+
     [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
     [SerializeField] Animator animator;            // optional, can be null
     [SerializeField] FeedbackEventChannel enemyHitBarrierFeedbackChannel;

@@ -17,4 +17,8 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: cd2861bff7fa4d4f99ca4fe0c314a971, type: 2}
     minAmount: 1
     maxAmount: 1
-    weight: 1
+    weight: 8
+  - item: {fileID: 11400000, guid: cd2861bff7fa4d4f99ca4fe0c314a971, type: 2}
+    minAmount: 2
+    maxAmount: 2
+    weight: 2

@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-06-05 - refactor(loot): weight basic potion drop amounts
+
+### Summary
+- Updated LootTable_PotionBasic so successful potion drops usually grant 1 potion.
+- Added a lower-weight 2-potion outcome for occasional bonus potion drops.
+- Kept enemy loot profile roll counts unchanged so potion drops remain one table result per enemy.
+
+### New or Updated Tests
+**EditMode**
+- `LootTableRngTests` - verifies PotionBasic asset weights 1 potion at 8 and 2 potions at 2.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-05 - refactor(enemy): add enemy stat and reward tuning table
+
+### Summary
+- Added authored enemy stat rows through EnemyBalanceTable with the current grunt baseline.
+- Added an EnemyLootProfile asset for the current grunt reward package while preserving existing loot table mappings.
+- Routed spawned enemies through an EnemyBalanceApplier so stats, XP, and loot mappings resolve from the central GameBalanceStation.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyBalanceTableTests` - verifies defaults, clamping, lookup behavior, and project asset wiring.
+- `EnemyBalanceApplierTests` - verifies stat and reward application plus missing-row fallback behavior.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Unity EditMode run attempted on 2026-06-05 but failed before tests due to Unity licensing IPC timeout; no NUnit XML was produced.
+
 ## 2026-05-26 - refactor(waves): add wave pacing and difficulty tuning table
 
 ### Summary

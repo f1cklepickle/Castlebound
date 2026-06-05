@@ -167,6 +167,13 @@ namespace Castlebound.Gameplay.Spawning
                 var instance = Instantiate(prefab, request.Position, Quaternion.identity);
                 _aliveCount++;
 
+                var balanceApplier = instance.GetComponent<EnemyBalanceApplier>();
+                if (balanceApplier != null)
+                {
+                    int waveIndex = waveIndexProvider != null ? waveIndexProvider.CurrentWaveIndex : 1;
+                    balanceApplier.Initialize(balanceStation, request.EnemyTypeId, waveIndex);
+                }
+
                 var lifetime = instance.GetComponent<SpawnedEntityLifetime>();
                 if (lifetime == null)
                 {

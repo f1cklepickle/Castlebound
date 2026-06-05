@@ -50,6 +50,12 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
 
     public Transform Target => target;
+    public float Speed
+    {
+        get => speed;
+        set => speed = Mathf.Max(0f, value);
+    }
+
     private EnemyTargetType _currentTargetType = EnemyTargetType.None;
     public EnemyTargetType CurrentTargetType => _currentTargetType;
 
