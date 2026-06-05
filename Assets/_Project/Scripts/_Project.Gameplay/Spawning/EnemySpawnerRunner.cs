@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Castlebound.Gameplay.Balance;
 using UnityEngine;
 
 namespace Castlebound.Gameplay.Spawning
@@ -17,6 +18,7 @@ namespace Castlebound.Gameplay.Spawning
         }
 
         [SerializeField] private EnemySpawnScheduleAsset scheduleAsset;
+        [SerializeField] private GameBalanceStation balanceStation;
         [SerializeField] private List<SpawnPointMarker> spawnMarkers = new List<SpawnPointMarker>();
         [SerializeField] private List<EnemyPrefabMapping> prefabMappings = new List<EnemyPrefabMapping>();
         [SerializeField] private bool autoFindMarkers = true;
@@ -29,6 +31,12 @@ namespace Castlebound.Gameplay.Spawning
         private IWaveIndexProvider waveIndexProvider;
 
         public WavePhaseTracker PhaseTracker => phaseTracker ??= new WavePhaseTracker();
+
+        public GameBalanceStation BalanceStation
+        {
+            get => balanceStation;
+            set => balanceStation = value;
+        }
 
         private void Start()
         {
@@ -57,10 +65,10 @@ namespace Castlebound.Gameplay.Spawning
                 }
             }
 
-            var waveSchedule = scheduleAsset.ToRuntimeWaveSchedule();
-            var hasAuthoredWaves = scheduleAsset != null && waveSchedule != null && waveSchedule.HasAuthoredWaves;
+            var waveSchedule = scheduleAsset.ToRuntimeWaveSchedule(balanceStation);
+            var canProvideWaves = waveSchedule != null && waveSchedule.CanProvideWaves;
 
-            if (hasAuthoredWaves)
+            if (canProvideWaves)
             {
                 _waveSpawner = new EnemyWaveSpawner(waveSchedule, spawnPoints);
                 _waveSpawner.OnWaveStarted += HandleWaveStarted;

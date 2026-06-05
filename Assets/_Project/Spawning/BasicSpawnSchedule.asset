@@ -18,7 +18,7 @@ MonoBehaviour:
   waves:
   - sequences:
     - enemyTypeId: grunt
-      spawnCount: 6
+      spawnCount: 5
       intervalSeconds: 1
       initialDelaySeconds: 0.5
     useStrategyOverride: 0
