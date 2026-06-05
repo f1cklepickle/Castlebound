@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Loot;
@@ -10,6 +11,8 @@ namespace Castlebound.Tests.Inventory
 {
     public class LootTableRngTests
     {
+        private const string PotionBasicPath = "Assets/_Project/Items/LootTables/LootTable_PotionBasic.asset";
+
         [Test]
         public void Roll_SeededRng_IsDeterministic()
         {
@@ -67,6 +70,27 @@ namespace Castlebound.Tests.Inventory
             Object.DestroyImmediate(itemA);
             Object.DestroyImmediate(itemB);
             Object.DestroyImmediate(itemC);
+        }
+
+        [Test]
+        public void PotionBasicAsset_WeightsOnePotionOverTwoPotions()
+        {
+            var table = AssetDatabase.LoadAssetAtPath<LootTable>(PotionBasicPath);
+
+            Assert.NotNull(table, "Potion basic loot table must exist.");
+            Assert.That(table.Entries, Is.Not.Null);
+            Assert.That(table.Entries.Length, Is.EqualTo(2));
+            AssertPotionEntry(table.Entries[0], 1, 8f);
+            AssertPotionEntry(table.Entries[1], 2, 2f);
+        }
+
+        private static void AssertPotionEntry(LootEntry entry, int amount, float weight)
+        {
+            Assert.NotNull(entry.Item);
+            Assert.That(entry.Item.ItemId, Is.EqualTo("potion_basic"));
+            Assert.That(entry.MinAmount, Is.EqualTo(amount));
+            Assert.That(entry.MaxAmount, Is.EqualTo(amount));
+            Assert.That(entry.Weight, Is.EqualTo(weight).Within(0.001f));
         }
     }
 }

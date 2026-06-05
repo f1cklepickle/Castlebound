@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10018b6c8221409fbf9d366afc32f253, type: 3}
+  m_Name: EnemyBalanceTable
+  m_EditorClassIdentifier: ""
+  enemies:
+  - enemyTypeId: grunt
+    maxHealth: 10
+    moveSpeed: 8
+    attackDamage: 1
+    attackCooldownSeconds: 0.8
+    xpReward: 5
+    lootProfile: {fileID: 11400000, guid: f6af5ba4e3e841eab07d6af86f261ca0, type: 2}

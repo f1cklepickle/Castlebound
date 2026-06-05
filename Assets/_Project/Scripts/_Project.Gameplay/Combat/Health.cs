@@ -14,6 +14,13 @@ public class Health : MonoBehaviour, IDamageable, IHealable
     public event Action<int, int> OnHealthChanged; // (current, max)
     public event Action OnDied;
 
+    public void ConfigureMaxHealth(int value, bool refill)
+    {
+        maxHealth = Mathf.Max(0, value);
+        current = refill ? maxHealth : Mathf.Clamp(current, 0, maxHealth);
+        OnHealthChanged?.Invoke(current, maxHealth);
+    }
+
     void Awake()
     {
         current = maxHealth;

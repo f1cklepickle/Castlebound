@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 4031526577869015660}
   - component: {fileID: 4347245256977356794}
   - component: {fileID: 2387932495633829988}
+  - component: {fileID: 6382125908214597412}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -197,8 +198,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b42b7e1aae77f64e8810845a4e4cbbc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   target: {fileID: 0}
   player: {fileID: 0}
   barrier: {fileID: 0}
@@ -226,8 +227,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c97023e7c008dd4ea8eeca0bd2f0d2d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!114 &1937058686654329911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,8 +239,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12b16749d0c1c00419a79f1ded1fdd58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name: ""
+  m_EditorClassIdentifier: ""
   regionOverride: {fileID: 0}
 --- !u!114 &3821050183671550168
 MonoBehaviour:
@@ -327,3 +328,17 @@ MonoBehaviour:
   spillConeWidth: 1
   spillDistanceMin: 0.4
   spillDistanceMax: 3.2
+--- !u!114 &6382125908214597412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2f0a13b9b534d04a2de7227e5839871, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: ""
+  enemyTypeId: grunt
+  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}

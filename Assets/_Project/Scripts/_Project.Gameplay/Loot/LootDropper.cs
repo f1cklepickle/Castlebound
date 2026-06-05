@@ -45,6 +45,7 @@ namespace Castlebound.Gameplay.Loot
 
         private LootRollResult[] cachedResults = Array.Empty<LootRollResult>();
         private Health health;
+        private bool hasPreRolled;
 
         public void SetLootTable(LootTable table)
         {
@@ -64,7 +65,15 @@ namespace Castlebound.Gameplay.Loot
 
         public void SetXpAmount(int amount)
         {
-            xpAmount = amount;
+            xpAmount = Mathf.Max(0, amount);
+        }
+
+        public void ConfigureLootTables(LootTableMapping[] mappings, int maxTables)
+        {
+            lootTables = mappings;
+            globalMaxTables = Mathf.Max(0, maxTables);
+            cachedResults = Array.Empty<LootRollResult>();
+            hasPreRolled = false;
         }
 
         private void Awake()
@@ -95,7 +104,7 @@ namespace Castlebound.Gameplay.Loot
 
         private void Start()
         {
-            if (lootTables == null || lootTables.Length == 0 || GameManager.I == null)
+            if (hasPreRolled || lootTables == null || lootTables.Length == 0 || GameManager.I == null)
             {
                 return;
             }
@@ -108,6 +117,7 @@ namespace Castlebound.Gameplay.Loot
             if (lootTables == null || lootTables.Length == 0 || rng == null)
             {
                 cachedResults = Array.Empty<LootRollResult>();
+                hasPreRolled = true;
                 return;
             }
 
@@ -138,6 +148,7 @@ namespace Castlebound.Gameplay.Loot
             if (combined.Count == 0)
             {
                 cachedResults = Array.Empty<LootRollResult>();
+                hasPreRolled = true;
                 return;
             }
 
@@ -158,10 +169,12 @@ namespace Castlebound.Gameplay.Loot
                 }
 
                 cachedResults = trimmed;
+                hasPreRolled = true;
                 return;
             }
 
             cachedResults = combined.ToArray();
+            hasPreRolled = true;
         }
 
         private void HandleDied()
