@@ -79,6 +79,41 @@ namespace Castlebound.Tests.Spawning
         }
 
         [Test]
+        public void CanProvideWaves_IsTrueForAuthoredOrGeneratedSchedules()
+        {
+            var authoredSchedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 0,
+                waves: new[]
+                {
+                    new WaveConfig
+                    {
+                        sequences = new List<SpawnSequenceConfig>
+                        {
+                            new SpawnSequenceConfig { enemyTypeId = "grunt", spawnCount = 1 }
+                        }
+                    }
+                },
+                ramp: null);
+
+            var generatedSchedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 0,
+                waves: null,
+                ramp: CreateSingleTierRamp(baseSpawnCount: 5, countPerStep: 1, stepSize: 1, startWave: 1));
+
+            var emptySchedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 0,
+                waves: null,
+                ramp: null);
+
+            Assert.IsTrue(authoredSchedule.CanProvideWaves);
+            Assert.IsTrue(generatedSchedule.CanProvideWaves);
+            Assert.IsFalse(emptySchedule.CanProvideWaves);
+        }
+
+        [Test]
         public void GeneratedRampWave_UsesProvidedSharedPacingDefaults()
         {
             var ramp = new RampConfig

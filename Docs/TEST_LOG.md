@@ -12,11 +12,12 @@
 - Routed EnemySpawnScheduleAsset wave defaults through the balance table when assigned while preserving fallback behavior.
 - Added active generated wave builds so the wave table can define count scaling presets like 5 enemies on wave 1 and 15 on wave 2.
 - Wired MainPrototype's EnemySpawnerRunner to the central balance station so active wave builds reach runtime.
+- Updated the spawner runner gate so generated wave schedules use the wave runtime even when no authored waves exist.
 
 ### New or Updated Tests
 **EditMode**
 - `WaveBalanceTableTests` - verifies defaults, clamping, seed resolution, and project asset wiring.
-- `WaveScheduleRuntimeTests` - verifies fallback and generated ramp waves use provided shared defaults, active build enemy count scaling, max count capping, and no-build fallback behavior.
+- `WaveScheduleRuntimeTests` - verifies fallback and generated ramp waves use provided shared defaults, active build enemy count scaling, max count capping, generated-schedule availability, and no-build fallback behavior.
 - `EnemySpawnScheduleAssetBalanceTests` - verifies balance-table routing, runner station override behavior, active build count generation, MainPrototype station wiring, and no-table fallback defaults.
 
 **PlayMode**

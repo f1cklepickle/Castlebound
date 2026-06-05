@@ -83,6 +83,7 @@ namespace Castlebound.Gameplay.Spawning
         }
 
         public bool HasAuthoredWaves => _waves.Count > 0;
+        public bool CanProvideWaves => HasAuthoredWaves || HasRampGeneration;
 
         public WaveRuntime GetWave(int waveIndex)
         {
@@ -208,6 +209,36 @@ namespace Castlebound.Gameplay.Spawning
 
             // If no weights set, weights are effectively equal; we just pick the first for now.
             return pool;
+        }
+
+        private bool HasRampGeneration
+        {
+            get
+            {
+                if (_ramp == null || _ramp.unlocks == null)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < _ramp.unlocks.Count; i++)
+                {
+                    var unlock = _ramp.unlocks[i];
+                    if (unlock.tiers == null)
+                    {
+                        continue;
+                    }
+
+                    for (int j = 0; j < unlock.tiers.Count; j++)
+                    {
+                        if (!string.IsNullOrWhiteSpace(unlock.tiers[j].enemyTypeId))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
         }
 
         private string ChooseEnemyType(List<RampTier> pool)

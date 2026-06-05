@@ -66,9 +66,9 @@ namespace Castlebound.Gameplay.Spawning
             }
 
             var waveSchedule = scheduleAsset.ToRuntimeWaveSchedule(balanceStation);
-            var hasAuthoredWaves = scheduleAsset != null && waveSchedule != null && waveSchedule.HasAuthoredWaves;
+            var canProvideWaves = waveSchedule != null && waveSchedule.CanProvideWaves;
 
-            if (hasAuthoredWaves)
+            if (canProvideWaves)
             {
                 _waveSpawner = new EnemyWaveSpawner(waveSchedule, spawnPoints);
                 _waveSpawner.OnWaveStarted += HandleWaveStarted;
