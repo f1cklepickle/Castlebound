@@ -13,6 +13,7 @@
 - Added active generated wave builds so the wave table can define count scaling presets like 5 enemies on wave 1 and 15 on wave 2.
 - Wired MainPrototype's EnemySpawnerRunner to the central balance station so active wave builds reach runtime.
 - Updated the spawner runner gate so generated wave schedules use the wave runtime even when no authored waves exist.
+- Tuned the default generated wave gap to 8 seconds to leave time for post-wave loot collection.
 
 ### New or Updated Tests
 **EditMode**

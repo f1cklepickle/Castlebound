@@ -105,7 +105,7 @@ namespace Castlebound.Gameplay.Balance
         [SerializeField] private SpawnMarkerStrategy defaultStrategy = SpawnMarkerStrategy.RoundRobin;
         [SerializeField] private bool useDefaultSeed = false;
         [SerializeField] private int defaultSeed = 0;
-        [SerializeField] private float defaultGapSeconds = 5f;
+        [SerializeField] private float defaultGapSeconds = 8f;
         [SerializeField] private bool defaultWaitForClear = true;
         [SerializeField] private int defaultMaxAlive = 0;
         [Header("Generated Wave Builds")]

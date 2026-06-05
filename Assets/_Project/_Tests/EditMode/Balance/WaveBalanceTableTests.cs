@@ -23,7 +23,7 @@ namespace Castlebound.Tests.Balance
                 Assert.IsFalse(table.UseDefaultSeed);
                 Assert.That(table.DefaultSeed, Is.EqualTo(0));
                 Assert.That(table.ResolvedDefaultSeed, Is.EqualTo(0));
-                Assert.That(table.DefaultGapSeconds, Is.EqualTo(5f).Within(0.001f));
+                Assert.That(table.DefaultGapSeconds, Is.EqualTo(8f).Within(0.001f));
                 Assert.IsTrue(table.DefaultWaitForClear);
                 Assert.That(table.DefaultMaxAlive, Is.EqualTo(0));
                 Assert.That(table.ActiveBuildIndex, Is.EqualTo(0));
@@ -134,7 +134,7 @@ namespace Castlebound.Tests.Balance
             Assert.NotNull(table, "WaveBalanceTable asset must exist.");
             Assert.AreSame(table, station.Wave, "Central station should reference the authored wave table.");
             Assert.That(table.DefaultStrategy, Is.EqualTo(SpawnMarkerStrategy.RoundRobin));
-            Assert.That(table.DefaultGapSeconds, Is.EqualTo(5f).Within(0.001f));
+            Assert.That(table.DefaultGapSeconds, Is.EqualTo(8f).Within(0.001f));
             Assert.IsTrue(table.DefaultWaitForClear);
             Assert.That(table.DefaultMaxAlive, Is.EqualTo(0));
             Assert.NotNull(table.ActiveBuild);

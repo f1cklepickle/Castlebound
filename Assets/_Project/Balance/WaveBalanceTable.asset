@@ -15,7 +15,7 @@ MonoBehaviour:
   defaultStrategy: 0
   useDefaultSeed: 0
   defaultSeed: 0
-  defaultGapSeconds: 5
+  defaultGapSeconds: 8
   defaultWaitForClear: 1
   defaultMaxAlive: 0
   activeBuildIndex: 0
