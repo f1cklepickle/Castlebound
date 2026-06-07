@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-07 - feat(world): add grid footprint placement contract
+
+### Summary
+- Added an explicit grid footprint value contract for declared placement dimensions.
+- Routed castle placement and occupancy checks through reusable footprint APIs.
+- Preserved existing 3x3 barrier placement wrappers while adding 1x1 and declared-footprint coverage.
+
+### New or Updated Tests
+**EditMode**
+- `CastleModulePlacementRulesTests` - verifies declared footprint cell enumeration, invalid footprint rejection, 1x1 placement, overlap blocking, off-lattice rejection, and existing 3x3 barrier placement behavior.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Unity EditMode run attempted on 2026-06-07 but failed before tests due to Unity licensing IPC timeout; no NUnit XML was produced.
+
 ## 2026-06-05 - refactor(player): add player baseline tuning table
 
 ### Summary

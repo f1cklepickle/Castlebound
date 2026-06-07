@@ -193,10 +193,11 @@ When the user says:
 Output in order:
 1. Branch name suggestion
 2. Commit message suggestion(s)
-3. PR template (below)
-4. Suggested labels
-5. Squash merge message
-6. Cleanup checklist
+3. Git push command
+4. PR template (below)
+5. Suggested labels
+6. Squash merge message
+7. Cleanup checklist
 
 Do not include Teaching Mode unless explicitly requested.
 
