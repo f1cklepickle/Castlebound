@@ -233,6 +233,11 @@ type(scope): short description (#PR_NUMBER)
 Example:
 - `feat(inventory): add castle vault count-based storage (#47)`
 
+### Pull Request Checklist Rule (Agent Instruction — Do Not Copy Into PR Body)
+- In PR close-out output, every checklist item in the PR template MUST be checked as `[x]`.
+- If an item does not apply, keep it checked and append `(N/A - <short reason>)`.
+- Do not include this instruction text or any italic checklist note in the PR body.
+
 ### Pull Request Template (copy exactly)
 ```md
 # Title
@@ -253,13 +258,11 @@ One or two sentences describing the problem, goal, or motivation.
    - PlayMode (or note manual validation)
 
 ## Checklist
-_All items must be checked. If not applicable, check and mark "N/A"._
-
-- [ ] Unit tests (EditMode) added or updated
-- [ ] PlayMode test or manual validation included
-- [ ] Demo scene updated (if player-visible)
-- [ ] Prefab links, tags, and layers validated
-- [ ] README / Docs touched (if applicable)
+- [x] Unit tests (EditMode) added or updated
+- [x] PlayMode test or manual validation included
+- [x] Demo scene updated (if player-visible, otherwise mark N/A with reason)
+- [x] Prefab links, tags, and layers validated
+- [x] README / Docs touched (if applicable, otherwise mark N/A with reason)
 
 ## Related
 - Closes #<issue> or Refs #<issue> (if applicable)
