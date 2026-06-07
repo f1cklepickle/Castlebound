@@ -14,12 +14,17 @@ namespace Castlebound.Gameplay.Castle
 
         public static bool CanPlace3x3At(Vector2 worldPosition, CastleOccupancyMap occupancy)
         {
-            if (occupancy == null || !IsOnLattice(worldPosition))
+            return CanPlaceAt(worldPosition, occupancy, GridFootprint.ThreeByThree);
+        }
+
+        public static bool CanPlaceAt(Vector2 worldPosition, CastleOccupancyMap occupancy, GridFootprint footprint)
+        {
+            if (occupancy == null || !footprint.IsValid || !IsOnLattice(worldPosition))
             {
                 return false;
             }
 
-            return !occupancy.IsAny3x3CellOccupied(worldPosition);
+            return !occupancy.IsAnyCellOccupied(worldPosition, footprint);
         }
 
         private static bool IsMultipleOfStep(float value)
