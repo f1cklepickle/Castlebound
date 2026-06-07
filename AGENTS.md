@@ -188,7 +188,7 @@ Examples:
 ## PR Close-Out (Only on Trigger)
 
 When the user says:
-`READY TO COMMIT: <summary>`
+`READY TO CLOSE: <summary>`
 
 Output in order:
 1. Branch name suggestion
@@ -349,7 +349,7 @@ When the user types `task refresh`, output this list — clean and scannable, no
 - `HANDOFF` — structured transition block for switching sessions
 - `sync issue tree` — scan GitHub, update Docs/LIVING_ISSUE_TREE.md in repo
 - `log issue: [title]` — create structured GitHub issue mid-session
-- `READY TO COMMIT: [summary]` — full PR close-out output
+- `READY TO CLOSE: [summary]` — full PR close-out output
 - `task refresh` — this list
 
 ---
