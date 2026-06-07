@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-05 - refactor(player): add player baseline tuning table
+
+### Summary
+- Added authored player baseline fields to PlayerBalanceTable.
+- Added a PlayerBalanceTable project asset and wired it through GameBalanceStation.
+- Routed player max HP, move speed, and repair range through a PlayerBalanceApplier while preserving instant full barrier repair.
+
+### New or Updated Tests
+**EditMode**
+- `PlayerBalanceTableTests` - verifies defaults, clamping, and project asset wiring.
+- `PlayerBalanceApplierTests` - verifies baseline application and missing-table fallback behavior.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode tests passed per user on 2026-06-07.
+
 ## 2026-06-05 - refactor(loot): weight basic potion drop amounts
 
 ### Summary

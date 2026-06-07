@@ -12,6 +12,12 @@ public class PlayerCollisionMove2D : MonoBehaviour
     private Collider2D _col;
     private Vector2 _input;
 
+    public float MoveSpeed
+    {
+        get => moveSpeed;
+        set => moveSpeed = Mathf.Max(0f, value);
+    }
+
     // Reused, no per-frame allocations
     private static readonly RaycastHit2D[] sHits = new RaycastHit2D[8];
 

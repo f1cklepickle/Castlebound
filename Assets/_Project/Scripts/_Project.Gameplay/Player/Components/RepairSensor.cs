@@ -7,6 +7,12 @@ public class RepairSensor
     [SerializeField] private float repairRadius = 2f;
     [SerializeField] private LayerMask barrierMask;
 
+    public float RepairRadius
+    {
+        get => repairRadius;
+        set => repairRadius = Mathf.Max(0f, value);
+    }
+
     /// <summary>
     /// Returns true if there is at least one broken barrier within repair range.
     /// </summary>

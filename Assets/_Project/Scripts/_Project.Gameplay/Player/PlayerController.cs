@@ -37,6 +37,20 @@ public class PlayerController : MonoBehaviour
     private InventoryState inventoryState;
     private bool inputLocked;
 
+    public float RepairRange
+    {
+        get => _repairSensor != null ? _repairSensor.RepairRadius : 0f;
+        set
+        {
+            if (_repairSensor == null)
+            {
+                _repairSensor = new RepairSensor();
+            }
+
+            _repairSensor.RepairRadius = value;
+        }
+    }
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();

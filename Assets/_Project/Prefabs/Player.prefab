@@ -121,6 +121,7 @@ GameObject:
   - component: {fileID: 9150000000000000203}
   - component: {fileID: 9150000000000000204}
   - component: {fileID: 9150000000000000205}
+  - component: {fileID: 9150000000000000301}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -599,6 +600,20 @@ MonoBehaviour:
   activeDuration: 0.02
   recoveryDuration: 0.01
   minSwingDuration: 0.03
+--- !u!114 &9150000000000000301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c61f73618fdb4e6b8b5f72101bedf19c, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: ""
+  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
+  playerController: {fileID: 4369444282720785943}
 --- !u!1 &9150000000000000001
 GameObject:
   m_ObjectHideFlags: 0
