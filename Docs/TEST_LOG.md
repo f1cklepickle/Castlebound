@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-08 - feat(defense): add bear trap placement prototype
+
+### Summary
+- Added a minimal bear trap placeable definition and prefab using a replaceable placeholder sprite visual.
+- Added runtime placement rules for 1x1 outside-ground snapping and occupied-footprint rejection.
+- Wired MainPrototype with a prototype bear trap placement controller that creates a simple runtime select button.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies bear trap definition authoring, outside-ground validation, occupied rejection, grid snapping, prefab visual swap contract, and MainPrototype controller wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passing per user validation; local batchmode run was blocked because the project was already open in another Unity instance.
+
 ## 2026-06-08 - feat(world): add castle and defense placeable definitions
 
 ### Summary
