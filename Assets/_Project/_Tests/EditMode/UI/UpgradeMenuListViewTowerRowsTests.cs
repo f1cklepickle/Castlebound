@@ -26,12 +26,55 @@ namespace Castlebound.Tests.UI
             {
                 context.View.Refresh();
 
+                Assert.That(context.View.ActiveTab, Is.EqualTo(UpgradeMenuTab.Castle));
+                AssertTextExists(context.ContentRoot, "Castle");
+                AssertTextExists(context.ContentRoot, "Defense");
                 AssertTextExists(context.ContentRoot, "North Barrier");
                 AssertTextExists(context.ContentRoot, "Tier 0 | HP 10/10 | 20 Gold");
+                AssertTextDoesNotExist(context.ContentRoot, "- Left Plot");
+                AssertTextDoesNotExist(context.ContentRoot, "- Right Plot");
+            }
+            finally
+            {
+                context.Destroy();
+            }
+        }
+
+        [Test]
+        public void DefenseTab_RendersTowerPlotChildRows()
+        {
+            var context = CreateContext();
+
+            try
+            {
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
+
                 AssertTextExists(context.ContentRoot, "- Left Plot");
                 AssertTextExists(context.ContentRoot, "- Right Plot");
                 AssertTextExists(context.ContentRoot, "ArcherTower | HP 10 | DMG 3 | Build 50 Gold");
-                Assert.That(context.ContentRoot.GetComponentsInChildren<Button>(true).Length, Is.EqualTo(3));
+                AssertTextDoesNotExist(context.ContentRoot, "North Barrier");
+            }
+            finally
+            {
+                context.Destroy();
+            }
+        }
+
+        [Test]
+        public void DefenseTabButton_SwitchesActiveTab()
+        {
+            var context = CreateContext();
+
+            try
+            {
+                context.View.Refresh();
+                var defenseTab = FindButtonByLabel(context.ContentRoot, "Defense");
+
+                defenseTab.onClick.Invoke();
+
+                Assert.That(context.View.ActiveTab, Is.EqualTo(UpgradeMenuTab.Defense));
+                AssertTextExists(context.ContentRoot, "- Left Plot");
+                AssertTextDoesNotExist(context.ContentRoot, "North Barrier");
             }
             finally
             {
@@ -46,7 +89,7 @@ namespace Castlebound.Tests.UI
 
             try
             {
-                context.View.Refresh();
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
                 var buildButton = FindButtonByLabel(context.ContentRoot, "Build");
 
                 buildButton.onClick.Invoke();
@@ -71,9 +114,9 @@ namespace Castlebound.Tests.UI
 
             try
             {
-                context.View.Refresh();
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
 
-                AssertTextExists(context.ContentRoot, "North Barrier");
+                AssertTextDoesNotExist(context.ContentRoot, "North Barrier");
                 AssertTextExists(context.ContentRoot, "ArcherTower | HP 10/10 | DMG 3 | RATE 1 | RNG 5");
 
                 Assert.NotNull(FindButtonByLabel(context.ContentRoot, "DMG 10"));
@@ -101,7 +144,7 @@ namespace Castlebound.Tests.UI
 
             try
             {
-                context.View.Refresh();
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
                 var damageButton = FindButtonByLabel(context.ContentRoot, "DMG 10");
 
                 damageButton.onClick.Invoke();
@@ -129,7 +172,7 @@ namespace Castlebound.Tests.UI
 
             try
             {
-                context.View.Refresh();
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
 
                 var damageButton = FindButtonByLabel(context.ContentRoot, "DMG 10");
                 Assert.IsTrue(damageButton.interactable, "Tower upgrade buttons should use the build controller pre-wave tracker.");
@@ -335,6 +378,12 @@ namespace Castlebound.Tests.UI
         {
             var texts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
             Assert.IsTrue(texts.Any(text => text.text == expected), $"Expected UI text '{expected}' was not found.");
+        }
+
+        private static void AssertTextDoesNotExist(Transform root, string unexpected)
+        {
+            var texts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            Assert.IsFalse(texts.Any(text => text.text == unexpected), $"Unexpected UI text '{unexpected}' was found.");
         }
 
         private static Button FindButtonByLabel(Transform root, string label)

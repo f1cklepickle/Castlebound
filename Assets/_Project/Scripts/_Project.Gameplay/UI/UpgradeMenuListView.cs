@@ -26,8 +26,12 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private FeedbackEventChannel feedbackChannel;
         [SerializeField] private InventoryStateComponent inventorySource;
         [SerializeField] private TowerBuildController towerBuildController;
+        [SerializeField] private UpgradeMenuTab activeTab = UpgradeMenuTab.Castle;
 
         private readonly List<ActionRow> rows = new List<ActionRow>();
+        private RectTransform rowRoot;
+        private UpgradeMenuTabStrip tabStrip;
+
         private static readonly TowerUpgradeTrack[] TowerUpgradeTracks =
         {
             TowerUpgradeTrack.Damage,
@@ -35,6 +39,8 @@ namespace Castlebound.Gameplay.UI
             TowerUpgradeTrack.Health,
             TowerUpgradeTrack.Range
         };
+
+        public UpgradeMenuTab ActiveTab => activeTab;
 
         private void OnEnable()
         {
@@ -64,6 +70,8 @@ namespace Castlebound.Gameplay.UI
         public void Refresh()
         {
             EnsureContentRoot();
+            EnsureTabControls();
+            EnsureRowRoot();
             ClearRows();
 
             var controllers = FindObjectsOfType<BarrierUpgradeController>();
@@ -86,9 +94,17 @@ namespace Castlebound.Gameplay.UI
                     controller.SetFeedbackChannel(feedbackChannel);
                 }
 
-                rows.Add(CreateBarrierUpgradeRow(controller));
-                CreateTowerPlotRows(controller);
+                if (activeTab == UpgradeMenuTab.Castle)
+                {
+                    rows.Add(CreateBarrierUpgradeRow(controller));
+                }
+                else
+                {
+                    CreateTowerPlotRows(controller);
+                }
             }
+
+            RefreshTabButtons();
         }
 
         public void SetContentRoot(RectTransform root)
@@ -99,6 +115,17 @@ namespace Castlebound.Gameplay.UI
         public void SetTowerBuildController(TowerBuildController controller)
         {
             towerBuildController = controller;
+        }
+
+        public void SetActiveTab(UpgradeMenuTab tab)
+        {
+            if (activeTab == tab)
+            {
+                return;
+            }
+
+            activeTab = tab;
+            Refresh();
         }
 
         private void ResolveReferences()
@@ -176,18 +203,60 @@ namespace Castlebound.Gameplay.UI
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
         }
 
+        private void EnsureTabControls()
+        {
+            if (contentRoot == null)
+            {
+                return;
+            }
+
+            if (tabStrip == null)
+            {
+                tabStrip = new UpgradeMenuTabStrip(CreateButton, SetActiveTab);
+            }
+
+            tabStrip.Ensure(contentRoot);
+            RefreshTabButtons();
+        }
+
+        private void RefreshTabButtons()
+        {
+            tabStrip?.Refresh(activeTab, normalButtonColor, hoverButtonColor);
+        }
+
+        private void EnsureRowRoot()
+        {
+            if (contentRoot == null || rowRoot != null)
+            {
+                return;
+            }
+
+            var rowObject = new GameObject("UpgradeMenuRows", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            rowObject.transform.SetParent(contentRoot, false);
+            rowRoot = rowObject.GetComponent<RectTransform>();
+
+            var layout = rowObject.GetComponent<VerticalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
+
+            var fitter = rowObject.GetComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        }
+
         private ActionRow CreateBarrierUpgradeRow(BarrierUpgradeController controller)
         {
             var rowObject = new GameObject("UpgradeRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
-            rowObject.transform.SetParent(contentRoot, false);
-            ConfigureRowLayout(rowObject, 0f, 28f);
+            rowObject.transform.SetParent(rowRoot, false);
+            ConfigureRowLayout(rowObject, 0f, 35f);
 
-            var nameText = CreateText("Name", rowObject.transform, 18, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(nameText.gameObject, 150f, 0f);
+            var nameText = CreateText("Name", rowObject.transform, 22, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 188f, 0f);
 
-            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(detailText.gameObject, 340f, 0f);
-            var button = CreateButton("UpgradeButton", rowObject.transform, "Upgrade", 96f);
+            var detailText = CreateText("Details", rowObject.transform, 20, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 425f, 0f);
+            var button = CreateButton("UpgradeButton", rowObject.transform, "Upgrade", 120f, 18);
 
             var row = new ActionRow(
                 rowObject,
@@ -245,22 +314,22 @@ namespace Castlebound.Gameplay.UI
         private ActionRow CreateTowerPlotRow(TowerPlot plot, int plotIndex, bool endsBarrierGroup)
         {
             var rowObject = new GameObject("TowerPlotRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
-            rowObject.transform.SetParent(contentRoot, false);
+            rowObject.transform.SetParent(rowRoot, false);
             if (endsBarrierGroup)
             {
                 var groupSpacing = rowObject.AddComponent<LayoutElement>();
-                groupSpacing.minHeight = 48f;
-                groupSpacing.preferredHeight = 48f;
+                groupSpacing.minHeight = 60f;
+                groupSpacing.preferredHeight = 60f;
             }
 
-            ConfigureRowLayout(rowObject, 42f, 28f);
+            ConfigureRowLayout(rowObject, 0f, 35f);
 
-            var nameText = CreateText("Name", rowObject.transform, 13, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(nameText.gameObject, 120f, 0f);
+            var nameText = CreateText("Name", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 150f, 0f);
 
-            var detailText = CreateText("Details", rowObject.transform, 13, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(detailText.gameObject, 340f, 0f);
-            var button = CreateButton("BuildButton", rowObject.transform, "Build", 80f);
+            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 425f, 0f);
+            var button = CreateButton("BuildButton", rowObject.transform, "Build", 100f, 18);
 
             var row = new ActionRow(
                 rowObject,
@@ -281,21 +350,21 @@ namespace Castlebound.Gameplay.UI
         private ActionRow CreateTowerUpgradeRow(TowerPlot plot, int plotIndex, bool endsBarrierGroup)
         {
             var rowObject = new GameObject("TowerUpgradeRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
-            rowObject.transform.SetParent(contentRoot, false);
+            rowObject.transform.SetParent(rowRoot, false);
             if (endsBarrierGroup)
             {
                 var groupSpacing = rowObject.AddComponent<LayoutElement>();
-                groupSpacing.minHeight = 48f;
-                groupSpacing.preferredHeight = 48f;
+                groupSpacing.minHeight = 60f;
+                groupSpacing.preferredHeight = 60f;
             }
 
-            ConfigureRowLayout(rowObject, 42f, 10f);
+            ConfigureRowLayout(rowObject, 0f, 12f);
 
-            var nameText = CreateText("Name", rowObject.transform, 13, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(nameText.gameObject, 120f, 0f);
+            var nameText = CreateText("Name", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 150f, 0f);
 
-            var detailText = CreateText("Details", rowObject.transform, 13, TextAlignmentOptions.Left);
-            ConfigureLayoutElement(detailText.gameObject, 260f, 0f);
+            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 325f, 0f);
 
             var upgradeController = GetTowerUpgradeController(plot);
             var bindings = new List<TowerUpgradeButtonBinding>();
@@ -324,7 +393,7 @@ namespace Castlebound.Gameplay.UI
                     continue;
                 }
 
-                var trackButton = CreateButton($"{track}Button", rowObject.transform, GetTrackLabel(track), 68f, 13);
+                var trackButton = CreateButton($"{track}Button", rowObject.transform, GetTrackLabel(track), 85f, 16);
                 var capturedTrack = track;
                 trackButton.onClick.AddListener(() =>
                 {
@@ -460,10 +529,10 @@ namespace Castlebound.Gameplay.UI
             textRect.offsetMax = Vector2.zero;
 
             var rect = go.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(width, 28f);
+            rect.sizeDelta = new Vector2(width, 35f);
             var layout = go.AddComponent<LayoutElement>();
             layout.preferredWidth = width;
-            layout.preferredHeight = 28f;
+            layout.preferredHeight = 35f;
             layout.flexibleWidth = 0f;
             layout.flexibleHeight = 0f;
 

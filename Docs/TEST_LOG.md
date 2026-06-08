@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-08 - feat(ui): add castle and defense upgrade tabs
+
+### Summary
+- Added Castle and Defense tabs to the upgrade menu while keeping the same menu frame.
+- Moved barrier upgrade rows under Castle and tower build/upgrade rows under Defense.
+- Enlarged per-tab row content and extracted tab strip behavior away from row rendering.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies Castle tab barrier rows, Defense tab tower rows, and existing barrier/tower actions after tab split.
+
+**PlayMode**
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - switches to the Defense tab before tower build/upgrade vertical-slice assertions.
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
 ## 2026-06-08 - feat(defense): add bear trap placement prototype
 
 ### Summary
