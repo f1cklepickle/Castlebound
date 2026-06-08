@@ -61,5 +61,24 @@ namespace Castlebound.Tests.Player
             Assert.DoesNotThrow(() => _controller.StopMovement(),
                 "StopMovement should not throw after unlocking.");
         }
+
+        [Test]
+        public void ClearAttackInputState_StopsHeldFireAndAttackLoop()
+        {
+            Object.DestroyImmediate(_controller);
+            var fireInput = _playerGo.AddComponent<PlayerFireInputController>();
+            var attackLoop = _playerGo.AddComponent<PlayerAttackLoop>();
+            _controller = _playerGo.AddComponent<PlayerController>();
+            fireInput.OnFirePressedStateChanged(true);
+            attackLoop.Tick(0f, 1.5f, true);
+
+            Assert.IsTrue(fireInput.IsFireHeld, "Precondition: fire should be held.");
+            Assert.IsTrue(attackLoop.IsSwingActive, "Precondition: attack loop should be active.");
+
+            _controller.ClearAttackInputState();
+
+            Assert.IsFalse(fireInput.IsFireHeld);
+            Assert.IsFalse(attackLoop.IsSwingActive);
+        }
     }
 }

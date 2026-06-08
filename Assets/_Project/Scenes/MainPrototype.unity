@@ -5105,8 +5105,11 @@ MonoBehaviour:
   worldGrid: {fileID: 2200000012}
   worldCamera: {fileID: 519420031}
   placedParent: {fileID: 2600000001}
+  uiParent: {fileID: 977390126}
   previewRenderer: {fileID: 0}
   placeholderPreviewSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
+  confirmButton: {fileID: 0}
+  cancelButton: {fileID: 0}
   currentSurface: 2
   gridCellSize: 1
   validPreviewColor: {r: 0.35, g: 1, b: 0.35, a: 0.55}

@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-06-08 - feat(defense): add confirm cancel placement loop
+
+### Summary
+- Added locked-target Bear Trap placement with Confirm and Cancel controls.
+- Kept placement mode active after each confirmed trap so another trap can be placed.
+- Reopened the upgrade menu on the Defense tab when placement is canceled, without leaving touch or PC attack stuck active.
+- Added player attack cleanup that clears held fire, resets active attack loops, and syncs attack presentation without locking movement.
+- Limited placement pointer blocking to Confirm/Cancel controls so full-screen touch zones do not hide the preview.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies locked target confirmation, repeat placement, occupied-cell rejection, cancel callback behavior, touch/PC attack release on cancel, and no global UI hit-test blocking for preview.
+- `PlayerAttackInputTests` - verifies player attack cleanup clears held fire and active attack loop state.
+- `UpgradeMenuControllerTests` - verifies hiding for placement does not start the wave and can reopen the menu.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
 ## 2026-06-08 - feat(defense): move trap placement into upgrade flow
 
 ### Summary

@@ -224,10 +224,22 @@ public class PlayerController : MonoBehaviour
         inputLocked = locked;
         if (locked)
         {
-            fireInputController?.ClearHeldFire();
-            attackLoop?.ResetLoopState();
-            ApplyAttackRuntimeState();
+            ClearAttackInputState();
         }
+    }
+
+    public void ClearAttackInputState()
+    {
+        if (fireInputController == null)
+            fireInputController = GetComponent<PlayerFireInputController>();
+
+        if (attackLoop == null)
+            attackLoop = GetComponent<PlayerAttackLoop>();
+
+        fireInputController?.ClearHeldFire();
+        attackLoop?.ResetLoopState();
+        ApplyAttackRuntimeState();
+        SyncAttackAnimationSpeed();
     }
 
     private float GetEffectiveAttackRate()

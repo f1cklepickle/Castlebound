@@ -87,6 +87,11 @@ namespace Castlebound.Gameplay.UI
             ApplyMenuState(false);
         }
 
+        public void ReopenMenuAfterPlacement()
+        {
+            ApplyMenuState(true);
+        }
+
         private void OnPhaseChanged(WavePhase phase)
         {
             if (phase != WavePhase.PreWave)

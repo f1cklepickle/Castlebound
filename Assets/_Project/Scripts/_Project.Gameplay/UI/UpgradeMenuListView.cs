@@ -380,13 +380,20 @@ namespace Castlebound.Gameplay.UI
                 return false;
             }
 
-            if (!bearTrapPlacementController.BeginPlacement(bearTrapDefinition))
+            if (!bearTrapPlacementController.BeginPlacement(bearTrapDefinition, ReopenDefenseTabAfterPlacement))
             {
                 return false;
             }
 
             menuController?.HideMenuForPlacement();
             return true;
+        }
+
+        private void ReopenDefenseTabAfterPlacement()
+        {
+            activeTab = UpgradeMenuTab.Defense;
+            menuController?.ReopenMenuAfterPlacement();
+            Refresh();
         }
 
         private ActionRow CreateTowerPlotRow(TowerPlot plot, int plotIndex, bool endsBarrierGroup)
