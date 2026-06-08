@@ -15,6 +15,7 @@ MonoBehaviour:
   id: castle.barrier_gate
   displayName: Barrier Gate
   category: 0
+  placementSurface: 0
   footprintWidth: 3
   footprintHeight: 3
   prefab: {fileID: 683792860472063015, guid: dc74549e32466984aa8c05b572869f89, type: 3}

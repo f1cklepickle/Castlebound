@@ -9,6 +9,7 @@ namespace Castlebound.Gameplay.World.Placement
         [SerializeField] private string id;
         [SerializeField] private string displayName;
         [SerializeField] private PlaceableObjectCategory category;
+        [SerializeField] private PlaceablePlacementSurface placementSurface;
         [SerializeField] private int footprintWidth = 3;
         [SerializeField] private int footprintHeight = 3;
         [SerializeField] private GameObject prefab;
@@ -29,6 +30,12 @@ namespace Castlebound.Gameplay.World.Placement
         {
             get => category;
             set => category = value;
+        }
+
+        public PlaceablePlacementSurface PlacementSurface
+        {
+            get => placementSurface;
+            set => placementSurface = value;
         }
 
         public int FootprintWidth

@@ -55,6 +55,25 @@ namespace Castlebound.Tests.World.Placement
             }
         }
 
+        [TestCase(PlaceablePlacementSurface.CastleWall)]
+        [TestCase(PlaceablePlacementSurface.CastleFloor)]
+        [TestCase(PlaceablePlacementSurface.OutsideGround)]
+        public void PlacementSurface_SupportsCurrentAndPlannedWorldPlacementSurfaces(PlaceablePlacementSurface surface)
+        {
+            var definition = ScriptableObject.CreateInstance<PlaceableObjectDefinition>();
+
+            try
+            {
+                definition.PlacementSurface = surface;
+
+                Assert.That(definition.PlacementSurface, Is.EqualTo(surface));
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition);
+            }
+        }
+
         [Test]
         public void SetFootprint_StoresExplicitGridFootprintDimensions()
         {
@@ -117,6 +136,7 @@ namespace Castlebound.Tests.World.Placement
             Assert.That(definition.Id, Is.EqualTo(expectedId));
             Assert.That(definition.DisplayName, Is.EqualTo(expectedDisplayName));
             Assert.That(definition.Category, Is.EqualTo(expectedCategory));
+            Assert.That(definition.PlacementSurface, Is.EqualTo(PlaceablePlacementSurface.CastleWall));
             Assert.That(definition.Footprint, Is.EqualTo(GridFootprint.ThreeByThree));
             Assert.NotNull(definition.Prefab, $"{expectedId} must reference a prefab.");
         }

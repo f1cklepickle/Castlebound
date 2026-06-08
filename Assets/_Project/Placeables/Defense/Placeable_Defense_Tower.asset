@@ -15,6 +15,7 @@ MonoBehaviour:
   id: defense.tower
   displayName: Tower
   category: 1
+  placementSurface: 0
   footprintWidth: 3
   footprintHeight: 3
   prefab: {fileID: 2000000000, guid: ec470124d4d042388418a66cedd418c1, type: 3}

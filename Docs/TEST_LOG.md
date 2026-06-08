@@ -9,11 +9,11 @@
 ### Summary
 - Added placeable object definitions for authored Castle and Defense placement data.
 - Authored current barrier gate and tower placeables as 3x3 footprints.
-- Kept placement overlap and tower wall-mount rules out of this data-only slice.
+- Added placement surface authoring while keeping overlap and tower wall-mount rules out of this data-only slice.
 
 ### New or Updated Tests
 **EditMode**
-- `PlaceableObjectDefinitionTests` - verifies required authoring fields, current categories, explicit footprint dimensions, invalid footprints, and project asset wiring.
+- `PlaceableObjectDefinitionTests` - verifies required authoring fields, current categories, placement surfaces, explicit footprint dimensions, invalid footprints, and project asset wiring.
 
 **PlayMode**
 - N/A - N/A
