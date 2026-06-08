@@ -1,3 +1,4 @@
+using System.IO;
 using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.World.Placement;
 using NUnit.Framework;
@@ -13,6 +14,7 @@ namespace Castlebound.Tests.World.Placement
         private const string BearTrapDefinitionPath = "Assets/_Project/Placeables/Defense/Placeable_Defense_BearTrap.asset";
         private const string BearTrapPrefabPath = "Assets/_Project/Prefabs/BearTrap.prefab";
         private const string MainPrototypeScenePath = "Assets/_Project/Scenes/MainPrototype.unity";
+        private const string PlacementControllerSourcePath = "Assets/_Project/Scripts/_Project.Gameplay/World/Placement/WorldPlaceablePlacementController.cs";
 
         [Test]
         public void BearTrapDefinition_IsDefenseOutsideGroundOneByOne()
@@ -107,6 +109,15 @@ namespace Castlebound.Tests.World.Placement
                     EditorSceneManager.CloseScene(scene, true);
                 }
             }
+        }
+
+        [Test]
+        public void PlacementController_DoesNotCreateStandaloneBearTrapButton()
+        {
+            var source = File.ReadAllText(PlacementControllerSourcePath);
+
+            StringAssert.DoesNotContain("BearTrapPlaceButton", source);
+            StringAssert.DoesNotContain("EnsureSelectButton", source);
         }
 
         private static PlaceableObjectDefinition CreateBearTrapDefinition()

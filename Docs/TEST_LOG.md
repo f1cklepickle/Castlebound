@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-08 - feat(defense): move trap placement into upgrade flow
+
+### Summary
+- Moved Bear Trap placement entry into the Defense tab of the upgrade menu.
+- Removed standalone Bear Trap button creation from the placement controller.
+- Added a menu hide path that starts placement without starting the next wave.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies the Defense tab renders Bear Trap and delegates placement to the world placement controller.
+- `BearTrapPlacementPrototypeTests` - verifies the standalone Bear Trap button path is no longer present.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
 ## 2026-06-08 - feat(ui): add castle and defense upgrade tabs
 
 ### Summary

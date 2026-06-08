@@ -6,6 +6,7 @@ using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
 using Castlebound.Gameplay.Tower;
 using Castlebound.Gameplay.UI;
+using Castlebound.Gameplay.World.Placement;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using TMPro;
@@ -49,6 +50,8 @@ namespace Castlebound.Tests.UI
             {
                 context.View.SetActiveTab(UpgradeMenuTab.Defense);
 
+                AssertTextExists(context.ContentRoot, "Bear Trap");
+                AssertTextExists(context.ContentRoot, "Free | Outside ground | 1x1");
                 AssertTextExists(context.ContentRoot, "- Left Plot");
                 AssertTextExists(context.ContentRoot, "- Right Plot");
                 AssertTextExists(context.ContentRoot, "ArcherTower | HP 10 | DMG 3 | Build 50 Gold");
@@ -75,6 +78,27 @@ namespace Castlebound.Tests.UI
                 Assert.That(context.View.ActiveTab, Is.EqualTo(UpgradeMenuTab.Defense));
                 AssertTextExists(context.ContentRoot, "- Left Plot");
                 AssertTextDoesNotExist(context.ContentRoot, "North Barrier");
+            }
+            finally
+            {
+                context.Destroy();
+            }
+        }
+
+        [Test]
+        public void BearTrapPlaceButton_StartsPlacementFromDefenseTab()
+        {
+            var context = CreateContext();
+
+            try
+            {
+                context.View.SetActiveTab(UpgradeMenuTab.Defense);
+                var placeButton = FindButtonByLabel(context.ContentRoot, "Place");
+
+                placeButton.onClick.Invoke();
+
+                Assert.IsTrue(context.PlacementController.HasSelection, "Bear Trap row should select the placeable placement controller.");
+                Assert.AreSame(context.BearTrapDefinition, context.PlacementController.SelectedPlaceable);
             }
             finally
             {
@@ -232,6 +256,10 @@ namespace Castlebound.Tests.UI
                 var field = typeof(UpgradeMenuListView).GetField("towerBuildController", BindingFlags.NonPublic | BindingFlags.Instance);
                 Assert.NotNull(field, "UpgradeMenuListView should serialize its TowerBuildController reference.");
                 Assert.AreSame(controller, field.GetValue(view), "UpgradeMenuListView should be wired to the scene TowerBuildController.");
+
+                var placementField = typeof(UpgradeMenuListView).GetField("bearTrapPlacementController", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.NotNull(placementField, "UpgradeMenuListView should serialize its Bear Trap placement controller reference.");
+                Assert.NotNull(placementField.GetValue(view), "MainPrototype should wire the Bear Trap placement controller into the upgrade menu.");
             }
             finally
             {
@@ -295,6 +323,18 @@ namespace Castlebound.Tests.UI
             towerController.TowerParent = towerParent;
             view.SetTowerBuildController(towerController);
 
+            var placementRoot = new GameObject("WorldPlaceablePlacementController");
+            var placementController = placementRoot.AddComponent<WorldPlaceablePlacementController>();
+            var bearTrapDefinition = ScriptableObject.CreateInstance<PlaceableObjectDefinition>();
+            bearTrapDefinition.Id = "defense.bear_trap";
+            bearTrapDefinition.DisplayName = "Bear Trap";
+            bearTrapDefinition.Category = PlaceableObjectCategory.Defense;
+            bearTrapDefinition.PlacementSurface = PlaceablePlacementSurface.OutsideGround;
+            bearTrapDefinition.SetFootprint(GridFootprint.OneByOne);
+            bearTrapDefinition.Prefab = new GameObject("BearTrapPrefab");
+            view.SetBearTrapPlacementController(placementController);
+            view.SetBearTrapDefinition(bearTrapDefinition);
+
             return new TestContext(
                 viewRoot,
                 contentRoot.gameObject,
@@ -307,6 +347,9 @@ namespace Castlebound.Tests.UI
                 towerConfig,
                 towerPrefab,
                 towerParent,
+                placementRoot,
+                placementController,
+                bearTrapDefinition,
                 inventory,
                 phase);
         }
@@ -443,6 +486,7 @@ namespace Castlebound.Tests.UI
             private readonly GameObject towerRoot;
             private readonly TowerBuildConfig towerConfig;
             private readonly GameObject towerPrefab;
+            private readonly GameObject placementRoot;
 
             public TestContext(
                 GameObject viewRoot,
@@ -456,6 +500,9 @@ namespace Castlebound.Tests.UI
                 TowerBuildConfig towerConfig,
                 GameObject towerPrefab,
                 Transform towerParent,
+                GameObject placementRoot,
+                WorldPlaceablePlacementController placementController,
+                PlaceableObjectDefinition bearTrapDefinition,
                 InventoryState inventory,
                 WavePhaseTracker phase)
             {
@@ -470,6 +517,9 @@ namespace Castlebound.Tests.UI
                 this.towerConfig = towerConfig;
                 this.towerPrefab = towerPrefab;
                 TowerParent = towerParent;
+                this.placementRoot = placementRoot;
+                PlacementController = placementController;
+                BearTrapDefinition = bearTrapDefinition;
                 Inventory = inventory;
                 Phase = phase;
             }
@@ -480,11 +530,28 @@ namespace Castlebound.Tests.UI
             public TowerPlot LeftPlot { get; }
             public TowerPlot RightPlot { get; }
             public Transform TowerParent { get; }
+            public WorldPlaceablePlacementController PlacementController { get; }
+            public PlaceableObjectDefinition BearTrapDefinition { get; }
             public InventoryState Inventory { get; }
             public WavePhaseTracker Phase { get; }
 
             public void Destroy()
             {
+                if (BearTrapDefinition != null)
+                {
+                    if (BearTrapDefinition.Prefab != null)
+                    {
+                        Object.DestroyImmediate(BearTrapDefinition.Prefab);
+                    }
+
+                    Object.DestroyImmediate(BearTrapDefinition);
+                }
+
+                if (placementRoot != null)
+                {
+                    Object.DestroyImmediate(placementRoot);
+                }
+
                 if (TowerParent != null)
                 {
                     Object.DestroyImmediate(TowerParent.gameObject);

@@ -4,6 +4,7 @@ using Castlebound.Gameplay.Barrier;
 using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Tower;
+using Castlebound.Gameplay.World.Placement;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,6 +27,8 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private FeedbackEventChannel feedbackChannel;
         [SerializeField] private InventoryStateComponent inventorySource;
         [SerializeField] private TowerBuildController towerBuildController;
+        [SerializeField] private WorldPlaceablePlacementController bearTrapPlacementController;
+        [SerializeField] private PlaceableObjectDefinition bearTrapDefinition;
         [SerializeField] private UpgradeMenuTab activeTab = UpgradeMenuTab.Castle;
 
         private readonly List<ActionRow> rows = new List<ActionRow>();
@@ -77,6 +80,11 @@ namespace Castlebound.Gameplay.UI
             var controllers = FindObjectsOfType<BarrierUpgradeController>();
             var inventory = inventorySource != null ? inventorySource.State : null;
 
+            if (activeTab == UpgradeMenuTab.Defense)
+            {
+                CreateBearTrapPlacementRow();
+            }
+
             foreach (var controller in controllers)
             {
                 if (controller == null || !controller.isActiveAndEnabled)
@@ -117,6 +125,16 @@ namespace Castlebound.Gameplay.UI
             towerBuildController = controller;
         }
 
+        public void SetBearTrapPlacementController(WorldPlaceablePlacementController controller)
+        {
+            bearTrapPlacementController = controller;
+        }
+
+        public void SetBearTrapDefinition(PlaceableObjectDefinition definition)
+        {
+            bearTrapDefinition = definition;
+        }
+
         public void SetActiveTab(UpgradeMenuTab tab)
         {
             if (activeTab == tab)
@@ -148,6 +166,16 @@ namespace Castlebound.Gameplay.UI
             if (towerBuildController == null)
             {
                 towerBuildController = FindObjectOfType<TowerBuildController>();
+            }
+
+            if (bearTrapPlacementController == null)
+            {
+                bearTrapPlacementController = FindObjectOfType<WorldPlaceablePlacementController>();
+            }
+
+            if (bearTrapDefinition == null && bearTrapPlacementController != null)
+            {
+                bearTrapDefinition = bearTrapPlacementController.DefaultPlaceable;
             }
         }
 
@@ -309,6 +337,56 @@ namespace Castlebound.Gameplay.UI
                     ? CreateTowerUpgradeRow(plot, i, i == plots.PlotCount - 1)
                     : CreateTowerPlotRow(plot, i, i == plots.PlotCount - 1));
             }
+        }
+
+        private void CreateBearTrapPlacementRow()
+        {
+            if (bearTrapDefinition == null)
+            {
+                return;
+            }
+
+            var rowObject = new GameObject("BearTrapPlacementRow", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+            rowObject.transform.SetParent(rowRoot, false);
+            ConfigureRowLayout(rowObject, 0f, 35f);
+
+            var nameText = CreateText("Name", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(nameText.gameObject, 150f, 0f);
+
+            var detailText = CreateText("Details", rowObject.transform, 16, TextAlignmentOptions.Left);
+            ConfigureLayoutElement(detailText.gameObject, 425f, 0f);
+            var button = CreateButton("BearTrapButton", rowObject.transform, "Place", 100f, 18);
+
+            var row = new ActionRow(
+                rowObject,
+                nameText,
+                detailText,
+                button,
+                () => bearTrapDefinition.DisplayName,
+                () => "Free | Outside ground | 1x1",
+                () => "Place",
+                () => bearTrapPlacementController != null && bearTrapDefinition.IsValid,
+                BeginBearTrapPlacement,
+                Refresh,
+                FlashButton);
+            row.Refresh();
+            rows.Add(row);
+        }
+
+        private bool BeginBearTrapPlacement()
+        {
+            if (bearTrapPlacementController == null || bearTrapDefinition == null)
+            {
+                return false;
+            }
+
+            if (!bearTrapPlacementController.BeginPlacement(bearTrapDefinition))
+            {
+                return false;
+            }
+
+            menuController?.HideMenuForPlacement();
+            return true;
         }
 
         private ActionRow CreateTowerPlotRow(TowerPlot plot, int plotIndex, bool endsBarrierGroup)

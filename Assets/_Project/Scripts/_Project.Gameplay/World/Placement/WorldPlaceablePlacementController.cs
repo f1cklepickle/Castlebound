@@ -1,9 +1,7 @@
 using Castlebound.Gameplay.Castle;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 namespace Castlebound.Gameplay.World.Placement
 {
@@ -13,8 +11,6 @@ namespace Castlebound.Gameplay.World.Placement
         [SerializeField] private Grid worldGrid;
         [SerializeField] private Camera worldCamera;
         [SerializeField] private Transform placedParent;
-        [SerializeField] private Transform uiParent;
-        [SerializeField] private Button selectButton;
         [SerializeField] private SpriteRenderer previewRenderer;
         [SerializeField] private Sprite placeholderPreviewSprite;
         [SerializeField] private PlaceablePlacementSurface currentSurface = PlaceablePlacementSurface.OutsideGround;
@@ -34,24 +30,7 @@ namespace Castlebound.Gameplay.World.Placement
         private void Awake()
         {
             ResolveReferences();
-            EnsureSelectButton();
             EnsurePreviewRenderer();
-        }
-
-        private void OnEnable()
-        {
-            if (selectButton != null)
-            {
-                selectButton.onClick.AddListener(SelectDefaultPlaceable);
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (selectButton != null)
-            {
-                selectButton.onClick.RemoveListener(SelectDefaultPlaceable);
-            }
         }
 
         private void Update()
@@ -80,10 +59,18 @@ namespace Castlebound.Gameplay.World.Placement
 
         public void SelectDefaultPlaceable()
         {
-            if (defaultPlaceable != null && defaultPlaceable.IsValid)
+            BeginPlacement(defaultPlaceable);
+        }
+
+        public bool BeginPlacement(PlaceableObjectDefinition definition)
+        {
+            if (definition == null || !definition.IsValid)
             {
-                selectedPlaceable = defaultPlaceable;
+                return false;
             }
+
+            selectedPlaceable = definition;
+            return true;
         }
 
         public bool CanPlaceSelectedAt(Vector2 snappedWorldPosition)
@@ -125,57 +112,10 @@ namespace Castlebound.Gameplay.World.Placement
                 placedParent = transform;
             }
 
-            if (uiParent == null)
-            {
-                var canvas = FindObjectOfType<Canvas>();
-                if (canvas != null)
-                {
-                    uiParent = canvas.transform;
-                }
-            }
-
             if (worldGrid != null)
             {
                 gridCellSize = Mathf.Max(0.01f, worldGrid.cellSize.x);
             }
-        }
-
-        private void EnsureSelectButton()
-        {
-            if (selectButton != null || uiParent == null)
-            {
-                return;
-            }
-
-            var buttonObject = new GameObject("BearTrapPlaceButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(uiParent, false);
-
-            var rect = buttonObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(24f, -96f);
-            rect.sizeDelta = new Vector2(148f, 42f);
-
-            var image = buttonObject.GetComponent<Image>();
-            image.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
-
-            selectButton = buttonObject.GetComponent<Button>();
-
-            var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-            labelObject.transform.SetParent(buttonObject.transform, false);
-
-            var labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            var label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = "Bear Trap";
-            label.fontSize = 16;
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
         }
 
         private void EnsurePreviewRenderer()

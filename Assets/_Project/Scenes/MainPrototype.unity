@@ -1385,6 +1385,9 @@ MonoBehaviour:
   feedbackChannel: {fileID: 11400000, guid: 1f9f2f0a7b2a4d0a9a2d6e11a6a0d1f6, type: 2}
   inventorySource: {fileID: 0}
   towerBuildController: {fileID: 2300000002}
+  bearTrapPlacementController: {fileID: 2600000002}
+  bearTrapDefinition: {fileID: 11400000, guid: 793435efe6d1405aade9a797c942ea9e, type: 2}
+  activeTab: 0
 --- !u!114 &676673187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5102,8 +5105,6 @@ MonoBehaviour:
   worldGrid: {fileID: 2200000012}
   worldCamera: {fileID: 519420031}
   placedParent: {fileID: 2600000001}
-  uiParent: {fileID: 977390126}
-  selectButton: {fileID: 0}
   previewRenderer: {fileID: 0}
   placeholderPreviewSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
   currentSurface: 2
