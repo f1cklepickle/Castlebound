@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-08 - feat(world): add castle and defense placeable definitions
+
+### Summary
+- Added placeable object definitions for authored Castle and Defense placement data.
+- Authored current barrier gate and tower placeables as 3x3 footprints.
+- Added placement surface authoring while keeping overlap and tower wall-mount rules out of this data-only slice.
+
+### New or Updated Tests
+**EditMode**
+- `PlaceableObjectDefinitionTests` - verifies required authoring fields, current categories, placement surfaces, explicit footprint dimensions, invalid footprints, and project asset wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Awaiting user-run EditMode validation.
+
 ## 2026-06-07 - feat(world): add grid footprint placement contract
 
 ### Summary
