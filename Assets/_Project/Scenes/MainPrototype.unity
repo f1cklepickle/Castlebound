@@ -1385,6 +1385,9 @@ MonoBehaviour:
   feedbackChannel: {fileID: 11400000, guid: 1f9f2f0a7b2a4d0a9a2d6e11a6a0d1f6, type: 2}
   inventorySource: {fileID: 0}
   towerBuildController: {fileID: 2300000002}
+  bearTrapPlacementController: {fileID: 2600000002}
+  bearTrapDefinition: {fileID: 11400000, guid: 793435efe6d1405aade9a797c942ea9e, type: 2}
+  activeTab: 0
 --- !u!114 &676673187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4764,8 +4767,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ffe78ccad9674bd88456656f36872899, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   waveText: {fileID: 2400000023}
   format: Wave {0}
   waveRunner: {fileID: 1166075763}
@@ -4825,8 +4828,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
@@ -4900,8 +4903,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
@@ -5034,8 +5037,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.03, g: 0.025, b: 0.02, a: 0.45}
   m_RaycastTarget: 0
@@ -5054,6 +5057,67 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &2600000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2600000001}
+  - component: {fileID: 2600000002}
+  m_Layer: 0
+  m_Name: BearTrapPlacementPrototype
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2600000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2600000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2600000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2600000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c5af0a1321b4ba9844194255614a28c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultPlaceable: {fileID: 11400000, guid: 793435efe6d1405aade9a797c942ea9e, type: 2}
+  worldGrid: {fileID: 2200000012}
+  worldCamera: {fileID: 519420031}
+  placedParent: {fileID: 2600000001}
+  uiParent: {fileID: 977390126}
+  castleRegionCollider: {fileID: 769892621}
+  previewRenderer: {fileID: 0}
+  placeholderPreviewSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
+  confirmButton: {fileID: 0}
+  cancelButton: {fileID: 0}
+  currentSurface: 2
+  placementBlockingLayers:
+    serializedVersion: 2
+    m_Bits: 320
+  gridCellSize: 1
+  validPreviewColor: {r: 0.35, g: 1, b: 0.35, a: 0.55}
+  invalidPreviewColor: {r: 1, g: 0.25, b: 0.2, a: 0.55}
 --- !u!1 &3000000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -5407,3 +5471,4 @@ SceneRoots:
   - {fileID: 2200000011}
   - {fileID: 3000000001}
   - {fileID: 2300000001}
+  - {fileID: 2600000001}

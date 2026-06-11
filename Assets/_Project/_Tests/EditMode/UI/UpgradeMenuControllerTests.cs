@@ -136,5 +136,42 @@ namespace Castlebound.Tests.UI
             Object.DestroyImmediate(menu);
             Object.DestroyImmediate(player);
         }
+
+        [Test]
+        public void HideMenuForPlacement_DoesNotStartWave_AndCanReopen()
+        {
+            var phase = new WavePhaseTracker();
+            var menu = new GameObject("Menu");
+            var root = new GameObject("MenuRoot", typeof(RectTransform));
+            var controller = menu.AddComponent<UpgradeMenuController>();
+
+            SetPrivateField(controller, "menuRoot", root.GetComponent<RectTransform>());
+            controller.SetPhaseTracker(phase);
+            controller.SetAutoOpenOnFirstPreWave(false);
+
+            phase.SetPhase(WavePhase.PreWave);
+            controller.ToggleMenu();
+            Assert.IsTrue(controller.IsMenuOpen, "Precondition: menu should open during pre-wave.");
+
+            controller.HideMenuForPlacement();
+
+            Assert.IsFalse(controller.IsMenuOpen);
+            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.PreWave), "Hiding for placement should not start the wave.");
+
+            controller.ReopenMenuAfterPlacement();
+
+            Assert.IsTrue(controller.IsMenuOpen);
+            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.PreWave));
+
+            Object.DestroyImmediate(menu);
+            Object.DestroyImmediate(root);
+        }
+
+        private static void SetPrivateField<T>(object target, string fieldName, T value)
+        {
+            var field = target.GetType().GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Assert.NotNull(field, $"Expected private field '{fieldName}' to exist.");
+            field.SetValue(target, value);
+        }
     }
 }

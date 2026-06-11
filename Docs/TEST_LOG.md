@@ -4,6 +4,96 @@
 
 ---
 
+## 2026-06-08 - feat(defense): validate trap placement surface
+
+### Summary
+- Resolved Bear Trap placement surface from the castle region collider instead of assuming every cursor cell is outside ground.
+- Rejected locked trap placement inside the castle region and on wall/barrier blockers while keeping outside-ground placement valid.
+- Wired MainPrototype placement validation to the existing CastleRegion collider.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies castle-region surface resolution, inside-castle rejection, wall/barrier blocker rejection, outside-ground acceptance, and MainPrototype validation wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
+## 2026-06-08 - feat(defense): add confirm cancel placement loop
+
+### Summary
+- Added locked-target Bear Trap placement with Confirm and Cancel controls.
+- Kept placement mode active after each confirmed trap so another trap can be placed.
+- Reopened the upgrade menu on the Defense tab when placement is canceled, without leaving touch or PC attack stuck active.
+- Added player attack cleanup that clears held fire, resets active attack loops, and syncs attack presentation without locking movement.
+- Limited placement pointer blocking to Confirm/Cancel controls so full-screen touch zones do not hide the preview.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies locked target confirmation, repeat placement, occupied-cell rejection, cancel callback behavior, touch/PC attack release on cancel, and no global UI hit-test blocking for preview.
+- `PlayerAttackInputTests` - verifies player attack cleanup clears held fire and active attack loop state.
+- `UpgradeMenuControllerTests` - verifies hiding for placement does not start the wave and can reopen the menu.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
+## 2026-06-08 - feat(defense): move trap placement into upgrade flow
+
+### Summary
+- Moved Bear Trap placement entry into the Defense tab of the upgrade menu.
+- Removed standalone Bear Trap button creation from the placement controller.
+- Added a menu hide path that starts placement without starting the next wave.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies the Defense tab renders Bear Trap and delegates placement to the world placement controller.
+- `BearTrapPlacementPrototypeTests` - verifies the standalone Bear Trap button path is no longer present.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
+## 2026-06-08 - feat(ui): add castle and defense upgrade tabs
+
+### Summary
+- Added Castle and Defense tabs to the upgrade menu while keeping the same menu frame.
+- Moved barrier upgrade rows under Castle and tower build/upgrade rows under Defense.
+- Enlarged per-tab row content and extracted tab strip behavior away from row rendering.
+
+### New or Updated Tests
+**EditMode**
+- `UpgradeMenuListViewTowerRowsTests` - verifies Castle tab barrier rows, Defense tab tower rows, and existing barrier/tower actions after tab split.
+
+**PlayMode**
+- `TowerBuildUpgradeMenuVerticalSlicePlayTests` - switches to the Defense tab before tower build/upgrade vertical-slice assertions.
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
+## 2026-06-08 - feat(defense): add bear trap placement prototype
+
+### Summary
+- Added a minimal bear trap placeable definition and prefab using a replaceable placeholder sprite visual.
+- Added runtime placement rules for 1x1 outside-ground snapping and occupied-footprint rejection.
+- Wired MainPrototype with a prototype bear trap placement controller that creates a simple runtime select button.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies bear trap definition authoring, outside-ground validation, occupied rejection, grid snapping, prefab visual swap contract, and MainPrototype controller wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode passing per user validation; local batchmode run was blocked because the project was already open in another Unity instance.
+
 ## 2026-06-08 - feat(world): add castle and defense placeable definitions
 
 ### Summary

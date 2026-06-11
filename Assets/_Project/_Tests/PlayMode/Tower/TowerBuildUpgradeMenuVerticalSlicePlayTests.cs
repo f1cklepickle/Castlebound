@@ -53,6 +53,9 @@ namespace Castlebound.Tests.PlayMode.Tower
             yield return null;
 
             Assert.IsTrue(menu.IsMenuOpen, "Upgrade menu should open in pre-wave.");
+            listView.SetActiveTab(UpgradeMenuTab.Defense);
+            yield return null;
+
             var buildButton = FindActiveButtonWithLabel("Build");
             Assert.NotNull(buildButton, "Expected the upgrade menu to expose a Build button for an empty tower plot.");
             Assert.IsTrue(buildButton.interactable, "Empty tower plot Build button should be interactable.");
@@ -125,6 +128,8 @@ namespace Castlebound.Tests.PlayMode.Tower
             var plots = FindPlots();
             Assert.That(plots.Any(plot => !plot.IsOccupied), Is.True, "Expected at least one empty tower plot before building.");
             menu.ToggleMenu();
+            yield return null;
+            listView.SetActiveTab(UpgradeMenuTab.Defense);
             yield return null;
 
             var buildButton = FindActiveButtonWithLabel("Build");

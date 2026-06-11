@@ -82,6 +82,16 @@ namespace Castlebound.Gameplay.UI
             phaseTracker?.SetPhase(WavePhase.InWave);
         }
 
+        public void HideMenuForPlacement()
+        {
+            ApplyMenuState(false);
+        }
+
+        public void ReopenMenuAfterPlacement()
+        {
+            ApplyMenuState(true);
+        }
+
         private void OnPhaseChanged(WavePhase phase)
         {
             if (phase != WavePhase.PreWave)
