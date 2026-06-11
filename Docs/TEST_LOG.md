@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-08 - feat(defense): validate trap placement surface
+
+### Summary
+- Resolved Bear Trap placement surface from the castle region collider instead of assuming every cursor cell is outside ground.
+- Rejected locked trap placement inside the castle region and on wall/barrier blockers while keeping outside-ground placement valid.
+- Wired MainPrototype placement validation to the existing CastleRegion collider.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies castle-region surface resolution, inside-castle rejection, wall/barrier blocker rejection, outside-ground acceptance, and MainPrototype validation wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local batchmode run was blocked because the project was already open in another Unity instance; awaiting validation.
+
 ## 2026-06-08 - feat(defense): add confirm cancel placement loop
 
 ### Summary

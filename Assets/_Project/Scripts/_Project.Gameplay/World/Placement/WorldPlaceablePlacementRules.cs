@@ -35,5 +35,41 @@ namespace Castlebound.Gameplay.World.Placement
 
             return !occupancy.IsAnyCellOccupied(snappedWorldPosition, definition.Footprint);
         }
+
+        public static PlaceablePlacementSurface ResolveAvailableSurface(
+            Vector2 snappedWorldPosition,
+            GridFootprint footprint,
+            PlaceablePlacementSurface fallbackSurface,
+            Collider2D castleRegion)
+        {
+            if (castleRegion == null || !footprint.IsValid)
+            {
+                return fallbackSurface;
+            }
+
+            foreach (var cell in EnumerateFootprintCells(snappedWorldPosition, footprint))
+            {
+                if (castleRegion.OverlapPoint(cell))
+                {
+                    return PlaceablePlacementSurface.CastleFloor;
+                }
+            }
+
+            return PlaceablePlacementSurface.OutsideGround;
+        }
+
+        private static System.Collections.Generic.IEnumerable<Vector2> EnumerateFootprintCells(
+            Vector2 snappedWorldPosition,
+            GridFootprint footprint)
+        {
+            var origin = new Vector2Int(
+                Mathf.RoundToInt(snappedWorldPosition.x),
+                Mathf.RoundToInt(snappedWorldPosition.y));
+
+            foreach (var cell in footprint.EnumerateCells(origin))
+            {
+                yield return new Vector2(cell.x, cell.y);
+            }
+        }
     }
 }

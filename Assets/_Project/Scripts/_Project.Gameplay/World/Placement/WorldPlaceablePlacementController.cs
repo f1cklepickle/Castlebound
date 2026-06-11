@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.Input;
 using System;
@@ -15,6 +16,7 @@ namespace Castlebound.Gameplay.World.Placement
         [SerializeField] private Camera worldCamera;
         [SerializeField] private Transform placedParent;
         [SerializeField] private Transform uiParent;
+        [SerializeField] private Collider2D castleRegionCollider;
         [SerializeField] private TouchAimAttackZone touchAimAttackZone;
         [SerializeField] private PlayerFireInputController playerFireInputController;
         [SerializeField] private PlayerController playerController;
@@ -23,6 +25,7 @@ namespace Castlebound.Gameplay.World.Placement
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
         [SerializeField] private PlaceablePlacementSurface currentSurface = PlaceablePlacementSurface.OutsideGround;
+        [SerializeField] private LayerMask placementBlockingLayers;
         [SerializeField] private float gridCellSize = 1f;
         [SerializeField] private Color validPreviewColor = new Color(0.35f, 1f, 0.35f, 0.55f);
         [SerializeField] private Color invalidPreviewColor = new Color(1f, 0.25f, 0.2f, 0.55f);
@@ -172,10 +175,26 @@ namespace Castlebound.Gameplay.World.Placement
 
         public bool CanPlaceSelectedAt(Vector2 snappedWorldPosition)
         {
+            if (selectedPlaceable == null)
+            {
+                return false;
+            }
+
+            var availableSurface = WorldPlaceablePlacementRules.ResolveAvailableSurface(
+                snappedWorldPosition,
+                selectedPlaceable.Footprint,
+                currentSurface,
+                castleRegionCollider);
+
+            if (IsFootprintBlocked(snappedWorldPosition, selectedPlaceable.Footprint))
+            {
+                return false;
+            }
+
             return WorldPlaceablePlacementRules.CanPlaceAt(
                 selectedPlaceable,
                 snappedWorldPosition,
-                currentSurface,
+                availableSurface,
                 occupancy);
         }
 
@@ -219,6 +238,11 @@ namespace Castlebound.Gameplay.World.Placement
                 }
             }
 
+            if (castleRegionCollider == null)
+            {
+                castleRegionCollider = ResolveCastleRegionCollider();
+            }
+
             if (touchAimAttackZone == null)
             {
                 touchAimAttackZone = FindObjectOfType<TouchAimAttackZone>();
@@ -237,6 +261,11 @@ namespace Castlebound.Gameplay.World.Placement
             if (worldGrid != null)
             {
                 gridCellSize = Mathf.Max(0.01f, worldGrid.cellSize.x);
+            }
+
+            if (placementBlockingLayers.value == 0)
+            {
+                placementBlockingLayers = LayerMask.GetMask("Walls", "Barriers");
             }
         }
 
@@ -368,6 +397,48 @@ namespace Castlebound.Gameplay.World.Placement
             }
 
             playerController?.ClearAttackInputState();
+        }
+
+        private static Collider2D ResolveCastleRegionCollider()
+        {
+            var detector = CastleRegionDetector.Instance != null
+                ? CastleRegionDetector.Instance
+                : FindObjectOfType<CastleRegionDetector>();
+            if (detector != null)
+            {
+                return detector.GetComponent<Collider2D>();
+            }
+
+            var tracker = FindObjectOfType<CastleRegionTracker>();
+            if (tracker != null)
+            {
+                return tracker.GetComponent<Collider2D>();
+            }
+
+            var regionObject = GameObject.Find("CastleRegion");
+            return regionObject != null ? regionObject.GetComponent<Collider2D>() : null;
+        }
+
+        private bool IsFootprintBlocked(Vector2 snappedWorldPosition, GridFootprint footprint)
+        {
+            if (placementBlockingLayers.value == 0)
+            {
+                return false;
+            }
+
+            var origin = new Vector2Int(
+                Mathf.RoundToInt(snappedWorldPosition.x),
+                Mathf.RoundToInt(snappedWorldPosition.y));
+
+            foreach (var cell in footprint.EnumerateCells(origin))
+            {
+                if (Physics2D.OverlapPoint(new Vector2(cell.x, cell.y), placementBlockingLayers) != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TryGetPointerScreenPosition(out Vector2 screenPosition)

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using Castlebound.Gameplay.Input;
 using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.World.Placement;
@@ -102,6 +103,15 @@ namespace Castlebound.Tests.World.Placement
                 Assert.NotNull(controller, "MainPrototype should include the prototype bear trap placement controller.");
                 Assert.NotNull(controller.DefaultPlaceable, "MainPrototype should reference the bear trap definition.");
                 Assert.That(controller.DefaultPlaceable.Id, Is.EqualTo("defense.bear_trap"));
+
+                var serializedController = new SerializedObject(controller);
+                Assert.NotNull(
+                    serializedController.FindProperty("castleRegionCollider").objectReferenceValue,
+                    "MainPrototype placement controller should reference the castle region collider for outside-ground validation.");
+                Assert.That(
+                    serializedController.FindProperty("placementBlockingLayers").intValue,
+                    Is.EqualTo(LayerMask.GetMask("Walls", "Barriers")),
+                    "MainPrototype placement controller should reject blocking wall and barrier colliders.");
             }
             finally
             {
@@ -127,6 +137,37 @@ namespace Castlebound.Tests.World.Placement
             var source = File.ReadAllText(PlacementControllerSourcePath);
 
             StringAssert.DoesNotContain("IsPointerOverGameObject", source);
+        }
+
+        [Test]
+        public void PlacementRules_ResolveCastleRegionAsCastleFloor()
+        {
+            var regionObject = new GameObject("CastleRegion");
+            var region = regionObject.AddComponent<BoxCollider2D>();
+            region.size = new Vector2(4f, 4f);
+
+            try
+            {
+                Assert.That(
+                    WorldPlaceablePlacementRules.ResolveAvailableSurface(
+                        Vector2.zero,
+                        GridFootprint.OneByOne,
+                        PlaceablePlacementSurface.OutsideGround,
+                        region),
+                    Is.EqualTo(PlaceablePlacementSurface.CastleFloor));
+
+                Assert.That(
+                    WorldPlaceablePlacementRules.ResolveAvailableSurface(
+                        new Vector2(5f, 0f),
+                        GridFootprint.OneByOne,
+                        PlaceablePlacementSurface.OutsideGround,
+                        region),
+                    Is.EqualTo(PlaceablePlacementSurface.OutsideGround));
+            }
+            finally
+            {
+                Object.DestroyImmediate(regionObject);
+            }
         }
 
         [Test]
@@ -186,6 +227,83 @@ namespace Castlebound.Tests.World.Placement
                 Object.DestroyImmediate(definition.Prefab);
                 Object.DestroyImmediate(definition);
                 Object.DestroyImmediate(controllerObject);
+            }
+        }
+
+        [Test]
+        public void ConfirmPlacement_RejectsLockedCellInsideCastleRegion()
+        {
+            var regionObject = new GameObject("CastleRegion");
+            var region = regionObject.AddComponent<BoxCollider2D>();
+            region.size = new Vector2(4f, 4f);
+            var controllerObject = new GameObject("PlacementController");
+            var controller = controllerObject.AddComponent<WorldPlaceablePlacementController>();
+            var definition = CreateBearTrapDefinition();
+
+            try
+            {
+                SetPrivateField(controller, "castleRegionCollider", region);
+
+                Assert.IsTrue(controller.BeginPlacement(definition));
+                controller.LockPlacementTarget(Vector2.zero);
+
+                Assert.IsFalse(controller.CanPlaceSelectedAt(Vector2.zero));
+                Assert.IsFalse(controller.ConfirmPlacement());
+                Assert.That(CountPlacedTraps(controllerObject.transform), Is.EqualTo(0));
+
+                controller.LockPlacementTarget(new Vector2(5f, 0f));
+
+                Assert.IsTrue(controller.CanPlaceSelectedAt(new Vector2(5f, 0f)));
+                Assert.IsTrue(controller.ConfirmPlacement());
+                Assert.That(CountPlacedTraps(controllerObject.transform), Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition.Prefab);
+                Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(controllerObject);
+                Object.DestroyImmediate(regionObject);
+            }
+        }
+
+        [Test]
+        [TestCase("Walls")]
+        [TestCase("Barriers")]
+        public void ConfirmPlacement_RejectsLockedCellOnBlockingLayer(string layerName)
+        {
+            var blockerObject = new GameObject($"{layerName}Blocker");
+            var blocker = blockerObject.AddComponent<BoxCollider2D>();
+            blocker.size = Vector2.one;
+            var layer = LayerMask.NameToLayer(layerName);
+            Assert.That(layer, Is.Not.EqualTo(-1), $"Project must define the {layerName} layer.");
+            blockerObject.layer = layer;
+            var controllerObject = new GameObject("PlacementController");
+            var controller = controllerObject.AddComponent<WorldPlaceablePlacementController>();
+            var definition = CreateBearTrapDefinition();
+
+            try
+            {
+                SetPrivateField(controller, "placementBlockingLayers", (LayerMask)LayerMask.GetMask("Walls", "Barriers"));
+
+                Assert.IsTrue(controller.BeginPlacement(definition));
+                controller.LockPlacementTarget(Vector2.zero);
+
+                Assert.IsFalse(controller.CanPlaceSelectedAt(Vector2.zero));
+                Assert.IsFalse(controller.ConfirmPlacement());
+                Assert.That(CountPlacedTraps(controllerObject.transform), Is.EqualTo(0));
+
+                controller.LockPlacementTarget(new Vector2(3f, 0f));
+
+                Assert.IsTrue(controller.CanPlaceSelectedAt(new Vector2(3f, 0f)));
+                Assert.IsTrue(controller.ConfirmPlacement());
+                Assert.That(CountPlacedTraps(controllerObject.transform), Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition.Prefab);
+                Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(controllerObject);
+                Object.DestroyImmediate(blockerObject);
             }
         }
 
@@ -331,6 +449,13 @@ namespace Castlebound.Tests.World.Placement
             }
 
             return count;
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field, $"Expected private field '{fieldName}' to exist.");
+            field.SetValue(target, value);
         }
     }
 }

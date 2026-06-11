@@ -5106,11 +5106,15 @@ MonoBehaviour:
   worldCamera: {fileID: 519420031}
   placedParent: {fileID: 2600000001}
   uiParent: {fileID: 977390126}
+  castleRegionCollider: {fileID: 769892621}
   previewRenderer: {fileID: 0}
   placeholderPreviewSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
   confirmButton: {fileID: 0}
   cancelButton: {fileID: 0}
   currentSurface: 2
+  placementBlockingLayers:
+    serializedVersion: 2
+    m_Bits: 320
   gridCellSize: 1
   validPreviewColor: {r: 0.35, g: 1, b: 0.35, a: 0.55}
   invalidPreviewColor: {r: 1, g: 0.25, b: 0.2, a: 0.55}
