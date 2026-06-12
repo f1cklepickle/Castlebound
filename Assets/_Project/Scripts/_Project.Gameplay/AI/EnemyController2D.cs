@@ -48,6 +48,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private float reseatBias = 0.3f;
     [SerializeField] private bool useBarrierTargeting = true;
     [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
+    [SerializeField] private EnemyRootReceiver rootReceiver;
 
     public Transform Target => target;
     public float Speed
@@ -86,6 +87,10 @@ public class EnemyController2D : MonoBehaviour
         if (knockbackReceiver == null)
         {
             knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
+        }
+        if (rootReceiver == null)
+        {
+            rootReceiver = GetComponent<EnemyRootReceiver>();
         }
         if (regionState == null)
         {
@@ -150,6 +155,10 @@ public class EnemyController2D : MonoBehaviour
         {
             knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
         }
+        if (rootReceiver == null)
+        {
+            rootReceiver = GetComponent<EnemyRootReceiver>();
+        }
 
         bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
         bool playerInsideCastle = regionState != null && regionState.PlayerInside;
@@ -169,6 +178,12 @@ public class EnemyController2D : MonoBehaviour
 
         Vector2 pos = _rb.position;
         float dt = Time.fixedDeltaTime;
+
+        if (rootReceiver != null && rootReceiver.IsRooted)
+        {
+            return;
+        }
+
         Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
 
         if (target == null)

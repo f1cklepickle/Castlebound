@@ -29,6 +29,7 @@ public class EnemyAttack : MonoBehaviour
 
     EnemyController2D controller;
     EnemyRegionState regionState;
+    EnemyRootReceiver rootReceiver;
     static bool missingRegionStateWarningLogged;
     bool onCooldown;
 
@@ -38,6 +39,7 @@ public class EnemyAttack : MonoBehaviour
     {
         controller = GetComponent<EnemyController2D>();
         regionState = GetComponent<EnemyRegionState>();
+        rootReceiver = GetComponent<EnemyRootReceiver>();
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (targetMask.value == 0) {
             int lm = LayerMask.NameToLayer(playerLayerName);
@@ -50,6 +52,7 @@ public class EnemyAttack : MonoBehaviour
     void Update()
     {
         if (onCooldown || controller == null) return;
+        if (IsRooted()) return;
 
         // Only attack while we're holding position near the player
         if (!controller.IsInHoldRange()) return;
@@ -131,7 +134,7 @@ public class EnemyAttack : MonoBehaviour
 
     public void DealDamage(IDamageable target)
     {
-        if (target == null || Damage <= 0)
+        if (target == null || Damage <= 0 || IsRooted())
         {
             return;
         }
@@ -174,6 +177,16 @@ public class EnemyAttack : MonoBehaviour
 
         enemyInside = regionState.EnemyInside;
         playerInside = regionState.PlayerInside;
+    }
+
+    private bool IsRooted()
+    {
+        if (rootReceiver == null)
+        {
+            rootReceiver = GetComponent<EnemyRootReceiver>();
+        }
+
+        return rootReceiver != null && rootReceiver.IsRooted;
     }
 
 #if UNITY_EDITOR

@@ -82,11 +82,20 @@ namespace Castlebound.Tests.World.Placement
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BearTrapPrefabPath);
 
             Assert.NotNull(prefab, "Bear trap prefab must exist.");
-            Assert.NotNull(prefab.GetComponentInChildren<SpriteRenderer>(true), "Bear trap prefab should expose a SpriteRenderer for placeholder art.");
+            var trapRenderer = prefab.GetComponentInChildren<SpriteRenderer>(true);
+            Assert.NotNull(trapRenderer, "Bear trap prefab should expose a SpriteRenderer for placeholder art.");
+            Assert.That(trapRenderer.sortingOrder, Is.LessThan(1), "Bear trap visual should render under enemies so triggered enemies remain visible.");
 
             var visualState = prefab.GetComponent<BearTrapVisualState>();
             Assert.NotNull(visualState, "Bear trap prefab should include BearTrapVisualState so closed art or animation can be swapped later.");
             Assert.NotNull(visualState.OpenSprite, "Bear trap visual state should reference the current placeholder/open sprite.");
+
+            var trigger = prefab.GetComponent<BearTrapTrigger>();
+            Assert.NotNull(trigger, "Bear trap prefab should include BearTrapTrigger for runtime trigger behavior.");
+            Assert.That(trigger.Damage, Is.EqualTo(2));
+            Assert.That(trigger.HoldDurationSeconds, Is.EqualTo(5f));
+            Assert.That(trigger.WaveLifetime, Is.EqualTo(1));
+            Assert.IsTrue(trigger.DisappearAfterWaveEnd, "Bear trap prefab should delete expired traps at wave end.");
         }
 
         [Test]
@@ -221,6 +230,39 @@ namespace Castlebound.Tests.World.Placement
                 Assert.IsTrue(controller.IsPlacementActive);
                 Assert.IsTrue(controller.HasLockedTarget, "Rejected placement should keep the locked cell for player correction.");
                 Assert.That(CountPlacedTraps(controllerObject.transform), Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition.Prefab);
+                Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(controllerObject);
+            }
+        }
+
+        [Test]
+        public void DestroyedPlacedTrap_ReleasesOccupiedCellForReplacement()
+        {
+            var controllerObject = new GameObject("PlacementController");
+            var controller = controllerObject.AddComponent<WorldPlaceablePlacementController>();
+            var definition = CreateBearTrapDefinition();
+            var position = new Vector2(4f, -2f);
+
+            try
+            {
+                Assert.IsTrue(controller.BeginPlacement(definition));
+
+                controller.LockPlacementTarget(position);
+                Assert.IsTrue(controller.ConfirmPlacement());
+                Assert.IsFalse(controller.CanPlaceSelectedAt(position), "Placed trap should reserve its occupied cell while alive.");
+
+                var placedTrap = FindPlacedTrap(controllerObject.transform);
+                Assert.NotNull(placedTrap, "Expected placed Bear Trap instance under the placement controller.");
+                var lease = placedTrap.GetComponent<PlaceableOccupancyLease>();
+                Assert.NotNull(lease, "Placed trap should carry an occupancy lease.");
+                lease.ReleaseNow();
+                Object.DestroyImmediate(placedTrap.gameObject);
+
+                Assert.IsTrue(controller.CanPlaceSelectedAt(position), "Destroyed trap should release its occupied cell for replacement.");
             }
             finally
             {
@@ -449,6 +491,19 @@ namespace Castlebound.Tests.World.Placement
             }
 
             return count;
+        }
+
+        private static Transform FindPlacedTrap(Transform root)
+        {
+            foreach (Transform child in root)
+            {
+                if (child.name == "Bear Trap")
+                {
+                    return child;
+                }
+            }
+
+            return null;
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)

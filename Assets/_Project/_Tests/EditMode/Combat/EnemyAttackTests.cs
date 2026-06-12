@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using Castlebound.Gameplay.AI;
 
 namespace Castlebound.Tests.Combat
 {
@@ -88,6 +89,31 @@ namespace Castlebound.Tests.Combat
 
             Object.DestroyImmediate(enemy);
             Object.DestroyImmediate(barrierGo);
+        }
+
+        [Test]
+        public void DealDamage_DoesNotApplyDamageWhileEnemyRooted()
+        {
+            var enemy = new GameObject("Enemy");
+            enemy.AddComponent<EnemyController2D>();
+            var rootReceiver = enemy.AddComponent<EnemyRootReceiver>();
+            var attack = enemy.AddComponent<EnemyAttack>();
+            attack.Damage = 3;
+
+            var dummy = new DummyDamageable();
+
+            try
+            {
+                rootReceiver.RootForSeconds(5f);
+
+                attack.DealDamage(dummy);
+
+                Assert.That(dummy.DamageTaken, Is.EqualTo(0), "Rooted trap-held enemies should not deal attack damage.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemy);
+            }
         }
     }
 }

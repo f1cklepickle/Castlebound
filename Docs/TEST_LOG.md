@@ -4,6 +4,94 @@
 
 ---
 
+## 2026-06-12 - test(defense): stabilize trap occupancy release test
+
+### Summary
+- Added an explicit idempotent release method to placed-object occupancy leases.
+- Updated the trap replacement regression to release the lease deterministically in EditMode.
+- Kept OnDestroy release behavior intact for runtime trap cleanup.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies placed traps carry an occupancy lease and release their cell before replacement.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - fix(defense): release deleted trap occupancy
+
+### Summary
+- Added occupancy release support to the castle placement occupancy map.
+- Attached a placement occupancy lease to placed objects so destroyed traps free their grid cell.
+- Added regression coverage for replacing a trap after its placed instance is destroyed.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies destroyed placed traps release their occupied cell for replacement.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - fix(defense): lock trapped enemies to trap tile
+
+### Summary
+- Locked trapped enemies to the triggering Bear Trap position for the hold duration.
+- Prevented already-rooted enemies from triggering additional Bear Traps.
+- Disabled enemy attack damage while the enemy is rooted by trap behavior.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` — verifies trap-position locking, no chained trap activation by rooted enemies, and independent activation by other enemies.
+- `EnemyAttackTests` — verifies rooted enemies do not deal attack damage.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - fix(defense): delete expired bear traps
+
+### Summary
+- Changed Bear Trap wave lifetime default to delete expired traps at wave end.
+- Lowered Bear Trap visual sorting so enemies render above traps.
+- Added contract coverage for delete-after-wave behavior and trap render order.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` — verifies default disappear policy deletes the trap after wave lifetime while reset policy remains supported.
+- `BearTrapPlacementPrototypeTests` — verifies Bear Trap prefab deletes expired traps and renders below enemies.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - feat(defense): add bear trap trigger behavior
+
+### Summary
+- Added Bear Trap runtime trigger behavior for one-enemy activation.
+- Added tunable damage, hold duration, wave lifetime, and wave-end reset/disappear policy defaults.
+- Added enemy root receiver support and a movement regression guard for rooted enemies.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` — verifies default tuning, one-enemy damage/root/spend behavior, spent-trap ignore behavior, wave-end reset, root release timing, and rooted enemy movement guard.
+- `BearTrapPlacementPrototypeTests` — verifies Bear Trap prefab runtime trigger wiring.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Local Unity EditMode run was blocked by Unity licensing IPC timeout before NUnit XML was produced.
+
 ## 2026-06-08 - feat(defense): validate trap placement surface
 
 ### Summary
