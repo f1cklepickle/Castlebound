@@ -4,6 +4,162 @@
 
 ---
 
+## 2026-06-13 - fix(defense): skip pulse knockback while rooted
+
+### Summary
+- Skipped barrier pulse knockback application for enemies currently held by root effects.
+- Preserved barrier pulse knockback after a rooted enemy is released while the pulse remains active.
+- Added regression coverage for trap-rooted enemies interacting with barrier pulse knockback.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPulseEmitterTests` - verifies rooted enemies receive no barrier pulse knockback until root ends.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user validation.
+
+## 2026-06-12 - fix(defense): catch released enemies on armed traps
+
+### Summary
+- Routed Bear Trap enter and stay trigger checks through the same guarded activation path.
+- Allowed released enemies still overlapping an armed trap to be caught after root expires.
+- Preserved the rule that currently rooted enemies cannot consume additional traps.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` - verifies trigger stay ignores rooted enemies, then catches the same enemy after root release while overlapping another armed trap.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - fix(visual): use bear trap sprite for placement preview
+
+### Summary
+- Updated placement preview sprite resolution to prefer the selected Bear Trap prefab open sprite.
+- Preserved placeholder preview fallback for placeables without authored sprite art.
+- Added regression coverage for Bear Trap ghost preview art selection.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies placement preview uses the selected Bear Trap open sprite before placeholder art.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - feat(visual): add bear trap animation states
+
+### Summary
+- Added the authored Bear Trap PNG sprite sheet under project art assets.
+- Imported the sheet as open, close, and closed sprite frames.
+- Wired the Bear Trap prefab visual state to play the close frame animation and remain closed when spent.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies the authored Bear Trap sprite sheet, frame names, prefab sprite references, and three-frame close animation contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-12 - test(defense): stabilize trap occupancy release test
+
+### Summary
+- Added an explicit idempotent release method to placed-object occupancy leases.
+- Updated the trap replacement regression to release the lease deterministically in EditMode.
+- Kept OnDestroy release behavior intact for runtime trap cleanup.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies placed traps carry an occupancy lease and release their cell before replacement.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - fix(defense): release deleted trap occupancy
+
+### Summary
+- Added occupancy release support to the castle placement occupancy map.
+- Attached a placement occupancy lease to placed objects so destroyed traps free their grid cell.
+- Added regression coverage for replacing a trap after its placed instance is destroyed.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies destroyed placed traps release their occupied cell for replacement.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - fix(defense): lock trapped enemies to trap tile
+
+### Summary
+- Locked trapped enemies to the triggering Bear Trap position for the hold duration.
+- Prevented already-rooted enemies from triggering additional Bear Traps.
+- Disabled enemy attack damage while the enemy is rooted by trap behavior.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` - verifies trap-position locking, no chained trap activation by rooted enemies, and independent activation by other enemies.
+- `EnemyAttackTests` - verifies rooted enemies do not deal attack damage.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - fix(defense): delete expired bear traps
+
+### Summary
+- Changed Bear Trap wave lifetime default to delete expired traps at wave end.
+- Lowered Bear Trap visual sorting so enemies render above traps.
+- Added contract coverage for delete-after-wave behavior and trap render order.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` - verifies default disappear policy deletes the trap after wave lifetime while reset policy remains supported.
+- `BearTrapPlacementPrototypeTests` - verifies Bear Trap prefab deletes expired traps and renders below enemies.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
+## 2026-06-11 - feat(defense): add bear trap trigger behavior
+
+### Summary
+- Added Bear Trap runtime trigger behavior for one-enemy activation.
+- Added tunable damage, hold duration, wave lifetime, and wave-end reset/disappear policy defaults.
+- Added enemy root receiver support and a movement regression guard for rooted enemies.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` - verifies default tuning, one-enemy damage/root/spend behavior, spent-trap ignore behavior, wave-end reset, root release timing, and rooted enemy movement guard.
+- `BearTrapPlacementPrototypeTests` - verifies Bear Trap prefab runtime trigger wiring.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity EditMode run was blocked by Unity licensing IPC timeout before NUnit XML was produced.
+
 ## 2026-06-08 - feat(defense): validate trap placement surface
 
 ### Summary
@@ -248,11 +404,11 @@
 
 ### New or Updated Tests
 **EditMode**
-- `BarrierBalanceTableTests` — verifies default table values, clamping, tier formulas, and project asset wiring.
-- `BarrierUpgradeTests` — verifies barrier health, upgrade costs, and purchase spending resolve through the assigned balance table.
+- `BarrierBalanceTableTests` - verifies default table values, clamping, tier formulas, and project asset wiring.
+- `BarrierUpgradeTests` - verifies barrier health, upgrade costs, and purchase spending resolve through the assigned balance table.
 
 **PlayMode**
-- N/A — N/A
+- N/A - N/A
 
 ### Notes
 - EditMode tests passed in Unity editor validation on 2026-05-25.
@@ -815,10 +971,10 @@
 
 ### New or Updated Tests
 **EditMode**
-- `TowerRuntimeContractTests` — verifies `Tower.prefab` exists, stays normalized, includes runtime/collider state, and preserves the approved child hierarchy contract.
+- `TowerRuntimeContractTests` - verifies `Tower.prefab` exists, stays normalized, includes runtime/collider state, and preserves the approved child hierarchy contract.
 
 **PlayMode**
-- `TowerSpawnInitPlayTests` — verifies a spawned tower initializes runtime state and resolves the required hierarchy references at runtime.
+- `TowerSpawnInitPlayTests` - verifies a spawned tower initializes runtime state and resolves the required hierarchy references at runtime.
 
 ### Notes
 - EditMode suite passed via `ci/run-editmode.ps1`. Tower PlayMode coverage was validated manually in the Unity editor after fixing runtime reference resolution for dynamic construction order.
@@ -832,16 +988,16 @@
 
 ### New or Updated Tests
 **EditMode**
-- `PlayerAttackAuthorityOwnershipContractsTests` — verifies attack cooldown authority moved out of `PlayerController` and into `PlayerAttackLoop`.
-- `PlayerAttackCadenceClockContractsTests` — verifies loop-owned cadence uses internal elapsed time instead of controller time sources.
-- `PlayerHoldFireContractsTests` — verifies `PlayerController` keeps held-fire intent delegated through `PlayerFireInputController` and into `PlayerAttackLoop`.
-- `PlayerAttackLoopTimingTests` — verifies chained swing timing, release behavior, and no-idle chaining across sustained held fire.
-- `MobileInputDriverOwnershipContractsTests` — verifies `MobileInputDriver` no longer exposes attack-rate APIs and `PlayerController` no longer syncs cadence into mobile input.
+- `PlayerAttackAuthorityOwnershipContractsTests` - verifies attack cooldown authority moved out of `PlayerController` and into `PlayerAttackLoop`.
+- `PlayerAttackCadenceClockContractsTests` - verifies loop-owned cadence uses internal elapsed time instead of controller time sources.
+- `PlayerHoldFireContractsTests` - verifies `PlayerController` keeps held-fire intent delegated through `PlayerFireInputController` and into `PlayerAttackLoop`.
+- `PlayerAttackLoopTimingTests` - verifies chained swing timing, release behavior, and no-idle chaining across sustained held fire.
+- `MobileInputDriverOwnershipContractsTests` - verifies `MobileInputDriver` no longer exposes attack-rate APIs and `PlayerController` no longer syncs cadence into mobile input.
 
 **PlayMode**
-- `PlayerHighRateCadenceConsistencyPlayTests` — verifies stable loop cadence across sustained high-rate attack windows.
-- `PlayerAttackDamagePlayTests` — verifies compressed high-rate swings still deal repeated damage across swings without allowing same-swing multi-hit overlap.
-- `PlayerAttackLoopIdleFlickerPlayTests` — verifies held attack presentation does not pulse to idle between chained swings.
+- `PlayerHighRateCadenceConsistencyPlayTests` - verifies stable loop cadence across sustained high-rate attack windows.
+- `PlayerAttackDamagePlayTests` - verifies compressed high-rate swings still deal repeated damage across swings without allowing same-swing multi-hit overlap.
+- `PlayerAttackLoopIdleFlickerPlayTests` - verifies held attack presentation does not pulse to idle between chained swings.
 
 ### Notes
 - Manual validation confirmed PC and Android hold-fire paths still function, high-rate attacks remain responsive, and unarmed attacks return to one damage per swing.
@@ -855,11 +1011,11 @@
 
 ### New or Updated Tests
 **EditMode**
-- `PlayerFacingPolicyContractsTests` — verifies delegated facing-policy contract, tunable thresholds, and source-selection boundaries.
-- `PlayerFacingPolicyResolverTests` — verifies PC aim-intent override, Android right-stick hysteresis enter/hold/exit, and no-movement facing preservation.
+- `PlayerFacingPolicyContractsTests` - verifies delegated facing-policy contract, tunable thresholds, and source-selection boundaries.
+- `PlayerFacingPolicyResolverTests` - verifies PC aim-intent override, Android right-stick hysteresis enter/hold/exit, and no-movement facing preservation.
 
 **PlayMode**
-- `PlayerFacingPolicyPlayTests` — verifies runtime movement-facing <-> aim-facing switching for PC and Android policy paths.
+- `PlayerFacingPolicyPlayTests` - verifies runtime movement-facing <-> aim-facing switching for PC and Android policy paths.
 
 ### Notes
 - Hold-fire cadence and editor touch-zone mouse-bleed regression suites remained green during facing-policy validation.
@@ -873,14 +1029,14 @@
 
 ### New or Updated Tests
 **EditMode**
-- `PcMouseAimContractsTests` — verifies mouse look binding and delegated aim resolver contract.
-- `PlayerHoldFireContractsTests` — verifies `PlayerController` delegates hold-fire lifecycle to `PlayerFireInputController`.
-- `PlayerFireInputControllerTests` — verifies hold-state transitions, tick attack attempts, and release fallback clear behavior.
-- `TouchMovementZoneTests` / `TouchAimAttackZoneTests` — verifies runtime handlers ignore mouse pointer events.
-- `MobileInputDriverEditorGatingContractsTests` — verifies editor gating contract for simulator touch enable behavior.
+- `PcMouseAimContractsTests` - verifies mouse look binding and delegated aim resolver contract.
+- `PlayerHoldFireContractsTests` - verifies `PlayerController` delegates hold-fire lifecycle to `PlayerFireInputController`.
+- `PlayerFireInputControllerTests` - verifies hold-state transitions, tick attack attempts, and release fallback clear behavior.
+- `TouchMovementZoneTests` / `TouchAimAttackZoneTests` - verifies runtime handlers ignore mouse pointer events.
+- `MobileInputDriverEditorGatingContractsTests` - verifies editor gating contract for simulator touch enable behavior.
 
 **PlayMode**
-- `PlayerHoldFireCadencePlayTests` — verifies held fire repeats attack attempts across frames and stops after release.
+- `PlayerHoldFireCadencePlayTests` - verifies held fire repeats attack attempts across frames and stops after release.
 
 ### Notes
 - Manual validation confirmed PC left-click hold starts repeated attacks and release stops immediately.
@@ -894,11 +1050,11 @@
 
 ### New or Updated Tests
 **EditMode**
-- `GameOverRestartContractsTests` — verifies shared UI restart entrypoint contract and touch-friendly death-screen copy in scenes.
-- `GameManagerKeyboardRestartContractsTests` — verifies `Space` restart code path remains present for Input System and legacy input.
+- `GameOverRestartContractsTests` - verifies shared UI restart entrypoint contract and touch-friendly death-screen copy in scenes.
+- `GameManagerKeyboardRestartContractsTests` - verifies `Space` restart code path remains present for Input System and legacy input.
 
 **PlayMode**
-- `DeathScreenRestartPlayTests` — verifies game-over UI appears on death and includes a tappable restart button.
+- `DeathScreenRestartPlayTests` - verifies game-over UI appears on death and includes a tappable restart button.
 
 ### Notes
 - Manual validation confirmed restart button works on death screen and `Space` restart works on PC after input-backend fallback update.
@@ -912,14 +1068,14 @@
 
 ### New or Updated Tests
 **EditMode**
-- `MobileInputDriverTests` — `SetAttackRate(float)` API contract and positive-minimum clamping
-- `PlayerAttackRateCalculatorTests` — effective rate math and weapon speed change coverage
-- `PlayerAttackCooldownGateTests` — cooldown consume cadence and reset behavior
-- `AnimatorAttackTransitionContractTests` — attack transition contract (`hasExitTime=true` with short blend duration)
-- `PlayerAttackInputTests` / `PlayerWeaponSlotSwapInputTests` — regression guards remained green through the `#143` split
+- `MobileInputDriverTests` - `SetAttackRate(float)` API contract and positive-minimum clamping
+- `PlayerAttackRateCalculatorTests` - effective rate math and weapon speed change coverage
+- `PlayerAttackCooldownGateTests` - cooldown consume cadence and reset behavior
+- `AnimatorAttackTransitionContractTests` - attack transition contract (`hasExitTime=true` with short blend duration)
+- `PlayerAttackInputTests` / `PlayerWeaponSlotSwapInputTests` - regression guards remained green through the `#143` split
 
 **PlayMode**
-- `PlayerAttackDamagePlayTests` — attack animation/hitbox path damages enemies on first and consecutive swings (regression guard for no-damage attack states)
+- `PlayerAttackDamagePlayTests` - attack animation/hitbox path damages enemies on first and consecutive swings (regression guard for no-damage attack states)
 
 ### Notes
 - Input debugging note: Device Simulator state caused repeated false negatives for mouse validation during this branch; reliable verification required separate passes (Simulator closed for mouse, open for touch).
@@ -943,15 +1099,15 @@
 
 ### New or Updated Tests
 **EditMode**
-- `TouchMovementZoneTests` — proportional magnitude at half-radius, full-radius,
+- `TouchMovementZoneTests` - proportional magnitude at half-radius, full-radius,
   and clamped-beyond-radius
-- `MobileInputDriverTests` — null-safety: OnEnable/OnDisable without refs, repeated
+- `MobileInputDriverTests` - null-safety: OnEnable/OnDisable without refs, repeated
   enable/disable cycles; PlayMode gap documented for pulse timer
-- `PlayerAttackInputTests` — PlayerController instantiation, input-lock blocks
+- `PlayerAttackInputTests` - PlayerController instantiation, input-lock blocks
   movement, unlock restores movement
 
 **PlayMode**
-- N/A — device pairing, attack pulse, and isPressed guard require full PlayerInput
+- N/A - device pairing, attack pulse, and isPressed guard require full PlayerInput
   runtime; manual Device Simulator validation performed: move, attack, repair,
   weapon swap, and upgrade panel all confirmed working
 
@@ -993,22 +1149,22 @@
 
 ### New or Updated Tests
 **EditMode**
-- ScaleCompensationGuardTests — removed legacy barrier root scale exception and kept normalized scale guard.
-- BarrierPrefabNormalizationTests — verifies barrier scale/collider normalization baseline.
-- CastleModulePlacementRulesTests — validates 3-unit lattice and occupancy rule decisions.
-- BarrierAssemblyBuilderTests — validates deterministic rebuild behavior and generated-child lifecycle.
-- BarrierAssemblyRunnerTests — validates runner orchestration from layout source to generated instances.
-- BarrierTilemapLayoutSourceTests — validates marker extraction and side mapping from barrier tilemap.
-- BarrierVisualBindingTests — validates side sprite binding and SystemsRoot rotation behavior.
-- BarrierPrefabVisualContractTests — validates side sprites and SystemsRoot ownership of directional/UI children.
-- BarrierPlacementPresentationContractTests — validates marker alignment, marker renderer hiding, and root rotation contract.
-- MainPrototypeBarrierAssemblyIntegrationTests — validates scene bootstrap wiring, generation, slot alignment, and side-rotation contract.
-- CastleWallTilemapColliderContractTests — validates walls as blocking colliders and barrier marker tilemap as non-blocking.
-- CastleFloorRegionContractTests — validates floor trigger collider and CastleRegionTracker region-source contract.
-- BarrierHitShakeTests — validates shake localizes to impacted barrier and baseline restore behavior.
+- ScaleCompensationGuardTests - removed legacy barrier root scale exception and kept normalized scale guard.
+- BarrierPrefabNormalizationTests - verifies barrier scale/collider normalization baseline.
+- CastleModulePlacementRulesTests - validates 3-unit lattice and occupancy rule decisions.
+- BarrierAssemblyBuilderTests - validates deterministic rebuild behavior and generated-child lifecycle.
+- BarrierAssemblyRunnerTests - validates runner orchestration from layout source to generated instances.
+- BarrierTilemapLayoutSourceTests - validates marker extraction and side mapping from barrier tilemap.
+- BarrierVisualBindingTests - validates side sprite binding and SystemsRoot rotation behavior.
+- BarrierPrefabVisualContractTests - validates side sprites and SystemsRoot ownership of directional/UI children.
+- BarrierPlacementPresentationContractTests - validates marker alignment, marker renderer hiding, and root rotation contract.
+- MainPrototypeBarrierAssemblyIntegrationTests - validates scene bootstrap wiring, generation, slot alignment, and side-rotation contract.
+- CastleWallTilemapColliderContractTests - validates walls as blocking colliders and barrier marker tilemap as non-blocking.
+- CastleFloorRegionContractTests - validates floor trigger collider and CastleRegionTracker region-source contract.
+- BarrierHitShakeTests - validates shake localizes to impacted barrier and baseline restore behavior.
 
 **PlayMode**
-- CastleTilemapRuntimeContractsPlayTests — validates walls/floor runtime collider contracts, barrier break collider disable behavior, and bootstrap rebuild pipeline with generated barrier rotation/sprite/runtime component contracts.
+- CastleTilemapRuntimeContractsPlayTests - validates walls/floor runtime collider contracts, barrier break collider disable behavior, and bootstrap rebuild pipeline with generated barrier rotation/sprite/runtime component contracts.
 
 ### Notes
 - Manual validation: barriers spawn from marker tilemap, remain in place, and use side-correct visuals with SystemsRoot-driven directional components.
@@ -1023,10 +1179,10 @@
 
 ### New or Updated Tests
 **EditMode**
-- `CastleTilesetImportBaselineTests` — tileset import contract for PPU32, point filter, uncompressed textures, mipmaps off (sprites), and center pivot consistency
+- `CastleTilesetImportBaselineTests` - tileset import contract for PPU32, point filter, uncompressed textures, mipmaps off (sprites), and center pivot consistency
 
 **PlayMode**
-- N/A — N/A
+- N/A - N/A
 
 ### Notes
 - Manual: verified castle tiles render correctly in `MainPrototype`, floor/walls layering is readable, and enemies can pass into castle after barrier break with updated pass-through tuning.
@@ -1040,13 +1196,13 @@
 
 ### New or Updated Tests
 **EditMode**
-- `CameraScaleBaselineTests` — `MainPrototype` orthographic camera baseline contract for PPU32 readability
-- `WorldGridBaselineTests` — `MainPrototype` authoritative `Grid` presence and `1x1` cell size
-- `PpuImportBaselineTests` — scoped importer contract for PPU/filter/compression/mipmap settings
-- `ScaleCompensationGuardTests` — prefab/root/sprite scale guard with explicit temporary barrier exception
+- `CameraScaleBaselineTests` - `MainPrototype` orthographic camera baseline contract for PPU32 readability
+- `WorldGridBaselineTests` - `MainPrototype` authoritative `Grid` presence and `1x1` cell size
+- `PpuImportBaselineTests` - scoped importer contract for PPU/filter/compression/mipmap settings
+- `ScaleCompensationGuardTests` - prefab/root/sprite scale guard with explicit temporary barrier exception
 
 **PlayMode**
-- `ScaleBaselineSmokePlayTests` — `MainPrototype` load + camera/player visibility smoke at baseline scale
+- `ScaleBaselineSmokePlayTests` - `MainPrototype` load + camera/player visibility smoke at baseline scale
 
 ### Notes
 - Manual: validated player/items readability at new baseline and retuned barrier/enemy/player scene behavior after PPU32 conversion.
@@ -1060,13 +1216,13 @@
 
 ### New or Updated Tests
 **EditMode**
-- `BarrierPulseEmitterVisualStateTests` — exposes and updates pulse visual state for VFX followers
-- `BarrierPulseVfxControllerTests` — ring follows active pulse radius/window and uses `PulseOrigin` center
-- `BarrierPulseVfxControllerConfigTests` — ring config contract (alpha/sorting/tile mode/ring-only controls)
-- `BarrierPulseRingFlipbookTests` — flipbook controls, frame advance/loop, and seam drift behavior
+- `BarrierPulseEmitterVisualStateTests` - exposes and updates pulse visual state for VFX followers
+- `BarrierPulseVfxControllerTests` - ring follows active pulse radius/window and uses `PulseOrigin` center
+- `BarrierPulseVfxControllerConfigTests` - ring config contract (alpha/sorting/tile mode/ring-only controls)
+- `BarrierPulseRingFlipbookTests` - flipbook controls, frame advance/loop, and seam drift behavior
 
 **PlayMode**
-- `BarrierPulseVfxPlayTests` — cue activation/teardown, runtime radius tracking, flipbook advance, and third-break flow with VFX attached
+- `BarrierPulseVfxPlayTests` - cue activation/teardown, runtime radius tracking, flipbook advance, and third-break flow with VFX attached
 
 ### Notes
 - Manual: validated in `MainPrototype` that pulse cue triggers reliably, uses `PulseOrigin`, and current ring behavior is tuned/acceptable.
@@ -1080,14 +1236,14 @@
 
 ### New or Updated Tests
 **EditMode**
-- `BarrierPulseEmitterTests` — continuous wavefront pressure, loop count active-window behavior, and threshold gating
-- `BarrierPressureTrackerTests` — scene-provider fallback and reset on wave changes
-- `EnemySpawnerTests` — runner updates `WaveIndexProviderComponent` on wave start
-- `BarrierSideClassifierTests` — barrier-side threshold classification contract
-- `EnemyControllerKnockbackTests` — knockback still applies when target is null
+- `BarrierPulseEmitterTests` - continuous wavefront pressure, loop count active-window behavior, and threshold gating
+- `BarrierPressureTrackerTests` - scene-provider fallback and reset on wave changes
+- `EnemySpawnerTests` - runner updates `WaveIndexProviderComponent` on wave start
+- `BarrierSideClassifierTests` - barrier-side threshold classification contract
+- `EnemyControllerKnockbackTests` - knockback still applies when target is null
 
 **PlayMode**
-- N/A — N/A
+- N/A - N/A
 
 ### Notes
 - Manual: verified third barrier break triggers pulse, pulse can be loop-configured, and trigger fires again in later waves.
@@ -1101,14 +1257,14 @@
 
 ### New or Updated Tests
 **EditMode**
-- CastleRegionTrackerEventsTests — tracker enter/exit events
-- EnemyRegionStateTests — cached state updates and missing-tracker fallback
-- EnemyControllerRegionStateTests — target selection uses cached state
-- EnemyAttackRegionStateTests — attack gating reads cached state
-- EnemyAttackRegionTrackerFallbackTests — warning when region state missing
+- CastleRegionTrackerEventsTests - tracker enter/exit events
+- EnemyRegionStateTests - cached state updates and missing-tracker fallback
+- EnemyControllerRegionStateTests - target selection uses cached state
+- EnemyAttackRegionStateTests - attack gating reads cached state
+- EnemyAttackRegionTrackerFallbackTests - warning when region state missing
 
 **PlayMode**
-- EnemyRegionStatePlayTests — crossing region trigger updates inside state
+- EnemyRegionStatePlayTests - crossing region trigger updates inside state
 
 ### Notes
 - Manual PlayMode verified enemy behavior.
@@ -1122,12 +1278,12 @@
 
 ### New or Updated Tests
 **EditMode**
-- `BarrierBreakPressureTriggerTests` — third-break trigger and wave reset behavior
-- `BarrierPressureTrackerTests` — per-barrier trigger and wave change reset
-- `BarrierHealthTests` — OnBroken event fires once per break
+- `BarrierBreakPressureTriggerTests` - third-break trigger and wave reset behavior
+- `BarrierPressureTrackerTests` - per-barrier trigger and wave change reset
+- `BarrierHealthTests` - OnBroken event fires once per break
 
 **PlayMode**
-- N/A — N/A
+- N/A - N/A
 
 ### Notes
 - Manual: verified trigger fires on 3rd break and resets next wave using temporary debug listener.

@@ -91,6 +91,38 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
+        public void SkipsRootedEnemyUntilRootEnds()
+        {
+            var region = CreateRegionTracker(out var regionGO);
+            var barrier = new GameObject("Barrier");
+            var origin = new GameObject("Origin");
+            origin.transform.SetParent(barrier.transform, false);
+            origin.transform.localPosition = Vector3.zero;
+
+            var emitter = AddEmitter(barrier);
+            SetPulseTuning(emitter, origin.transform, 2.0f, 10f, 5f);
+            Invoke(emitter, "Debug_StartPulse");
+
+            var enemy = CreateEnemy(new Vector2(5f, 0f));
+            var rootReceiver = enemy.GetComponent<EnemyRootReceiver>();
+            rootReceiver.RootForSeconds(5f);
+
+            Invoke(emitter, "Debug_TickPulse", 1.0f);
+            var rootedPush = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+
+            rootReceiver.ClearRoot();
+            Invoke(emitter, "Debug_TickPulse", 0.1f);
+            var releasedPush = enemy.GetComponent<EnemyKnockbackReceiver>().ConsumeDisplacement(0.1f).magnitude;
+
+            Assert.That(rootedPush, Is.EqualTo(0f).Within(0.001f), "Rooted enemy should not receive barrier pulse knockback.");
+            Assert.Greater(releasedPush, 0.01f, "Released enemy should receive knockback while the pulse remains active.");
+
+            UnityEngine.Object.DestroyImmediate(regionGO);
+            UnityEngine.Object.DestroyImmediate(barrier);
+            UnityEngine.Object.DestroyImmediate(enemy);
+        }
+
+        [Test]
         public void UsesInnerOriginDirection()
         {
             var region = CreateRegionTracker(out var regionGO);
@@ -219,6 +251,7 @@ namespace Castlebound.Tests.Castle
             enemy.AddComponent<EnemyController2D>();
             enemy.AddComponent<EnemyRegionState>();
             enemy.AddComponent<EnemyKnockbackReceiver>();
+            enemy.AddComponent<EnemyRootReceiver>();
             return enemy;
         }
 

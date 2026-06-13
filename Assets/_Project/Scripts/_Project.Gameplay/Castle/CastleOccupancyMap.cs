@@ -25,6 +25,19 @@ namespace Castlebound.Gameplay.Castle
             Occupy(worldPosition, GridFootprint.ThreeByThree);
         }
 
+        public void Release(Vector2 worldPosition, GridFootprint footprint)
+        {
+            if (!footprint.IsValid)
+            {
+                throw new System.ArgumentException("Cannot release an invalid grid footprint.", nameof(footprint));
+            }
+
+            foreach (var cell in EnumerateCells(worldPosition, footprint))
+            {
+                occupiedCells.Remove(cell);
+            }
+        }
+
         public bool IsAnyCellOccupied(Vector2 worldPosition, GridFootprint footprint)
         {
             if (!footprint.IsValid)

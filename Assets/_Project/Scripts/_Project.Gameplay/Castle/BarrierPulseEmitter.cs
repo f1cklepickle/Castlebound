@@ -192,6 +192,12 @@ namespace Castlebound.Gameplay.Castle
                     continue;
                 }
 
+                var rootReceiver = enemy.GetComponent<EnemyRootReceiver>();
+                if (rootReceiver != null && rootReceiver.IsRooted)
+                {
+                    continue;
+                }
+
                 Vector2 enemyPos = enemy.transform.position;
                 float dist = Vector2.Distance(origin, enemyPos);
                 // While pulse is active, keep enemies outside the castle from moving

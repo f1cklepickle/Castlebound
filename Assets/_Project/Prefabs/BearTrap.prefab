@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2100000001}
   - component: {fileID: 2100000002}
   - component: {fileID: 2100000003}
+  - component: {fileID: 2100000004}
   m_Layer: 11
   m_Name: BearTrap
   m_TagString: Untagged
@@ -92,10 +93,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   visualRenderer: {fileID: 2100000012}
-  openSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
-  closedSprite: {fileID: 0}
+  openSprite: {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closedSprite: {fileID: -7100100000000000003, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closeAnimationFrames:
+  - {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  - {fileID: -7100100000000000002, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  - {fileID: -7100100000000000003, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closeFrameSeconds: 0.08
   animator: {fileID: 0}
   closeTriggerName: Close
+--- !u!114 &2100000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92a611910d094fa6b6d2f9bd4a4590fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 2
+  holdDurationSeconds: 5
+  waveLifetime: 1
+  disappearAfterWaveEnd: 1
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 128
+  visualState: {fileID: 2100000003}
+  waveRunner: {fileID: 0}
 --- !u!1 &2100000010
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,8 +195,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 4
-  m_Sprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
+  m_SortingOrder: 0
+  m_Sprite: {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

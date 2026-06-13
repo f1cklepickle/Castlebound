@@ -209,7 +209,24 @@ namespace Castlebound.Gameplay.World.Placement
             var instance = Instantiate(selectedPlaceable.Prefab, snappedWorldPosition, Quaternion.identity, parent);
             instance.name = selectedPlaceable.DisplayName;
             occupancy.Occupy(snappedWorldPosition, selectedPlaceable.Footprint);
+            AttachOccupancyLease(instance, snappedWorldPosition, selectedPlaceable.Footprint);
             return true;
+        }
+
+        private void AttachOccupancyLease(GameObject instance, Vector2 snappedWorldPosition, GridFootprint footprint)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            var lease = instance.GetComponent<PlaceableOccupancyLease>();
+            if (lease == null)
+            {
+                lease = instance.AddComponent<PlaceableOccupancyLease>();
+            }
+
+            lease.Configure(occupancy, snappedWorldPosition, footprint);
         }
 
         private void ResolveReferences()
@@ -507,21 +524,22 @@ namespace Castlebound.Gameplay.World.Placement
 
         private Sprite ResolvePreviewSprite()
         {
-            if (placeholderPreviewSprite != null)
-            {
-                return placeholderPreviewSprite;
-            }
-
             if (selectedPlaceable != null && selectedPlaceable.Prefab != null)
             {
+                var visualState = selectedPlaceable.Prefab.GetComponent<BearTrapVisualState>();
+                if (visualState != null && visualState.OpenSprite != null)
+                {
+                    return visualState.OpenSprite;
+                }
+
                 var renderer = selectedPlaceable.Prefab.GetComponentInChildren<SpriteRenderer>(true);
-                if (renderer != null)
+                if (renderer != null && renderer.sprite != null)
                 {
                     return renderer.sprite;
                 }
             }
 
-            return null;
+            return placeholderPreviewSprite;
         }
 
         private void SetPreviewActive(bool active)
