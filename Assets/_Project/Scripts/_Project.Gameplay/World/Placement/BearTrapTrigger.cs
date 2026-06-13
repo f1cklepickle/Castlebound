@@ -62,6 +62,16 @@ namespace Castlebound.Gameplay.World.Placement
 
         private void OnTriggerEnter2D(Collider2D other)
         {
+            TryTrigger(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            TryTrigger(other);
+        }
+
+        private void TryTrigger(Collider2D other)
+        {
             if (isSpent || other == null || !IsEnemy(other))
             {
                 return;

@@ -4,6 +4,57 @@
 
 ---
 
+## 2026-06-12 - fix(defense): catch released enemies on armed traps
+
+### Summary
+- Routed Bear Trap enter and stay trigger checks through the same guarded activation path.
+- Allowed released enemies still overlapping an armed trap to be caught after root expires.
+- Preserved the rule that currently rooted enemies cannot consume additional traps.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapTriggerTests` - verifies trigger stay ignores rooted enemies, then catches the same enemy after root release while overlapping another armed trap.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - fix(visual): use bear trap sprite for placement preview
+
+### Summary
+- Updated placement preview sprite resolution to prefer the selected Bear Trap prefab open sprite.
+- Preserved placeholder preview fallback for placeables without authored sprite art.
+- Added regression coverage for Bear Trap ghost preview art selection.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies placement preview uses the selected Bear Trap open sprite before placeholder art.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- N/A
+
+## 2026-06-12 - feat(visual): add bear trap animation states
+
+### Summary
+- Added the authored Bear Trap PNG sprite sheet under project art assets.
+- Imported the sheet as open, close, and closed sprite frames.
+- Wired the Bear Trap prefab visual state to play the close frame animation and remain closed when spent.
+
+### New or Updated Tests
+**EditMode**
+- `BearTrapPlacementPrototypeTests` - verifies the authored Bear Trap sprite sheet, frame names, prefab sprite references, and three-frame close animation contract.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- Local Unity validation was not rerun in this shell because batchmode was blocked by Unity licensing IPC timeout earlier in the session.
+
 ## 2026-06-12 - test(defense): stabilize trap occupancy release test
 
 ### Summary

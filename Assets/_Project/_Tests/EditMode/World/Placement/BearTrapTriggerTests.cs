@@ -111,6 +111,38 @@ namespace Castlebound.Tests.World.Placement
         }
 
         [Test]
+        public void TriggerStay_CatchesReleasedEnemyStillOverlappingArmedTrap()
+        {
+            var firstTrapObject = CreateTrap(out var firstTrap);
+            var secondTrapObject = CreateTrap(out var secondTrap);
+            var enemyObject = CreateEnemy(out var health, out var rootReceiver);
+
+            try
+            {
+                firstTrapObject.transform.position = new Vector3(1f, 0f, 0f);
+                secondTrapObject.transform.position = new Vector3(2f, 0f, 0f);
+
+                InvokeTriggerEnter(firstTrap, enemyObject.GetComponent<Collider2D>());
+                InvokeTriggerStay(secondTrap, enemyObject.GetComponent<Collider2D>());
+                Assert.IsTrue(secondTrap.IsArmed, "Rooted enemy should not trigger the second trap yet.");
+
+                rootReceiver.Tick(5f);
+                InvokeTriggerStay(secondTrap, enemyObject.GetComponent<Collider2D>());
+
+                Assert.That(health.Current, Is.EqualTo(6));
+                Assert.IsTrue(secondTrap.IsSpent);
+                Assert.IsTrue(rootReceiver.IsRooted);
+                Assert.That((Vector2)enemyObject.transform.position, Is.EqualTo((Vector2)secondTrapObject.transform.position));
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemyObject);
+                Object.DestroyImmediate(secondTrapObject);
+                Object.DestroyImmediate(firstTrapObject);
+            }
+        }
+
+        [Test]
         public void Trigger_OtherEnemyCanTriggerAnotherArmedTrap()
         {
             var firstTrapObject = CreateTrap(out var firstTrap);
@@ -264,6 +296,15 @@ namespace Castlebound.Tests.World.Placement
                 "OnTriggerEnter2D",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.NotNull(method, "Expected BearTrapTrigger.OnTriggerEnter2D for trigger contract.");
+            method.Invoke(trap, new object[] { collider });
+        }
+
+        private static void InvokeTriggerStay(BearTrapTrigger trap, Collider2D collider)
+        {
+            var method = typeof(BearTrapTrigger).GetMethod(
+                "OnTriggerStay2D",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method, "Expected BearTrapTrigger.OnTriggerStay2D for trigger-stay contract.");
             method.Invoke(trap, new object[] { collider });
         }
 

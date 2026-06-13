@@ -93,8 +93,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   visualRenderer: {fileID: 2100000012}
-  openSprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
-  closedSprite: {fileID: 0}
+  openSprite: {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closedSprite: {fileID: -7100100000000000003, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closeAnimationFrames:
+  - {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  - {fileID: -7100100000000000002, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  - {fileID: -7100100000000000003, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
+  closeFrameSeconds: 0.08
   animator: {fileID: 0}
   closeTriggerName: Close
 --- !u!114 &2100000004
@@ -191,7 +196,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 40fce742cb865404798ef8ba7d49ebd4, type: 3}
+  m_Sprite: {fileID: -7100100000000000001, guid: eb79155a600b4f24a0f7d02aae20f4e9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

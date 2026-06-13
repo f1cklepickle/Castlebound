@@ -524,21 +524,22 @@ namespace Castlebound.Gameplay.World.Placement
 
         private Sprite ResolvePreviewSprite()
         {
-            if (placeholderPreviewSprite != null)
-            {
-                return placeholderPreviewSprite;
-            }
-
             if (selectedPlaceable != null && selectedPlaceable.Prefab != null)
             {
+                var visualState = selectedPlaceable.Prefab.GetComponent<BearTrapVisualState>();
+                if (visualState != null && visualState.OpenSprite != null)
+                {
+                    return visualState.OpenSprite;
+                }
+
                 var renderer = selectedPlaceable.Prefab.GetComponentInChildren<SpriteRenderer>(true);
-                if (renderer != null)
+                if (renderer != null && renderer.sprite != null)
                 {
                     return renderer.sprite;
                 }
             }
 
-            return null;
+            return placeholderPreviewSprite;
         }
 
         private void SetPreviewActive(bool active)

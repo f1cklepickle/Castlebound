@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Castlebound.Gameplay.Input;
 using Castlebound.Gameplay.Castle;
@@ -15,6 +16,7 @@ namespace Castlebound.Tests.World.Placement
     {
         private const string BearTrapDefinitionPath = "Assets/_Project/Placeables/Defense/Placeable_Defense_BearTrap.asset";
         private const string BearTrapPrefabPath = "Assets/_Project/Prefabs/BearTrap.prefab";
+        private const string BearTrapSpriteSheetPath = "Assets/_Project/Art/Defense/BearTrap/BearTrap.png";
         private const string MainPrototypeScenePath = "Assets/_Project/Scenes/MainPrototype.unity";
         private const string PlacementControllerSourcePath = "Assets/_Project/Scripts/_Project.Gameplay/World/Placement/WorldPlaceablePlacementController.cs";
 
@@ -80,8 +82,14 @@ namespace Castlebound.Tests.World.Placement
         public void BearTrapPrefab_UsesReplaceableSpriteOrAnimatorVisualContract()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BearTrapPrefabPath);
+            var spriteSheet = AssetDatabase.LoadAssetAtPath<Texture2D>(BearTrapSpriteSheetPath);
+            var sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(BearTrapSpriteSheetPath)
+                .OfType<Sprite>()
+                .ToArray();
 
             Assert.NotNull(prefab, "Bear trap prefab must exist.");
+            Assert.NotNull(spriteSheet, "Bear trap authored sprite sheet must exist.");
+            Assert.That(sprites.Select(sprite => sprite.name), Is.EquivalentTo(new[] { "BearTrap_Open", "BearTrap_Close", "BearTrap_Closed" }));
             var trapRenderer = prefab.GetComponentInChildren<SpriteRenderer>(true);
             Assert.NotNull(trapRenderer, "Bear trap prefab should expose a SpriteRenderer for placeholder art.");
             Assert.That(trapRenderer.sortingOrder, Is.LessThan(1), "Bear trap visual should render under enemies so triggered enemies remain visible.");
@@ -89,6 +97,10 @@ namespace Castlebound.Tests.World.Placement
             var visualState = prefab.GetComponent<BearTrapVisualState>();
             Assert.NotNull(visualState, "Bear trap prefab should include BearTrapVisualState so closed art or animation can be swapped later.");
             Assert.NotNull(visualState.OpenSprite, "Bear trap visual state should reference the current placeholder/open sprite.");
+            Assert.NotNull(visualState.ClosedSprite, "Bear trap visual state should reference the authored closed sprite.");
+            Assert.That(visualState.OpenSprite.name, Is.EqualTo("BearTrap_Open"));
+            Assert.That(visualState.ClosedSprite.name, Is.EqualTo("BearTrap_Closed"));
+            Assert.That(visualState.CloseAnimationFrameCount, Is.EqualTo(3), "Bear trap visual state should play open, close, and closed frames.");
 
             var trigger = prefab.GetComponent<BearTrapTrigger>();
             Assert.NotNull(trigger, "Bear trap prefab should include BearTrapTrigger for runtime trigger behavior.");
@@ -146,6 +158,37 @@ namespace Castlebound.Tests.World.Placement
             var source = File.ReadAllText(PlacementControllerSourcePath);
 
             StringAssert.DoesNotContain("IsPointerOverGameObject", source);
+        }
+
+        [Test]
+        public void PlacementPreview_UsesSelectedBearTrapOpenSpriteBeforePlaceholder()
+        {
+            var controllerObject = new GameObject("PlacementController");
+            var controller = controllerObject.AddComponent<WorldPlaceablePlacementController>();
+            var definition = CreateBearTrapDefinition();
+            var placeholder = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.one * 0.5f);
+            var openSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.one * 0.5f);
+            openSprite.name = "BearTrap_Open";
+            definition.Prefab.AddComponent<SpriteRenderer>();
+            var visualState = definition.Prefab.AddComponent<BearTrapVisualState>();
+            visualState.OpenSprite = openSprite;
+
+            try
+            {
+                SetPrivateField(controller, "placeholderPreviewSprite", placeholder);
+
+                Assert.IsTrue(controller.BeginPlacement(definition));
+
+                Assert.AreSame(openSprite, InvokeResolvePreviewSprite(controller));
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition.Prefab);
+                Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(controllerObject);
+                Object.DestroyImmediate(placeholder);
+                Object.DestroyImmediate(openSprite);
+            }
         }
 
         [Test]
@@ -504,6 +547,15 @@ namespace Castlebound.Tests.World.Placement
             }
 
             return null;
+        }
+
+        private static Sprite InvokeResolvePreviewSprite(WorldPlaceablePlacementController controller)
+        {
+            var method = typeof(WorldPlaceablePlacementController).GetMethod(
+                "ResolvePreviewSprite",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(method, "Expected private ResolvePreviewSprite method.");
+            return (Sprite)method.Invoke(controller, null);
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)
