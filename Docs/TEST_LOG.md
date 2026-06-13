@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-06-13 - fix(defense): skip pulse knockback while rooted
+
+### Summary
+- Skipped barrier pulse knockback application for enemies currently held by root effects.
+- Preserved barrier pulse knockback after a rooted enemy is released while the pulse remains active.
+- Added regression coverage for trap-rooted enemies interacting with barrier pulse knockback.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPulseEmitterTests` - verifies rooted enemies receive no barrier pulse knockback until root ends.
+
+**PlayMode**
+- N/A - N/A
+
+### Notes
+- EditMode and PlayMode passed per user validation.
+
 ## 2026-06-12 - fix(defense): catch released enemies on armed traps
 
 ### Summary
