@@ -34,6 +34,23 @@ namespace Castlebound.Tests.Gate
             Object.DestroyImmediate(barrier);
         }
 
+        [Test]
+        public void Repair_AfterBreak_RaisesRepairedEvent()
+        {
+            var barrier = new GameObject("Barrier");
+            var health = barrier.AddComponent<BarrierHealth>();
+            health.MaxHealth = 1;
+            health.CurrentHealth = 1;
+            var repairedCount = 0;
+            health.OnRepaired += () => repairedCount++;
+
+            health.TakeDamage(1);
+            health.Repair();
+
+            Assert.That(repairedCount, Is.EqualTo(1));
+            Object.DestroyImmediate(barrier);
+        }
+
         private static SpriteRenderer CreateRenderer(Transform parent, string name)
         {
             var child = new GameObject(name);

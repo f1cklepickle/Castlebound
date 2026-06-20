@@ -5,6 +5,7 @@ public class BarrierHitShake : MonoBehaviour
 {
     [SerializeField] FeedbackEventChannel feedbackChannel;
     [SerializeField] Transform shakeTarget;
+    [SerializeField] BarrierHealth barrierHealth;
     [SerializeField] float durationSeconds = 0.15f;
     [SerializeField] float intensity = 0.05f;
 
@@ -15,6 +16,7 @@ public class BarrierHitShake : MonoBehaviour
 
     void Awake()
     {
+        ResolveBarrierHealth();
         originalLocalPos = ShakeTarget.localPosition;
     }
 
@@ -28,14 +30,25 @@ public class BarrierHitShake : MonoBehaviour
 
     void OnEnable()
     {
+        ResolveBarrierHealth();
+        originalLocalPos = ShakeTarget.localPosition;
+
         if (feedbackChannel != null)
             feedbackChannel.Raised += OnFeedbackRaised;
+
+        if (barrierHealth != null)
+            barrierHealth.OnRepaired += ResetShake;
     }
 
     void OnDisable()
     {
         if (feedbackChannel != null)
             feedbackChannel.Raised -= OnFeedbackRaised;
+
+        if (barrierHealth != null)
+            barrierHealth.OnRepaired -= ResetShake;
+
+        ResetShake();
     }
 
     void OnFeedbackRaised(FeedbackCue cue)
@@ -46,12 +59,8 @@ public class BarrierHitShake : MonoBehaviour
         if (durationSeconds <= 0f || intensity <= 0f)
             return;
 
-        // Capture the runtime baseline at the moment of impact so we don't snap
-        // back to prefab-authored local offsets after dynamic placement.
-        originalLocalPos = ShakeTarget.localPosition;
-
         if (shakeRoutine != null)
-            StopCoroutine(shakeRoutine);
+            ResetShake();
 
         shakeRoutine = StartCoroutine(ShakeRoutine());
     }
@@ -81,5 +90,22 @@ public class BarrierHitShake : MonoBehaviour
 
         ShakeTarget.localPosition = originalLocalPos;
         shakeRoutine = null;
+    }
+
+    public void ResetShake()
+    {
+        if (shakeRoutine != null)
+        {
+            StopCoroutine(shakeRoutine);
+            shakeRoutine = null;
+        }
+
+        ShakeTarget.localPosition = originalLocalPos;
+    }
+
+    void ResolveBarrierHealth()
+    {
+        if (barrierHealth == null)
+            barrierHealth = GetComponent<BarrierHealth>();
     }
 }

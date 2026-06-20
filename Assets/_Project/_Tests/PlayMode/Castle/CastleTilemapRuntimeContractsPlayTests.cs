@@ -29,6 +29,10 @@ namespace Castlebound.Tests.PlayMode.Castle
             Assert.NotNull(collider, "CastleWallsTilemap must include TilemapCollider2D.");
             Assert.IsTrue(collider.enabled, "CastleWallsTilemap collider must be enabled in PlayMode.");
             Assert.IsFalse(collider.isTrigger, "CastleWallsTilemap collider must remain solid (non-trigger).");
+
+            var renderer = walls.GetComponent<TilemapRenderer>();
+            Assert.NotNull(renderer, "CastleWallsTilemap must include TilemapRenderer.");
+            Assert.That(renderer.sortingOrder, Is.EqualTo(10), "Castle walls must render above Player and Enemy sprites.");
         }
 
         [UnityTest]

@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-06-20 - fix(barrier): preserve gate baseline and wall occlusion
+
+### Summary
+- Rendered Player and Enemy sprites below barrier Wall/Arch layers and the castle wall tilemap.
+- Kept pickup sprites visible above barrier and castle wall stonework.
+- Prevented repeated hits and repair from leaving the Gate shake target offset from its authored position.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - validates Player/Enemy wall occlusion and pickup visibility above stonework.
+- `CastleWallTilemapColliderContractTests` - validates castle walls render above Player and Enemy prefabs.
+- `BarrierHealthTests` - verifies repair raises the Gate reset notification.
+
+**PlayMode**
+- `BarrierHitShakeVisualSegmentPlayTests` - verifies repeated hits and repair restore the stable Gate baseline.
+- `CastleTilemapRuntimeContractsPlayTests` - validates runtime castle wall sorting order.
+
+### Notes
+- Unity rerun was blocked by the managed licensing/escalation wrapper after the red sorting-contract run; final EditMode and PlayMode reruns remain required.
+
 ## 2026-06-20 - fix(barrier): isolate damage shake to visual gate segment
 
 ### Summary

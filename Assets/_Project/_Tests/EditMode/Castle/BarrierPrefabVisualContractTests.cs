@@ -8,6 +8,13 @@ namespace Castlebound.Tests.Castle
     {
         private const string BarrierPrefabPath = "Assets/_Project/Prefabs/Barrier_Gate.prefab";
         private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
+        private const string PlayerPrefabPath = "Assets/_Project/Prefabs/Player.prefab";
+        private static readonly string[] PickupPrefabPaths =
+        {
+            "Assets/_Project/Prefabs/Pickups/Pickup_Gold_1.prefab",
+            "Assets/_Project/Prefabs/Pickups/Pickup_Potion_Health.prefab",
+            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_Sword.prefab"
+        };
         private const float ColliderTolerance = 0.05f;
 
         [Test]
@@ -71,8 +78,8 @@ namespace Castlebound.Tests.Castle
 
                 AssertRendererOrder(ground, 0);
                 AssertRendererOrder(gate, 1);
-                AssertRendererOrder(wall, 2);
-                AssertRendererOrder(arch, 10);
+                AssertRendererOrder(wall, 10);
+                AssertRendererOrder(arch, 11);
 
                 foreach (var visual in new[] { ground, gateShakeRoot, gate, wall, arch })
                 {
@@ -98,21 +105,37 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
-        public void BarrierAndEnemyPrefabs_RenderEnemyAboveWallAndBelowArch()
+        public void BarrierPrefabs_RenderPlayerAndEnemyBelowWallAndArch_WhilePickupsRemainAbove()
         {
             var barrier = PrefabTestUtil.Load(BarrierPrefabPath);
             var enemy = PrefabTestUtil.Load(EnemyPrefabPath);
+            var player = PrefabTestUtil.Load(PlayerPrefabPath);
             try
             {
                 var wallOrder = FindChildRecursive(barrier.transform, "WallRenderer").GetComponent<SpriteRenderer>().sortingOrder;
                 var archOrder = FindChildRecursive(barrier.transform, "ArchRenderer").GetComponent<SpriteRenderer>().sortingOrder;
-                var enemyOrder = enemy.GetComponentInChildren<SpriteRenderer>(true).sortingOrder;
+                AssertRenderersBelow(enemy, wallOrder, "Enemy");
+                AssertRenderersBelow(player, wallOrder, "Player");
 
-                Assert.That(enemyOrder, Is.GreaterThan(wallOrder));
-                Assert.That(enemyOrder, Is.LessThan(archOrder));
+                foreach (var pickupPath in PickupPrefabPaths)
+                {
+                    var pickup = PrefabTestUtil.Load(pickupPath);
+                    try
+                    {
+                        foreach (var renderer in pickup.GetComponentsInChildren<SpriteRenderer>(true))
+                        {
+                            Assert.That(renderer.sortingOrder, Is.GreaterThan(archOrder), $"{pickup.name} should remain visible above barrier stone.");
+                        }
+                    }
+                    finally
+                    {
+                        PrefabTestUtil.Unload(pickup);
+                    }
+                }
             }
             finally
             {
+                PrefabTestUtil.Unload(player);
                 PrefabTestUtil.Unload(enemy);
                 PrefabTestUtil.Unload(barrier);
             }
@@ -222,6 +245,14 @@ namespace Castlebound.Tests.Castle
             var renderer = transform.GetComponent<SpriteRenderer>();
             Assert.NotNull(renderer, $"{transform.name} requires a SpriteRenderer.");
             Assert.That(renderer.sortingOrder, Is.EqualTo(expectedOrder));
+        }
+
+        private static void AssertRenderersBelow(GameObject prefab, int wallOrder, string label)
+        {
+            foreach (var renderer in prefab.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                Assert.That(renderer.sortingOrder, Is.LessThan(wallOrder), $"{label} renderer '{renderer.name}' should render below barrier walls.");
+            }
         }
 
         private static Transform GetTransform(BarrierVisualBinder binder, string fieldName)

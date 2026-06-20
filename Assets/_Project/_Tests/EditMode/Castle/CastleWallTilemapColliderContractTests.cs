@@ -63,6 +63,32 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
+        public void MainPrototype_CastleWallsTilemap_RendersAbovePlayerAndEnemy()
+        {
+            Scene scene = default;
+            try
+            {
+                scene = EditorSceneManager.OpenScene(MainPrototypeScenePath, OpenSceneMode.Additive);
+                var walls = FindByName<Tilemap>(scene, WallsTilemapName);
+                Assert.NotNull(walls);
+
+                var wallRenderer = walls.GetComponent<TilemapRenderer>();
+                Assert.NotNull(wallRenderer);
+                Assert.That(wallRenderer.sortingOrder, Is.EqualTo(10));
+
+                Assert.That(GetHighestPrefabSortingOrder("Assets/_Project/Prefabs/Player.prefab"), Is.LessThan(wallRenderer.sortingOrder));
+                Assert.That(GetHighestPrefabSortingOrder("Assets/_Project/Prefabs/Enemy.prefab"), Is.LessThan(wallRenderer.sortingOrder));
+            }
+            finally
+            {
+                if (scene.IsValid() && scene.isLoaded)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+        }
+
+        [Test]
         public void MainPrototype_CastleBarriersTilemap_DoesNotUseBlockingCollider()
         {
             Scene scene = default;
@@ -112,6 +138,25 @@ namespace Castlebound.Tests.Castle
             }
 
             return null;
+        }
+
+        private static int GetHighestPrefabSortingOrder(string prefabPath)
+        {
+            var prefab = PrefabTestUtil.Load(prefabPath);
+            try
+            {
+                var highest = int.MinValue;
+                foreach (var renderer in prefab.GetComponentsInChildren<SpriteRenderer>(true))
+                {
+                    highest = Mathf.Max(highest, renderer.sortingOrder);
+                }
+
+                return highest;
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefab);
+            }
         }
     }
 }

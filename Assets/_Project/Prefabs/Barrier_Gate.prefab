@@ -176,6 +176,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   feedbackChannel: {fileID: 11400000, guid: 70c41c2488baae148bc4ec73d60b720f, type: 2}
   shakeTarget: {fileID: 5123738521183147461}
+  barrierHealth: {fileID: 3476958120085971061}
   durationSeconds: 0.2
   intensity: 0.05
 --- !u!114 &9213801122334455667
@@ -667,7 +668,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 10
   m_Sprite: {fileID: 21300000, guid: 18825cebef3a2134589c8743a937db99, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -751,7 +752,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 10
+  m_SortingOrder: 11
   m_Sprite: {fileID: 21300000, guid: 95f4f6b6b7512b84e9384199ea7736a3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

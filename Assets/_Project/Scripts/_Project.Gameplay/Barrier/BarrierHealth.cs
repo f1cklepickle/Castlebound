@@ -9,6 +9,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     private static readonly Collider2D[] _overlapBuffer = new Collider2D[24];
 
     public event Action OnBroken;
+    public event Action OnRepaired;
 
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;
@@ -88,6 +89,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         // Ensure collider + sprite are re-enabled.
         UpdateBrokenState();
         ResolveActiveOverlaps();
+        OnRepaired?.Invoke();
     }
 
     public void ReviveIfNeeded()
@@ -100,6 +102,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         IsBroken = false;
         UpdateBrokenState();
         ResolveActiveOverlaps();
+        OnRepaired?.Invoke();
     }
 
     private void UpdateBrokenState()
