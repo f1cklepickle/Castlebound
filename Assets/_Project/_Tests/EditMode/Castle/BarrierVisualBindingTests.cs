@@ -26,11 +26,8 @@ namespace Castlebound.Tests.Castle
 
             try
             {
-                SetMember(binderType, binder, "targetRenderer", renderer);
-                SetMember(binderType, binder, "northSprite", north);
-                SetMember(binderType, binder, "eastSprite", east);
-                SetMember(binderType, binder, "southSprite", south);
-                SetMember(binderType, binder, "westSprite", west);
+                SetMember(binderType, binder, "groundRenderer", renderer);
+                SetMember(binderType, binder, "groundSprites", CreateSpriteSet(north, east, south, west));
 
                 var applySide = binderType.GetMethod("ApplySide", BindingFlags.Public | BindingFlags.Instance);
                 Assert.NotNull(applySide, "Expected public ApplySide(BarrierSide).");
@@ -66,11 +63,8 @@ namespace Castlebound.Tests.Castle
 
             try
             {
-                SetMember(binderType, binder, "targetRenderer", renderer);
-                SetMember(binderType, binder, "northSprite", north);
-                SetMember(binderType, binder, "eastSprite", east);
-                SetMember(binderType, binder, "southSprite", south);
-                SetMember(binderType, binder, "westSprite", west);
+                SetMember(binderType, binder, "groundRenderer", renderer);
+                SetMember(binderType, binder, "groundSprites", CreateSpriteSet(north, east, south, west));
                 SetMember(binderType, binder, "systemsRoot", systemsRoot.transform);
 
                 var applySide = binderType.GetMethod("ApplySide", BindingFlags.Public | BindingFlags.Instance);
@@ -108,11 +102,8 @@ namespace Castlebound.Tests.Castle
 
             try
             {
-                SetMember(binderType, binder, "targetRenderer", renderer);
-                SetMember(binderType, binder, "northSprite", north);
-                SetMember(binderType, binder, "eastSprite", east);
-                SetMember(binderType, binder, "southSprite", south);
-                SetMember(binderType, binder, "westSprite", west);
+                SetMember(binderType, binder, "groundRenderer", renderer);
+                SetMember(binderType, binder, "groundSprites", CreateSpriteSet(north, east, south, west));
 
                 var slots = new List<BarrierPlacementSlot>
                 {
@@ -165,6 +156,11 @@ namespace Castlebound.Tests.Castle
             var sprite = Sprite.Create(texture, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 32f);
             sprite.name = $"{name}_Sprite";
             return sprite;
+        }
+
+        private static BarrierDirectionalSpriteSet CreateSpriteSet(Sprite north, Sprite east, Sprite south, Sprite west)
+        {
+            return new BarrierDirectionalSpriteSet(north, east, south, west);
         }
 
         private static Type ResolveGameplayType(string fullName)

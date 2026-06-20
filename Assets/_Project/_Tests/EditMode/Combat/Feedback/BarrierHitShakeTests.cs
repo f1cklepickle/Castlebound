@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 
 namespace Castlebound.Tests.Combat
@@ -41,6 +42,27 @@ namespace Castlebound.Tests.Combat
             Assert.IsFalse(shake.ShouldRespondToCue(cue), "Barrier shake should ignore non-barrier feedback types.");
 
             Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void ShakeTarget_WhenConfigured_UsesVisualChildWithoutMovingBarrierRoot()
+        {
+            var barrier = new GameObject("Barrier");
+            var gateShakeRoot = new GameObject("GateShakeRoot");
+            gateShakeRoot.transform.SetParent(barrier.transform, false);
+            var shake = barrier.AddComponent<BarrierHitShake>();
+
+            var field = typeof(BarrierHitShake).GetField("shakeTarget", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field, "BarrierHitShake should expose a serialized shakeTarget transform.");
+            field.SetValue(shake, gateShakeRoot.transform);
+
+            var property = typeof(BarrierHitShake).GetProperty("ShakeTarget", BindingFlags.Public | BindingFlags.Instance);
+            Assert.NotNull(property, "BarrierHitShake should expose its resolved shake target for contract validation.");
+
+            Assert.AreSame(gateShakeRoot.transform, property.GetValue(shake));
+            Assert.That(barrier.transform.localPosition, Is.EqualTo(Vector3.zero), "The barrier root must remain stationary.");
+
+            Object.DestroyImmediate(barrier);
         }
     }
 }

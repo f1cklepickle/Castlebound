@@ -7,6 +7,7 @@ namespace Castlebound.Tests.Castle
     public class BarrierPrefabVisualContractTests
     {
         private const string BarrierPrefabPath = "Assets/_Project/Prefabs/Barrier_Gate.prefab";
+        private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
         private const float ColliderTolerance = 0.05f;
 
         [Test]
@@ -18,10 +19,10 @@ namespace Castlebound.Tests.Castle
                 var binder = prefab.GetComponent<BarrierVisualBinder>();
                 Assert.NotNull(binder, "Barrier prefab must include BarrierVisualBinder.");
 
-                AssertSpriteAssigned(binder, "northSprite");
-                AssertSpriteAssigned(binder, "eastSprite");
-                AssertSpriteAssigned(binder, "southSprite");
-                AssertSpriteAssigned(binder, "westSprite");
+                AssertLayerSpritesAssigned(binder, "groundSprites");
+                AssertLayerSpritesAssigned(binder, "gateSprites");
+                AssertLayerSpritesAssigned(binder, "wallSprites");
+                AssertLayerSpritesAssigned(binder, "archSprites");
             }
             finally
             {
@@ -38,14 +39,82 @@ namespace Castlebound.Tests.Castle
                 var binder = prefab.GetComponent<BarrierVisualBinder>();
                 Assert.NotNull(binder, "Barrier prefab must include BarrierVisualBinder.");
 
-                AssertSpriteSizeIs96(GetSprite(binder, "northSprite"), "northSprite");
-                AssertSpriteSizeIs96(GetSprite(binder, "eastSprite"), "eastSprite");
-                AssertSpriteSizeIs96(GetSprite(binder, "southSprite"), "southSprite");
-                AssertSpriteSizeIs96(GetSprite(binder, "westSprite"), "westSprite");
+                AssertLayerSpritesAre96By96(binder, "groundSprites");
+                AssertLayerSpritesAre96By96(binder, "gateSprites");
+                AssertLayerSpritesAre96By96(binder, "wallSprites");
+                AssertLayerSpritesAre96By96(binder, "archSprites");
             }
             finally
             {
                 PrefabTestUtil.Unload(prefab);
+            }
+        }
+
+        [Test]
+        public void BarrierPrefab_LayeredVisuals_HaveExpectedHierarchySortingAndNoPhysics()
+        {
+            var prefab = PrefabTestUtil.Load(BarrierPrefabPath);
+            try
+            {
+                var ground = FindChildRecursive(prefab.transform, "GroundRenderer");
+                var gateShakeRoot = FindChildRecursive(prefab.transform, "GateShakeRoot");
+                var gate = FindChildRecursive(prefab.transform, "GateRenderer");
+                var wall = FindChildRecursive(prefab.transform, "WallRenderer");
+                var arch = FindChildRecursive(prefab.transform, "ArchRenderer");
+
+                Assert.NotNull(ground);
+                Assert.NotNull(gateShakeRoot);
+                Assert.NotNull(gate);
+                Assert.NotNull(wall);
+                Assert.NotNull(arch);
+                Assert.AreSame(gateShakeRoot, gate.parent, "GateRenderer should be the only visual under GateShakeRoot.");
+
+                AssertRendererOrder(ground, 0);
+                AssertRendererOrder(gate, 1);
+                AssertRendererOrder(wall, 2);
+                AssertRendererOrder(arch, 10);
+
+                foreach (var visual in new[] { ground, gateShakeRoot, gate, wall, arch })
+                {
+                    Assert.That(visual.localPosition, Is.EqualTo(Vector3.zero), $"{visual.name} must align to the shared 96x96 canvas.");
+                    Assert.IsNull(visual.GetComponent<Collider2D>(), $"{visual.name} must remain visual-only.");
+                    Assert.IsNull(visual.GetComponent<Rigidbody2D>(), $"{visual.name} must remain visual-only.");
+                }
+
+                var shake = prefab.GetComponent<BarrierHitShake>();
+                Assert.NotNull(shake);
+                Assert.AreSame(gateShakeRoot, shake.ShakeTarget, "Only GateShakeRoot should move during barrier hit shake.");
+
+                var health = prefab.GetComponent<BarrierHealth>();
+                Assert.NotNull(health);
+                var gateField = typeof(BarrierHealth).GetField("barrierGateRenderer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                Assert.NotNull(gateField);
+                Assert.AreSame(gate.GetComponent<SpriteRenderer>(), gateField.GetValue(health), "Broken barriers should hide only GateRenderer.");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefab);
+            }
+        }
+
+        [Test]
+        public void BarrierAndEnemyPrefabs_RenderEnemyAboveWallAndBelowArch()
+        {
+            var barrier = PrefabTestUtil.Load(BarrierPrefabPath);
+            var enemy = PrefabTestUtil.Load(EnemyPrefabPath);
+            try
+            {
+                var wallOrder = FindChildRecursive(barrier.transform, "WallRenderer").GetComponent<SpriteRenderer>().sortingOrder;
+                var archOrder = FindChildRecursive(barrier.transform, "ArchRenderer").GetComponent<SpriteRenderer>().sortingOrder;
+                var enemyOrder = enemy.GetComponentInChildren<SpriteRenderer>(true).sortingOrder;
+
+                Assert.That(enemyOrder, Is.GreaterThan(wallOrder));
+                Assert.That(enemyOrder, Is.LessThan(archOrder));
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(enemy);
+                PrefabTestUtil.Unload(barrier);
             }
         }
 
@@ -120,24 +189,39 @@ namespace Castlebound.Tests.Castle
             }
         }
 
-        private static void AssertSpriteAssigned(BarrierVisualBinder binder, string fieldName)
+        private static void AssertLayerSpritesAssigned(BarrierVisualBinder binder, string fieldName)
         {
-            var sprite = GetSprite(binder, fieldName);
-            Assert.NotNull(sprite, $"BarrierVisualBinder field '{fieldName}' must be assigned.");
+            var spriteSet = GetSpriteSet(binder, fieldName);
+            foreach (BarrierSide side in System.Enum.GetValues(typeof(BarrierSide)))
+            {
+                Assert.NotNull(spriteSet.GetSprite(side), $"BarrierVisualBinder field '{fieldName}' must assign {side}.");
+            }
         }
 
-        private static void AssertSpriteSizeIs96(Sprite sprite, string fieldName)
+        private static void AssertLayerSpritesAre96By96(BarrierVisualBinder binder, string fieldName)
         {
-            Assert.NotNull(sprite, $"BarrierVisualBinder field '{fieldName}' must be assigned.");
-            Assert.That(sprite.rect.width, Is.EqualTo(96f), $"{fieldName} sprite width should be 96px.");
-            Assert.That(sprite.rect.height, Is.EqualTo(96f), $"{fieldName} sprite height should be 96px.");
+            var spriteSet = GetSpriteSet(binder, fieldName);
+            foreach (BarrierSide side in System.Enum.GetValues(typeof(BarrierSide)))
+            {
+                var sprite = spriteSet.GetSprite(side);
+                Assert.NotNull(sprite, $"BarrierVisualBinder field '{fieldName}' must assign {side}.");
+                Assert.That(sprite.rect.width, Is.EqualTo(96f), $"{fieldName} {side} sprite width should be 96px.");
+                Assert.That(sprite.rect.height, Is.EqualTo(96f), $"{fieldName} {side} sprite height should be 96px.");
+            }
         }
 
-        private static Sprite GetSprite(BarrierVisualBinder binder, string fieldName)
+        private static BarrierDirectionalSpriteSet GetSpriteSet(BarrierVisualBinder binder, string fieldName)
         {
             var field = typeof(BarrierVisualBinder).GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             Assert.NotNull(field, $"Expected BarrierVisualBinder field '{fieldName}'.");
-            return field.GetValue(binder) as Sprite;
+            return field.GetValue(binder) as BarrierDirectionalSpriteSet;
+        }
+
+        private static void AssertRendererOrder(Transform transform, int expectedOrder)
+        {
+            var renderer = transform.GetComponent<SpriteRenderer>();
+            Assert.NotNull(renderer, $"{transform.name} requires a SpriteRenderer.");
+            Assert.That(renderer.sortingOrder, Is.EqualTo(expectedOrder));
         }
 
         private static Transform GetTransform(BarrierVisualBinder binder, string fieldName)

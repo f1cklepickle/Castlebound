@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-06-20 - fix(barrier): isolate damage shake to visual gate segment
+
+### Summary
+- Split each directional barrier visual into aligned Ground, Gate, Wall, and Arch render layers.
+- Isolated hit shake and broken-state visibility to the collider-free Gate visual while root physics remains stationary.
+- Ordered barrier and enemy renderers as Ground, Gate, Wall, Enemy, then Arch.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - validates layered sprite assignments, hierarchy, sorting, physics isolation, and enemy interleaving.
+- `BarrierVisualBindingTests` - validates directional sprite-set selection for layered barrier visuals.
+- `BarrierHitShakeTests` - validates the configured Gate shake target remains separate from the barrier root.
+- `BarrierHealthTests` - verifies breaking a layered barrier disables only the Gate renderer.
+- `MainPrototypeBarrierAssemblyIntegrationTests` - validates generated barriers expose four assigned visual layers.
+
+**PlayMode**
+- `BarrierHitShakeVisualSegmentPlayTests` - verifies Gate shake does not move the barrier root or collider and restores its baseline.
+- `CastleTilemapRuntimeContractsPlayTests` - validates generated runtime barriers use four assigned child renderers.
+
+### Notes
+- Full EditMode and PlayMode suites passed in Unity 2022.3.62f2.
+
 ## 2026-06-13 - fix(defense): skip pulse knockback while rooted
 
 ### Summary

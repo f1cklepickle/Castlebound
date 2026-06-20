@@ -128,11 +128,17 @@ namespace Castlebound.Tests.PlayMode.Castle
 
                 var health = child.GetComponent<BarrierHealth>();
                 var binder = child.GetComponent<BarrierVisualBinder>();
-                var renderer = child.GetComponent<SpriteRenderer>();
+                var visualRoot = child.Find("VisualRoot");
                 Assert.NotNull(health, $"Generated barrier '{child.name}' missing BarrierHealth.");
                 Assert.NotNull(binder, $"Generated barrier '{child.name}' missing BarrierVisualBinder.");
-                Assert.NotNull(renderer, $"Generated barrier '{child.name}' missing SpriteRenderer.");
-                Assert.NotNull(renderer.sprite, $"Generated barrier '{child.name}' missing assigned side sprite.");
+                Assert.NotNull(visualRoot, $"Generated barrier '{child.name}' missing VisualRoot.");
+
+                var renderers = visualRoot.GetComponentsInChildren<SpriteRenderer>(true);
+                Assert.That(renderers.Length, Is.EqualTo(4), $"Generated barrier '{child.name}' should have four visual layers.");
+                foreach (var renderer in renderers)
+                {
+                    Assert.NotNull(renderer.sprite, $"Generated barrier '{child.name}' has an unassigned layer sprite.");
+                }
             }
         }
 

@@ -13,6 +13,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     [SerializeField] private int maxHealth = 10;
     [SerializeField] private int currentHealth = 10;
     [SerializeField] private float enemyPushInDistance = 0.5f;
+    [SerializeField] private SpriteRenderer barrierGateRenderer;
     private Collider2D barrierCollider;
     private SpriteRenderer barrierSprite;
 
@@ -34,7 +35,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     private void OnEnable()
     {
         barrierCollider = GetComponent<Collider2D>();
-        barrierSprite = GetComponent<SpriteRenderer>();
+        CacheRenderers();
         UpdateBrokenState();
         ResolveActiveOverlaps();
 
@@ -108,10 +109,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
             barrierCollider = GetComponent<Collider2D>();
         }
 
-        if (barrierSprite == null)
-        {
-            barrierSprite = GetComponent<SpriteRenderer>();
-        }
+        CacheRenderers();
 
         bool broken = IsBroken;
 
@@ -123,6 +121,28 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         if (barrierSprite != null)
         {
             barrierSprite.enabled = !broken;
+        }
+
+        if (barrierGateRenderer != null)
+        {
+            barrierGateRenderer.enabled = !broken;
+        }
+    }
+
+    private void CacheRenderers()
+    {
+        if (barrierSprite == null)
+        {
+            barrierSprite = GetComponent<SpriteRenderer>();
+        }
+
+        if (barrierGateRenderer == null)
+        {
+            var binder = GetComponent<Castlebound.Gameplay.Castle.BarrierVisualBinder>();
+            if (binder != null)
+            {
+                barrierGateRenderer = binder.GateRenderer;
+            }
         }
     }
 
