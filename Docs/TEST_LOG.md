@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-06-20 - fix(visual): preserve tower and projectile render order
+
+### Summary
+- Rendered Tower platform and top visuals above barrier and castle wall stonework.
+- Kept tower-fired arrows above Tower visuals until they clear the launch area, then moved them below Enemy sprites during flight.
+- Disabled launch-distance updates after the one-time sorting transition and for non-Tower projectiles.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - validates Tower platform and top sorting orders.
+- `TowerAttackControllerTests` - validates tower-fired arrows begin above Tower visuals.
+- `ProjectileArrowPrefabContractTests` - validates flight ordering below enemies and the one-way Tower launch transition.
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` - validates tower-fired arrows return to flight order after clearing the Tower.
+
+### Notes
+- Gameplay, EditMode, and PlayMode assemblies compile successfully; full Unity test-runner validation remains required.
+
 ## 2026-06-20 - fix(barrier): preserve gate baseline and wall occlusion
 
 ### Summary

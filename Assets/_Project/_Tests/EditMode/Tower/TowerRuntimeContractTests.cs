@@ -108,8 +108,8 @@ namespace Castlebound.Tests.Tower
                 Assert.That(platformRenderer.sprite.name, Is.EqualTo("Tower_Foundation"), "Base tower platform must use the approved foundation sprite.");
                 Assert.That(towerVisual.localEulerAngles.z, Is.EqualTo(45f).Within(0.01f), "Tower_Arrow art should be rotated so its diagonal bow faces local up.");
                 Assert.That(firePoint.localPosition.y, Is.GreaterThan(0f), "FirePoint should sit forward of the aim pivot.");
-                Assert.That(platformRenderer.sortingOrder, Is.GreaterThan(1), "Tower foundation should render above the barrier wall base sorting order.");
-                Assert.That(towerRenderer.sortingOrder, Is.GreaterThan(platformRenderer.sortingOrder), "Tower arrow top should render above its foundation baseplate.");
+                Assert.That(platformRenderer.sortingOrder, Is.EqualTo(13), "Tower foundation should render above barrier/castle walls and pickups.");
+                Assert.That(towerRenderer.sortingOrder, Is.EqualTo(14), "Tower arrow top should render above its foundation baseplate.");
             }
             finally
             {
