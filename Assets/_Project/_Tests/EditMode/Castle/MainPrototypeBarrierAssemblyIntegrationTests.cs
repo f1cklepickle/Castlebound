@@ -105,9 +105,12 @@ namespace Castlebound.Tests.Castle
                     Assert.NotNull(towerPlots, $"Generated barrier '{child.name}' missing BarrierTowerPlotCollection.");
                     Assert.That(towerPlots.PlotCount, Is.EqualTo(2), $"Generated barrier '{child.name}' should expose two linked tower plots.");
 
-                    var renderer = child.GetComponent<SpriteRenderer>();
-                    Assert.NotNull(renderer, $"Generated barrier '{child.name}' missing SpriteRenderer.");
-                    Assert.NotNull(renderer.sprite, $"Generated barrier '{child.name}' missing assigned side sprite.");
+                    var renderers = child.GetComponentsInChildren<SpriteRenderer>(true)
+                        .Where(renderer => renderer.transform.IsChildOf(child.Find("VisualRoot")))
+                        .ToArray();
+                    Assert.That(renderers.Length, Is.EqualTo(4), $"Generated barrier '{child.name}' should have four visual layers.");
+                    Assert.That(renderers.All(renderer => renderer.sprite != null), Is.True,
+                        $"Generated barrier '{child.name}' has an unassigned directional layer sprite.");
 
                     foreach (var plot in towerPlots.Plots)
                     {

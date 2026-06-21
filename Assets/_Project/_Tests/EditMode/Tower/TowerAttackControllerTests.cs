@@ -42,6 +42,7 @@ namespace Castlebound.Tests.Tower
                 Assert.AreSame(projectile, fixture.LastFiredProjectile, "Fired event should include the spawned projectile.");
                 Assert.That(fixture.FiredCount, Is.EqualTo(1));
                 Assert.That(projectile.transform.position, Is.EqualTo(fixture.FirePoint.position), "Projectile should launch from the fire point.");
+                Assert.That(projectile.GetComponent<SpriteRenderer>().sortingOrder, Is.EqualTo(15), "Tower-fired projectile should start above Tower visuals.");
             }
             finally
             {
@@ -170,6 +171,8 @@ namespace Castlebound.Tests.Tower
             var body = projectileObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
             body.gravityScale = 0f;
+            projectileObject.AddComponent<SpriteRenderer>().sortingOrder = 4;
+            projectileObject.AddComponent<ProjectileLaunchSorting>();
             return projectileObject.AddComponent<ProjectileRuntime>();
         }
 

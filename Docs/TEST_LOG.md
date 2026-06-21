@@ -4,6 +4,67 @@
 
 ---
 
+## 2026-06-20 - fix(visual): preserve tower and projectile render order
+
+### Summary
+- Rendered Tower platform and top visuals above barrier and castle wall stonework.
+- Kept tower-fired arrows above Tower visuals until they clear the launch area, then moved them below Enemy sprites during flight.
+- Disabled launch-distance updates after the one-time sorting transition and for non-Tower projectiles.
+
+### New or Updated Tests
+**EditMode**
+- `TowerRuntimeContractTests` - validates Tower platform and top sorting orders.
+- `TowerAttackControllerTests` - validates tower-fired arrows begin above Tower visuals.
+- `ProjectileArrowPrefabContractTests` - validates flight ordering below enemies and the one-way Tower launch transition.
+
+**PlayMode**
+- `TowerSpawnInitPlayTests` - validates tower-fired arrows return to flight order after clearing the Tower.
+
+### Notes
+- Gameplay, EditMode, and PlayMode assemblies compile successfully; full Unity test-runner validation remains required.
+
+## 2026-06-20 - fix(barrier): preserve gate baseline and wall occlusion
+
+### Summary
+- Rendered Player and Enemy sprites below barrier Wall/Arch layers and the castle wall tilemap.
+- Kept pickup sprites visible above barrier and castle wall stonework.
+- Prevented repeated hits and repair from leaving the Gate shake target offset from its authored position.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - validates Player/Enemy wall occlusion and pickup visibility above stonework.
+- `CastleWallTilemapColliderContractTests` - validates castle walls render above Player and Enemy prefabs.
+- `BarrierHealthTests` - verifies repair raises the Gate reset notification.
+
+**PlayMode**
+- `BarrierHitShakeVisualSegmentPlayTests` - verifies repeated hits and repair restore the stable Gate baseline.
+- `CastleTilemapRuntimeContractsPlayTests` - validates runtime castle wall sorting order.
+
+### Notes
+- Unity rerun was blocked by the managed licensing/escalation wrapper after the red sorting-contract run; final EditMode and PlayMode reruns remain required.
+
+## 2026-06-20 - fix(barrier): isolate damage shake to visual gate segment
+
+### Summary
+- Split each directional barrier visual into aligned Ground, Gate, Wall, and Arch render layers.
+- Isolated hit shake and broken-state visibility to the collider-free Gate visual while root physics remains stationary.
+- Ordered barrier and enemy renderers as Ground, Gate, Wall, Enemy, then Arch.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierPrefabVisualContractTests` - validates layered sprite assignments, hierarchy, sorting, physics isolation, and enemy interleaving.
+- `BarrierVisualBindingTests` - validates directional sprite-set selection for layered barrier visuals.
+- `BarrierHitShakeTests` - validates the configured Gate shake target remains separate from the barrier root.
+- `BarrierHealthTests` - verifies breaking a layered barrier disables only the Gate renderer.
+- `MainPrototypeBarrierAssemblyIntegrationTests` - validates generated barriers expose four assigned visual layers.
+
+**PlayMode**
+- `BarrierHitShakeVisualSegmentPlayTests` - verifies Gate shake does not move the barrier root or collider and restores its baseline.
+- `CastleTilemapRuntimeContractsPlayTests` - validates generated runtime barriers use four assigned child renderers.
+
+### Notes
+- Full EditMode and PlayMode suites passed in Unity 2022.3.62f2.
+
 ## 2026-06-13 - fix(defense): skip pulse knockback while rooted
 
 ### Summary

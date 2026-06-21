@@ -1,5 +1,6 @@
 using System.Collections;
 using Castlebound.Gameplay.Tower;
+using Castlebound.Gameplay.Projectile;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -105,6 +106,24 @@ namespace Castlebound.Tests.PlayMode.Tower
             Assert.Fail("Tower prefab PlayMode smoke requires the Unity editor.");
             yield break;
 #endif
+        }
+
+        [UnityTest]
+        public IEnumerator TowerLaunchSorting_AfterClearingTower_ReturnsArrowBelowEnemies()
+        {
+            var projectile = new GameObject("Projectile");
+            var renderer = projectile.AddComponent<SpriteRenderer>();
+            renderer.sortingOrder = 4;
+            var sorting = projectile.AddComponent<ProjectileLaunchSorting>();
+
+            sorting.BeginTowerLaunch(Vector3.zero);
+            Assert.That(renderer.sortingOrder, Is.EqualTo(15));
+
+            projectile.transform.position = Vector3.right;
+            yield return null;
+
+            Assert.That(renderer.sortingOrder, Is.EqualTo(4));
+            Object.Destroy(projectile);
         }
 
         private static GameObject CreateTower()

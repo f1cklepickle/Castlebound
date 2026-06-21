@@ -1,10 +1,63 @@
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 
 namespace Castlebound.Tests.Gate
 {
     public class BarrierHealthTests
     {
+        [Test]
+        public void TakeDamage_WhenBroken_DisablesOnlyConfiguredGateRenderer()
+        {
+            var barrier = new GameObject("Barrier");
+            barrier.AddComponent<BoxCollider2D>();
+            var health = barrier.AddComponent<BarrierHealth>();
+            health.MaxHealth = 1;
+            health.CurrentHealth = 1;
+
+            var ground = CreateRenderer(barrier.transform, "Ground");
+            var gate = CreateRenderer(barrier.transform, "Gate");
+            var wall = CreateRenderer(barrier.transform, "Wall");
+            var arch = CreateRenderer(barrier.transform, "Arch");
+
+            var field = typeof(BarrierHealth).GetField("barrierGateRenderer", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field);
+            field.SetValue(health, gate);
+
+            health.TakeDamage(1);
+
+            Assert.IsTrue(ground.enabled);
+            Assert.IsFalse(gate.enabled);
+            Assert.IsTrue(wall.enabled);
+            Assert.IsTrue(arch.enabled);
+
+            Object.DestroyImmediate(barrier);
+        }
+
+        [Test]
+        public void Repair_AfterBreak_RaisesRepairedEvent()
+        {
+            var barrier = new GameObject("Barrier");
+            var health = barrier.AddComponent<BarrierHealth>();
+            health.MaxHealth = 1;
+            health.CurrentHealth = 1;
+            var repairedCount = 0;
+            health.OnRepaired += () => repairedCount++;
+
+            health.TakeDamage(1);
+            health.Repair();
+
+            Assert.That(repairedCount, Is.EqualTo(1));
+            Object.DestroyImmediate(barrier);
+        }
+
+        private static SpriteRenderer CreateRenderer(Transform parent, string name)
+        {
+            var child = new GameObject(name);
+            child.transform.SetParent(parent, false);
+            return child.AddComponent<SpriteRenderer>();
+        }
+
         [Test]
         public void Breaks_WhenHealthReachesZero()
         {

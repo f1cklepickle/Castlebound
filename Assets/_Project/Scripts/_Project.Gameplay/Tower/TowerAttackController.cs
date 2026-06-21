@@ -123,6 +123,12 @@ namespace Castlebound.Gameplay.Tower
                 targetLayerMask);
 
             projectile.Launch(context);
+
+            if (projectile.TryGetComponent<ProjectileLaunchSorting>(out var launchSorting))
+            {
+                launchSorting.BeginTowerLaunch(origin);
+            }
+
             nextFireTime = currentTime + cooldownSeconds;
             Fired?.Invoke(projectile);
             return projectile;
