@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1000000003}
   - component: {fileID: 1000000004}
   - component: {fileID: 1000000005}
+  - component: {fileID: 1000000006}
   m_Layer: 0
   m_Name: Pickup_Weapon_Sword
   m_TagString: Untagged
@@ -159,9 +160,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a7f6e3d2e1b4f9aa4d0bdb5c4a9e3d9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   kind: 0
   itemDefinition: {fileID: 11400000, guid: d2a3b4c5e6f708192a3b4c5d6e7f8091, type: 2}
   amount: 1
   pickupDelaySeconds: 0.3
+--- !u!114 &1000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b4d6a0c8f94c46b3d29f2101930003, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  magnetField: {fileID: 0}

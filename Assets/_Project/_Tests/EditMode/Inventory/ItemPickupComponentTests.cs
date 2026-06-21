@@ -91,5 +91,57 @@ namespace Castlebound.Tests.Inventory
             Object.DestroyImmediate(pickupGo);
             Object.DestroyImmediate(playerGo);
         }
+
+        [Test]
+        public void CanAutoPickup_ReusesCachedPickup_WithoutAllocating()
+        {
+            var inventory = new InventoryState();
+            var pickupGo = new GameObject("Pickup");
+            var pickup = pickupGo.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Gold;
+            pickup.Amount = 1;
+            pickup.CanAutoPickup(inventory);
+
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 1000; i++)
+            {
+                pickup.CanAutoPickup(inventory);
+            }
+            long allocated = System.GC.GetAllocatedBytesForCurrentThread() - before;
+
+            Assert.AreEqual(0L, allocated);
+
+            Object.DestroyImmediate(pickupGo);
+        }
+
+        [Test]
+        public void CachedPickup_Invalidates_WhenConfigurationChanges()
+        {
+            var inventory = new InventoryState();
+            var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            weapon.ItemId = "weapon_basic";
+            var pickupGo = new GameObject("Pickup");
+            var pickup = pickupGo.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Gold;
+            pickup.Amount = 1;
+
+            Assert.IsTrue(pickup.CanAutoPickup(inventory));
+
+            pickup.Amount = 0;
+            Assert.IsFalse(pickup.CanAutoPickup(inventory));
+
+            pickup.Amount = 1;
+            pickup.Kind = ItemPickupKind.Weapon;
+            Assert.IsFalse(pickup.CanAutoPickup(inventory));
+
+            pickup.ItemDefinition = weapon;
+            Assert.IsTrue(pickup.CanAutoPickup(inventory));
+
+            pickup.ItemDefinition = null;
+            Assert.IsFalse(pickup.CanAutoPickup(inventory));
+
+            Object.DestroyImmediate(pickupGo);
+            Object.DestroyImmediate(weapon);
+        }
     }
 }

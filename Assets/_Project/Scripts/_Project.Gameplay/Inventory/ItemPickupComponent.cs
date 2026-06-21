@@ -10,23 +10,37 @@ namespace Castlebound.Gameplay.Inventory
         [SerializeField] private float pickupDelaySeconds = 0f;
 
         private float pickupDelayRemaining = 0f;
+        private ItemPickup cachedPickup;
+        private bool isPickupCacheDirty = true;
 
         public ItemPickupKind Kind
         {
             get => kind;
-            set => kind = value;
+            set
+            {
+                kind = value;
+                InvalidatePickupCache();
+            }
         }
 
         public ItemDefinition ItemDefinition
         {
             get => itemDefinition;
-            set => itemDefinition = value;
+            set
+            {
+                itemDefinition = value;
+                InvalidatePickupCache();
+            }
         }
 
         public int Amount
         {
             get => amount;
-            set => amount = value;
+            set
+            {
+                amount = value;
+                InvalidatePickupCache();
+            }
         }
 
         public bool IsConsumed { get; private set; }
@@ -83,22 +97,12 @@ namespace Castlebound.Gameplay.Inventory
 
         public bool TryAutoPickup(InventoryState inventory)
         {
-            if (IsConsumed)
+            if (!CanAutoPickup(inventory))
             {
                 return false;
             }
 
-            if (pickupDelayRemaining > 0f)
-            {
-                return false;
-            }
-
-            ItemPickup pickup = BuildPickup();
-            if (pickup == null)
-            {
-                return false;
-            }
-
+            ItemPickup pickup = GetPickup();
             bool result = pickup.TryAutoPickup(inventory);
             if (result)
             {
@@ -106,6 +110,17 @@ namespace Castlebound.Gameplay.Inventory
             }
 
             return result;
+        }
+
+        public bool CanAutoPickup(InventoryState inventory)
+        {
+            if (IsConsumed || pickupDelayRemaining > 0f)
+            {
+                return false;
+            }
+
+            ItemPickup pickup = GetPickup();
+            return pickup != null && pickup.CanAutoPickup(inventory);
         }
 
         public bool TryManualPickup(InventoryState inventory)
@@ -120,7 +135,7 @@ namespace Castlebound.Gameplay.Inventory
                 return false;
             }
 
-            ItemPickup pickup = BuildPickup();
+            ItemPickup pickup = GetPickup();
             if (pickup == null)
             {
                 return false;
@@ -133,6 +148,18 @@ namespace Castlebound.Gameplay.Inventory
             }
 
             return result;
+        }
+
+        private ItemPickup GetPickup()
+        {
+            if (!isPickupCacheDirty)
+            {
+                return cachedPickup;
+            }
+
+            cachedPickup = BuildPickup();
+            isPickupCacheDirty = false;
+            return cachedPickup;
         }
 
         private ItemPickup BuildPickup()
@@ -160,6 +187,17 @@ namespace Castlebound.Gameplay.Inventory
                 default:
                     return null;
             }
+        }
+
+        private void InvalidatePickupCache()
+        {
+            cachedPickup = null;
+            isPickupCacheDirty = true;
+        }
+
+        private void OnValidate()
+        {
+            InvalidatePickupCache();
         }
 
         private static bool TryGetInventory(Component other, out InventoryState inventory)

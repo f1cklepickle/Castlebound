@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-06-21 - feat(loot): add magnetic pickup attraction
+
+### Summary
+- Added wall-agnostic pickup attraction with a moderate in-wave radius and faster extended sweep between waves.
+- Routed standard and sweep range/speed tuning through the shared economy balance table.
+- Preserved spill motion, pickup delay, inventory eligibility, and existing collection behavior while removing recurring eligibility allocations.
+
+### New or Updated Tests
+**EditMode**
+- `PickupMagnetFieldTests` - validates standard and sweep profiles, wave transitions, range checks, and normalized tuning.
+- `PickupMagnetMotionTests` - validates wall-agnostic attraction, spill coordination, and full weapon inventory regression behavior.
+- `PickupMagnetPrefabContractTests` - validates player balance configuration and magnet motion on gold, potion, and weapon prefabs.
+- `ItemPickupComponentTests` - validates allocation-free cached eligibility, cache invalidation, pickup consumption, full inventory, and delay behavior.
+
+**PlayMode**
+- `PickupMagnetSweepPlayTests` - validates wave-end collection of distant gold through a wall into player inventory.
+
+### Notes
+- Unity assemblies compiled successfully; allocation and magnet test execution awaits the next Test Runner pass.
+
 ## 2026-06-20 - fix(visual): preserve tower and projectile render order
 
 ### Summary

@@ -88,8 +88,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbfff868dea261e44802d7a99abd02ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   playerHitEnemyFeedbackChannel: {fileID: 11400000, guid: 80d7fae19fc8c724fb8344818aae2e88, type: 2}
 --- !u!1 &8325390509751579795
 GameObject:
@@ -122,6 +122,7 @@ GameObject:
   - component: {fileID: 9150000000000000204}
   - component: {fileID: 9150000000000000205}
   - component: {fileID: 9150000000000000301}
+  - component: {fileID: 9150000000000000401}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -730,3 +731,17 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
+--- !u!114 &9150000000000000401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b4d6a0c8f94c46b3d29f2101930001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
+  waveRunner: {fileID: 0}

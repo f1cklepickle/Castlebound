@@ -14,3 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingGold: 0
   startingXp: 0
+  pickupMagnetRange: 8
+  pickupMagnetSpeed: 10.4
+  pickupSweepRange: 30
+  pickupSweepSpeed: 26
