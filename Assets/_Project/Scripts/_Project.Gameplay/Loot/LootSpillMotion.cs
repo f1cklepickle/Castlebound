@@ -12,6 +12,8 @@ namespace Castlebound.Gameplay.Loot
         private float elapsed;
         private bool isActive;
 
+        public bool IsActive => isActive;
+
         public void Initialize(Vector3 target, float moveDuration)
         {
             startPosition = transform.position;
