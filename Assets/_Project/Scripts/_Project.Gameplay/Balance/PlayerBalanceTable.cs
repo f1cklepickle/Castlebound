@@ -8,6 +8,7 @@ namespace Castlebound.Gameplay.Balance
         [SerializeField] private int baseMaxHealth = 200;
         [SerializeField] private float baseMoveSpeed = 12f;
         [SerializeField] private float baseRepairRange = 2f;
+        [SerializeField] private float baseRepairCooldownSeconds = 1f;
 
         public int BaseMaxHealth
         {
@@ -27,11 +28,18 @@ namespace Castlebound.Gameplay.Balance
             set => baseRepairRange = Mathf.Max(0f, value);
         }
 
+        public float BaseRepairCooldownSeconds
+        {
+            get => baseRepairCooldownSeconds;
+            set => baseRepairCooldownSeconds = Mathf.Max(0f, value);
+        }
+
         private void OnValidate()
         {
             BaseMaxHealth = baseMaxHealth;
             BaseMoveSpeed = baseMoveSpeed;
             BaseRepairRange = baseRepairRange;
+            BaseRepairCooldownSeconds = baseRepairCooldownSeconds;
         }
     }
 }

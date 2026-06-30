@@ -26,6 +26,7 @@ namespace Castlebound.Tests.Balance
                 table.BaseMaxHealth = 150;
                 table.BaseMoveSpeed = 9.5f;
                 table.BaseRepairRange = 3.25f;
+                table.BaseRepairCooldownSeconds = 1.5f;
                 station.Player = table;
                 applier.BalanceStation = station;
                 applier.PlayerController = controller;
@@ -36,6 +37,7 @@ namespace Castlebound.Tests.Balance
                 Assert.That(health.Current, Is.EqualTo(150));
                 Assert.That(mover.MoveSpeed, Is.EqualTo(9.5f).Within(0.001f));
                 Assert.That(controller.RepairRange, Is.EqualTo(3.25f).Within(0.001f));
+                Assert.That(controller.RepairCooldownSeconds, Is.EqualTo(1.5f).Within(0.001f));
             }
             finally
             {
@@ -63,6 +65,7 @@ namespace Castlebound.Tests.Balance
                 health.ConfigureMaxHealth(200, true);
                 mover.MoveSpeed = 12f;
                 controller.RepairRange = 2f;
+                controller.RepairCooldownSeconds = 1f;
                 applier.BalanceStation = station;
                 applier.PlayerController = controller;
 
@@ -71,6 +74,7 @@ namespace Castlebound.Tests.Balance
                 Assert.That(health.Max, Is.EqualTo(200));
                 Assert.That(mover.MoveSpeed, Is.EqualTo(12f).Within(0.001f));
                 Assert.That(controller.RepairRange, Is.EqualTo(2f).Within(0.001f));
+                Assert.That(controller.RepairCooldownSeconds, Is.EqualTo(1f).Within(0.001f));
             }
             finally
             {

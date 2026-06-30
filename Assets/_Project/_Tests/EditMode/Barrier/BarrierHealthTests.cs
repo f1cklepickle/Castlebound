@@ -51,6 +51,49 @@ namespace Castlebound.Tests.Gate
             Object.DestroyImmediate(barrier);
         }
 
+        [Test]
+        public void Repair_WhenDamagedButNotBroken_RestoresHealthAndRaisesRepairedEvent()
+        {
+            var barrier = new GameObject("Barrier");
+            var health = barrier.AddComponent<BarrierHealth>();
+            health.MaxHealth = 10;
+            health.CurrentHealth = 10;
+            var repairedCount = 0;
+            health.OnRepaired += () => repairedCount++;
+
+            health.TakeDamage(4);
+            var repaired = health.Repair();
+
+            Assert.IsTrue(repaired);
+            Assert.IsFalse(health.IsBroken);
+            Assert.IsFalse(health.IsDamaged);
+            Assert.IsFalse(health.CanRepair);
+            Assert.That(health.CurrentHealth, Is.EqualTo(health.MaxHealth));
+            Assert.That(repairedCount, Is.EqualTo(1));
+
+            Object.DestroyImmediate(barrier);
+        }
+
+        [Test]
+        public void Repair_WhenFullHealth_DoesNotRaiseRepairedEvent()
+        {
+            var barrier = new GameObject("Barrier");
+            var health = barrier.AddComponent<BarrierHealth>();
+            health.MaxHealth = 10;
+            health.CurrentHealth = 10;
+            var repairedCount = 0;
+            health.OnRepaired += () => repairedCount++;
+
+            var repaired = health.Repair();
+
+            Assert.IsFalse(repaired);
+            Assert.IsFalse(health.IsDamaged);
+            Assert.IsFalse(health.CanRepair);
+            Assert.That(repairedCount, Is.EqualTo(0));
+
+            Object.DestroyImmediate(barrier);
+        }
+
         private static SpriteRenderer CreateRenderer(Transform parent, string name)
         {
             var child = new GameObject(name);

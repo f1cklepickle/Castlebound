@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Repair")]
     [SerializeField] private RepairSensor _repairSensor;
+    [SerializeField] private float repairCooldownSeconds = 1f;
 
     [Header("Potions")]
     [SerializeField] private PotionUseController potionUseController;
@@ -36,6 +37,7 @@ public class PlayerController : MonoBehaviour
     private PlayerCollisionMove2D mover;
     private InventoryState inventoryState;
     private bool inputLocked;
+    private float repairCooldownRemaining;
 
     public float RepairRange
     {
@@ -50,6 +52,25 @@ public class PlayerController : MonoBehaviour
             _repairSensor.RepairRadius = value;
         }
     }
+
+    public LayerMask RepairBarrierMask
+    {
+        get => _repairSensor != null ? _repairSensor.BarrierMask : default(LayerMask);
+        set
+        {
+            EnsureRepairSensor();
+            _repairSensor.BarrierMask = value;
+        }
+    }
+
+    public float RepairCooldownSeconds
+    {
+        get => repairCooldownSeconds;
+        set => repairCooldownSeconds = Mathf.Max(0f, value);
+    }
+
+    public float RepairCooldownRemaining => repairCooldownRemaining;
+    public bool IsRepairOnCooldown => repairCooldownRemaining > 0f;
 
     void Awake()
     {
@@ -104,6 +125,8 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        TickRepairCooldown(Time.fixedDeltaTime);
+
         if (inputLocked)
             return;
 
@@ -141,11 +164,11 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns true if there is at least one broken barrier within repair range.
+    /// Returns true if there is at least one damaged barrier within repair range.
     /// </summary>
     public bool HasRepairableBarrierInRange()
     {
-        return _repairSensor.HasRepairableBarrierInRange(transform.position);
+        return _repairSensor != null && _repairSensor.HasRepairableBarrierInRange(transform.position);
     }
 
     public void OnRepair(InputValue value)
@@ -156,7 +179,33 @@ public class PlayerController : MonoBehaviour
         if (!value.isPressed)
             return;
 
-        _repairSensor.TryRepairNearest(transform.position);
+        TryRepair();
+    }
+
+    public bool TryRepair()
+    {
+        if (inputLocked || IsRepairOnCooldown || _repairSensor == null)
+        {
+            return false;
+        }
+
+        if (!_repairSensor.TryRepairNearest(transform.position))
+        {
+            return false;
+        }
+
+        repairCooldownRemaining = repairCooldownSeconds;
+        return true;
+    }
+
+    public void TickRepairCooldown(float deltaTime)
+    {
+        if (repairCooldownRemaining <= 0f)
+        {
+            return;
+        }
+
+        repairCooldownRemaining = Mathf.Max(0f, repairCooldownRemaining - Mathf.Max(0f, deltaTime));
     }
 
     public void OnUsePotion(InputValue value)
@@ -203,6 +252,14 @@ public class PlayerController : MonoBehaviour
         inventorySource = inventorySource != null ? inventorySource : GetComponent<InventoryStateComponent>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         return inventoryState != null;
+    }
+
+    private void EnsureRepairSensor()
+    {
+        if (_repairSensor == null)
+        {
+            _repairSensor = new RepairSensor();
+        }
     }
 
     public void StopMovement()

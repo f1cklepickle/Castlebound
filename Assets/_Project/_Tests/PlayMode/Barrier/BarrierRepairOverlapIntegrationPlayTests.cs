@@ -35,6 +35,9 @@ namespace Castlebound.Tests.Gate
             Physics2D.SyncTransforms();
 
             Vector2 before = playerGo.transform.position;
+            barrierHealth.MaxHealth = 10;
+            barrierHealth.CurrentHealth = 10;
+            barrierHealth.TakeDamage(1);
             barrierHealth.Repair();
 
             yield return new WaitForFixedUpdate();

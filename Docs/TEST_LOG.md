@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-06-26 - fix(barrier): allow repair below max health with cooldown
+
+### Summary
+- Added damaged-barrier repair coverage so barriers below max health are repairable before breaking.
+- Added player repair cooldown coverage to prevent repeated repair attempts until the cooldown expires.
+- Routed repair cooldown tuning through the player balance table and balance applier.
+
+### New or Updated Tests
+**EditMode**
+- `BarrierHealthTests` - validates damaged repair, full-health no-op repair, and repaired event behavior.
+- `PlayerRepairControllerTests` - validates repair sensor detection, repair cooldown start, full-health no-op, and cooldown expiry.
+- `PlayerBalanceTableTests` - validates repair cooldown defaults, clamping, and project asset tuning.
+- `PlayerBalanceApplierTests` - validates repair cooldown application and missing-table preservation.
+- `TouchRepairButtonTests` - validates repair visibility for damaged barriers instead of broken-only barriers.
+- `PrefabSmokeTests` - validates the authored Player prefab repair cooldown.
+
+**PlayMode**
+- `BarrierRepairOverlapIntegrationPlayTests` - validates overlap resolution still runs from a damaged repair flow.
+
+### Notes
+- N/A
+
 ## 2026-06-21 - feat(loot): add magnetic pickup attraction
 
 ### Summary
