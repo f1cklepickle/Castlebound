@@ -31,6 +31,8 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     }
 
     public bool IsBroken { get; private set; }
+    public bool IsDamaged => MaxHealth > 0 && CurrentHealth < MaxHealth;
+    public bool CanRepair => IsDamaged;
     public float EnemyPushInDistance => enemyPushInDistance;
 
     private void OnEnable()
@@ -74,22 +76,20 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         }
     }
 
-    public void Repair()
+    public bool Repair()
     {
-        // If max health is zero, there's nothing to repair.
-        if (MaxHealth <= 0)
+        if (!CanRepair)
         {
-            return;
+            return false;
         }
 
-        // Restore health and clear broken flag.
         CurrentHealth = MaxHealth;
         IsBroken = false;
 
-        // Ensure collider + sprite are re-enabled.
         UpdateBrokenState();
         ResolveActiveOverlaps();
         OnRepaired?.Invoke();
+        return true;
     }
 
     public void ReviveIfNeeded()

@@ -63,7 +63,7 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
-        public void IsVisible_ReturnsFalse_WhenBarrierInRangeButNotBroken()
+        public void IsVisible_ReturnsFalse_WhenBarrierInRangeButFullHealth()
         {
             _barrierGo = new GameObject("Barrier");
             _barrierGo.transform.position = new Vector3(1f, 0f, 0f);
@@ -73,7 +73,7 @@ namespace Castlebound.Tests.Input
             _button.UpdateProximity(Vector2.zero, checkRadius: 5f);
 
             Assert.IsFalse(_button.IsVisible,
-                "Button should be hidden when nearby barrier is not broken.");
+                "Button should be hidden when nearby barrier is full health.");
         }
 
         [Test]
@@ -109,7 +109,9 @@ namespace Castlebound.Tests.Input
             go = new GameObject("Barrier");
             go.transform.position = new Vector3(position.x, position.y, 0f);
             var health = go.AddComponent<BarrierHealth>();
-            health.TakeDamage(999);
+            health.MaxHealth = 10;
+            health.CurrentHealth = 10;
+            health.TakeDamage(4);
             return health;
         }
     }

@@ -70,6 +70,7 @@ namespace Castlebound.Gameplay.Balance
             if (controller != null)
             {
                 controller.RepairRange = table.BaseRepairRange;
+                controller.RepairCooldownSeconds = table.BaseRepairCooldownSeconds;
             }
         }
     }

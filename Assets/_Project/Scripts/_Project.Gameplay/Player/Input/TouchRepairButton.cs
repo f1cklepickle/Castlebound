@@ -69,7 +69,7 @@ namespace Castlebound.Gameplay.Input
             for (int i = 0; i < all.Count; i++)
             {
                 var barrier = all[i];
-                if (barrier == null || !barrier.IsBroken)
+                if (barrier == null || !barrier.CanRepair)
                     continue;
 
                 var barrierPos = (Vector2)barrier.transform.position;

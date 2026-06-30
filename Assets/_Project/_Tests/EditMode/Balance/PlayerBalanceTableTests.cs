@@ -21,6 +21,7 @@ namespace Castlebound.Tests.Balance
                 Assert.That(table.BaseMaxHealth, Is.EqualTo(200));
                 Assert.That(table.BaseMoveSpeed, Is.EqualTo(12f).Within(0.001f));
                 Assert.That(table.BaseRepairRange, Is.EqualTo(2f).Within(0.001f));
+                Assert.That(table.BaseRepairCooldownSeconds, Is.EqualTo(1f).Within(0.001f));
             }
             finally
             {
@@ -38,10 +39,12 @@ namespace Castlebound.Tests.Balance
                 table.BaseMaxHealth = -1;
                 table.BaseMoveSpeed = -1f;
                 table.BaseRepairRange = -1f;
+                table.BaseRepairCooldownSeconds = -1f;
 
                 Assert.That(table.BaseMaxHealth, Is.EqualTo(0));
                 Assert.That(table.BaseMoveSpeed, Is.EqualTo(0f));
                 Assert.That(table.BaseRepairRange, Is.EqualTo(0f));
+                Assert.That(table.BaseRepairCooldownSeconds, Is.EqualTo(0f));
             }
             finally
             {
@@ -61,6 +64,7 @@ namespace Castlebound.Tests.Balance
             Assert.That(table.BaseMaxHealth, Is.EqualTo(200));
             Assert.That(table.BaseMoveSpeed, Is.EqualTo(12f).Within(0.001f));
             Assert.That(table.BaseRepairRange, Is.EqualTo(2f).Within(0.001f));
+            Assert.That(table.BaseRepairCooldownSeconds, Is.EqualTo(1f).Within(0.001f));
         }
     }
 }

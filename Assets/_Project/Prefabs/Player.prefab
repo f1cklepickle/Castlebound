@@ -245,6 +245,7 @@ MonoBehaviour:
     barrierMask:
       serializedVersion: 2
       m_Bits: 256
+  repairCooldownSeconds: 1
   potionUseController: {fileID: 0}
   inventorySource: {fileID: 0}
   weaponSlotSwapHandler:

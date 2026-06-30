@@ -13,8 +13,14 @@ public class RepairSensor
         set => repairRadius = Mathf.Max(0f, value);
     }
 
+    public LayerMask BarrierMask
+    {
+        get => barrierMask;
+        set => barrierMask = value;
+    }
+
     /// <summary>
-    /// Returns true if there is at least one broken barrier within repair range.
+    /// Returns true if there is at least one damaged barrier within repair range.
     /// </summary>
     public bool HasRepairableBarrierInRange(Vector2 position)
     {
@@ -25,19 +31,19 @@ public class RepairSensor
             var hit = hits[i];
             if (!hit) continue;
             var barrier = hit.GetComponentInParent<BarrierHealth>();
-            if (barrier != null && barrier.IsBroken) return true;
+            if (barrier != null && barrier.CanRepair) return true;
         }
         return false;
     }
 
     /// <summary>
-    /// Finds the first broken barrier within repair range and repairs it.
+    /// Finds the first damaged barrier within repair range and repairs it.
     /// </summary>
-    public void TryRepairNearest(Vector2 position)
+    public bool TryRepairNearest(Vector2 position)
     {
         var hits = Physics2D.OverlapCircleAll(position, repairRadius, barrierMask);
         if (hits == null || hits.Length == 0)
-            return;
+            return false;
 
         for (int i = 0; i < hits.Length; i++)
         {
@@ -48,11 +54,12 @@ public class RepairSensor
             if (barrier == null)
                 continue;
 
-            if (!barrier.IsBroken)
+            if (!barrier.CanRepair)
                 continue;
 
-            barrier.Repair();
-            break; // Repair one barrier per key press.
+            return barrier.Repair();
         }
+
+        return false;
     }
 }

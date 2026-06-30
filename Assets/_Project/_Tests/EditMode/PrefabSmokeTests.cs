@@ -36,6 +36,14 @@ public class PrefabSmokeTests
         PrefabTestUtil.Unload(go);
     }
 
+    [Test] public void Player_RepairCooldown_IsAuthored() {
+        var go = PrefabTestUtil.Load(PlayerPath);
+        var controller = go.GetComponent<PlayerController>();
+        Assert.NotNull(controller);
+        Assert.That(controller.RepairCooldownSeconds, Is.EqualTo(1f).Within(0.001f));
+        PrefabTestUtil.Unload(go);
+    }
+
     [Test] public void Player_Has_Health() {
         var go = PrefabTestUtil.Load(PlayerPath);
         Assert.NotNull(go.GetComponent<Health>());
