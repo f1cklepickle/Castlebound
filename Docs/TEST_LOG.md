@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-07-01 - feat(inventory): add Castle Inventory persistent vault
+
+### Summary
+- Added a separate Castle Inventory vault state for persistent count-based item storage.
+- Added a lightweight runtime component wrapper without changing active player inventory behavior.
+- Covered valid adds, rejected inputs, removals, event emission, sorted entries, and snapshot safety.
+
+### New or Updated Tests
+**EditMode**
+- `CastleInventoryStateTests` — validates vault item counts, invalid input rejection, removal semantics, change events, sorted entries, and snapshot safety.
+- `CastleInventoryStateComponentTests` — validates stable component access to the vault state.
+
+**PlayMode**
+- N/A — data-model slice only; no scene or prefab runtime path changed.
+
+### Notes
+- Active `InventoryState` combat inventory remains unchanged.
+
 ## 2026-06-26 - fix(barrier): allow repair below max health with cooldown
 
 ### Summary
