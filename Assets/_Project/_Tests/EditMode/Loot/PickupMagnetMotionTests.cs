@@ -107,6 +107,73 @@ namespace Castlebound.Tests.Loot
             Object.DestroyImmediate(economy);
         }
 
+        [Test]
+        public void Step_AttractsWeapon_WhenInventoryIsFullAndBackpackHasCapacity()
+        {
+            var economy = ScriptableObject.CreateInstance<EconomyBalanceTable>();
+            economy.PickupMagnetRange = 10f;
+            economy.PickupMagnetSpeed = 4f;
+            var station = ScriptableObject.CreateInstance<GameBalanceStation>();
+            station.Economy = economy;
+            var player = new GameObject("Player");
+            var inventory = player.AddComponent<InventoryStateComponent>();
+            var backpack = player.AddComponent<BackpackInventoryStateComponent>();
+            backpack.MaxItemCount = 1;
+            inventory.State.AddWeapon("weapon_a");
+            inventory.State.AddWeapon("weapon_b");
+            var field = player.AddComponent<PickupMagnetField>();
+            field.BalanceStation = station;
+            var definition = ScriptableObject.CreateInstance<WeaponDefinition>();
+            definition.ItemId = "weapon_c";
+            var pickupObject = CreateWeaponPickup(new Vector3(2f, 0f), definition);
+            var motion = pickupObject.AddComponent<PickupMagnetMotion>();
+            motion.MagnetField = field;
+
+            motion.Step(0.25f);
+
+            Assert.AreEqual(1f, pickupObject.transform.position.x, 0.001f);
+
+            Object.DestroyImmediate(pickupObject);
+            Object.DestroyImmediate(definition);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(station);
+            Object.DestroyImmediate(economy);
+        }
+
+        [Test]
+        public void Step_DoesNotAttractWeapon_WhenInventoryAndBackpackAreFull()
+        {
+            var economy = ScriptableObject.CreateInstance<EconomyBalanceTable>();
+            economy.PickupMagnetRange = 10f;
+            economy.PickupMagnetSpeed = 4f;
+            var station = ScriptableObject.CreateInstance<GameBalanceStation>();
+            station.Economy = economy;
+            var player = new GameObject("Player");
+            var inventory = player.AddComponent<InventoryStateComponent>();
+            var backpack = player.AddComponent<BackpackInventoryStateComponent>();
+            backpack.MaxItemCount = 1;
+            inventory.State.AddWeapon("weapon_a");
+            inventory.State.AddWeapon("weapon_b");
+            backpack.State.AddItem("weapon_backpack", 1);
+            var field = player.AddComponent<PickupMagnetField>();
+            field.BalanceStation = station;
+            var definition = ScriptableObject.CreateInstance<WeaponDefinition>();
+            definition.ItemId = "weapon_c";
+            var pickupObject = CreateWeaponPickup(new Vector3(2f, 0f), definition);
+            var motion = pickupObject.AddComponent<PickupMagnetMotion>();
+            motion.MagnetField = field;
+
+            motion.Step(0.25f);
+
+            Assert.AreEqual(2f, pickupObject.transform.position.x, 0.001f);
+
+            Object.DestroyImmediate(pickupObject);
+            Object.DestroyImmediate(definition);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(station);
+            Object.DestroyImmediate(economy);
+        }
+
         private static GameObject CreateGoldPickup(Vector3 position)
         {
             var pickupObject = new GameObject("Gold Pickup");
@@ -114,6 +181,16 @@ namespace Castlebound.Tests.Loot
             var pickup = pickupObject.AddComponent<ItemPickupComponent>();
             pickup.Kind = ItemPickupKind.Gold;
             pickup.Amount = 1;
+            return pickupObject;
+        }
+
+        private static GameObject CreateWeaponPickup(Vector3 position, WeaponDefinition definition)
+        {
+            var pickupObject = new GameObject("Weapon Pickup");
+            pickupObject.transform.position = position;
+            var pickup = pickupObject.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Weapon;
+            pickup.ItemDefinition = definition;
             return pickupObject;
         }
     }

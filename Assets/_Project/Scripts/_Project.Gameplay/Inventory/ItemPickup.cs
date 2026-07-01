@@ -70,6 +70,11 @@ namespace Castlebound.Gameplay.Inventory
             }
         }
 
+        public bool CanAutoPickup(InventoryPickupContext context)
+        {
+            return CanAutoPickup(context.ActiveInventory) || CanOverflowToBackpack(context);
+        }
+
         public bool TryAutoPickup(InventoryState inventory)
         {
             if (!CanAutoPickup(inventory))
@@ -78,6 +83,21 @@ namespace Castlebound.Gameplay.Inventory
             }
 
             return Apply(inventory);
+        }
+
+        public bool TryAutoPickup(InventoryPickupContext context)
+        {
+            if (CanAutoPickup(context.ActiveInventory))
+            {
+                return Apply(context.ActiveInventory);
+            }
+
+            if (CanOverflowToBackpack(context))
+            {
+                return context.Backpack.AddItem(ItemId, Amount);
+            }
+
+            return false;
         }
 
         public bool TryManualPickup(InventoryState inventory)
@@ -118,6 +138,15 @@ namespace Castlebound.Gameplay.Inventory
             }
 
             return false;
+        }
+
+        private bool CanOverflowToBackpack(InventoryPickupContext context)
+        {
+            return Kind == ItemPickupKind.Weapon &&
+                !string.IsNullOrWhiteSpace(ItemId) &&
+                Amount > 0 &&
+                context.Backpack != null &&
+                context.Backpack.CanAddItem(ItemId, Amount);
         }
     }
 }

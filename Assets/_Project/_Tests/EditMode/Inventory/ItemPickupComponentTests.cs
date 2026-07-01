@@ -63,6 +63,71 @@ namespace Castlebound.Tests.Inventory
         }
 
         [Test]
+        public void AutoPickup_ConsumesWeaponIntoBackpack_WhenWeaponSlotsFull()
+        {
+            var playerGo = new GameObject("Player");
+            var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
+            var backpackComponent = playerGo.AddComponent<BackpackInventoryStateComponent>();
+            var pickupCollider = playerGo.AddComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>();
+            inventoryComponent.State.AddWeapon("weapon_a");
+            inventoryComponent.State.AddWeapon("weapon_b");
+            backpackComponent.MaxItemCount = 1;
+
+            var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            weapon.ItemId = "weapon_c";
+
+            var pickupGo = new GameObject("Pickup");
+            var pickup = pickupGo.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Weapon;
+            pickup.ItemDefinition = weapon;
+            var context = new InventoryPickupContext(inventoryComponent.State, backpackComponent.State);
+
+            var result = pickup.TryAutoPickup(context);
+
+            Assert.IsTrue(result);
+            Assert.IsTrue(pickup.IsConsumed);
+            Assert.AreEqual("weapon_a", inventoryComponent.State.GetWeaponId(0));
+            Assert.AreEqual("weapon_b", inventoryComponent.State.GetWeaponId(1));
+            Assert.That(backpackComponent.State.GetCount("weapon_c"), Is.EqualTo(1));
+
+            Object.DestroyImmediate(pickupGo);
+            Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(weapon);
+        }
+
+        [Test]
+        public void AutoPickup_DoesNotConsumeWeapon_WhenInventoryAndBackpackAreFull()
+        {
+            var playerGo = new GameObject("Player");
+            var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
+            var backpackComponent = playerGo.AddComponent<BackpackInventoryStateComponent>();
+            var pickupCollider = playerGo.AddComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>();
+            inventoryComponent.State.AddWeapon("weapon_a");
+            inventoryComponent.State.AddWeapon("weapon_b");
+            backpackComponent.MaxItemCount = 1;
+            backpackComponent.State.AddItem("weapon_backpack", 1);
+
+            var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            weapon.ItemId = "weapon_c";
+
+            var pickupGo = new GameObject("Pickup");
+            var pickup = pickupGo.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Weapon;
+            pickup.ItemDefinition = weapon;
+            var context = new InventoryPickupContext(inventoryComponent.State, backpackComponent.State);
+
+            var result = pickup.TryAutoPickup(context);
+
+            Assert.IsFalse(result);
+            Assert.IsFalse(pickup.IsConsumed);
+            Assert.That(backpackComponent.State.GetCount("weapon_c"), Is.EqualTo(0));
+
+            Object.DestroyImmediate(pickupGo);
+            Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(weapon);
+        }
+
+        [Test]
         public void AutoPickup_RespectsPickupDelay()
         {
             var playerGo = new GameObject("Player");

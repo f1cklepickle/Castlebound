@@ -12,6 +12,47 @@ namespace Castlebound.Tests.Loot
     public class PickupMagnetSweepPlayTests
     {
         [UnityTest]
+        public IEnumerator OverflowWeaponPickup_GoesToBackpack_WhenActiveWeaponSlotsAreFull()
+        {
+            var player = new GameObject("Player");
+            var inventory = player.AddComponent<InventoryStateComponent>();
+            var backpack = player.AddComponent<BackpackInventoryStateComponent>();
+            player.AddComponent<PlayerPickupCollider>();
+            var playerCollider = player.AddComponent<CircleCollider2D>();
+            playerCollider.isTrigger = true;
+            inventory.State.AddWeapon("weapon_a");
+            inventory.State.AddWeapon("weapon_b");
+            backpack.MaxItemCount = 1;
+
+            var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            weapon.ItemId = "weapon_c";
+
+            var pickupObject = new GameObject("Weapon Pickup");
+            pickupObject.transform.position = player.transform.position;
+            var body = pickupObject.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Kinematic;
+            var pickupCollider = pickupObject.AddComponent<CircleCollider2D>();
+            pickupCollider.isTrigger = true;
+            var pickup = pickupObject.AddComponent<ItemPickupComponent>();
+            pickup.Kind = ItemPickupKind.Weapon;
+            pickup.ItemDefinition = weapon;
+
+            yield return new WaitForFixedUpdate();
+
+            Assert.IsTrue(pickup == null || pickup.IsConsumed);
+            Assert.AreEqual("weapon_a", inventory.State.GetWeaponId(0));
+            Assert.AreEqual("weapon_b", inventory.State.GetWeaponId(1));
+            Assert.That(backpack.State.GetCount("weapon_c"), Is.EqualTo(1));
+
+            Object.Destroy(player);
+            if (pickupObject != null)
+            {
+                Object.Destroy(pickupObject);
+            }
+            Object.Destroy(weapon);
+        }
+
+        [UnityTest]
         public IEnumerator WaveEnd_SweepsDistantGoldThroughWall_IntoInventory()
         {
             var economy = ScriptableObject.CreateInstance<EconomyBalanceTable>();

@@ -67,12 +67,12 @@ namespace Castlebound.Gameplay.Inventory
                 return;
             }
 
-            if (!TryGetInventory(other, out InventoryState inventory))
+            if (!TryGetPickupContext(other, out InventoryPickupContext context))
             {
                 return;
             }
 
-            TryAutoPickup(inventory);
+            TryAutoPickup(context);
         }
 
         private void OnTriggerStay2D(Collider2D other)
@@ -87,12 +87,12 @@ namespace Castlebound.Gameplay.Inventory
                 return;
             }
 
-            if (!TryGetInventory(other, out InventoryState inventory))
+            if (!TryGetPickupContext(other, out InventoryPickupContext context))
             {
                 return;
             }
 
-            TryAutoPickup(inventory);
+            TryAutoPickup(context);
         }
 
         public bool TryAutoPickup(InventoryState inventory)
@@ -112,6 +112,23 @@ namespace Castlebound.Gameplay.Inventory
             return result;
         }
 
+        public bool TryAutoPickup(InventoryPickupContext context)
+        {
+            if (!CanAutoPickup(context))
+            {
+                return false;
+            }
+
+            ItemPickup pickup = GetPickup();
+            bool result = pickup.TryAutoPickup(context);
+            if (result)
+            {
+                Consume();
+            }
+
+            return result;
+        }
+
         public bool CanAutoPickup(InventoryState inventory)
         {
             if (IsConsumed || pickupDelayRemaining > 0f)
@@ -121,6 +138,17 @@ namespace Castlebound.Gameplay.Inventory
 
             ItemPickup pickup = GetPickup();
             return pickup != null && pickup.CanAutoPickup(inventory);
+        }
+
+        public bool CanAutoPickup(InventoryPickupContext context)
+        {
+            if (IsConsumed || pickupDelayRemaining > 0f)
+            {
+                return false;
+            }
+
+            ItemPickup pickup = GetPickup();
+            return pickup != null && pickup.CanAutoPickup(context);
         }
 
         public bool TryManualPickup(InventoryState inventory)
@@ -200,22 +228,25 @@ namespace Castlebound.Gameplay.Inventory
             InvalidatePickupCache();
         }
 
-        private static bool TryGetInventory(Component other, out InventoryState inventory)
+        private static bool TryGetPickupContext(Component other, out InventoryPickupContext context)
         {
             if (other.GetComponent<Castlebound.Gameplay.Player.PlayerPickupCollider>() == null)
             {
-                inventory = null;
+                context = default(InventoryPickupContext);
                 return false;
             }
 
-            InventoryStateComponent component = other.GetComponentInParent<InventoryStateComponent>();
-            if (component != null)
+            InventoryStateComponent inventoryComponent = other.GetComponentInParent<InventoryStateComponent>();
+            if (inventoryComponent != null)
             {
-                inventory = component.State;
+                BackpackInventoryStateComponent backpackComponent = other.GetComponentInParent<BackpackInventoryStateComponent>();
+                context = new InventoryPickupContext(
+                    inventoryComponent.State,
+                    backpackComponent != null ? backpackComponent.State : null);
                 return true;
             }
 
-            inventory = null;
+            context = default(InventoryPickupContext);
             return false;
         }
 
