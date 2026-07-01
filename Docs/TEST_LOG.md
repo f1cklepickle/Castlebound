@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-07-01 - feat(inventory): transfer Backpack to Castle Vault
+
+### Summary
+- Added wave-end Backpack transfer into the persistent Castle Inventory vault.
+- Cleared Backpack contents after successful transfer to keep it mid-wave-only storage.
+- Wired the Player prefab with Castle Inventory and Backpack transfer components.
+
+### New or Updated Tests
+**EditMode**
+- `BackpackVaultTransferTests` - validates transfer, Backpack clearing, empty no-op behavior, repeated transfer safety, active inventory preservation, and source configuration.
+- `PrefabSmokeTests` - validates the Player prefab includes Backpack-to-vault transfer wiring.
+
+**PlayMode**
+- `BackpackVaultTransferPlayTests` - validates the wave-end event hook transfers Backpack contents into the Castle Vault.
+
+### Notes
+- Transfer listens to `EnemySpawnerRunner.OnWaveEnded` when a wave runner is present.
+
 ## 2026-07-01 - feat(inventory): add Backpack mid-wave carry
 
 ### Summary
