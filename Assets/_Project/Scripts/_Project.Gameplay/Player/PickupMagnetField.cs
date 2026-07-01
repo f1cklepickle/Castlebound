@@ -11,6 +11,7 @@ namespace Castlebound.Gameplay.Player
         [SerializeField] private EnemySpawnerRunner waveRunner;
 
         private InventoryStateComponent inventoryComponent;
+        private BackpackInventoryStateComponent backpackComponent;
         private bool isSweepActive;
 
         public GameBalanceStation BalanceStation
@@ -38,6 +39,7 @@ namespace Castlebound.Gameplay.Player
         private void Awake()
         {
             inventoryComponent = GetComponentInChildren<InventoryStateComponent>();
+            backpackComponent = GetComponentInChildren<BackpackInventoryStateComponent>();
             EnsureWaveRunner();
         }
 
@@ -69,12 +71,20 @@ namespace Castlebound.Gameplay.Player
                 inventoryComponent = GetComponentInChildren<InventoryStateComponent>();
             }
 
+            if (backpackComponent == null)
+            {
+                backpackComponent = GetComponentInChildren<BackpackInventoryStateComponent>();
+            }
+
             if (pickup == null || pickup.IsConsumed || inventoryComponent == null)
             {
                 return false;
             }
 
-            return pickup.CanAutoPickup(inventoryComponent.State);
+            var context = new InventoryPickupContext(
+                inventoryComponent.State,
+                backpackComponent != null ? backpackComponent.State : null);
+            return pickup.CanAutoPickup(context);
         }
 
         public bool IsWithinRange(Vector3 position)

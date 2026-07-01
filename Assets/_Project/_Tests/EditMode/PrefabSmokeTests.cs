@@ -44,6 +44,14 @@ public class PrefabSmokeTests
         PrefabTestUtil.Unload(go);
     }
 
+    [Test] public void Player_Has_BackpackInventory() {
+        var go = PrefabTestUtil.Load(PlayerPath);
+        var backpack = go.GetComponent<Castlebound.Gameplay.Inventory.BackpackInventoryStateComponent>();
+        Assert.NotNull(backpack);
+        Assert.That(backpack.MaxItemCount, Is.EqualTo(8));
+        PrefabTestUtil.Unload(go);
+    }
+
     [Test] public void Player_Has_Health() {
         var go = PrefabTestUtil.Load(PlayerPath);
         Assert.NotNull(go.GetComponent<Health>());

@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-07-01 - feat(inventory): add Backpack mid-wave carry
+
+### Summary
+- Added a temporary Backpack inventory for mid-wave overflow items.
+- Routed overflow weapon pickups to Backpack when active weapon slots are full.
+- Kept pickup magnet eligibility aligned with actual pickup eligibility so uncollectable items do not pull.
+
+### New or Updated Tests
+**EditMode**
+- `BackpackInventoryStateTests` — validates capacity, valid adds, rejected inputs, removals, clear behavior, change events, sorted entries, and snapshot safety.
+- `BackpackInventoryStateComponentTests` — validates stable component access and authored capacity.
+- `ItemPickupTests` — validates active weapon slot priority, overflow weapon pickup into Backpack, and rejection when Backpack is full.
+- `ItemPickupComponentTests` — validates component pickup consumption into Backpack and rejection when active inventory and Backpack are full.
+- `PickupMagnetMotionTests` — validates overflow weapons attract only when Backpack can accept them.
+- `PrefabSmokeTests` — validates the Player prefab includes authored Backpack inventory capacity.
+
+**PlayMode**
+- `PickupMagnetSweepPlayTests` — validates an overflow weapon pickup is collected into Backpack when active weapon slots are full.
+
+### Notes
+- Potion stack limits remain unchanged and do not overflow to Backpack in this slice.
+
 ## 2026-07-01 - feat(inventory): add Castle Inventory persistent vault
 
 ### Summary

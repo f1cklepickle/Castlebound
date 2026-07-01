@@ -63,6 +63,56 @@ namespace Castlebound.Tests.Inventory
         }
 
         [Test]
+        public void WeaponAutoPickup_WhenSlotsFullAndBackpackHasCapacity_AddsToBackpack()
+        {
+            var inventory = new InventoryState();
+            inventory.AddWeapon("weapon_a");
+            inventory.AddWeapon("weapon_b");
+            var backpack = new BackpackInventoryState(maxItemCount: 1);
+            var context = new InventoryPickupContext(inventory, backpack);
+            var pickup = ItemPickup.Weapon("weapon_c");
+
+            var result = pickup.TryAutoPickup(context);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual("weapon_a", inventory.GetWeaponId(0));
+            Assert.AreEqual("weapon_b", inventory.GetWeaponId(1));
+            Assert.That(backpack.GetCount("weapon_c"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void WeaponAutoPickup_WhenSlotsFullAndBackpackFull_IsBlocked()
+        {
+            var inventory = new InventoryState();
+            inventory.AddWeapon("weapon_a");
+            inventory.AddWeapon("weapon_b");
+            var backpack = new BackpackInventoryState(maxItemCount: 1);
+            backpack.AddItem("weapon_backpack", 1);
+            var context = new InventoryPickupContext(inventory, backpack);
+            var pickup = ItemPickup.Weapon("weapon_c");
+
+            var result = pickup.TryAutoPickup(context);
+
+            Assert.IsFalse(result);
+            Assert.That(backpack.GetCount("weapon_c"), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void WeaponAutoPickup_WhenActiveSlotAvailable_UsesActiveInventoryBeforeBackpack()
+        {
+            var inventory = new InventoryState();
+            var backpack = new BackpackInventoryState(maxItemCount: 1);
+            var context = new InventoryPickupContext(inventory, backpack);
+            var pickup = ItemPickup.Weapon("weapon_c");
+
+            var result = pickup.TryAutoPickup(context);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual("weapon_c", inventory.GetWeaponId(0));
+            Assert.That(backpack.ItemCount, Is.EqualTo(0));
+        }
+
+        [Test]
         public void WeaponManualPickup_WhenSlotsFull_SwapsActive_AndEmitsWeaponChange()
         {
             var inventory = new InventoryState();
