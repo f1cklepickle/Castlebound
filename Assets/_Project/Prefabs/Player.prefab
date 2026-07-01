@@ -110,6 +110,8 @@ GameObject:
   - component: {fileID: -5784453068084145222}
   - component: {fileID: -4357144976434651652}
   - component: {fileID: 9150000000000000501}
+  - component: {fileID: 9150000000000000601}
+  - component: {fileID: 9150000000000000602}
   - component: {fileID: -4056653655764099198}
   - component: {fileID: -6994024940450972999}
   - component: {fileID: 7777777777777777777}
@@ -440,6 +442,33 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   maxItemCount: 8
+--- !u!114 &9150000000000000601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70bc9d27b3ee42a98d972f4180fde0da, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &9150000000000000602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1f6d8c328e4f74bcf5b7f56de0a091, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  backpackSource: {fileID: 9150000000000000501}
+  castleInventorySource: {fileID: 9150000000000000601}
+  waveRunner: {fileID: 0}
 --- !u!114 &-4056653655764099198
 MonoBehaviour:
   m_ObjectHideFlags: 0

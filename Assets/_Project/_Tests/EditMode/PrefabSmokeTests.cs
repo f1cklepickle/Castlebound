@@ -52,6 +52,15 @@ public class PrefabSmokeTests
         PrefabTestUtil.Unload(go);
     }
 
+    [Test] public void Player_Has_BackpackVaultTransfer() {
+        var go = PrefabTestUtil.Load(PlayerPath);
+        var transfer = go.GetComponent<Castlebound.Gameplay.Inventory.BackpackVaultTransfer>();
+        Assert.NotNull(transfer);
+        Assert.NotNull(transfer.BackpackSource);
+        Assert.NotNull(transfer.CastleInventorySource);
+        PrefabTestUtil.Unload(go);
+    }
+
     [Test] public void Player_Has_Health() {
         var go = PrefabTestUtil.Load(PlayerPath);
         Assert.NotNull(go.GetComponent<Health>());
