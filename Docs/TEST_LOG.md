@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-01 - feat(ui): inventory panel tabs
+
+### Summary
+- Added a display-only Inventory panel opened from a top-left Bag button.
+- Added Backpack and Vault tabs with Backpack available mid-wave and Vault locked during waves.
+- Anchored the new Bag button and Player health bar to the top-left HUD area for responsive placement.
+
+### New or Updated Tests
+**EditMode**
+- `InventoryPanelControllerTests` - validates Backpack default/open behavior, Backpack and Vault row rendering, mid-wave Vault locking, change-event refresh, and top-left button anchoring.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` - smoke-validates opening the Backpack panel and locking Vault access mid-wave.
+
+### Notes
+- Local Unity test execution was not run because the configured Unity editor path is missing and no Unity executable is available on PATH in this shell.
+
 ## 2026-07-01 - feat(inventory): transfer Backpack to Castle Vault
 
 ### Summary
