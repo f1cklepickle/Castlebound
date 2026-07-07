@@ -1,5 +1,6 @@
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
+using Castlebound.Gameplay.Combat;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,14 +15,21 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private Button vaultTabButton;
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private BackpackInventoryStateComponent backpackSource;
+        [SerializeField] private InventoryStateComponent activeInventorySource;
         [SerializeField] private CastleInventoryStateComponent castleInventorySource;
         [SerializeField] private EnemySpawnerRunner waveRunner;
+        [SerializeField] private InventoryContextMenuController contextMenu;
+        [SerializeField] private BackpackWeaponEquipController equipController;
+        [SerializeField] private BackpackItemDropController dropController;
+        [SerializeField] private MonoBehaviour weaponDefinitionResolverSource;
 
         private BackpackInventoryState backpack;
         private CastleInventoryState vault;
         private WavePhaseTracker phaseTracker;
+        private IWeaponDefinitionResolver weaponDefinitionResolver;
         private RectTransform tabRoot;
         private InventoryPanelTab activeTab = InventoryPanelTab.Backpack;
+        private bool contextMenuHooked;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
         public InventoryPanelTab ActiveTab => activeTab;
@@ -41,6 +49,7 @@ namespace Castlebound.Gameplay.UI
         private void OnDisable()
         {
             UnhookSources();
+            UnhookContextMenu();
         }
 
         public void SetBackpackSource(BackpackInventoryStateComponent source)
@@ -55,6 +64,15 @@ namespace Castlebound.Gameplay.UI
             backpack = backpackSource != null ? backpackSource.State : null;
             HookBackpack();
             Refresh();
+        }
+
+        public void SetActiveInventorySource(InventoryStateComponent source)
+        {
+            activeInventorySource = source;
+            if (equipController != null)
+            {
+                equipController.SetActiveInventorySource(activeInventorySource);
+            }
         }
 
         public void SetCastleInventorySource(CastleInventoryStateComponent source)
@@ -90,6 +108,16 @@ namespace Castlebound.Gameplay.UI
             SetPhaseTracker(waveRunner != null ? waveRunner.PhaseTracker : null);
         }
 
+        public void SetWeaponDefinitionResolver(IWeaponDefinitionResolver resolver)
+        {
+            weaponDefinitionResolver = resolver;
+            weaponDefinitionResolverSource = resolver as MonoBehaviour;
+            if (dropController != null)
+            {
+                dropController.SetWeaponDefinitionResolver(resolver);
+            }
+        }
+
         public void TogglePanel()
         {
             ApplyPanelState(!IsOpen);
@@ -101,6 +129,11 @@ namespace Castlebound.Gameplay.UI
 
         public void ClosePanel()
         {
+            if (contextMenu != null)
+            {
+                contextMenu.Close();
+            }
+
             ApplyPanelState(false);
         }
 
@@ -132,6 +165,11 @@ namespace Castlebound.Gameplay.UI
                 backpackSource = FindObjectOfType<BackpackInventoryStateComponent>();
             }
 
+            if (activeInventorySource == null)
+            {
+                activeInventorySource = FindObjectOfType<InventoryStateComponent>();
+            }
+
             if (castleInventorySource == null)
             {
                 castleInventorySource = FindObjectOfType<CastleInventoryStateComponent>();
@@ -145,6 +183,7 @@ namespace Castlebound.Gameplay.UI
             backpack = backpackSource != null ? backpackSource.State : null;
             vault = castleInventorySource != null ? castleInventorySource.State : null;
             phaseTracker = waveRunner != null ? waveRunner.PhaseTracker : phaseTracker;
+            weaponDefinitionResolver = weaponDefinitionResolverSource as IWeaponDefinitionResolver ?? weaponDefinitionResolver ?? FindWeaponDefinitionResolver();
         }
 
         private void HookSources()
@@ -287,6 +326,71 @@ namespace Castlebound.Gameplay.UI
                 layout.childControlHeight = true;
                 layout.childControlWidth = true;
             }
+
+            EnsureContextActionComponents();
+        }
+
+        private void EnsureContextActionComponents()
+        {
+            if (equipController == null)
+            {
+                equipController = GetComponent<BackpackWeaponEquipController>();
+                if (equipController == null)
+                {
+                    equipController = gameObject.AddComponent<BackpackWeaponEquipController>();
+                }
+            }
+
+            if (dropController == null)
+            {
+                dropController = GetComponent<BackpackItemDropController>();
+                if (dropController == null)
+                {
+                    dropController = gameObject.AddComponent<BackpackItemDropController>();
+                }
+            }
+
+            if (contextMenu == null)
+            {
+                contextMenu = GetComponent<InventoryContextMenuController>();
+                if (contextMenu == null)
+                {
+                    contextMenu = gameObject.AddComponent<InventoryContextMenuController>();
+                }
+            }
+
+            HookContextMenu();
+
+            equipController.SetActiveInventorySource(activeInventorySource);
+            equipController.SetBackpackSource(backpackSource);
+            dropController.SetBackpackSource(backpackSource);
+            dropController.SetDropOrigin(activeInventorySource != null ? activeInventorySource.transform : transform);
+            dropController.SetWeaponDefinitionResolver(weaponDefinitionResolverSource as IWeaponDefinitionResolver ?? weaponDefinitionResolver ?? FindWeaponDefinitionResolver());
+            contextMenu.SetParentRoot(panelRoot);
+            contextMenu.SetEquipController(equipController);
+            contextMenu.SetDropController(dropController);
+        }
+
+        private void HookContextMenu()
+        {
+            if (contextMenu == null || contextMenuHooked)
+            {
+                return;
+            }
+
+            contextMenu.ActionCompleted += Refresh;
+            contextMenuHooked = true;
+        }
+
+        private void UnhookContextMenu()
+        {
+            if (contextMenu == null || !contextMenuHooked)
+            {
+                return;
+            }
+
+            contextMenu.ActionCompleted -= Refresh;
+            contextMenuHooked = false;
         }
 
         private RectTransform CreatePanel(Transform parent)
@@ -351,6 +455,11 @@ namespace Castlebound.Gameplay.UI
                 return;
             }
 
+            if (contextMenu != null)
+            {
+                contextMenu.Close();
+            }
+
             for (int i = contentRoot.childCount - 1; i >= 0; i--)
             {
                 DestroyChild(contentRoot.GetChild(i).gameObject);
@@ -381,7 +490,7 @@ namespace Castlebound.Gameplay.UI
 
             foreach (var entry in backpack.Entries)
             {
-                CreateTextRow($"{entry.ItemId} x{entry.Count}");
+                CreateBackpackRow(entry);
             }
         }
 
@@ -419,6 +528,67 @@ namespace Castlebound.Gameplay.UI
             text.color = Color.white;
             text.alignment = TextAlignmentOptions.Left;
             text.raycastTarget = false;
+        }
+
+        private void CreateBackpackRow(BackpackInventoryEntry entry)
+        {
+            var rowObject = new GameObject("InventoryRow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(LayoutElement));
+            rowObject.transform.SetParent(contentRoot, false);
+
+            var rect = rowObject.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0f, 34f);
+
+            var layout = rowObject.GetComponent<LayoutElement>();
+            layout.minHeight = 34f;
+            layout.preferredHeight = 34f;
+            layout.flexibleWidth = 1f;
+
+            var image = rowObject.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.04f);
+            image.raycastTarget = true;
+
+            var button = rowObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(() => contextMenu.ShowForItem(entry.ItemId, IsWeaponItem(entry.ItemId), rect));
+
+            var labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            labelObject.transform.SetParent(rowObject.transform, false);
+
+            var labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(8f, 0f);
+            labelRect.offsetMax = new Vector2(-8f, 0f);
+
+            var text = labelObject.GetComponent<TextMeshProUGUI>();
+            text.text = $"{entry.ItemId} x{entry.Count}";
+            text.fontSize = 16;
+            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Left;
+            text.raycastTarget = false;
+
+            var trigger = rowObject.AddComponent<InventoryContextMenuTrigger>();
+            trigger.Configure(contextMenu, entry.ItemId, IsWeaponItem(entry.ItemId));
+        }
+
+        private bool IsWeaponItem(string itemId)
+        {
+            IWeaponDefinitionResolver resolver = weaponDefinitionResolverSource as IWeaponDefinitionResolver ?? weaponDefinitionResolver ?? FindWeaponDefinitionResolver();
+            return resolver != null && resolver.Resolve(itemId) != null;
+        }
+
+        private IWeaponDefinitionResolver FindWeaponDefinitionResolver()
+        {
+            var behaviours = FindObjectsOfType<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IWeaponDefinitionResolver resolver)
+                {
+                    return resolver;
+                }
+            }
+
+            return null;
         }
 
         private static Button CreateButton(string name, Transform parent, string label, Vector2 size, int fontSize)
@@ -473,6 +643,7 @@ namespace Castlebound.Gameplay.UI
         {
             if (Application.isPlaying)
             {
+                child.SetActive(false);
                 Object.Destroy(child);
             }
             else

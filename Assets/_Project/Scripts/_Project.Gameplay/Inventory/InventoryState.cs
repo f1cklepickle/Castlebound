@@ -80,6 +80,25 @@ namespace Castlebound.Gameplay.Inventory
             return true;
         }
 
+        public bool TrySetWeaponAtSlot(int slotIndex, string weaponId, out string previousWeaponId)
+        {
+            previousWeaponId = null;
+            if (!IsValidSlotIndex(slotIndex) || string.IsNullOrEmpty(weaponId))
+            {
+                return false;
+            }
+
+            previousWeaponId = weaponIds[slotIndex];
+            if (string.Equals(previousWeaponId, weaponId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            weaponIds[slotIndex] = weaponId;
+            RaiseChanged(InventoryChangeFlags.Weapons);
+            return true;
+        }
+
         public bool TryAddPotion(string potionId, int amount)
         {
             if (string.IsNullOrEmpty(potionId) || amount <= 0)

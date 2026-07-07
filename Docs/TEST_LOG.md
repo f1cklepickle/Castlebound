@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-07-07 - feat-p4-backpack-context-actions
+
+### Summary
+- Added Backpack row context actions for weapon inventory flow.
+- Added right-click and long-press row triggers that open Drop / Equip actions.
+- Made each Backpack item row a full-width button that opens the context menu on click/tap.
+- Added Equip slot choices for Main and Secondary active weapon slots.
+- Added drop-to-world behavior that removes one Backpack weapon and spawns a pickup near the player.
+- Fixed repeated Backpack weapon swaps after panel refresh by immediately deactivating stale runtime UI rows/menu buttons before deferred destruction.
+- Updated dropped weapon behavior to slide farther forward with slight scatter using `LootSpillMotion` and block pickup for 5 seconds.
+- Closed the open item context menu when Backpack rows refresh so round-end Backpack clearing cannot strand a stale menu.
+
+### New or Updated Tests
+**EditMode**
+- `InventoryStateTests` - validates direct active weapon slot replacement.
+- `BackpackWeaponEquipControllerTests` - validates Backpack weapon equip and displaced weapon return behavior.
+- `BackpackWeaponEquipControllerTests` - validates repeated Backpack-to-active weapon swaps remain allowed.
+- `BackpackItemDropControllerTests` - validates Backpack weapon drop spawning, outward slide motion, pickup cooldown blocking, and failure without mutation for unmapped ids.
+- `InventoryContextMenuControllerTests` - validates Equip transforming into Main / Secondary and Main slot equip action.
+- `InventoryPanelControllerTests` - validates button click and right-click opening Drop / Equip for weapon Backpack rows, repeated context-menu swaps after refresh, and closing stale menus when Backpack contents clear.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` - smoke-validates Backpack context menu equip into the main weapon slot.
+
+### Notes
+- Local EditMode execution was attempted through the Unity CI entrypoint, but Unity exited through the project-already-open crash path and produced no NUnit XML.
+- `git diff --check` passed.
+
 ## 2026-07-05 - issue-209-prototype-weapon-variety
 
 ### Summary

@@ -114,6 +114,24 @@ namespace Castlebound.Tests.Inventory
         }
 
         [Test]
+        public void TrySetWeaponAtSlot_ReplacesRequestedSlotAndReturnsPreviousWeapon()
+        {
+            var state = new InventoryState();
+            var recorder = new EventRecorder();
+            state.OnInventoryChanged += recorder.Record;
+            state.AddWeapon("weapon_a");
+            state.AddWeapon("weapon_b");
+
+            var result = state.TrySetWeaponAtSlot(1, "weapon_c", out string previousWeapon);
+
+            Assert.IsTrue(result);
+            Assert.That(previousWeapon, Is.EqualTo("weapon_b"));
+            Assert.That(state.GetWeaponId(0), Is.EqualTo("weapon_a"));
+            Assert.That(state.GetWeaponId(1), Is.EqualTo("weapon_c"));
+            Assert.AreEqual(InventoryChangeFlags.Weapons, recorder.LastFlags);
+        }
+
+        [Test]
         public void AddPotion_EmptyStack_AddsTypeAndCount_AndEmitsPotionChange()
         {
             var state = new InventoryState();
