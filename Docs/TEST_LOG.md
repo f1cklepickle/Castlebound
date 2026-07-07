@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-07-05 - issue-209-prototype-weapon-variety
+
+### Summary
+- Added iron club, club, and rusty dagger prototype weapon definitions using clean project-convention PNG sprites.
+- Added basic weapon pickup prefabs and pickup visual sync from assigned item icons.
+- Replaced the initial generated weapon art with hard-alpha pixel PNG source files.
+- Expanded the basic weapon loot table and resolver wiring for prototype weapon variety.
+- Fixed the player prefab resolver so equipped prototype weapons resolve stats and hand sprites.
+- Wired PlayerWeaponController to the player-local weapon resolver to avoid resolver lookup ambiguity.
+- Restored CastleFloorTilemap to the built-in sprite material after an unintended material override hid the floor.
+
+### New or Updated Tests
+**EditMode**
+- ItemPickupVisualTests - pickup visuals render from assigned ItemDefinition icons.
+- WeaponVarietyAssetTests - prototype weapon stats, prefabs, loot table entries, and sprite asset identity match the requested contracts.
+- PrefabSmokeTests - player prefab resolves sword, iron club, club, and rusty dagger definitions from its local resolver.
+- PickupMagnetPrefabContractTests - new weapon pickup prefabs keep magnet motion wiring.
+
+**PlayMode**
+- N/A - asset and prefab contract coverage only.
+
+### Notes
+- EditMode rerun after the resolver prefab fix was blocked because the Unity project was already open in another instance.
+- Previous EditMode run before this resolver fix passed locally: 616 passed, 0 failed.
+- PlayMode not required for this data/prefab slice.
+
 ## 2026-07-01 - feat(ui): inventory panel tabs
 
 ### Summary

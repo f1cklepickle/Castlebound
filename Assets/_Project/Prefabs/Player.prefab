@@ -511,7 +511,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventorySource: {fileID: 0}
-  resolverSource: {fileID: 0}
+  resolverSource: {fileID: 9150000000000000006}
 --- !u!114 &9150000000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -526,6 +526,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   definitions:
   - {fileID: 11400000, guid: d2a3b4c5e6f708192a3b4c5d6e7f8091, type: 2}
+  - {fileID: 11400000, guid: 3f101a2b3c4d5e6f708192a3b4c5d601, type: 2}
+  - {fileID: 11400000, guid: 3f101a2b3c4d5e6f708192a3b4c5d602, type: 2}
+  - {fileID: 11400000, guid: 3f101a2b3c4d5e6f708192a3b4c5d603, type: 2}
 --- !u!114 &9150000000000000007
 MonoBehaviour:
   m_ObjectHideFlags: 0
