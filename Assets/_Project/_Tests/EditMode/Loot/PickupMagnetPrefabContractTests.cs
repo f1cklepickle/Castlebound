@@ -13,7 +13,10 @@ namespace Castlebound.Tests.Loot
         {
             "Assets/_Project/Prefabs/Pickups/Pickup_Gold_1.prefab",
             "Assets/_Project/Prefabs/Pickups/Pickup_Potion_Health.prefab",
-            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_Sword.prefab"
+            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_Sword.prefab",
+            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_IronClub.prefab",
+            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_Club.prefab",
+            "Assets/_Project/Prefabs/Pickups/Pickup_Weapon_RustyDagger.prefab"
         };
 
         [TestCaseSource(nameof(PickupPaths))]

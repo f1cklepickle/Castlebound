@@ -61,6 +61,17 @@ public class PrefabSmokeTests
         PrefabTestUtil.Unload(go);
     }
 
+    [Test] public void Player_WeaponResolver_ResolvesPrototypeWeapons() {
+        var go = PrefabTestUtil.Load(PlayerPath);
+        var resolver = go.GetComponent<Castlebound.Gameplay.Combat.WeaponDefinitionResolverComponent>();
+        Assert.NotNull(resolver);
+        Assert.That(resolver.Resolve("weapon_sword")?.Damage, Is.EqualTo(5));
+        Assert.That(resolver.Resolve("weapon_iron_club")?.Damage, Is.EqualTo(5));
+        Assert.That(resolver.Resolve("weapon_club")?.Damage, Is.EqualTo(3));
+        Assert.That(resolver.Resolve("weapon_rusty_dagger")?.Damage, Is.EqualTo(3));
+        PrefabTestUtil.Unload(go);
+    }
+
     [Test] public void Player_Has_Health() {
         var go = PrefabTestUtil.Load(PlayerPath);
         Assert.NotNull(go.GetComponent<Health>());
