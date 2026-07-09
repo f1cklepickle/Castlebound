@@ -169,21 +169,22 @@ namespace Castlebound.Gameplay.UI
 
         private void TryMoveVaultItemToBackpack()
         {
+            string itemId = activeItemId;
             var vault = vaultSource != null ? vaultSource.State : null;
             var backpack = backpackSource != null ? backpackSource.State : null;
-            if (vault == null || backpack == null || vault.GetCount(activeItemId) <= 0 || !backpack.CanAddItem(activeItemId, 1))
+            if (vault == null || backpack == null || string.IsNullOrWhiteSpace(itemId) || vault.GetCount(itemId) <= 0 || !backpack.CanAddItem(itemId, 1))
             {
                 return;
             }
 
-            if (!vault.TryRemoveItem(activeItemId, 1))
+            if (!vault.TryRemoveItem(itemId, 1))
             {
                 return;
             }
 
-            if (!backpack.AddItem(activeItemId, 1))
+            if (!backpack.AddItem(itemId, 1))
             {
-                vault.AddItem(activeItemId, 1);
+                vault.AddItem(itemId, 1);
                 return;
             }
 
@@ -192,26 +193,27 @@ namespace Castlebound.Gameplay.UI
 
         private bool TryEquipVaultItem(int slotIndex)
         {
+            string itemId = activeItemId;
             var activeInventory = activeInventorySource != null ? activeInventorySource.State : null;
             var vault = vaultSource != null ? vaultSource.State : null;
-            if (activeInventory == null || vault == null || string.IsNullOrWhiteSpace(activeItemId))
+            if (activeInventory == null || vault == null || string.IsNullOrWhiteSpace(itemId))
             {
                 return false;
             }
 
-            if (slotIndex < 0 || slotIndex >= InventoryState.WeaponSlotCount || vault.GetCount(activeItemId) <= 0)
+            if (slotIndex < 0 || slotIndex >= InventoryState.WeaponSlotCount || vault.GetCount(itemId) <= 0)
             {
                 return false;
             }
 
-            if (!vault.TryRemoveItem(activeItemId, 1))
+            if (!vault.TryRemoveItem(itemId, 1))
             {
                 return false;
             }
 
-            if (!activeInventory.TrySetWeaponAtSlot(slotIndex, activeItemId, out string displacedWeaponId))
+            if (!activeInventory.TrySetWeaponAtSlot(slotIndex, itemId, out string displacedWeaponId))
             {
-                vault.AddItem(activeItemId, 1);
+                vault.AddItem(itemId, 1);
                 return false;
             }
 
