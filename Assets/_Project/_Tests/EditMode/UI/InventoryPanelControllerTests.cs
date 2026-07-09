@@ -286,7 +286,7 @@ namespace Castlebound.Tests.UI
             vault.State.AddItem("weapon_sword", 2);
             panel.OpenVaultFromWorld();
 
-            OpenFirstBackpackRowContextMenu();
+            OpenFirstInventoryRowContextMenu();
             ClickButton("Move to Backpack");
             var menu = root.GetComponent<InventoryContextMenuController>();
 
@@ -305,7 +305,11 @@ namespace Castlebound.Tests.UI
             vault.State.AddItem("weapon_sword", 1);
             panel.OpenVaultFromWorld();
 
-            OpenFirstBackpackRowContextMenu();
+            OpenFirstInventoryRowContextMenu();
+            var menu = root.GetComponent<InventoryContextMenuController>();
+            Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
+            Assert.That(menu.ActiveItemId, Is.EqualTo("weapon_sword"));
+
             ClickButton("Equip");
             ClickButton("Main");
 
@@ -341,6 +345,11 @@ namespace Castlebound.Tests.UI
 
         private void OpenFirstBackpackRowContextMenu()
         {
+            OpenFirstInventoryRowContextMenu();
+        }
+
+        private void OpenFirstInventoryRowContextMenu()
+        {
             var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
             Assert.NotNull(trigger);
             var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Right };
@@ -352,6 +361,11 @@ namespace Castlebound.Tests.UI
             var buttons = root.GetComponentsInChildren<Button>(true);
             foreach (var button in buttons)
             {
+                if (!button.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
                 var text = button.GetComponentInChildren<TextMeshProUGUI>(true);
                 if (text != null && text.text == label)
                 {
