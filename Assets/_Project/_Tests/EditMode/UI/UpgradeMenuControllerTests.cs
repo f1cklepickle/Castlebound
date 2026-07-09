@@ -52,7 +52,7 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void CloseMenu_StartsWave()
+        public void CloseMenu_DoesNotStartWave()
         {
             var phase = new WavePhaseTracker();
             var menu = new GameObject("Menu");
@@ -68,7 +68,7 @@ namespace Castlebound.Tests.UI
             controller.CloseMenu();
 
             Assert.IsFalse(controller.IsMenuOpen, "Menu should close.");
-            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.InWave), "Closing the menu should start the wave.");
+            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.PreWave), "Closing the menu should not start the wave.");
 
             Object.DestroyImmediate(menu);
         }
@@ -96,24 +96,18 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void CloseMenu_DoesNotStartWaveUntilExplicitStart()
+        public void NextWaveHudButton_StartsWave()
         {
             var phase = new WavePhaseTracker();
-            var menu = new GameObject("Menu");
-            var controller = menu.AddComponent<UpgradeMenuController>();
-            controller.SetPhaseTracker(phase);
-            controller.SetAutoOpenOnFirstPreWave(true);
+            var hud = new GameObject("NextWaveHud");
+            var button = hud.AddComponent<NextWaveHudButton>();
+            button.SetPhaseTracker(phase);
 
-            phase.SetPhase(WavePhase.InWave);
-            phase.SetPhase(WavePhase.PreWave);
+            button.StartNextWave();
 
-            Assert.IsTrue(controller.IsMenuOpen, "Precondition: menu auto-opened.");
+            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.InWave), "The explicit HUD button should start the wave.");
 
-            controller.CloseMenu();
-
-            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.InWave), "Closing the menu should start the wave.");
-
-            Object.DestroyImmediate(menu);
+            Object.DestroyImmediate(hud);
         }
 
         [Test]

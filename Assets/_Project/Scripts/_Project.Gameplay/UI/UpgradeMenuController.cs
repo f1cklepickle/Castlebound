@@ -72,14 +72,6 @@ namespace Castlebound.Gameplay.UI
         public void CloseMenu()
         {
             ApplyMenuState(false);
-
-            if (waveRunner != null)
-            {
-                waveRunner.StartNextWaveFromMenu();
-                return;
-            }
-
-            phaseTracker?.SetPhase(WavePhase.InWave);
         }
 
         public void HideMenuForPlacement()

@@ -58,7 +58,6 @@ namespace Castlebound.Tests.UI
         {
             vault.State.AddItem("weapon_sword", 1);
 
-            panel.SetActiveTab(InventoryPanelTab.Vault);
             panel.TogglePanel();
 
             Assert.IsTrue(panel.IsOpen);
@@ -76,29 +75,39 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void VaultTab_RendersVaultEntries_BetweenWaves()
+        public void OpenVaultFromWorld_RendersVaultEntries_BetweenWaves()
         {
             phase.SetPhase(WavePhase.PreWave);
             vault.State.AddItem("potion_health", 3);
 
-            panel.TogglePanel();
-            panel.SetActiveTab(InventoryPanelTab.Vault);
+            Assert.IsTrue(panel.OpenVaultFromWorld());
 
             AssertTextExists("potion_health x3");
-            Assert.That(panel.VaultTabButton.interactable, Is.False);
         }
 
         [Test]
-        public void VaultTab_IsDisabled_MidWave()
+        public void OpenVaultFromWorld_IsDenied_MidWave()
         {
             phase.SetPhase(WavePhase.InWave);
 
             panel.TogglePanel();
-            panel.SetActiveTab(InventoryPanelTab.Vault);
+            Assert.IsFalse(panel.OpenVaultFromWorld());
 
             Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
-            Assert.That(panel.VaultTabButton.interactable, Is.False);
             Assert.That(panel.BackpackTabButton.interactable, Is.False);
+        }
+
+        [Test]
+        public void ShopTab_IsInert_AndDoesNotRenderVaultEntries()
+        {
+            vault.State.AddItem("potion_health", 3);
+            panel.TogglePanel();
+
+            panel.ShopTabButton.onClick.Invoke();
+
+            Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
+            AssertTextExists("Backpack is empty");
+            AssertTextMissing("potion_health x3");
         }
 
         [Test]
@@ -163,7 +172,7 @@ namespace Castlebound.Tests.UI
             Assert.IsFalse(tabLabel.raycastTarget);
             Assert.IsTrue(panel.OpenButton.GetComponent<Image>().raycastTarget);
             Assert.IsTrue(panel.BackpackTabButton.GetComponent<Image>().raycastTarget);
-            Assert.IsTrue(panel.VaultTabButton.GetComponent<Image>().raycastTarget);
+            Assert.IsTrue(panel.ShopTabButton.GetComponent<Image>().raycastTarget);
         }
 
         [Test]
@@ -250,6 +259,18 @@ namespace Castlebound.Tests.UI
             }
 
             Assert.Fail($"Expected inventory panel text '{expected}'.");
+        }
+
+        private void AssertTextMissing(string expected)
+        {
+            var labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (var label in labels)
+            {
+                if (label.text == expected)
+                {
+                    Assert.Fail($"Did not expect inventory panel text '{expected}'.");
+                }
+            }
         }
 
         private void OpenFirstBackpackRowContextMenu()

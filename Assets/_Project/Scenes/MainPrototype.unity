@@ -937,6 +937,71 @@ MonoBehaviour:
   generatedParent: {fileID: 0}
   rebuildOnAwake: 1
   clearGeneratedBeforeRebuild: 1
+--- !u!1001 &509989970
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3000000000, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_Name
+      value: Vault
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.7451096
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4.834528
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000001, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3000000043, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: inventoryPanel
+      value:
+      objectReference: {fileID: 977390127}
+    - target: {fileID: 3000000043, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
+      propertyPath: waveRunner
+      value:
+      objectReference: {fileID: 1166075763}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 66798ac1432e4b5e943a25ded9687f5b, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1390,6 +1455,7 @@ GameObject:
   m_Component:
   - component: {fileID: 676673185}
   - component: {fileID: 676673187}
+  - component: {fileID: 676673188}
   - component: {fileID: 676673186}
   m_Layer: 5
   m_Name: UpgradeMenuUI
@@ -1462,6 +1528,22 @@ MonoBehaviour:
   waveRunner: {fileID: 1166075763}
   pausePlayerWhileOpen: 1
   playerController: {fileID: 0}
+--- !u!114 &676673188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 676673184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57cf35128d82412e845c6e93500f251d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  button: {fileID: 0}
+  waveRunner: {fileID: 1166075763}
+  hudParent: {fileID: 977390126}
+  label: Start Wave
 --- !u!1001 &683320760
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2667,8 +2749,13 @@ MonoBehaviour:
   vaultTabButton: {fileID: 0}
   contentRoot: {fileID: 0}
   backpackSource: {fileID: 0}
+  activeInventorySource: {fileID: 0}
   castleInventorySource: {fileID: 0}
   waveRunner: {fileID: 1166075763}
+  contextMenu: {fileID: 0}
+  equipController: {fileID: 0}
+  dropController: {fileID: 0}
+  weaponDefinitionResolverSource: {fileID: 0}
 --- !u!1001 &1123947275
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5615,3 +5702,4 @@ SceneRoots:
   - {fileID: 575043386}
   - {fileID: 1123947275}
   - {fileID: 1431412949}
+  - {fileID: 509989970}

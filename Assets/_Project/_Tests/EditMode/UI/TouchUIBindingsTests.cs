@@ -113,6 +113,8 @@ namespace Castlebound.Tests.UI
 
             Assert.IsFalse(upgradeMenu.IsMenuOpen,
                 "Clicking the close button should close the upgrade menu.");
+            Assert.That(phase.CurrentPhase, Is.EqualTo(WavePhase.PreWave),
+                "Clicking the close button should not start the next wave.");
         }
 
         [Test]

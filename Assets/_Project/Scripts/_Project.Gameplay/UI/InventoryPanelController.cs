@@ -30,12 +30,14 @@ namespace Castlebound.Gameplay.UI
         private RectTransform tabRoot;
         private InventoryPanelTab activeTab = InventoryPanelTab.Backpack;
         private bool contextMenuHooked;
+        private bool vaultOpenedFromWorld;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
         public InventoryPanelTab ActiveTab => activeTab;
         public Button OpenButton => openButton;
         public Button BackpackTabButton => backpackTabButton;
         public Button VaultTabButton => vaultTabButton;
+        public Button ShopTabButton => vaultTabButton;
 
         private void OnEnable()
         {
@@ -121,10 +123,25 @@ namespace Castlebound.Gameplay.UI
         public void TogglePanel()
         {
             ApplyPanelState(!IsOpen);
+            vaultOpenedFromWorld = false;
             if (IsOpen)
             {
                 SetActiveTab(InventoryPanelTab.Backpack);
             }
+        }
+
+        public bool OpenVaultFromWorld()
+        {
+            if (!IsVaultAccessible())
+            {
+                return false;
+            }
+
+            EnsureRuntimeUi();
+            vaultOpenedFromWorld = true;
+            ApplyPanelState(true);
+            Refresh();
+            return true;
         }
 
         public void ClosePanel()
@@ -134,20 +151,19 @@ namespace Castlebound.Gameplay.UI
                 contextMenu.Close();
             }
 
+            vaultOpenedFromWorld = false;
             ApplyPanelState(false);
         }
 
         public void SetActiveTab(InventoryPanelTab tab)
         {
-            if (tab == InventoryPanelTab.Vault && !IsVaultAccessible())
+            if (tab == InventoryPanelTab.Shop)
             {
-                activeTab = InventoryPanelTab.Backpack;
-            }
-            else
-            {
-                activeTab = tab;
+                return;
             }
 
+            vaultOpenedFromWorld = false;
+            activeTab = tab;
             Refresh();
         }
 
@@ -250,8 +266,9 @@ namespace Castlebound.Gameplay.UI
 
         private void OnPhaseChanged(WavePhase phase)
         {
-            if (phase == WavePhase.InWave && activeTab == InventoryPanelTab.Vault)
+            if (phase == WavePhase.InWave && vaultOpenedFromWorld)
             {
+                vaultOpenedFromWorld = false;
                 activeTab = InventoryPanelTab.Backpack;
             }
 
@@ -305,9 +322,11 @@ namespace Castlebound.Gameplay.UI
 
             if (vaultTabButton == null)
             {
-                vaultTabButton = CreateButton("VaultTab", tabRoot, "Vault", new Vector2(120f, 38f), 16);
-                vaultTabButton.onClick.AddListener(() => SetActiveTab(InventoryPanelTab.Vault));
+                vaultTabButton = CreateButton("ShopTab", tabRoot, "Shop", new Vector2(120f, 38f), 16);
+                vaultTabButton.onClick.AddListener(() => SetActiveTab(InventoryPanelTab.Shop));
             }
+
+            ConfigureShopTabButton();
 
             if (contentRoot == null)
             {
@@ -439,12 +458,27 @@ namespace Castlebound.Gameplay.UI
         {
             if (backpackTabButton != null)
             {
-                backpackTabButton.interactable = activeTab != InventoryPanelTab.Backpack;
+                backpackTabButton.interactable = vaultOpenedFromWorld || activeTab != InventoryPanelTab.Backpack;
             }
 
             if (vaultTabButton != null)
             {
-                vaultTabButton.interactable = activeTab != InventoryPanelTab.Vault && IsVaultAccessible();
+                vaultTabButton.interactable = true;
+            }
+        }
+
+        private void ConfigureShopTabButton()
+        {
+            if (vaultTabButton == null)
+            {
+                return;
+            }
+
+            vaultTabButton.gameObject.name = "ShopTab";
+            var label = vaultTabButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = "Shop";
             }
         }
 
@@ -465,18 +499,23 @@ namespace Castlebound.Gameplay.UI
                 DestroyChild(contentRoot.GetChild(i).gameObject);
             }
 
-            if (activeTab == InventoryPanelTab.Vault && !IsVaultAccessible())
+            if (vaultOpenedFromWorld && !IsVaultAccessible())
             {
+                vaultOpenedFromWorld = false;
                 activeTab = InventoryPanelTab.Backpack;
             }
 
-            if (activeTab == InventoryPanelTab.Backpack)
+            if (vaultOpenedFromWorld)
+            {
+                CreateVaultRows();
+            }
+            else if (activeTab == InventoryPanelTab.Backpack)
             {
                 CreateBackpackRows();
             }
             else
             {
-                CreateVaultRows();
+                CreateTextRow("Shop coming soon");
             }
         }
 

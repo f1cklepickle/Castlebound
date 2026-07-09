@@ -4,6 +4,50 @@
 
 ---
 
+## 2026-07-07 - feat-p4-castle-vault-world-interaction
+
+### Summary
+- Added world-gated Castle Vault interaction policy for range plus between-wave access.
+- Added Vault outline state handling and a Vault prefab contract using the provided sprites.
+- Replaced the Inventory panel Vault tab with an inert Shop tab and moved Vault viewing behind world interaction.
+- Replaced Vault art with the larger 192px sprites and expanded the solid/interaction hitboxes to match the visible body.
+- Added a top-center Start Wave HUD button and removed next-wave behavior from the upgrade menu close button.
+- Changed Vault outlining from a scaled duplicate sprite to thin offset edge renderers.
+- Moved mobile Vault hold targeting to the larger interaction trigger with explicit camera hit testing.
+- Reduced the Vault solid blocker to the central body with rounded corners to prevent movement snagging while approaching it.
+- Added overlap polling for Vault range detection so outline and interaction do not depend only on trigger callbacks.
+- Synced the Vault interaction phase tracker into the inventory panel on open attempts so between-wave access cannot be denied by stale panel phase state.
+- Restored full-opacity white/red Vault outline edge colors for clearer accessible/blocked feedback.
+- Hardened Vault runtime reference discovery so scene instances can recover the active wave runner phase and sibling outline presenter.
+- Increased the Vault outline offset to two pixels so the accessible white outline remains visible against the pale Vault sprite.
+- Replaced shifted duplicate Vault outline rendering with a border-only sprite so accessible/blocked states render as a clean white/red rim.
+- Added pointer fallback for Vault hold interaction so mobile/remote input paths that do not expose `Touchscreen.current` can still open the Vault.
+- Stopped Vault open attempts from re-polling range during the input frame, preventing a visibly interactive Vault from being denied by a transient physics overlap miss.
+- Wired the MainPrototype Vault instance directly to the scene InventoryPanelController and EnemySpawnerRunner so open attempts do not depend on runtime object search.
+- Preserved explicitly assigned Vault phase trackers so tests and scene wiring cannot be overwritten by an ambient discovered runner in a different phase.
+- Raised the Vault foundation sorting order above floor tilemaps while keeping it below player, enemies, and items.
+
+### New or Updated Tests
+**EditMode**
+- `VaultInteractionPolicyTests` - validates range and wave-phase Vault access plus outline state selection.
+- `VaultOutlinePresenterTests` - validates white/red/hidden outline rendering states and single border-sprite presentation.
+- `VaultWorldInteractionTests` - validates world interaction opens Vault only in range and between waves, including overlap-polled range detection, current range-state opening, panel phase sync, discovered runner phase, explicit phase preservation, sibling outline lookup, and pointer fallback source contract.
+- `VaultPrefabContractTests` - validates Vault prefab tag/layer, rounded blocking collider, foundation sorting above floor and below actors/items, trigger, outline components, mobile touch target, MainPrototype scene references, and 192px sprite import settings including the border-only outline sprite.
+- `BackpackDropDirectionResolverTests` - guards the existing visual-forward drop convention.
+- `InventoryPanelControllerTests` - validates world-open Vault rows and inert Shop tab behavior.
+- `NextWaveHudButtonTests` - validates top-center runtime button placement, pre-wave visibility, and explicit wave start behavior.
+- `TouchUIBindingsTests` - validates the upgrade menu close button closes without starting the next wave.
+- `UpgradeMenuControllerTests` - validates upgrade menu close no longer starts the next wave.
+
+**PlayMode**
+- `VaultWorldInteractionPlayTests` - smoke-validates runtime world interaction opening the Vault panel.
+- `InventoryPanelControllerPlayTests` - updates mid-wave Vault denial coverage for world-open flow.
+
+### Notes
+- Local `ci/run-editmode.ps1` validation was blocked by a PowerShell parse error in the existing script.
+- Direct Unity 2022.3.62f2 EditMode validation was attempted with the CI entrypoint, but Unity hit the project-already-open crash path before NUnit XML was produced.
+- Direct Unity Roslyn compile passes for `_Project.Gameplay` and `_Project.Tests.EditMode`; only the existing unused-field warning in `PlayerFacingPolicyResolver` remains.
+
 ## 2026-07-07 - feat-p4-backpack-context-actions
 
 ### Summary
