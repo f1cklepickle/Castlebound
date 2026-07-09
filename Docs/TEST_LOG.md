@@ -26,6 +26,9 @@
 - Wired the MainPrototype Vault instance directly to the scene InventoryPanelController and EnemySpawnerRunner so open attempts do not depend on runtime object search.
 - Preserved explicitly assigned Vault phase trackers so tests and scene wiring cannot be overwritten by an ambient discovered runner in a different phase.
 - Raised the Vault foundation sorting order above floor tilemaps while keeping it below player, enemies, and items.
+- Added source-aware inventory context menus so Backpack and Vault actions can refresh without closing while the selected item still exists.
+- Added Vault item actions for moving items to Backpack and equipping Vault weapons into active slots, returning displaced weapons to the Vault.
+- Reduced the Vault solid blocker to avoid trapping the player against the Vault body while keeping the interaction trigger large.
 
 ### New or Updated Tests
 **EditMode**
@@ -34,7 +37,8 @@
 - `VaultWorldInteractionTests` - validates world interaction opens Vault only in range and between waves, including overlap-polled range detection, current range-state opening, panel phase sync, discovered runner phase, explicit phase preservation, sibling outline lookup, and pointer fallback source contract.
 - `VaultPrefabContractTests` - validates Vault prefab tag/layer, rounded blocking collider, foundation sorting above floor and below actors/items, trigger, outline components, mobile touch target, MainPrototype scene references, and 192px sprite import settings including the border-only outline sprite.
 - `BackpackDropDirectionResolverTests` - guards the existing visual-forward drop convention.
-- `InventoryPanelControllerTests` - validates world-open Vault rows and inert Shop tab behavior.
+- `InventoryContextMenuControllerTests` - validates source-aware Backpack/Vault menu actions, Vault-to-Backpack moves, and Vault weapon equip displacement.
+- `InventoryPanelControllerTests` - validates world-open Vault rows, Vault context actions, context menu persistence across refresh while an item remains, and inert Shop tab behavior.
 - `NextWaveHudButtonTests` - validates top-center runtime button placement, pre-wave visibility, and explicit wave start behavior.
 - `TouchUIBindingsTests` - validates the upgrade menu close button closes without starting the next wave.
 - `UpgradeMenuControllerTests` - validates upgrade menu close no longer starts the next wave.

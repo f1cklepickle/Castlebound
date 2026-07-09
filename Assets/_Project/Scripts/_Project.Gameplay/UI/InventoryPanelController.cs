@@ -126,6 +126,11 @@ namespace Castlebound.Gameplay.UI
             vaultOpenedFromWorld = false;
             if (IsOpen)
             {
+                if (contextMenu != null)
+                {
+                    contextMenu.Close();
+                }
+
                 SetActiveTab(InventoryPanelTab.Backpack);
             }
         }
@@ -139,6 +144,11 @@ namespace Castlebound.Gameplay.UI
 
             EnsureRuntimeUi();
             vaultOpenedFromWorld = true;
+            if (contextMenu != null && contextMenu.ActiveSource != InventoryContextSource.Vault)
+            {
+                contextMenu.Close();
+            }
+
             ApplyPanelState(true);
             Refresh();
             return true;
@@ -163,6 +173,11 @@ namespace Castlebound.Gameplay.UI
             }
 
             vaultOpenedFromWorld = false;
+            if (contextMenu != null)
+            {
+                contextMenu.Close();
+            }
+
             activeTab = tab;
             Refresh();
         }
@@ -388,6 +403,7 @@ namespace Castlebound.Gameplay.UI
             contextMenu.SetParentRoot(panelRoot);
             contextMenu.SetEquipController(equipController);
             contextMenu.SetDropController(dropController);
+            contextMenu.SetInventorySources(backpackSource, castleInventorySource, activeInventorySource);
         }
 
         private void HookContextMenu()
@@ -489,11 +505,6 @@ namespace Castlebound.Gameplay.UI
                 return;
             }
 
-            if (contextMenu != null)
-            {
-                contextMenu.Close();
-            }
-
             for (int i = contentRoot.childCount - 1; i >= 0; i--)
             {
                 DestroyChild(contentRoot.GetChild(i).gameObject);
@@ -516,6 +527,11 @@ namespace Castlebound.Gameplay.UI
             else
             {
                 CreateTextRow("Shop coming soon");
+            }
+
+            if (contextMenu != null)
+            {
+                contextMenu.CloseIfActiveItemMissing();
             }
         }
 
@@ -549,7 +565,7 @@ namespace Castlebound.Gameplay.UI
 
             foreach (var entry in vault.Entries)
             {
-                CreateTextRow($"{entry.ItemId} x{entry.Count}");
+                CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Vault);
             }
         }
 
@@ -571,6 +587,11 @@ namespace Castlebound.Gameplay.UI
 
         private void CreateBackpackRow(BackpackInventoryEntry entry)
         {
+            CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Backpack);
+        }
+
+        private void CreateInventoryRow(string itemId, int count, InventoryContextSource source)
+        {
             var rowObject = new GameObject("InventoryRow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(LayoutElement));
             rowObject.transform.SetParent(contentRoot, false);
 
@@ -588,7 +609,7 @@ namespace Castlebound.Gameplay.UI
 
             var button = rowObject.GetComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(() => contextMenu.ShowForItem(entry.ItemId, IsWeaponItem(entry.ItemId), rect));
+            button.onClick.AddListener(() => contextMenu.ShowForItem(itemId, IsWeaponItem(itemId), source, rect));
 
             var labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             labelObject.transform.SetParent(rowObject.transform, false);
@@ -600,14 +621,14 @@ namespace Castlebound.Gameplay.UI
             labelRect.offsetMax = new Vector2(-8f, 0f);
 
             var text = labelObject.GetComponent<TextMeshProUGUI>();
-            text.text = $"{entry.ItemId} x{entry.Count}";
+            text.text = $"{itemId} x{count}";
             text.fontSize = 16;
             text.color = Color.white;
             text.alignment = TextAlignmentOptions.Left;
             text.raycastTarget = false;
 
             var trigger = rowObject.AddComponent<InventoryContextMenuTrigger>();
-            trigger.Configure(contextMenu, entry.ItemId, IsWeaponItem(entry.ItemId));
+            trigger.Configure(contextMenu, itemId, IsWeaponItem(itemId), source);
         }
 
         private bool IsWeaponItem(string itemId)

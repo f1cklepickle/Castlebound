@@ -25,10 +25,10 @@ namespace Castlebound.Tests.Castle
             var blocker = prefab.GetComponent<BoxCollider2D>();
             Assert.NotNull(blocker);
             Assert.IsFalse(blocker.isTrigger);
-            Assert.That(blocker.size.x, Is.EqualTo(1.45f).Within(0.001f));
-            Assert.That(blocker.size.y, Is.EqualTo(1.25f).Within(0.001f));
+            Assert.That(blocker.size.x, Is.EqualTo(1.1f).Within(0.001f));
+            Assert.That(blocker.size.y, Is.EqualTo(0.9f).Within(0.001f));
             Assert.That(blocker.offset, Is.EqualTo(Vector2.zero));
-            Assert.That(blocker.edgeRadius, Is.EqualTo(0.08f).Within(0.001f));
+            Assert.That(blocker.edgeRadius, Is.EqualTo(0.06f).Within(0.001f));
         }
 
         [Test]

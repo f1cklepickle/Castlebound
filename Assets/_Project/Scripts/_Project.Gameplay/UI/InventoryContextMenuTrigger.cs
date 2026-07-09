@@ -10,6 +10,7 @@ namespace Castlebound.Gameplay.UI
         private InventoryContextMenuController menu;
         private string itemId;
         private bool isWeapon;
+        private InventoryContextSource source;
         private bool isPressing;
         private bool hasOpenedFromPress;
         private float pressStartTime;
@@ -22,9 +23,19 @@ namespace Castlebound.Gameplay.UI
 
         public void Configure(InventoryContextMenuController targetMenu, string targetItemId, bool targetIsWeapon)
         {
+            Configure(targetMenu, targetItemId, targetIsWeapon, InventoryContextSource.Backpack);
+        }
+
+        public void Configure(
+            InventoryContextMenuController targetMenu,
+            string targetItemId,
+            bool targetIsWeapon,
+            InventoryContextSource targetSource)
+        {
             menu = targetMenu;
             itemId = targetItemId;
             isWeapon = targetIsWeapon;
+            source = targetSource;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -68,7 +79,7 @@ namespace Castlebound.Gameplay.UI
             RectTransform anchor = transform as RectTransform;
             if (menu != null)
             {
-                menu.ShowForItem(itemId, isWeapon, anchor);
+                menu.ShowForItem(itemId, isWeapon, source, anchor);
             }
         }
     }

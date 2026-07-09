@@ -6,21 +6,32 @@ using UnityEngine.UI;
 
 namespace Castlebound.Gameplay.UI
 {
+    public enum InventoryContextSource
+    {
+        Backpack = 0,
+        Vault = 1
+    }
+
     public class InventoryContextMenuController : MonoBehaviour
     {
         [SerializeField] private RectTransform menuRoot;
         [SerializeField] private BackpackWeaponEquipController equipController;
         [SerializeField] private BackpackItemDropController dropController;
+        [SerializeField] private BackpackInventoryStateComponent backpackSource;
+        [SerializeField] private CastleInventoryStateComponent vaultSource;
+        [SerializeField] private InventoryStateComponent activeInventorySource;
 
         private RectTransform parentRoot;
         private string activeItemId;
         private bool activeItemIsWeapon;
+        private InventoryContextSource activeSource;
         private bool isChoosingEquipSlot;
 
         public event Action ActionCompleted;
 
         public bool IsOpen => menuRoot != null && menuRoot.gameObject.activeSelf;
         public string ActiveItemId => activeItemId;
+        public InventoryContextSource ActiveSource => activeSource;
         public bool IsChoosingEquipSlot => isChoosingEquipSlot;
 
         public void SetParentRoot(RectTransform root)
@@ -38,7 +49,22 @@ namespace Castlebound.Gameplay.UI
             dropController = controller;
         }
 
+        public void SetInventorySources(
+            BackpackInventoryStateComponent backpack,
+            CastleInventoryStateComponent vault,
+            InventoryStateComponent activeInventory)
+        {
+            backpackSource = backpack;
+            vaultSource = vault;
+            activeInventorySource = activeInventory;
+        }
+
         public void ShowForItem(string itemId, bool isWeapon, RectTransform anchor)
+        {
+            ShowForItem(itemId, isWeapon, InventoryContextSource.Backpack, anchor);
+        }
+
+        public void ShowForItem(string itemId, bool isWeapon, InventoryContextSource source, RectTransform anchor)
         {
             if (string.IsNullOrWhiteSpace(itemId))
             {
@@ -48,6 +74,7 @@ namespace Castlebound.Gameplay.UI
 
             activeItemId = itemId;
             activeItemIsWeapon = isWeapon;
+            activeSource = source;
             isChoosingEquipSlot = false;
             EnsureMenuRoot();
             PositionNear(anchor);
@@ -59,6 +86,7 @@ namespace Castlebound.Gameplay.UI
         {
             activeItemId = null;
             activeItemIsWeapon = false;
+            activeSource = InventoryContextSource.Backpack;
             isChoosingEquipSlot = false;
             if (menuRoot != null)
             {
@@ -66,10 +94,28 @@ namespace Castlebound.Gameplay.UI
             }
         }
 
+        public void CloseIfActiveItemMissing()
+        {
+            if (!IsOpen || GetActiveItemCount() > 0)
+            {
+                return;
+            }
+
+            Close();
+        }
+
         private void RebuildRootActions()
         {
             ClearMenu();
-            CreateMenuButton("Drop", TryDropActiveItem);
+            if (activeSource == InventoryContextSource.Backpack)
+            {
+                CreateMenuButton("Drop", TryDropActiveItem);
+            }
+            else
+            {
+                CreateMenuButton("Move to Backpack", TryMoveVaultItemToBackpack);
+            }
+
             if (activeItemIsWeapon)
             {
                 CreateMenuButton("Equip", ShowEquipSlots);
@@ -87,7 +133,15 @@ namespace Castlebound.Gameplay.UI
 
             isChoosingEquipSlot = true;
             ClearMenu();
-            CreateMenuButton("Drop", TryDropActiveItem);
+            if (activeSource == InventoryContextSource.Backpack)
+            {
+                CreateMenuButton("Drop", TryDropActiveItem);
+            }
+            else
+            {
+                CreateMenuButton("Move to Backpack", TryMoveVaultItemToBackpack);
+            }
+
             CreateMenuButton("Main", () => TryEquipActiveItem(0));
             CreateMenuButton("Secondary", () => TryEquipActiveItem(1));
             RefreshMenuSize();
@@ -103,16 +157,97 @@ namespace Castlebound.Gameplay.UI
 
         private void TryEquipActiveItem(int slotIndex)
         {
-            if (equipController != null && equipController.TryEquip(activeItemId, slotIndex))
+            bool equipped = activeSource == InventoryContextSource.Backpack
+                ? equipController != null && equipController.TryEquip(activeItemId, slotIndex)
+                : TryEquipVaultItem(slotIndex);
+
+            if (equipped)
             {
                 CompleteAction();
             }
         }
 
+        private void TryMoveVaultItemToBackpack()
+        {
+            var vault = vaultSource != null ? vaultSource.State : null;
+            var backpack = backpackSource != null ? backpackSource.State : null;
+            if (vault == null || backpack == null || vault.GetCount(activeItemId) <= 0 || !backpack.CanAddItem(activeItemId, 1))
+            {
+                return;
+            }
+
+            if (!vault.TryRemoveItem(activeItemId, 1))
+            {
+                return;
+            }
+
+            if (!backpack.AddItem(activeItemId, 1))
+            {
+                vault.AddItem(activeItemId, 1);
+                return;
+            }
+
+            CompleteAction();
+        }
+
+        private bool TryEquipVaultItem(int slotIndex)
+        {
+            var activeInventory = activeInventorySource != null ? activeInventorySource.State : null;
+            var vault = vaultSource != null ? vaultSource.State : null;
+            if (activeInventory == null || vault == null || string.IsNullOrWhiteSpace(activeItemId))
+            {
+                return false;
+            }
+
+            if (slotIndex < 0 || slotIndex >= InventoryState.WeaponSlotCount || vault.GetCount(activeItemId) <= 0)
+            {
+                return false;
+            }
+
+            if (!vault.TryRemoveItem(activeItemId, 1))
+            {
+                return false;
+            }
+
+            if (!activeInventory.TrySetWeaponAtSlot(slotIndex, activeItemId, out string displacedWeaponId))
+            {
+                vault.AddItem(activeItemId, 1);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(displacedWeaponId))
+            {
+                return true;
+            }
+
+            vault.AddItem(displacedWeaponId, 1);
+            return true;
+        }
+
         private void CompleteAction()
         {
-            Close();
+            if (GetActiveItemCount() <= 0)
+            {
+                Close();
+            }
+            else if (isChoosingEquipSlot)
+            {
+                RebuildRootActions();
+            }
+
             ActionCompleted?.Invoke();
+        }
+
+        private int GetActiveItemCount()
+        {
+            if (string.IsNullOrWhiteSpace(activeItemId))
+            {
+                return 0;
+            }
+
+            return activeSource == InventoryContextSource.Backpack
+                ? backpackSource != null ? backpackSource.State.GetCount(activeItemId) : 0
+                : vaultSource != null ? vaultSource.State.GetCount(activeItemId) : 0;
         }
 
         private void EnsureMenuRoot()
