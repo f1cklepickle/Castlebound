@@ -6,9 +6,9 @@ namespace Castlebound.Gameplay.Castle
     {
         private static readonly CastleShopOffer[] defaultOffers =
         {
-            new CastleShopOffer("weapon_sword", "Sword"),
-            new CastleShopOffer("weapon_iron_club", "Iron Club"),
-            new CastleShopOffer("potion_basic", "Health Potion")
+            new CastleShopOffer("weapon_sword", "Sword", 250),
+            new CastleShopOffer("weapon_iron_club", "Iron Club", 250),
+            new CastleShopOffer("potion_basic", "Health Potion", 50)
         };
 
         public static IReadOnlyList<CastleShopOffer> DefaultOffers => defaultOffers;

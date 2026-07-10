@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-07-10 - codex-shop-purchasing
+
+### Summary
+- Added fixed-price Shop purchasing for Sword, Iron Club, and Health Potion.
+- Routed weapon purchases to Backpack and Health Potion purchases to the active potion inventory.
+- Wired Shop Buy buttons to existing gold spending with success and failure feedback.
+
+### New or Updated Tests
+**EditMode**
+- `CastleShopCatalogTests` — validates fixed Shop prices for Sword, Iron Club, and Health Potion.
+- `CastleShopPurchaseServiceTests` — validates purchase success, access denial, insufficient gold, invalid offers, full inventory, and item routing.
+- `InventoryPanelControllerTests` — validates Buy affordance rendering, successful purchase feedback, and insufficient-gold feedback.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` — validates runtime Shop offer price rendering, wave-start close behavior, and a buy flow that spends gold and adds a Backpack item.
+
+### Notes
+- EditMode, PlayMode, and manual validation passed.
+- Manual validation confirmed purchasing works in game.
+
 ## 2026-07-10 - feat-p4-static-shop-catalog
 
 ### Summary
