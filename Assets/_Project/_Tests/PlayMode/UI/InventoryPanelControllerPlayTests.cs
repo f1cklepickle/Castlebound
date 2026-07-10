@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Spawning;
@@ -97,6 +98,45 @@ namespace Castlebound.Tests.UI
             }
         }
 
+        [UnityTest]
+        public IEnumerator InventoryPanel_ShopRendersInCastle_AndClosesOnWaveStart()
+        {
+            var root = new GameObject("InventoryPanelShopPlayRoot", typeof(Canvas));
+            GameObject player = null;
+
+            try
+            {
+                root.AddComponent<BackpackInventoryStateComponent>();
+                root.AddComponent<CastleInventoryStateComponent>();
+                var phase = new WavePhaseTracker();
+                var castleRegion = root.AddComponent<CastleRegionTracker>();
+                var panel = root.AddComponent<InventoryPanelController>();
+                panel.SetPhaseTracker(phase);
+                panel.SetCastleRegionTracker(castleRegion);
+
+                player = new GameObject("Player", typeof(BoxCollider2D));
+                player.tag = "Player";
+                castleRegion.SendMessage("OnTriggerEnter2D", player.GetComponent<Collider2D>());
+
+                panel.TogglePanel();
+                panel.ShopTabButton.onClick.Invoke();
+                yield return null;
+
+                Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
+                AssertTextExists(root, "Castle Shop");
+
+                phase.SetPhase(WavePhase.InWave);
+                yield return null;
+
+                Assert.IsFalse(panel.IsOpen);
+            }
+            finally
+            {
+                Object.Destroy(player);
+                Object.Destroy(root);
+            }
+        }
+
         private static void ClickButton(GameObject root, string label)
         {
             var buttons = root.GetComponentsInChildren<Button>(true);
@@ -111,6 +151,20 @@ namespace Castlebound.Tests.UI
             }
 
             Assert.Fail($"Expected button '{label}'.");
+        }
+
+        private static void AssertTextExists(GameObject root, string expected)
+        {
+            var labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (var label in labels)
+            {
+                if (label.text == expected)
+                {
+                    return;
+                }
+            }
+
+            Assert.Fail($"Expected text '{expected}'.");
         }
 
         private sealed class TestWeaponResolver : MonoBehaviour, IWeaponDefinitionResolver

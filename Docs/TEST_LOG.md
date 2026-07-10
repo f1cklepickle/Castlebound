@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-07-10 - feat-p4-castle-shop-foundation
+
+### Summary
+- Added castle shop access policy for castle-region plus pre-wave gating.
+- Made the Inventory panel Shop tab render blocked or prototype static shop rows based on access.
+- Auto-closes an active Shop panel when the player exits the castle region or the wave phase changes to active.
+- Stabilized Shop EditMode tests by using an editor-only castle-region test hook instead of private trigger message dispatch.
+
+### New or Updated Tests
+**EditMode**
+- `CastleShopAccessPolicyTests` — validates shop access requires an available castle tracker, player inside castle, and pre-wave phase.
+- `InventoryPanelControllerTests` — validates blocked Shop state, prototype Shop rows, and Shop auto-close on castle exit or wave start.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` — smoke-validates Shop rows inside the castle and panel close on wave start.
+
+### Notes
+- EditMode, PlayMode, and manual validation passed.
+- Manual validation confirmed Shop opens between waves only and shows a blocked message when unavailable.
+
 ## 2026-07-07 - feat-p4-castle-vault-world-interaction
 
 ### Summary

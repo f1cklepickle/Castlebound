@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Spawning;
@@ -18,6 +19,7 @@ namespace Castlebound.Tests.UI
         private InventoryStateComponent activeInventory;
         private CastleInventoryStateComponent vault;
         private WavePhaseTracker phase;
+        private CastleRegionTracker castleRegion;
         private TestWeaponResolver weaponResolver;
         private WeaponDefinition weapon;
         private WeaponDefinition dagger;
@@ -98,16 +100,63 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void ShopTab_IsInert_AndDoesNotRenderVaultEntries()
+        public void ShopTab_RendersBlockedState_WhenAccessDenied()
         {
             vault.State.AddItem("potion_health", 3);
             panel.TogglePanel();
 
             panel.ShopTabButton.onClick.Invoke();
 
-            Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
-            AssertTextExists("Backpack is empty");
+            Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
+            AssertTextExists("Shop opens inside castle between waves");
             AssertTextMissing("potion_health x3");
+        }
+
+        [Test]
+        public void ShopTab_RendersPrototypeRows_WhenInsideCastleAndBetweenWaves()
+        {
+            var tracker = CreateCastleRegionTracker();
+            tracker.Debug_SetPlayerInsideForTests(true);
+            phase.SetPhase(WavePhase.PreWave);
+            panel.SetCastleRegionTracker(tracker);
+            panel.TogglePanel();
+
+            panel.ShopTabButton.onClick.Invoke();
+
+            Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
+            AssertTextExists("Castle Shop");
+            AssertTextExists("Repair Kit - Coming soon");
+            AssertTextExists("Wall Supplies - Coming soon");
+        }
+
+        [Test]
+        public void ShopTab_ClosesPanel_WhenAccessIsLost()
+        {
+            var tracker = CreateCastleRegionTracker();
+            tracker.Debug_SetPlayerInsideForTests(true);
+            phase.SetPhase(WavePhase.PreWave);
+            panel.SetCastleRegionTracker(tracker);
+            panel.TogglePanel();
+            panel.ShopTabButton.onClick.Invoke();
+
+            tracker.Debug_SetPlayerInsideForTests(false);
+
+            Assert.IsFalse(panel.IsOpen);
+        }
+
+        [Test]
+        public void ShopTab_ClosesPanel_WhenWaveStarts()
+        {
+            var tracker = CreateCastleRegionTracker();
+            tracker.Debug_SetPlayerInsideForTests(true);
+            phase.SetPhase(WavePhase.PreWave);
+            panel.SetCastleRegionTracker(tracker);
+            panel.TogglePanel();
+            panel.ShopTabButton.onClick.Invoke();
+
+            phase.SetPhase(WavePhase.InWave);
+
+            Assert.IsFalse(panel.IsOpen);
         }
 
         [Test]
@@ -389,6 +438,13 @@ namespace Castlebound.Tests.UI
             }
 
             return null;
+        }
+
+        private CastleRegionTracker CreateCastleRegionTracker()
+        {
+            castleRegion = root.AddComponent<CastleRegionTracker>();
+            panel.SetCastleRegionTracker(castleRegion);
+            return castleRegion;
         }
 
         private sealed class TestWeaponResolver : MonoBehaviour, IWeaponDefinitionResolver
