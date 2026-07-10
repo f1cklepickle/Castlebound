@@ -102,7 +102,6 @@ namespace Castlebound.Tests.UI
         public IEnumerator InventoryPanel_ShopRendersInCastle_AndClosesOnWaveStart()
         {
             var root = new GameObject("InventoryPanelShopPlayRoot", typeof(Canvas));
-            GameObject player = null;
 
             try
             {
@@ -114,9 +113,7 @@ namespace Castlebound.Tests.UI
                 panel.SetPhaseTracker(phase);
                 panel.SetCastleRegionTracker(castleRegion);
 
-                player = new GameObject("Player", typeof(BoxCollider2D));
-                player.tag = "Player";
-                castleRegion.SendMessage("OnTriggerEnter2D", player.GetComponent<Collider2D>());
+                castleRegion.Debug_SetPlayerInsideForTests(true);
 
                 panel.TogglePanel();
                 panel.ShopTabButton.onClick.Invoke();
@@ -124,6 +121,9 @@ namespace Castlebound.Tests.UI
 
                 Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
                 AssertTextExists(root, "Castle Shop");
+                AssertTextExists(root, "Sword");
+                AssertTextExists(root, "Iron Club");
+                AssertTextExists(root, "Health Potion");
 
                 phase.SetPhase(WavePhase.InWave);
                 yield return null;
@@ -132,7 +132,6 @@ namespace Castlebound.Tests.UI
             }
             finally
             {
-                Object.Destroy(player);
                 Object.Destroy(root);
             }
         }

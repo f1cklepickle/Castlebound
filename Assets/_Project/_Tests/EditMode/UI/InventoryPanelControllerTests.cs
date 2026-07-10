@@ -125,8 +125,13 @@ namespace Castlebound.Tests.UI
 
             Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
             AssertTextExists("Castle Shop");
-            AssertTextExists("Repair Kit - Coming soon");
-            AssertTextExists("Wall Supplies - Coming soon");
+            AssertTextExists("Sword");
+            AssertTextExists("Iron Club");
+            AssertTextExists("Health Potion");
+            AssertTextMissing("Club");
+            AssertTextMissing("Rusty Dagger");
+            AssertTextMissing("Repair Kit - Coming soon");
+            AssertTextMissing("Wall Supplies - Coming soon");
         }
 
         [Test]

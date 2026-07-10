@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-07-10 - feat-p4-static-shop-catalog
+
+### Summary
+- Added a static castle shop catalog.
+- Limited the initial Shop offers to Sword, Iron Club, and Health Potion.
+- Updated the Shop tab to render catalog offers instead of placeholder supply rows.
+
+### New or Updated Tests
+**EditMode**
+- `CastleShopCatalogTests` — validates the default catalog contains only Sword, Iron Club, and Health Potion.
+- `InventoryPanelControllerTests` — validates the allowed Shop tab renders the approved catalog offers and excludes old placeholder rows.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` — validates the runtime Shop smoke renders the approved catalog offers.
+
+### Notes
+- EditMode, PlayMode, and manual validation passed.
+- Manual validation confirmed Shop renders Sword, Iron Club, and Health Potion only.
+
 ## 2026-07-10 - feat-p4-castle-shop-foundation
 
 ### Summary

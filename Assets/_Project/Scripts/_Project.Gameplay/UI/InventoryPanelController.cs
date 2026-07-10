@@ -658,8 +658,10 @@ namespace Castlebound.Gameplay.UI
             }
 
             CreateTextRow("Castle Shop");
-            CreateTextRow("Repair Kit - Coming soon");
-            CreateTextRow("Wall Supplies - Coming soon");
+            foreach (var offer in CastleShopCatalog.DefaultOffers)
+            {
+                CreateTextRow(offer.DisplayName);
+            }
         }
 
         private void CreateTextRow(string value)
