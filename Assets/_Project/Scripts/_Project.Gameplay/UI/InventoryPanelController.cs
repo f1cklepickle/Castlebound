@@ -1,3 +1,5 @@
+using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Castle;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
 using Castlebound.Gameplay.Combat;
@@ -18,6 +20,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private InventoryStateComponent activeInventorySource;
         [SerializeField] private CastleInventoryStateComponent castleInventorySource;
         [SerializeField] private EnemySpawnerRunner waveRunner;
+        [SerializeField] private CastleRegionTracker castleRegionTracker;
         [SerializeField] private InventoryContextMenuController contextMenu;
         [SerializeField] private BackpackWeaponEquipController equipController;
         [SerializeField] private BackpackItemDropController dropController;
@@ -30,6 +33,7 @@ namespace Castlebound.Gameplay.UI
         private RectTransform tabRoot;
         private InventoryPanelTab activeTab = InventoryPanelTab.Backpack;
         private bool contextMenuHooked;
+        private bool castleRegionHooked;
         private bool vaultOpenedFromWorld;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
@@ -110,6 +114,19 @@ namespace Castlebound.Gameplay.UI
             SetPhaseTracker(waveRunner != null ? waveRunner.PhaseTracker : null);
         }
 
+        public void SetCastleRegionTracker(CastleRegionTracker tracker)
+        {
+            if (castleRegionTracker == tracker)
+            {
+                return;
+            }
+
+            UnhookCastleRegionTracker();
+            castleRegionTracker = tracker;
+            HookCastleRegionTracker();
+            HandleShopAccessChanged();
+        }
+
         public void SetWeaponDefinitionResolver(IWeaponDefinitionResolver resolver)
         {
             weaponDefinitionResolver = resolver;
@@ -167,11 +184,6 @@ namespace Castlebound.Gameplay.UI
 
         public void SetActiveTab(InventoryPanelTab tab)
         {
-            if (tab == InventoryPanelTab.Shop)
-            {
-                return;
-            }
-
             vaultOpenedFromWorld = false;
             if (contextMenu != null)
             {
@@ -211,6 +223,11 @@ namespace Castlebound.Gameplay.UI
                 waveRunner = FindObjectOfType<EnemySpawnerRunner>();
             }
 
+            if (castleRegionTracker == null)
+            {
+                castleRegionTracker = CastleRegionTracker.Instance;
+            }
+
             backpack = backpackSource != null ? backpackSource.State : null;
             vault = castleInventorySource != null ? castleInventorySource.State : null;
             phaseTracker = waveRunner != null ? waveRunner.PhaseTracker : phaseTracker;
@@ -222,6 +239,9 @@ namespace Castlebound.Gameplay.UI
             HookBackpack();
             HookVault();
             HookPhaseTracker();
+            HookCastleRegionTracker();
+            CastleRegionTracker.InstanceReady -= OnCastleRegionInstanceReady;
+            CastleRegionTracker.InstanceReady += OnCastleRegionInstanceReady;
         }
 
         private void UnhookSources()
@@ -229,6 +249,8 @@ namespace Castlebound.Gameplay.UI
             UnhookBackpack();
             UnhookVault();
             UnhookPhaseTracker();
+            UnhookCastleRegionTracker();
+            CastleRegionTracker.InstanceReady -= OnCastleRegionInstanceReady;
         }
 
         private void HookBackpack()
@@ -287,12 +309,70 @@ namespace Castlebound.Gameplay.UI
                 activeTab = InventoryPanelTab.Backpack;
             }
 
+            HandleShopAccessChanged();
             Refresh();
+        }
+
+        private void OnCastleRegionInstanceReady()
+        {
+            if (castleRegionTracker != null)
+            {
+                return;
+            }
+
+            SetCastleRegionTracker(CastleRegionTracker.Instance);
+        }
+
+        private void HookCastleRegionTracker()
+        {
+            if (castleRegionHooked || castleRegionTracker == null)
+            {
+                return;
+            }
+
+            castleRegionTracker.OnPlayerEntered += OnCastlePlayerRegionChanged;
+            castleRegionTracker.OnPlayerExited += OnCastlePlayerRegionChanged;
+            castleRegionHooked = true;
+        }
+
+        private void UnhookCastleRegionTracker()
+        {
+            if (!castleRegionHooked || castleRegionTracker == null)
+            {
+                castleRegionHooked = false;
+                return;
+            }
+
+            castleRegionTracker.OnPlayerEntered -= OnCastlePlayerRegionChanged;
+            castleRegionTracker.OnPlayerExited -= OnCastlePlayerRegionChanged;
+            castleRegionHooked = false;
+        }
+
+        private void OnCastlePlayerRegionChanged()
+        {
+            HandleShopAccessChanged();
+            Refresh();
+        }
+
+        private void HandleShopAccessChanged()
+        {
+            if (activeTab == InventoryPanelTab.Shop && IsOpen && !IsShopAccessible())
+            {
+                ClosePanel();
+            }
         }
 
         private bool IsVaultAccessible()
         {
             return phaseTracker == null || phaseTracker.CurrentPhase == WavePhase.PreWave;
+        }
+
+        private bool IsShopAccessible()
+        {
+            return CastleShopAccessPolicy.CanOpen(
+                castleRegionTracker != null,
+                castleRegionTracker != null && castleRegionTracker.PlayerInside,
+                phaseTracker != null ? phaseTracker.CurrentPhase : WavePhase.PreWave);
         }
 
         private void ApplyPanelState(bool open)
@@ -526,7 +606,7 @@ namespace Castlebound.Gameplay.UI
             }
             else
             {
-                CreateTextRow("Shop coming soon");
+                CreateShopRows();
             }
 
             if (contextMenu != null)
@@ -567,6 +647,19 @@ namespace Castlebound.Gameplay.UI
             {
                 CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Vault);
             }
+        }
+
+        private void CreateShopRows()
+        {
+            if (!IsShopAccessible())
+            {
+                CreateTextRow("Shop opens inside castle between waves");
+                return;
+            }
+
+            CreateTextRow("Castle Shop");
+            CreateTextRow("Repair Kit - Coming soon");
+            CreateTextRow("Wall Supplies - Coming soon");
         }
 
         private void CreateTextRow(string value)

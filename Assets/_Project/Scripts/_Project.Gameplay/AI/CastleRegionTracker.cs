@@ -83,6 +83,24 @@ namespace Castlebound.Gameplay.AI
             Instance = this;
             InstanceReady?.Invoke();
         }
+
+        public void Debug_SetPlayerInsideForTests(bool inside)
+        {
+            if (PlayerInside == inside)
+            {
+                return;
+            }
+
+            PlayerInside = inside;
+            if (PlayerInside)
+            {
+                OnPlayerEntered?.Invoke();
+            }
+            else
+            {
+                OnPlayerExited?.Invoke();
+            }
+        }
 #endif
     }
 }
