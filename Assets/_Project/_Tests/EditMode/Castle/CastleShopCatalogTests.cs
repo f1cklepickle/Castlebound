@@ -24,6 +24,12 @@ namespace Castlebound.Tests.Castle
                 "Iron Club",
                 "Health Potion"
             }));
+            Assert.That(offers.Select(offer => offer.Price), Is.EqualTo(new[]
+            {
+                250,
+                250,
+                50
+            }));
         }
     }
 }

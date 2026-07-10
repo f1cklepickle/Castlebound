@@ -125,13 +125,49 @@ namespace Castlebound.Tests.UI
 
             Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
             AssertTextExists("Castle Shop");
-            AssertTextExists("Sword");
-            AssertTextExists("Iron Club");
-            AssertTextExists("Health Potion");
+            AssertTextExists("Sword - 250 gold");
+            AssertTextExists("Iron Club - 250 gold");
+            AssertTextExists("Health Potion - 50 gold");
+            AssertButtonCount("Buy", 3);
             AssertTextMissing("Club");
             AssertTextMissing("Rusty Dagger");
             AssertTextMissing("Repair Kit - Coming soon");
             AssertTextMissing("Wall Supplies - Coming soon");
+        }
+
+        [Test]
+        public void ShopTab_BuySword_SpendsGoldAndAddsToBackpack()
+        {
+            var tracker = CreateCastleRegionTracker();
+            tracker.Debug_SetPlayerInsideForTests(true);
+            phase.SetPhase(WavePhase.PreWave);
+            activeInventory.State.AddGold(300);
+            panel.SetCastleRegionTracker(tracker);
+            panel.TogglePanel();
+            panel.ShopTabButton.onClick.Invoke();
+
+            ClickButton("Buy");
+
+            Assert.That(activeInventory.State.Gold, Is.EqualTo(50));
+            Assert.That(backpack.State.GetCount("weapon_sword"), Is.EqualTo(1));
+            AssertTextExists("Purchase complete");
+        }
+
+        [Test]
+        public void ShopTab_BuyWithoutGold_ShowsFailureAndDoesNotMutateBackpack()
+        {
+            var tracker = CreateCastleRegionTracker();
+            tracker.Debug_SetPlayerInsideForTests(true);
+            phase.SetPhase(WavePhase.PreWave);
+            panel.SetCastleRegionTracker(tracker);
+            panel.TogglePanel();
+            panel.ShopTabButton.onClick.Invoke();
+
+            ClickButton("Buy");
+
+            Assert.That(activeInventory.State.Gold, Is.EqualTo(0));
+            Assert.That(backpack.State.ItemCount, Is.EqualTo(0));
+            AssertTextExists("Not enough gold");
         }
 
         [Test]
@@ -429,6 +465,22 @@ namespace Castlebound.Tests.UI
             }
 
             Assert.Fail($"Expected button '{label}'.");
+        }
+
+        private void AssertButtonCount(string label, int expectedCount)
+        {
+            int count = 0;
+            var buttons = root.GetComponentsInChildren<Button>(true);
+            foreach (var button in buttons)
+            {
+                var text = button.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (text != null && text.text == label)
+                {
+                    count++;
+                }
+            }
+
+            Assert.That(count, Is.EqualTo(expectedCount));
         }
 
         private RectTransform FindRectTransform(string objectName)

@@ -35,6 +35,7 @@ namespace Castlebound.Gameplay.UI
         private bool contextMenuHooked;
         private bool castleRegionHooked;
         private bool vaultOpenedFromWorld;
+        private string shopFeedbackMessage;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
         public InventoryPanelTab ActiveTab => activeTab;
@@ -185,6 +186,7 @@ namespace Castlebound.Gameplay.UI
         public void SetActiveTab(InventoryPanelTab tab)
         {
             vaultOpenedFromWorld = false;
+            shopFeedbackMessage = null;
             if (contextMenu != null)
             {
                 contextMenu.Close();
@@ -660,7 +662,85 @@ namespace Castlebound.Gameplay.UI
             CreateTextRow("Castle Shop");
             foreach (var offer in CastleShopCatalog.DefaultOffers)
             {
-                CreateTextRow(offer.DisplayName);
+                CreateShopOfferRow(offer);
+            }
+
+            if (!string.IsNullOrWhiteSpace(shopFeedbackMessage))
+            {
+                CreateTextRow(shopFeedbackMessage);
+            }
+        }
+
+        private void CreateShopOfferRow(CastleShopOffer offer)
+        {
+            var rowObject = new GameObject("ShopOfferRow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+            rowObject.transform.SetParent(contentRoot, false);
+
+            var rect = rowObject.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0f, 38f);
+
+            var layout = rowObject.GetComponent<LayoutElement>();
+            layout.minHeight = 38f;
+            layout.preferredHeight = 38f;
+            layout.flexibleWidth = 1f;
+
+            var image = rowObject.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.04f);
+            image.raycastTarget = false;
+
+            var rowLayout = rowObject.GetComponent<HorizontalLayoutGroup>();
+            rowLayout.spacing = 8f;
+            rowLayout.padding = new RectOffset(8, 8, 4, 4);
+            rowLayout.childForceExpandHeight = true;
+            rowLayout.childForceExpandWidth = false;
+            rowLayout.childControlHeight = true;
+            rowLayout.childControlWidth = true;
+
+            var labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(LayoutElement));
+            labelObject.transform.SetParent(rowObject.transform, false);
+
+            var labelLayout = labelObject.GetComponent<LayoutElement>();
+            labelLayout.flexibleWidth = 1f;
+            labelLayout.minHeight = 30f;
+
+            var text = labelObject.GetComponent<TextMeshProUGUI>();
+            text.text = $"{offer.DisplayName} - {offer.Price} gold";
+            text.fontSize = 16;
+            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Left;
+            text.raycastTarget = false;
+
+            var buyButton = CreateButton("BuyButton", rowObject.transform, "Buy", new Vector2(70f, 30f), 15);
+            buyButton.onClick.AddListener(() => TryPurchaseShopOffer(offer.ItemId));
+        }
+
+        private void TryPurchaseShopOffer(string itemId)
+        {
+            var result = CastleShopPurchaseService.TryPurchase(
+                CastleShopCatalog.DefaultOffers,
+                itemId,
+                IsShopAccessible(),
+                activeInventorySource != null ? activeInventorySource.State : null,
+                backpack);
+
+            shopFeedbackMessage = GetShopFeedbackMessage(result);
+            Refresh();
+        }
+
+        private static string GetShopFeedbackMessage(CastleShopPurchaseResult result)
+        {
+            switch (result)
+            {
+                case CastleShopPurchaseResult.Success:
+                    return "Purchase complete";
+                case CastleShopPurchaseResult.InsufficientGold:
+                    return "Not enough gold";
+                case CastleShopPurchaseResult.InventoryFull:
+                    return "Inventory full";
+                case CastleShopPurchaseResult.InvalidOffer:
+                    return "Offer unavailable";
+                default:
+                    return "Shop unavailable";
             }
         }
 

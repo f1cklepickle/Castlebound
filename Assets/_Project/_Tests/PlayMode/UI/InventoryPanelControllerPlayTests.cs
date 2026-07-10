@@ -121,14 +121,52 @@ namespace Castlebound.Tests.UI
 
                 Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Shop));
                 AssertTextExists(root, "Castle Shop");
-                AssertTextExists(root, "Sword");
-                AssertTextExists(root, "Iron Club");
-                AssertTextExists(root, "Health Potion");
+                AssertTextExists(root, "Sword - 250 gold");
+                AssertTextExists(root, "Iron Club - 250 gold");
+                AssertTextExists(root, "Health Potion - 50 gold");
 
                 phase.SetPhase(WavePhase.InWave);
                 yield return null;
 
                 Assert.IsFalse(panel.IsOpen);
+            }
+            finally
+            {
+                Object.Destroy(root);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator InventoryPanel_ShopBuy_SpendsGoldAndAddsItem()
+        {
+            var root = new GameObject("InventoryPanelShopBuyPlayRoot", typeof(Canvas));
+
+            try
+            {
+                var backpack = root.AddComponent<BackpackInventoryStateComponent>();
+                var activeInventory = root.AddComponent<InventoryStateComponent>();
+                root.AddComponent<CastleInventoryStateComponent>();
+                var phase = new WavePhaseTracker();
+                var castleRegion = root.AddComponent<CastleRegionTracker>();
+                var panel = root.AddComponent<InventoryPanelController>();
+                panel.SetBackpackSource(backpack);
+                panel.SetActiveInventorySource(activeInventory);
+                panel.SetPhaseTracker(phase);
+                panel.SetCastleRegionTracker(castleRegion);
+
+                castleRegion.Debug_SetPlayerInsideForTests(true);
+                activeInventory.State.AddGold(300);
+
+                panel.TogglePanel();
+                panel.ShopTabButton.onClick.Invoke();
+                yield return null;
+
+                ClickButton(root, "Buy");
+                yield return null;
+
+                Assert.That(activeInventory.State.Gold, Is.EqualTo(50));
+                Assert.That(backpack.State.GetCount("weapon_sword"), Is.EqualTo(1));
+                AssertTextExists(root, "Purchase complete");
             }
             finally
             {
