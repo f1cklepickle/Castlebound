@@ -30,12 +30,14 @@ namespace Castlebound.Gameplay.UI
         private RectTransform tabRoot;
         private InventoryPanelTab activeTab = InventoryPanelTab.Backpack;
         private bool contextMenuHooked;
+        private bool vaultOpenedFromWorld;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
         public InventoryPanelTab ActiveTab => activeTab;
         public Button OpenButton => openButton;
         public Button BackpackTabButton => backpackTabButton;
         public Button VaultTabButton => vaultTabButton;
+        public Button ShopTabButton => vaultTabButton;
 
         private void OnEnable()
         {
@@ -121,10 +123,35 @@ namespace Castlebound.Gameplay.UI
         public void TogglePanel()
         {
             ApplyPanelState(!IsOpen);
+            vaultOpenedFromWorld = false;
             if (IsOpen)
             {
+                if (contextMenu != null)
+                {
+                    contextMenu.Close();
+                }
+
                 SetActiveTab(InventoryPanelTab.Backpack);
             }
+        }
+
+        public bool OpenVaultFromWorld()
+        {
+            if (!IsVaultAccessible())
+            {
+                return false;
+            }
+
+            EnsureRuntimeUi();
+            vaultOpenedFromWorld = true;
+            if (contextMenu != null && contextMenu.ActiveSource != InventoryContextSource.Vault)
+            {
+                contextMenu.Close();
+            }
+
+            ApplyPanelState(true);
+            Refresh();
+            return true;
         }
 
         public void ClosePanel()
@@ -134,20 +161,24 @@ namespace Castlebound.Gameplay.UI
                 contextMenu.Close();
             }
 
+            vaultOpenedFromWorld = false;
             ApplyPanelState(false);
         }
 
         public void SetActiveTab(InventoryPanelTab tab)
         {
-            if (tab == InventoryPanelTab.Vault && !IsVaultAccessible())
+            if (tab == InventoryPanelTab.Shop)
             {
-                activeTab = InventoryPanelTab.Backpack;
-            }
-            else
-            {
-                activeTab = tab;
+                return;
             }
 
+            vaultOpenedFromWorld = false;
+            if (contextMenu != null)
+            {
+                contextMenu.Close();
+            }
+
+            activeTab = tab;
             Refresh();
         }
 
@@ -250,8 +281,9 @@ namespace Castlebound.Gameplay.UI
 
         private void OnPhaseChanged(WavePhase phase)
         {
-            if (phase == WavePhase.InWave && activeTab == InventoryPanelTab.Vault)
+            if (phase == WavePhase.InWave && vaultOpenedFromWorld)
             {
+                vaultOpenedFromWorld = false;
                 activeTab = InventoryPanelTab.Backpack;
             }
 
@@ -305,9 +337,11 @@ namespace Castlebound.Gameplay.UI
 
             if (vaultTabButton == null)
             {
-                vaultTabButton = CreateButton("VaultTab", tabRoot, "Vault", new Vector2(120f, 38f), 16);
-                vaultTabButton.onClick.AddListener(() => SetActiveTab(InventoryPanelTab.Vault));
+                vaultTabButton = CreateButton("ShopTab", tabRoot, "Shop", new Vector2(120f, 38f), 16);
+                vaultTabButton.onClick.AddListener(() => SetActiveTab(InventoryPanelTab.Shop));
             }
+
+            ConfigureShopTabButton();
 
             if (contentRoot == null)
             {
@@ -369,6 +403,7 @@ namespace Castlebound.Gameplay.UI
             contextMenu.SetParentRoot(panelRoot);
             contextMenu.SetEquipController(equipController);
             contextMenu.SetDropController(dropController);
+            contextMenu.SetInventorySources(backpackSource, castleInventorySource, activeInventorySource);
         }
 
         private void HookContextMenu()
@@ -439,12 +474,27 @@ namespace Castlebound.Gameplay.UI
         {
             if (backpackTabButton != null)
             {
-                backpackTabButton.interactable = activeTab != InventoryPanelTab.Backpack;
+                backpackTabButton.interactable = vaultOpenedFromWorld || activeTab != InventoryPanelTab.Backpack;
             }
 
             if (vaultTabButton != null)
             {
-                vaultTabButton.interactable = activeTab != InventoryPanelTab.Vault && IsVaultAccessible();
+                vaultTabButton.interactable = true;
+            }
+        }
+
+        private void ConfigureShopTabButton()
+        {
+            if (vaultTabButton == null)
+            {
+                return;
+            }
+
+            vaultTabButton.gameObject.name = "ShopTab";
+            var label = vaultTabButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = "Shop";
             }
         }
 
@@ -455,28 +505,33 @@ namespace Castlebound.Gameplay.UI
                 return;
             }
 
-            if (contextMenu != null)
-            {
-                contextMenu.Close();
-            }
-
             for (int i = contentRoot.childCount - 1; i >= 0; i--)
             {
                 DestroyChild(contentRoot.GetChild(i).gameObject);
             }
 
-            if (activeTab == InventoryPanelTab.Vault && !IsVaultAccessible())
+            if (vaultOpenedFromWorld && !IsVaultAccessible())
             {
+                vaultOpenedFromWorld = false;
                 activeTab = InventoryPanelTab.Backpack;
             }
 
-            if (activeTab == InventoryPanelTab.Backpack)
+            if (vaultOpenedFromWorld)
+            {
+                CreateVaultRows();
+            }
+            else if (activeTab == InventoryPanelTab.Backpack)
             {
                 CreateBackpackRows();
             }
             else
             {
-                CreateVaultRows();
+                CreateTextRow("Shop coming soon");
+            }
+
+            if (contextMenu != null)
+            {
+                contextMenu.CloseIfActiveItemMissing();
             }
         }
 
@@ -510,7 +565,7 @@ namespace Castlebound.Gameplay.UI
 
             foreach (var entry in vault.Entries)
             {
-                CreateTextRow($"{entry.ItemId} x{entry.Count}");
+                CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Vault);
             }
         }
 
@@ -532,6 +587,11 @@ namespace Castlebound.Gameplay.UI
 
         private void CreateBackpackRow(BackpackInventoryEntry entry)
         {
+            CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Backpack);
+        }
+
+        private void CreateInventoryRow(string itemId, int count, InventoryContextSource source)
+        {
             var rowObject = new GameObject("InventoryRow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(LayoutElement));
             rowObject.transform.SetParent(contentRoot, false);
 
@@ -549,7 +609,7 @@ namespace Castlebound.Gameplay.UI
 
             var button = rowObject.GetComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(() => contextMenu.ShowForItem(entry.ItemId, IsWeaponItem(entry.ItemId), rect));
+            button.onClick.AddListener(() => contextMenu.ShowForItem(itemId, IsWeaponItem(itemId), source, rect));
 
             var labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             labelObject.transform.SetParent(rowObject.transform, false);
@@ -561,14 +621,14 @@ namespace Castlebound.Gameplay.UI
             labelRect.offsetMax = new Vector2(-8f, 0f);
 
             var text = labelObject.GetComponent<TextMeshProUGUI>();
-            text.text = $"{entry.ItemId} x{entry.Count}";
+            text.text = $"{itemId} x{count}";
             text.fontSize = 16;
             text.color = Color.white;
             text.alignment = TextAlignmentOptions.Left;
             text.raycastTarget = false;
 
             var trigger = rowObject.AddComponent<InventoryContextMenuTrigger>();
-            trigger.Configure(contextMenu, entry.ItemId, IsWeaponItem(entry.ItemId));
+            trigger.Configure(contextMenu, itemId, IsWeaponItem(itemId), source);
         }
 
         private bool IsWeaponItem(string itemId)

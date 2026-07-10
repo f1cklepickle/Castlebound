@@ -3,6 +3,7 @@ namespace Castlebound.Gameplay.UI
     public enum InventoryPanelTab
     {
         Backpack = 0,
-        Vault = 1
+        Shop = 1,
+        Vault = Shop
     }
 }

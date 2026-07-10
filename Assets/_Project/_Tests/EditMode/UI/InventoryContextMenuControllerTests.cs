@@ -12,6 +12,7 @@ namespace Castlebound.Tests.UI
     {
         private GameObject root;
         private BackpackInventoryStateComponent backpack;
+        private CastleInventoryStateComponent vault;
         private InventoryStateComponent activeInventory;
         private InventoryContextMenuController menu;
         private BackpackWeaponEquipController equipController;
@@ -23,6 +24,7 @@ namespace Castlebound.Tests.UI
         {
             root = new GameObject("MenuRoot", typeof(Canvas), typeof(RectTransform));
             backpack = root.AddComponent<BackpackInventoryStateComponent>();
+            vault = root.AddComponent<CastleInventoryStateComponent>();
             activeInventory = root.AddComponent<InventoryStateComponent>();
             var resolver = root.AddComponent<TestWeaponResolver>();
             equipController = root.AddComponent<BackpackWeaponEquipController>();
@@ -41,6 +43,7 @@ namespace Castlebound.Tests.UI
             menu.SetParentRoot(root.GetComponent<RectTransform>());
             menu.SetEquipController(equipController);
             menu.SetDropController(dropController);
+            menu.SetInventorySources(backpack, vault, activeInventory);
         }
 
         [TearDown]
@@ -80,6 +83,47 @@ namespace Castlebound.Tests.UI
             Assert.IsFalse(menu.IsOpen);
             Assert.That(activeInventory.State.GetWeaponId(0), Is.EqualTo("weapon_dagger"));
             Assert.That(backpack.State.GetCount("weapon_sword"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ClickingMain_EquipsVaultWeaponIntoMainSlot_AndReturnsDisplacedWeaponToVault()
+        {
+            vault.State.AddItem("weapon_dagger", 1);
+            activeInventory.State.AddWeapon("weapon_sword");
+            menu.ShowForItem("weapon_dagger", true, InventoryContextSource.Vault, null);
+            ClickButton("Equip");
+
+            ClickButton("Main");
+
+            Assert.IsFalse(menu.IsOpen);
+            Assert.That(activeInventory.State.GetWeaponId(0), Is.EqualTo("weapon_dagger"));
+            Assert.That(vault.State.GetCount("weapon_sword"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MoveToBackpack_MovesOneVaultItem_AndKeepsMenuOpenWhenMoreRemain()
+        {
+            vault.State.AddItem("weapon_dagger", 2);
+            menu.ShowForItem("weapon_dagger", true, InventoryContextSource.Vault, null);
+
+            ClickButton("Move to Backpack");
+
+            Assert.IsTrue(menu.IsOpen);
+            Assert.That(vault.State.GetCount("weapon_dagger"), Is.EqualTo(1));
+            Assert.That(backpack.State.GetCount("weapon_dagger"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MoveToBackpack_ClosesMenuWhenLastVaultItemMoves()
+        {
+            vault.State.AddItem("weapon_dagger", 1);
+            menu.ShowForItem("weapon_dagger", true, InventoryContextSource.Vault, null);
+
+            ClickButton("Move to Backpack");
+
+            Assert.IsFalse(menu.IsOpen);
+            Assert.That(vault.State.GetCount("weapon_dagger"), Is.EqualTo(0));
+            Assert.That(backpack.State.GetCount("weapon_dagger"), Is.EqualTo(1));
         }
 
         private void ClickButton(string label)

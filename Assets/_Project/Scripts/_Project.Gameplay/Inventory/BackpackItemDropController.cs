@@ -122,11 +122,7 @@ namespace Castlebound.Gameplay.Inventory
         private void ResolveDropPositions(out Vector3 startPosition, out Vector3 targetPosition)
         {
             Transform origin = dropOrigin != null ? dropOrigin : transform;
-            Vector3 facingOffset = -origin.up;
-            if (facingOffset.sqrMagnitude <= 0.0001f)
-            {
-                facingOffset = Vector3.down;
-            }
+            Vector3 facingOffset = BackpackDropDirectionResolver.ResolveVisualForward(origin);
 
             Vector3 direction = Quaternion.Euler(0f, 0f, Random.Range(-dropScatterDegrees, dropScatterDegrees)) * facingOffset.normalized;
             startPosition = origin.position + direction * Mathf.Max(0f, dropStartDistance);

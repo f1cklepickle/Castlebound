@@ -58,7 +58,6 @@ namespace Castlebound.Tests.UI
         {
             vault.State.AddItem("weapon_sword", 1);
 
-            panel.SetActiveTab(InventoryPanelTab.Vault);
             panel.TogglePanel();
 
             Assert.IsTrue(panel.IsOpen);
@@ -76,29 +75,39 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void VaultTab_RendersVaultEntries_BetweenWaves()
+        public void OpenVaultFromWorld_RendersVaultEntries_BetweenWaves()
         {
             phase.SetPhase(WavePhase.PreWave);
             vault.State.AddItem("potion_health", 3);
 
-            panel.TogglePanel();
-            panel.SetActiveTab(InventoryPanelTab.Vault);
+            Assert.IsTrue(panel.OpenVaultFromWorld());
 
             AssertTextExists("potion_health x3");
-            Assert.That(panel.VaultTabButton.interactable, Is.False);
         }
 
         [Test]
-        public void VaultTab_IsDisabled_MidWave()
+        public void OpenVaultFromWorld_IsDenied_MidWave()
         {
             phase.SetPhase(WavePhase.InWave);
 
             panel.TogglePanel();
-            panel.SetActiveTab(InventoryPanelTab.Vault);
+            Assert.IsFalse(panel.OpenVaultFromWorld());
 
             Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
-            Assert.That(panel.VaultTabButton.interactable, Is.False);
             Assert.That(panel.BackpackTabButton.interactable, Is.False);
+        }
+
+        [Test]
+        public void ShopTab_IsInert_AndDoesNotRenderVaultEntries()
+        {
+            vault.State.AddItem("potion_health", 3);
+            panel.TogglePanel();
+
+            panel.ShopTabButton.onClick.Invoke();
+
+            Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
+            AssertTextExists("Backpack is empty");
+            AssertTextMissing("potion_health x3");
         }
 
         [Test]
@@ -163,7 +172,7 @@ namespace Castlebound.Tests.UI
             Assert.IsFalse(tabLabel.raycastTarget);
             Assert.IsTrue(panel.OpenButton.GetComponent<Image>().raycastTarget);
             Assert.IsTrue(panel.BackpackTabButton.GetComponent<Image>().raycastTarget);
-            Assert.IsTrue(panel.VaultTabButton.GetComponent<Image>().raycastTarget);
+            Assert.IsTrue(panel.ShopTabButton.GetComponent<Image>().raycastTarget);
         }
 
         [Test]
@@ -238,6 +247,76 @@ namespace Castlebound.Tests.UI
             AssertTextExists("Backpack is empty");
         }
 
+        [Test]
+        public void BackpackChange_KeepsOpenContextMenu_WhenSelectedItemStillExists()
+        {
+            backpack.State.AddItem("weapon_sword", 2);
+            panel.TogglePanel();
+            OpenFirstBackpackRowContextMenu();
+            var menu = root.GetComponent<InventoryContextMenuController>();
+
+            backpack.State.TryRemoveItem("weapon_sword", 1);
+
+            Assert.IsTrue(menu.IsOpen);
+            Assert.That(menu.ActiveItemId, Is.EqualTo("weapon_sword"));
+            AssertTextExists("weapon_sword x1");
+        }
+
+        [Test]
+        public void VaultRow_ButtonClickOpensContextMenu_WithMoveAndEquipActions()
+        {
+            phase.SetPhase(WavePhase.PreWave);
+            vault.State.AddItem("weapon_sword", 1);
+            panel.OpenVaultFromWorld();
+
+            var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
+            var rowButton = trigger.GetComponent<Button>();
+
+            Assert.NotNull(rowButton);
+            rowButton.onClick.Invoke();
+
+            AssertTextExists("Move to Backpack");
+            AssertTextExists("Equip");
+        }
+
+        [Test]
+        public void VaultContextMenu_MoveToBackpack_RefreshesVaultRowsWithoutClosingWhenMoreRemain()
+        {
+            phase.SetPhase(WavePhase.PreWave);
+            vault.State.AddItem("weapon_sword", 2);
+            panel.OpenVaultFromWorld();
+
+            OpenFirstInventoryRowContextMenu();
+            ClickButton("Move to Backpack");
+            var menu = root.GetComponent<InventoryContextMenuController>();
+
+            Assert.IsTrue(menu.IsOpen);
+            Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
+            Assert.That(vault.State.GetCount("weapon_sword"), Is.EqualTo(1));
+            Assert.That(backpack.State.GetCount("weapon_sword"), Is.EqualTo(1));
+            AssertTextExists("weapon_sword x1");
+        }
+
+        [Test]
+        public void VaultContextMenu_EquipWeapon_ReturnsDisplacedWeaponToVault()
+        {
+            phase.SetPhase(WavePhase.PreWave);
+            activeInventory.State.AddWeapon("weapon_dagger");
+            vault.State.AddItem("weapon_sword", 1);
+            panel.OpenVaultFromWorld();
+
+            OpenFirstInventoryRowContextMenu();
+            var menu = root.GetComponent<InventoryContextMenuController>();
+            Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
+            Assert.That(menu.ActiveItemId, Is.EqualTo("weapon_sword"));
+
+            ClickButton("Equip");
+            ClickButton("Main");
+
+            Assert.That(activeInventory.State.GetWeaponId(0), Is.EqualTo("weapon_sword"));
+            Assert.That(vault.State.GetCount("weapon_dagger"), Is.EqualTo(1));
+        }
+
         private void AssertTextExists(string expected)
         {
             var labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
@@ -252,7 +331,24 @@ namespace Castlebound.Tests.UI
             Assert.Fail($"Expected inventory panel text '{expected}'.");
         }
 
+        private void AssertTextMissing(string expected)
+        {
+            var labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (var label in labels)
+            {
+                if (label.text == expected)
+                {
+                    Assert.Fail($"Did not expect inventory panel text '{expected}'.");
+                }
+            }
+        }
+
         private void OpenFirstBackpackRowContextMenu()
+        {
+            OpenFirstInventoryRowContextMenu();
+        }
+
+        private void OpenFirstInventoryRowContextMenu()
         {
             var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
             Assert.NotNull(trigger);
@@ -265,6 +361,11 @@ namespace Castlebound.Tests.UI
             var buttons = root.GetComponentsInChildren<Button>(true);
             foreach (var button in buttons)
             {
+                if (!button.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
                 var text = button.GetComponentInChildren<TextMeshProUGUI>(true);
                 if (text != null && text.text == label)
                 {
