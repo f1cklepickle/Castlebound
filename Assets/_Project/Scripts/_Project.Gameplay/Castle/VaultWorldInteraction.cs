@@ -7,6 +7,7 @@ namespace Castlebound.Gameplay.Castle
 {
     public class VaultWorldInteraction : MonoBehaviour
     {
+        [SerializeField] private VaultPanelController vaultPanel;
         [SerializeField] private InventoryPanelController inventoryPanel;
         [SerializeField] private EnemySpawnerRunner waveRunner;
         [SerializeField] private VaultOutlinePresenter outlinePresenter;
@@ -53,6 +54,11 @@ namespace Castlebound.Gameplay.Castle
         public void SetInventoryPanel(InventoryPanelController panel)
         {
             inventoryPanel = panel;
+        }
+
+        public void SetVaultPanel(VaultPanelController panel)
+        {
+            vaultPanel = panel;
         }
 
         public void SetPhaseTracker(WavePhaseTracker tracker)
@@ -107,17 +113,17 @@ namespace Castlebound.Gameplay.Castle
             ResolveReferences();
             ApplyVisualState();
 
-            if (!VaultInteractionPolicy.CanOpen(playerInRange, CurrentPhase) || inventoryPanel == null)
+            if (!VaultInteractionPolicy.CanOpen(playerInRange, CurrentPhase) || vaultPanel == null)
             {
                 return false;
             }
 
             if (phaseTracker != null)
             {
-                inventoryPanel.SetPhaseTracker(phaseTracker);
+                vaultPanel.SetPhaseTracker(phaseTracker);
             }
 
-            return inventoryPanel.OpenVaultFromWorld();
+            return vaultPanel.OpenFromWorld();
         }
 
         private bool TryOpenVaultFromHeldScreenPosition(Vector2 screenPosition, float deltaSeconds)
@@ -186,6 +192,20 @@ namespace Castlebound.Gameplay.Castle
                 inventoryPanel = FindObjectOfType<InventoryPanelController>();
             }
 
+            if (vaultPanel == null)
+            {
+                vaultPanel = FindObjectOfType<VaultPanelController>();
+            }
+
+            if (vaultPanel == null && inventoryPanel != null)
+            {
+                vaultPanel = inventoryPanel.GetComponent<VaultPanelController>();
+                if (vaultPanel == null)
+                {
+                    vaultPanel = inventoryPanel.gameObject.AddComponent<VaultPanelController>();
+                }
+            }
+
             if (waveRunner == null && phaseTracker == null)
             {
                 waveRunner = FindObjectOfType<EnemySpawnerRunner>();
@@ -227,6 +247,11 @@ namespace Castlebound.Gameplay.Castle
             if (inventoryPanel != null && phaseTracker != null)
             {
                 inventoryPanel.SetPhaseTracker(phaseTracker);
+            }
+
+            if (vaultPanel != null && phaseTracker != null)
+            {
+                vaultPanel.SetPhaseTracker(phaseTracker);
             }
         }
 

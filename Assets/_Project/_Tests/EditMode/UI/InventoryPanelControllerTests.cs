@@ -77,18 +77,7 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void OpenVaultFromWorld_RendersVaultEntries_BetweenWaves()
-        {
-            phase.SetPhase(WavePhase.PreWave);
-            vault.State.AddItem("potion_health", 3);
-
-            Assert.IsTrue(panel.OpenVaultFromWorld());
-
-            AssertTextExists("potion_health x3");
-        }
-
-        [Test]
-        public void OpenVaultFromWorld_IsDenied_MidWave()
+        public void OpenVaultFromWorld_IsNotOwnedByInventoryPanel()
         {
             phase.SetPhase(WavePhase.InWave);
 
@@ -350,61 +339,6 @@ namespace Castlebound.Tests.UI
             Assert.IsTrue(menu.IsOpen);
             Assert.That(menu.ActiveItemId, Is.EqualTo("weapon_sword"));
             AssertTextExists("weapon_sword x1");
-        }
-
-        [Test]
-        public void VaultRow_ButtonClickOpensContextMenu_WithMoveAndEquipActions()
-        {
-            phase.SetPhase(WavePhase.PreWave);
-            vault.State.AddItem("weapon_sword", 1);
-            panel.OpenVaultFromWorld();
-
-            var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
-            var rowButton = trigger.GetComponent<Button>();
-
-            Assert.NotNull(rowButton);
-            rowButton.onClick.Invoke();
-
-            AssertTextExists("Move to Backpack");
-            AssertTextExists("Equip");
-        }
-
-        [Test]
-        public void VaultContextMenu_MoveToBackpack_RefreshesVaultRowsWithoutClosingWhenMoreRemain()
-        {
-            phase.SetPhase(WavePhase.PreWave);
-            vault.State.AddItem("weapon_sword", 2);
-            panel.OpenVaultFromWorld();
-
-            OpenFirstInventoryRowContextMenu();
-            ClickButton("Move to Backpack");
-            var menu = root.GetComponent<InventoryContextMenuController>();
-
-            Assert.IsTrue(menu.IsOpen);
-            Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
-            Assert.That(vault.State.GetCount("weapon_sword"), Is.EqualTo(1));
-            Assert.That(backpack.State.GetCount("weapon_sword"), Is.EqualTo(1));
-            AssertTextExists("weapon_sword x1");
-        }
-
-        [Test]
-        public void VaultContextMenu_EquipWeapon_ReturnsDisplacedWeaponToVault()
-        {
-            phase.SetPhase(WavePhase.PreWave);
-            activeInventory.State.AddWeapon("weapon_dagger");
-            vault.State.AddItem("weapon_sword", 1);
-            panel.OpenVaultFromWorld();
-
-            OpenFirstInventoryRowContextMenu();
-            var menu = root.GetComponent<InventoryContextMenuController>();
-            Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
-            Assert.That(menu.ActiveItemId, Is.EqualTo("weapon_sword"));
-
-            ClickButton("Equip");
-            ClickButton("Main");
-
-            Assert.That(activeInventory.State.GetWeaponId(0), Is.EqualTo("weapon_sword"));
-            Assert.That(vault.State.GetCount("weapon_dagger"), Is.EqualTo(1));
         }
 
         private void AssertTextExists(string expected)

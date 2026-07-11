@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-07-10 - codex-vault-dedicated-panel
+
+### Summary
+- Added a dedicated Vault panel separate from the Inventory panel with a close button.
+- Routed world Vault interaction to open the dedicated Vault panel while allowing Backpack to remain visible.
+- Kept Shop and Backpack behavior unchanged, with club/dagger art metadata cleanup carried into the branch.
+
+### New or Updated Tests
+**EditMode**
+- `VaultPanelControllerTests` — validates dedicated Vault rendering, close button behavior, blocked state, refresh, Vault context menu actions, and Vault weapon equip behavior.
+- `VaultWorldInteractionTests` — validates world Vault interaction opens the dedicated panel and preserves Backpack visibility.
+- `InventoryPanelControllerTests` — validates Inventory no longer owns the world Vault view.
+
+**PlayMode**
+- `VaultWorldInteractionPlayTests` — validates runtime Vault opening shows the dedicated Vault panel while Backpack remains visible and the close button closes it.
+- `InventoryPanelControllerPlayTests` — validates Inventory panel no longer owns the world Vault view.
+
+### Notes
+- EditMode, PlayMode, and manual validation passed.
+- Manual validation confirmed the dedicated Vault panel, Backpack side-by-side visibility, and X close button work in game.
+
 ## 2026-07-10 - codex-shop-purchasing
 
 ### Summary
