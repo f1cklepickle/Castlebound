@@ -34,7 +34,6 @@ namespace Castlebound.Gameplay.UI
         private InventoryPanelTab activeTab = InventoryPanelTab.Backpack;
         private bool contextMenuHooked;
         private bool castleRegionHooked;
-        private bool vaultOpenedFromWorld;
         private string shopFeedbackMessage;
 
         public bool IsOpen => panelRoot != null && panelRoot.gameObject.activeSelf;
@@ -141,7 +140,6 @@ namespace Castlebound.Gameplay.UI
         public void TogglePanel()
         {
             ApplyPanelState(!IsOpen);
-            vaultOpenedFromWorld = false;
             if (IsOpen)
             {
                 if (contextMenu != null)
@@ -155,21 +153,7 @@ namespace Castlebound.Gameplay.UI
 
         public bool OpenVaultFromWorld()
         {
-            if (!IsVaultAccessible())
-            {
-                return false;
-            }
-
-            EnsureRuntimeUi();
-            vaultOpenedFromWorld = true;
-            if (contextMenu != null && contextMenu.ActiveSource != InventoryContextSource.Vault)
-            {
-                contextMenu.Close();
-            }
-
-            ApplyPanelState(true);
-            Refresh();
-            return true;
+            return false;
         }
 
         public void ClosePanel()
@@ -179,13 +163,11 @@ namespace Castlebound.Gameplay.UI
                 contextMenu.Close();
             }
 
-            vaultOpenedFromWorld = false;
             ApplyPanelState(false);
         }
 
         public void SetActiveTab(InventoryPanelTab tab)
         {
-            vaultOpenedFromWorld = false;
             shopFeedbackMessage = null;
             if (contextMenu != null)
             {
@@ -305,12 +287,6 @@ namespace Castlebound.Gameplay.UI
 
         private void OnPhaseChanged(WavePhase phase)
         {
-            if (phase == WavePhase.InWave && vaultOpenedFromWorld)
-            {
-                vaultOpenedFromWorld = false;
-                activeTab = InventoryPanelTab.Backpack;
-            }
-
             HandleShopAccessChanged();
             Refresh();
         }
@@ -362,11 +338,6 @@ namespace Castlebound.Gameplay.UI
             {
                 ClosePanel();
             }
-        }
-
-        private bool IsVaultAccessible()
-        {
-            return phaseTracker == null || phaseTracker.CurrentPhase == WavePhase.PreWave;
         }
 
         private bool IsShopAccessible()
@@ -556,7 +527,7 @@ namespace Castlebound.Gameplay.UI
         {
             if (backpackTabButton != null)
             {
-                backpackTabButton.interactable = vaultOpenedFromWorld || activeTab != InventoryPanelTab.Backpack;
+                backpackTabButton.interactable = activeTab != InventoryPanelTab.Backpack;
             }
 
             if (vaultTabButton != null)
@@ -592,17 +563,7 @@ namespace Castlebound.Gameplay.UI
                 DestroyChild(contentRoot.GetChild(i).gameObject);
             }
 
-            if (vaultOpenedFromWorld && !IsVaultAccessible())
-            {
-                vaultOpenedFromWorld = false;
-                activeTab = InventoryPanelTab.Backpack;
-            }
-
-            if (vaultOpenedFromWorld)
-            {
-                CreateVaultRows();
-            }
-            else if (activeTab == InventoryPanelTab.Backpack)
+            if (activeTab == InventoryPanelTab.Backpack)
             {
                 CreateBackpackRows();
             }
@@ -628,26 +589,6 @@ namespace Castlebound.Gameplay.UI
             foreach (var entry in backpack.Entries)
             {
                 CreateBackpackRow(entry);
-            }
-        }
-
-        private void CreateVaultRows()
-        {
-            if (!IsVaultAccessible())
-            {
-                CreateTextRow("Vault opens between waves");
-                return;
-            }
-
-            if (vault == null || vault.EntryCount == 0)
-            {
-                CreateTextRow("Vault is empty");
-                return;
-            }
-
-            foreach (var entry in vault.Entries)
-            {
-                CreateInventoryRow(entry.ItemId, entry.Count, InventoryContextSource.Vault);
             }
         }
 

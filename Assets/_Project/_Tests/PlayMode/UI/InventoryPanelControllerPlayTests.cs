@@ -16,7 +16,7 @@ namespace Castlebound.Tests.UI
     public class InventoryPanelControllerPlayTests
     {
         [UnityTest]
-        public IEnumerator InventoryPanel_OpensBackpack_AndDeniesWorldVaultMidWave()
+        public IEnumerator InventoryPanel_OpensBackpack_AndDoesNotOwnWorldVaultView()
         {
             var root = new GameObject("InventoryPanelPlayRoot", typeof(Canvas));
 
@@ -38,7 +38,6 @@ namespace Castlebound.Tests.UI
                 Assert.IsTrue(panel.IsOpen);
                 Assert.That(panel.ActiveTab, Is.EqualTo(InventoryPanelTab.Backpack));
 
-                phase.SetPhase(WavePhase.InWave);
                 Assert.IsFalse(panel.OpenVaultFromWorld());
                 yield return null;
 

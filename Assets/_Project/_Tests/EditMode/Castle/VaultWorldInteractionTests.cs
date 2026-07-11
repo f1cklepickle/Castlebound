@@ -13,7 +13,10 @@ namespace Castlebound.Tests.Castle
     {
         private GameObject root;
         private InventoryPanelController panel;
+        private VaultPanelController vaultPanel;
+        private BackpackInventoryStateComponent backpack;
         private CastleInventoryStateComponent vault;
+        private InventoryStateComponent activeInventory;
         private WavePhaseTracker phase;
         private VaultWorldInteraction interaction;
 
@@ -21,15 +24,22 @@ namespace Castlebound.Tests.Castle
         public void SetUp()
         {
             root = new GameObject("VaultInteractionRoot", typeof(Canvas));
-            root.AddComponent<BackpackInventoryStateComponent>();
+            backpack = root.AddComponent<BackpackInventoryStateComponent>();
+            activeInventory = root.AddComponent<InventoryStateComponent>();
             vault = root.AddComponent<CastleInventoryStateComponent>();
             panel = root.AddComponent<InventoryPanelController>();
+            vaultPanel = root.AddComponent<VaultPanelController>();
             phase = new WavePhaseTracker();
+            panel.SetBackpackSource(backpack);
+            panel.SetActiveInventorySource(activeInventory);
             panel.SetCastleInventorySource(vault);
             panel.SetPhaseTracker(phase);
+            vaultPanel.SetInventorySources(backpack, vault, activeInventory);
+            vaultPanel.SetPhaseTracker(phase);
 
             interaction = root.AddComponent<VaultWorldInteraction>();
             interaction.SetInventoryPanel(panel);
+            interaction.SetVaultPanel(vaultPanel);
             interaction.SetPhaseTracker(phase);
         }
 
@@ -52,8 +62,26 @@ namespace Castlebound.Tests.Castle
 
             phase.SetPhase(WavePhase.PreWave);
             Assert.IsTrue(interaction.TryOpenVault());
-            Assert.IsTrue(panel.IsOpen);
+            Assert.IsFalse(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
             AssertTextExists("potion_health x2");
+        }
+
+        [Test]
+        public void TryOpenVault_KeepsBackpackPanelVisibleBesideVaultPanel()
+        {
+            backpack.State.AddItem("weapon_sword", 1);
+            vault.State.AddItem("potion_health", 1);
+            panel.TogglePanel();
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.PreWave);
+
+            Assert.IsTrue(interaction.TryOpenVault());
+
+            Assert.IsTrue(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
+            AssertTextExists("weapon_sword x1");
+            AssertTextExists("potion_health x1");
         }
 
         [Test]
@@ -114,7 +142,7 @@ namespace Castlebound.Tests.Castle
             vault.State.AddItem("potion_health", 1);
 
             Assert.IsTrue(interaction.TryOpenVault());
-            Assert.IsTrue(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
             AssertTextExists("potion_health x1");
         }
 
@@ -129,7 +157,7 @@ namespace Castlebound.Tests.Castle
             vault.State.AddItem("potion_health", 1);
 
             Assert.IsTrue(interaction.TryOpenVault());
-            Assert.IsTrue(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
             AssertTextExists("potion_health x1");
         }
 
@@ -148,7 +176,7 @@ namespace Castlebound.Tests.Castle
             vault.State.AddItem("potion_health", 1);
 
             Assert.IsTrue(interaction.TryOpenVault());
-            Assert.IsTrue(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
             AssertTextExists("potion_health x1");
 
             Object.DestroyImmediate(runnerObject);
@@ -166,7 +194,7 @@ namespace Castlebound.Tests.Castle
             vault.State.AddItem("potion_health", 1);
 
             Assert.IsTrue(interaction.TryOpenVault());
-            Assert.IsTrue(panel.IsOpen);
+            Assert.IsTrue(vaultPanel.IsOpen);
             AssertTextExists("potion_health x1");
 
             Object.DestroyImmediate(runnerObject);
