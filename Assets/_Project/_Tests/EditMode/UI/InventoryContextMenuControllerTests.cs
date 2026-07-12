@@ -126,6 +126,29 @@ namespace Castlebound.Tests.UI
             Assert.That(backpack.State.GetCount("weapon_dagger"), Is.EqualTo(1));
         }
 
+        [Test]
+        public void ShowForItem_ClampsMenuInsideParentRoot()
+        {
+            var parent = root.GetComponent<RectTransform>();
+            parent.sizeDelta = new Vector2(160f, 120f);
+
+            var anchorObject = new GameObject("Anchor", typeof(RectTransform));
+            anchorObject.transform.SetParent(root.transform, false);
+            var anchor = anchorObject.GetComponent<RectTransform>();
+            anchor.anchorMin = new Vector2(0f, 1f);
+            anchor.anchorMax = new Vector2(0f, 1f);
+            anchor.pivot = new Vector2(0f, 1f);
+            anchor.anchoredPosition = new Vector2(150f, -110f);
+            anchor.sizeDelta = new Vector2(34f, 34f);
+
+            menu.ShowForItem("weapon_dagger", true, anchor);
+
+            var menuRoot = FindRectTransform("InventoryContextMenu");
+            Assert.NotNull(menuRoot);
+            Assert.That(menuRoot.anchoredPosition.x, Is.InRange(0f, parent.rect.width - menuRoot.sizeDelta.x));
+            Assert.That(menuRoot.anchoredPosition.y, Is.InRange(-parent.rect.height + menuRoot.sizeDelta.y, 0f));
+        }
+
         private void ClickButton(string label)
         {
             var buttons = root.GetComponentsInChildren<Button>(true);
@@ -154,6 +177,20 @@ namespace Castlebound.Tests.UI
             }
 
             Assert.Fail($"Expected text '{expected}'.");
+        }
+
+        private RectTransform FindRectTransform(string objectName)
+        {
+            var rects = root.GetComponentsInChildren<RectTransform>(true);
+            for (int i = 0; i < rects.Length; i++)
+            {
+                if (rects[i].name == objectName)
+                {
+                    return rects[i];
+                }
+            }
+
+            return null;
         }
 
         private sealed class TestWeaponResolver : MonoBehaviour, IWeaponDefinitionResolver

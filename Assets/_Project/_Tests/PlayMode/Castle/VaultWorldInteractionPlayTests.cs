@@ -49,6 +49,17 @@ namespace Castlebound.Tests.PlayMode.Castle
                 AssertTextExists(root, "weapon_sword x1");
                 AssertTextExists(root, "potion_health x1");
 
+                Assert.IsTrue(interaction.TryToggleVault());
+                yield return null;
+
+                Assert.IsTrue(panel.IsOpen);
+                Assert.IsFalse(vaultPanel.IsOpen);
+
+                Assert.IsTrue(interaction.TryToggleVault());
+                yield return null;
+
+                Assert.IsTrue(vaultPanel.IsOpen);
+
                 ClickButton(root, "X");
                 yield return null;
 
