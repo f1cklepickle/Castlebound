@@ -222,13 +222,28 @@ namespace Castlebound.Gameplay.UI
 
         private void ConfigureContextMenu()
         {
+            if (contextMenu == null && panelRoot == null)
+            {
+                return;
+            }
+
             if (contextMenu == null)
             {
-                contextMenu = GetComponent<InventoryContextMenuController>();
-                if (contextMenu == null)
+                contextMenu = panelRoot != null
+                    ? panelRoot.GetComponentInChildren<InventoryContextMenuController>(true)
+                    : null;
+
+                if (contextMenu == null && panelRoot != null)
                 {
-                    contextMenu = gameObject.AddComponent<InventoryContextMenuController>();
+                    var menuObject = new GameObject("VaultInventoryContextMenu", typeof(RectTransform), typeof(InventoryContextMenuController));
+                    menuObject.transform.SetParent(panelRoot, false);
+                    contextMenu = menuObject.GetComponent<InventoryContextMenuController>();
                 }
+            }
+
+            if (contextMenu == null)
+            {
+                return;
             }
 
             HookContextMenu();

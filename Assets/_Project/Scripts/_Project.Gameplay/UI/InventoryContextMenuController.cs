@@ -77,8 +77,8 @@ namespace Castlebound.Gameplay.UI
             activeSource = source;
             isChoosingEquipSlot = false;
             EnsureMenuRoot();
-            PositionNear(anchor);
             RebuildRootActions();
+            PositionNear(anchor);
             menuRoot.gameObject.SetActive(true);
         }
 
@@ -291,13 +291,30 @@ namespace Castlebound.Gameplay.UI
 
             if (anchor == null || parentRoot == null)
             {
-                menuRoot.anchoredPosition = new Vector2(212f, -62f);
+                menuRoot.anchoredPosition = ClampToParent(new Vector2(212f, -62f));
                 return;
             }
 
             Vector3 worldPosition = anchor.TransformPoint(new Vector3(anchor.rect.xMax, anchor.rect.yMax, 0f));
             Vector3 localPosition = parentRoot.InverseTransformPoint(worldPosition);
-            menuRoot.anchoredPosition = new Vector2(localPosition.x + 8f, localPosition.y);
+            menuRoot.anchoredPosition = ClampToParent(new Vector2(localPosition.x + 8f, localPosition.y));
+        }
+
+        private Vector2 ClampToParent(Vector2 position)
+        {
+            if (parentRoot == null || menuRoot == null)
+            {
+                return position;
+            }
+
+            Rect parentRect = parentRoot.rect;
+            Vector2 menuSize = menuRoot.sizeDelta;
+            float maxX = Mathf.Max(0f, parentRect.width - menuSize.x);
+            float minY = Mathf.Min(0f, -parentRect.height + menuSize.y);
+
+            return new Vector2(
+                Mathf.Clamp(position.x, 0f, maxX),
+                Mathf.Clamp(position.y, minY, 0f));
         }
 
         private void ClearMenu()

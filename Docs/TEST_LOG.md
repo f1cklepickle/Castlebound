@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-07-11 - codex-vault-world-toggle
+
+### Summary
+- Added Vault world interaction toggling so the same input can open or close the dedicated Vault panel.
+- Routed keyboard and touch-hold Vault input through the toggle path while preserving open-only `TryOpenVault` behavior.
+- Kept the existing Vault close button, Backpack side-by-side behavior, and between-wave open gate intact.
+- Fixed Vault context menus to use a Vault-scoped menu instance and clamp menu placement inside the owning panel.
+
+### New or Updated Tests
+**EditMode**
+- `VaultWorldInteractionTests` - validates toggle open, toggle close, blocked open attempts, out-of-range close blocking, open-only compatibility, and touch fallback routing.
+- `InventoryContextMenuControllerTests` - validates context menu placement clamps inside its parent panel.
+- `VaultPanelControllerTests` - validates Vault menus do not steal Backpack menu ownership when both panels share a root.
+
+**PlayMode**
+- `VaultWorldInteractionPlayTests` - validates runtime toggle close/reopen while Backpack remains visible and the close button still closes the Vault.
+
+### Notes
+- Local EditMode runner could not execute because `ci/run-editmode.ps1` currently parse-fails in this shell.
+- Local PlayMode runner could not execute because the configured Unity editor path was not found in this shell.
+
 ## 2026-07-10 - codex-vault-dedicated-panel
 
 ### Summary

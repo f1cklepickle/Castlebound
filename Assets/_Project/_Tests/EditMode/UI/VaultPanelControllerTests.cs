@@ -118,7 +118,7 @@ namespace Castlebound.Tests.UI
 
             OpenFirstVaultRowContextMenu();
             ClickButton("Move to Backpack");
-            var menu = root.GetComponent<InventoryContextMenuController>();
+            var menu = root.GetComponentInChildren<InventoryContextMenuController>(true);
 
             Assert.IsTrue(menu.IsOpen);
             Assert.That(menu.ActiveSource, Is.EqualTo(InventoryContextSource.Vault));
@@ -144,9 +144,50 @@ namespace Castlebound.Tests.UI
             Assert.That(vault.State.GetCount("weapon_dagger"), Is.EqualTo(1));
         }
 
+        [Test]
+        public void VaultContextMenu_CreatesVaultScopedMenu_WhenSharingRootWithInventoryPanel()
+        {
+            var inventoryPanel = root.AddComponent<InventoryPanelController>();
+            inventoryPanel.SetBackpackSource(backpack);
+            inventoryPanel.SetActiveInventorySource(activeInventory);
+            inventoryPanel.SetCastleInventorySource(vault);
+            inventoryPanel.SetPhaseTracker(phase);
+            inventoryPanel.SetWeaponDefinitionResolver(root.GetComponent<TestWeaponResolver>());
+
+            phase.SetPhase(WavePhase.PreWave);
+            backpack.State.AddItem("weapon_sword", 1);
+            vault.State.AddItem("weapon_sword", 1);
+            inventoryPanel.TogglePanel();
+
+            Assert.IsTrue(panel.OpenFromWorld());
+
+            OpenFirstVaultRowContextMenu();
+            var vaultMenu = FindMenuWithSource(InventoryContextSource.Vault);
+
+            Assert.NotNull(vaultMenu);
+            Assert.That(vaultMenu.transform.parent.name, Is.EqualTo("VaultPanel"));
+
+            OpenFirstInventoryRowContextMenu();
+            var backpackMenu = root.GetComponent<InventoryContextMenuController>();
+
+            Assert.NotNull(backpackMenu);
+            Assert.IsTrue(backpackMenu.IsOpen);
+            Assert.That(backpackMenu.ActiveSource, Is.EqualTo(InventoryContextSource.Backpack));
+            AssertTextExists("Drop");
+            AssertTextExists("Equip");
+        }
+
         private void OpenFirstVaultRowContextMenu()
         {
-            var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
+            var trigger = FindTriggerUnder("VaultRows");
+            Assert.NotNull(trigger);
+            var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Right };
+            trigger.OnPointerClick(eventData);
+        }
+
+        private void OpenFirstInventoryRowContextMenu()
+        {
+            var trigger = FindTriggerUnder("InventoryRows");
             Assert.NotNull(trigger);
             var eventData = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Right };
             trigger.OnPointerClick(eventData);
@@ -197,6 +238,50 @@ namespace Castlebound.Tests.UI
                     Assert.Fail($"Did not expect vault panel text '{expected}'.");
                 }
             }
+        }
+
+        private InventoryContextMenuController FindMenuWithSource(InventoryContextSource source)
+        {
+            var menus = root.GetComponentsInChildren<InventoryContextMenuController>(true);
+            foreach (var menu in menus)
+            {
+                if (menu.IsOpen && menu.ActiveSource == source)
+                {
+                    return menu;
+                }
+            }
+
+            return null;
+        }
+
+        private InventoryContextMenuTrigger FindTriggerUnder(string parentName)
+        {
+            var triggers = root.GetComponentsInChildren<InventoryContextMenuTrigger>(true);
+            foreach (var trigger in triggers)
+            {
+                if (HasParentNamed(trigger.transform, parentName))
+                {
+                    return trigger;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool HasParentNamed(Transform child, string parentName)
+        {
+            var current = child;
+            while (current != null)
+            {
+                if (current.name == parentName)
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
         }
 
         private sealed class TestWeaponResolver : MonoBehaviour, IWeaponDefinitionResolver

@@ -68,6 +68,77 @@ namespace Castlebound.Tests.Castle
         }
 
         [Test]
+        public void TryToggleVault_OpensWhenClosedAndAccessible()
+        {
+            vault.State.AddItem("potion_health", 1);
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.PreWave);
+
+            Assert.IsTrue(interaction.TryToggleVault());
+
+            Assert.IsTrue(vaultPanel.IsOpen);
+            AssertTextExists("potion_health x1");
+        }
+
+        [Test]
+        public void TryToggleVault_ClosesWhenVaultPanelIsOpen()
+        {
+            vault.State.AddItem("potion_health", 1);
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.PreWave);
+
+            Assert.IsTrue(interaction.TryOpenVault());
+            Assert.IsTrue(vaultPanel.IsOpen);
+
+            Assert.IsTrue(interaction.TryToggleVault());
+
+            Assert.IsFalse(vaultPanel.IsOpen);
+        }
+
+        [Test]
+        public void TryToggleVault_DoesNotCloseOpenVault_WhenOutOfRange()
+        {
+            vault.State.AddItem("potion_health", 1);
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.PreWave);
+
+            Assert.IsTrue(interaction.TryOpenVault());
+
+            interaction.SetPlayerInRange(false);
+
+            Assert.IsFalse(interaction.TryToggleVault());
+            Assert.IsTrue(vaultPanel.IsOpen);
+        }
+
+        [Test]
+        public void TryToggleVault_DoesNotOpenWhenOutOfRangeOrInWave()
+        {
+            vault.State.AddItem("potion_health", 1);
+
+            Assert.IsFalse(interaction.TryToggleVault());
+            Assert.IsFalse(vaultPanel.IsOpen);
+
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.InWave);
+
+            Assert.IsFalse(interaction.TryToggleVault());
+            Assert.IsFalse(vaultPanel.IsOpen);
+        }
+
+        [Test]
+        public void TryOpenVault_RemainsOpenOnly_WhenVaultPanelIsAlreadyOpen()
+        {
+            vault.State.AddItem("potion_health", 1);
+            interaction.SetPlayerInRange(true);
+            phase.SetPhase(WavePhase.PreWave);
+
+            Assert.IsTrue(interaction.TryOpenVault());
+            Assert.IsTrue(interaction.TryOpenVault());
+
+            Assert.IsTrue(vaultPanel.IsOpen);
+        }
+
+        [Test]
         public void TryOpenVault_KeepsBackpackPanelVisibleBesideVaultPanel()
         {
             backpack.State.AddItem("weapon_sword", 1);
@@ -236,7 +307,7 @@ namespace Castlebound.Tests.Castle
 
             StringAssert.Contains("Touchscreen.current", source);
             StringAssert.Contains("Pointer.current", source);
-            StringAssert.Contains("TryOpenVaultFromHeldScreenPosition(screenPosition, Time.deltaTime)", source);
+            StringAssert.Contains("TryToggleVaultFromHeldScreenPosition(screenPosition, Time.deltaTime)", source);
         }
 
         private void AssertTextExists(string expected)

@@ -19,7 +19,7 @@ namespace Castlebound.Gameplay.Castle
         private WavePhaseTracker phaseTracker;
         private bool playerInRange;
         private float touchHoldTimer;
-        private bool touchOpenedThisPress;
+        private bool touchToggledThisPress;
         private bool phaseHooked;
         private readonly Collider2D[] rangeHits = new Collider2D[8];
 
@@ -45,7 +45,7 @@ namespace Castlebound.Gameplay.Castle
 
             if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
             {
-                TryOpenVault();
+                TryToggleVault();
             }
 
             UpdateTouchHold();
@@ -126,7 +126,21 @@ namespace Castlebound.Gameplay.Castle
             return vaultPanel.OpenFromWorld();
         }
 
-        private bool TryOpenVaultFromHeldScreenPosition(Vector2 screenPosition, float deltaSeconds)
+        public bool TryToggleVault()
+        {
+            ResolveReferences();
+            ApplyVisualState();
+
+            if (vaultPanel != null && vaultPanel.IsOpen && playerInRange)
+            {
+                vaultPanel.ClosePanel();
+                return true;
+            }
+
+            return TryOpenVault();
+        }
+
+        private bool TryToggleVaultFromHeldScreenPosition(Vector2 screenPosition, float deltaSeconds)
         {
             if (!playerInRange || !IsScreenPositionOverTouchTarget(screenPosition))
             {
@@ -134,7 +148,7 @@ namespace Castlebound.Gameplay.Castle
                 return false;
             }
 
-            if (touchOpenedThisPress)
+            if (touchToggledThisPress)
             {
                 return false;
             }
@@ -145,12 +159,12 @@ namespace Castlebound.Gameplay.Castle
                 return false;
             }
 
-            if (!TryOpenVault())
+            if (!TryToggleVault())
             {
                 return false;
             }
 
-            touchOpenedThisPress = true;
+            touchToggledThisPress = true;
             return true;
         }
 
@@ -327,12 +341,12 @@ namespace Castlebound.Gameplay.Castle
                 return;
             }
 
-            if (touchOpenedThisPress)
+            if (touchToggledThisPress)
             {
                 return;
             }
 
-            TryOpenVaultFromHeldScreenPosition(screenPosition, Time.deltaTime);
+            TryToggleVaultFromHeldScreenPosition(screenPosition, Time.deltaTime);
         }
 
         private bool TryReadPressedPointerPosition(out Vector2 screenPosition)
@@ -384,7 +398,7 @@ namespace Castlebound.Gameplay.Castle
         private void ResetTouchHold()
         {
             touchHoldTimer = 0f;
-            touchOpenedThisPress = false;
+            touchToggledThisPress = false;
         }
     }
 }
