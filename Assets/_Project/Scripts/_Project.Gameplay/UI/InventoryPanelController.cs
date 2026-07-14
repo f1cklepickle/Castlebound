@@ -105,6 +105,7 @@ namespace Castlebound.Gameplay.UI
             UnhookPhaseTracker();
             phaseTracker = tracker;
             HookPhaseTracker();
+            UpdateContextMenuAccessContext();
             Refresh();
         }
 
@@ -124,6 +125,7 @@ namespace Castlebound.Gameplay.UI
             UnhookCastleRegionTracker();
             castleRegionTracker = tracker;
             HookCastleRegionTracker();
+            UpdateContextMenuAccessContext();
             HandleShopAccessChanged();
         }
 
@@ -457,6 +459,15 @@ namespace Castlebound.Gameplay.UI
             contextMenu.SetEquipController(equipController);
             contextMenu.SetDropController(dropController);
             contextMenu.SetInventorySources(backpackSource, castleInventorySource, activeInventorySource);
+            UpdateContextMenuAccessContext();
+        }
+
+        private void UpdateContextMenuAccessContext()
+        {
+            if (contextMenu != null)
+            {
+                contextMenu.SetAccessContext(castleRegionTracker, phaseTracker);
+            }
         }
 
         private void HookContextMenu()

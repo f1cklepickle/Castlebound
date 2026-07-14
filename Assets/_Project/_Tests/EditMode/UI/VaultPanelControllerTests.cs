@@ -105,7 +105,7 @@ namespace Castlebound.Tests.UI
             Assert.NotNull(rowButton);
             rowButton.onClick.Invoke();
 
-            AssertTextExists("Move to Backpack");
+            AssertTextExists("Backpack");
             AssertTextExists("Equip");
         }
 
@@ -117,7 +117,7 @@ namespace Castlebound.Tests.UI
             Assert.IsTrue(panel.OpenFromWorld());
 
             OpenFirstVaultRowContextMenu();
-            ClickButton("Move to Backpack");
+            ClickButton("Backpack");
             var menu = root.GetComponentInChildren<InventoryContextMenuController>(true);
 
             Assert.IsTrue(menu.IsOpen);
