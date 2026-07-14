@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-07-14 - codex-backpack-move-to-vault
+
+### Summary
+- Added Backpack context menu transfer into the Castle Vault with the short `Vault` button label.
+- Renamed the Vault-to-Backpack context action to `Backpack`.
+- Gated Backpack-to-Vault transfer to inside-castle PreWave access while preserving Drop, Equip, and Vault panel actions.
+
+### New or Updated Tests
+**EditMode**
+- `InventoryContextMenuControllerTests` — validates Backpack-to-Vault transfer, short action labels, menu close/retain behavior, and outside-castle / in-wave blocking.
+- `InventoryPanelControllerTests` — validates Backpack row context menus expose the `Vault` action beside existing Drop and Equip actions.
+
+**PlayMode**
+- `InventoryPanelControllerPlayTests` — validates runtime Backpack context menu can move one item into the Vault when inside the castle during PreWave.
+
+### Notes
+- N/A
+
 ## 2026-07-11 - codex-vault-world-toggle
 
 ### Summary

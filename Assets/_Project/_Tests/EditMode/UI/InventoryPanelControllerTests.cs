@@ -267,6 +267,7 @@ namespace Castlebound.Tests.UI
             Assert.NotNull(rowButton);
             trigger.OnPointerClick(eventData);
 
+            AssertTextExists("Vault");
             AssertTextExists("Drop");
             AssertTextExists("Equip");
         }

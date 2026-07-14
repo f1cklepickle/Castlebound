@@ -1,5 +1,7 @@
 using System;
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Spawning;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,12 +22,14 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private BackpackInventoryStateComponent backpackSource;
         [SerializeField] private CastleInventoryStateComponent vaultSource;
         [SerializeField] private InventoryStateComponent activeInventorySource;
+        [SerializeField] private CastleRegionTracker castleRegionTracker;
 
         private RectTransform parentRoot;
         private string activeItemId;
         private bool activeItemIsWeapon;
         private InventoryContextSource activeSource;
         private bool isChoosingEquipSlot;
+        private WavePhaseTracker phaseTracker;
 
         public event Action ActionCompleted;
 
@@ -57,6 +61,12 @@ namespace Castlebound.Gameplay.UI
             backpackSource = backpack;
             vaultSource = vault;
             activeInventorySource = activeInventory;
+        }
+
+        public void SetAccessContext(CastleRegionTracker regionTracker, WavePhaseTracker wavePhaseTracker)
+        {
+            castleRegionTracker = regionTracker;
+            phaseTracker = wavePhaseTracker;
         }
 
         public void ShowForItem(string itemId, bool isWeapon, RectTransform anchor)
@@ -109,11 +119,12 @@ namespace Castlebound.Gameplay.UI
             ClearMenu();
             if (activeSource == InventoryContextSource.Backpack)
             {
+                CreateMenuButton("Vault", TryMoveBackpackItemToVault);
                 CreateMenuButton("Drop", TryDropActiveItem);
             }
             else
             {
-                CreateMenuButton("Move to Backpack", TryMoveVaultItemToBackpack);
+                CreateMenuButton("Backpack", TryMoveVaultItemToBackpack);
             }
 
             if (activeItemIsWeapon)
@@ -135,11 +146,12 @@ namespace Castlebound.Gameplay.UI
             ClearMenu();
             if (activeSource == InventoryContextSource.Backpack)
             {
+                CreateMenuButton("Vault", TryMoveBackpackItemToVault);
                 CreateMenuButton("Drop", TryDropActiveItem);
             }
             else
             {
-                CreateMenuButton("Move to Backpack", TryMoveVaultItemToBackpack);
+                CreateMenuButton("Backpack", TryMoveVaultItemToBackpack);
             }
 
             CreateMenuButton("Main", () => TryEquipActiveItem(0));
@@ -189,6 +201,37 @@ namespace Castlebound.Gameplay.UI
             }
 
             CompleteAction();
+        }
+
+        private void TryMoveBackpackItemToVault()
+        {
+            string itemId = activeItemId;
+            var backpack = backpackSource != null ? backpackSource.State : null;
+            var vault = vaultSource != null ? vaultSource.State : null;
+            if (!CanMoveBackpackItemToVault() || backpack == null || vault == null || string.IsNullOrWhiteSpace(itemId) || backpack.GetCount(itemId) <= 0)
+            {
+                return;
+            }
+
+            if (!backpack.TryRemoveItem(itemId, 1))
+            {
+                return;
+            }
+
+            if (!vault.AddItem(itemId, 1))
+            {
+                backpack.AddItem(itemId, 1);
+                return;
+            }
+
+            CompleteAction();
+        }
+
+        private bool CanMoveBackpackItemToVault()
+        {
+            return castleRegionTracker != null
+                && castleRegionTracker.PlayerInside
+                && (phaseTracker == null || phaseTracker.CurrentPhase == WavePhase.PreWave);
         }
 
         private bool TryEquipVaultItem(int slotIndex)

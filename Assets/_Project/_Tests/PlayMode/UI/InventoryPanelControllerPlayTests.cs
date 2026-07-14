@@ -98,6 +98,46 @@ namespace Castlebound.Tests.UI
         }
 
         [UnityTest]
+        public IEnumerator InventoryPanel_BackpackContextMenu_VaultMovesOneItem_WhenInsideCastlePreWave()
+        {
+            var root = new GameObject("InventoryPanelVaultMovePlayRoot", typeof(Canvas));
+
+            try
+            {
+                var backpack = root.AddComponent<BackpackInventoryStateComponent>();
+                root.AddComponent<InventoryStateComponent>();
+                var vault = root.AddComponent<CastleInventoryStateComponent>();
+                var castleRegion = root.AddComponent<CastleRegionTracker>();
+                var phase = new WavePhaseTracker();
+                var panel = root.AddComponent<InventoryPanelController>();
+                panel.SetBackpackSource(backpack);
+                panel.SetCastleInventorySource(vault);
+                panel.SetCastleRegionTracker(castleRegion);
+                panel.SetPhaseTracker(phase);
+
+                castleRegion.Debug_SetPlayerInsideForTests(true);
+                backpack.State.AddItem("potion_health", 2);
+                panel.TogglePanel();
+                yield return null;
+
+                var trigger = root.GetComponentInChildren<InventoryContextMenuTrigger>(true);
+                Assert.NotNull(trigger);
+                trigger.OnPointerClick(new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Right });
+                yield return null;
+
+                ClickButton(root, "Vault");
+                yield return null;
+
+                Assert.That(backpack.State.GetCount("potion_health"), Is.EqualTo(1));
+                Assert.That(vault.State.GetCount("potion_health"), Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.Destroy(root);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator InventoryPanel_ShopRendersInCastle_AndClosesOnWaveStart()
         {
             var root = new GameObject("InventoryPanelShopPlayRoot", typeof(Canvas));
