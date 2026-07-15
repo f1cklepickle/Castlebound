@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Castlebound.Gameplay.Stats;
 
 public class BarrierHealth : MonoBehaviour, IDamageable
 {
@@ -89,6 +90,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         UpdateBrokenState();
         ResolveActiveOverlaps();
         OnRepaired?.Invoke();
+        RunStatsEvents.RaiseRepairPerformed();
         return true;
     }
 

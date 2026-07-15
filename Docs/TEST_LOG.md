@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-07-15 - codex-stats-run-stats-tracking-service
+
+### Summary
+- Added run counters for waves survived, enemies killed, damage dealt, repairs, health restored, and gold flow.
+- Connected counters to confirmed gameplay outcomes through a lightweight runtime event relay.
+- Excluded overheal and starting currency from earned run totals.
+
+### New or Updated Tests
+**EditMode**
+- `RunStatsTests` — validates zero initialization, accumulation, wave survival, invalid amounts, and starting currency semantics.
+- `HealthRunStatsRegressionTests` — validates health-restored stats count actual recovery without overheal.
+
+**PlayMode**
+- N/A — runtime wiring is installed by the existing `GameManager` without scene changes.
+
+### Notes
+- N/A
+
 ## 2026-07-14 - codex-spawning-lurker-enemy-type
 
 ### Summary

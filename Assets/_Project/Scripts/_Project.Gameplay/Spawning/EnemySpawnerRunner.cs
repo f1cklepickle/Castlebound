@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Castlebound.Gameplay.Balance;
 using UnityEngine;
+using Castlebound.Gameplay.Stats;
 
 namespace Castlebound.Gameplay.Spawning
 {
@@ -125,6 +126,7 @@ namespace Castlebound.Gameplay.Spawning
 
         private void HandleWaveEnded()
         {
+            RunStatsEvents.RaiseWaveSurvived();
             OnWaveEnded?.Invoke();
             phaseTracker.SetPhase(WavePhase.PreWave);
         }
