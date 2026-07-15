@@ -1,4 +1,5 @@
 using System;
+using Castlebound.Gameplay.Stats;
 
 namespace Castlebound.Gameplay.Inventory
 {
@@ -24,6 +25,12 @@ namespace Castlebound.Gameplay.Inventory
         public int Xp { get; private set; }
 
         public event Action<InventoryChangeFlags> OnInventoryChanged;
+
+        public InventoryState(int initialGold = 0, int initialXp = 0)
+        {
+            Gold = initialGold > 0 ? initialGold : 0;
+            Xp = initialXp > 0 ? initialXp : 0;
+        }
 
         public string GetWeaponId(int slotIndex)
         {
@@ -150,6 +157,7 @@ namespace Castlebound.Gameplay.Inventory
 
             Gold += amount;
             RaiseChanged(InventoryChangeFlags.Currency);
+            RunStatsEvents.RaiseGoldEarned(amount);
             return true;
         }
 
@@ -162,6 +170,7 @@ namespace Castlebound.Gameplay.Inventory
 
             Gold -= amount;
             RaiseChanged(InventoryChangeFlags.Currency);
+            RunStatsEvents.RaiseGoldSpent(amount);
             return true;
         }
 

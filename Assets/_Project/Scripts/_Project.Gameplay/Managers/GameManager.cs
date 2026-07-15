@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Castlebound.Gameplay.UI;
+using Castlebound.Gameplay.Stats;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -12,6 +13,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject gameOverUI; // optional canvas element
 
     public Random LootRng { get; private set; }
+    public RunStatsTracker RunStatsTracker { get; private set; }
 
     bool gameOver;
     GameOverScreenController gameOverScreenController;
@@ -21,6 +23,9 @@ public class GameManager : MonoBehaviour
         if (I && I != this) { Destroy(gameObject); return; }
         I = this;
         LootRng = new Random();
+        RunStatsTracker = GetComponent<RunStatsTracker>();
+        if (RunStatsTracker == null)
+            RunStatsTracker = gameObject.AddComponent<RunStatsTracker>();
         ResolveGameOverScreenController();
     }
 

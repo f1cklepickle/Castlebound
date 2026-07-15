@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Stats;
 
 public class Health : MonoBehaviour, IDamageable, IHealable
 {
@@ -29,9 +30,13 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
     public void TakeDamage(int amount)
     {
-        if (current <= 0) return;
+        if (current <= 0 || amount <= 0) return;
+        int previous = current;
         current = Mathf.Max(0, current - amount);
         OnHealthChanged?.Invoke(current, maxHealth);
+
+        if (CompareTag("Enemy"))
+            RunStatsEvents.RaiseDamageDealt(previous - current);
 
         if (CompareTag("Player") && playerHitFeedbackChannel != null)
         {
@@ -43,14 +48,20 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
     public void Heal(int amount)
     {
-        if (current <= 0) return;
+        if (current <= 0 || amount <= 0) return;
+        int previous = current;
         current = Mathf.Min(maxHealth, current + amount);
         OnHealthChanged?.Invoke(current, maxHealth);
+
+        if (CompareTag("Player"))
+            RunStatsEvents.RaiseHealthRestored(current - previous);
     }
 
     void Die()
     {
         OnDied?.Invoke();
+        if (CompareTag("Enemy"))
+            RunStatsEvents.RaiseEnemyKilled();
         if (CompareTag("Player"))
             GameManager.I?.OnPlayerDied();
 

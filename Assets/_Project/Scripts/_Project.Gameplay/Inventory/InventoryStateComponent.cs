@@ -34,18 +34,9 @@ namespace Castlebound.Gameplay.Inventory
             {
                 if (state == null)
                 {
-                    state = new InventoryState();
                     int initialGold = ActiveEconomyTable != null ? ActiveEconomyTable.StartingGold : startingGold;
                     int initialXp = ActiveEconomyTable != null ? ActiveEconomyTable.StartingXp : startingXp;
-                    if (initialGold > 0)
-                    {
-                        state.AddGold(initialGold);
-                    }
-
-                    if (initialXp > 0)
-                    {
-                        state.AddXp(initialXp);
-                    }
+                    state = new InventoryState(initialGold, initialXp);
                 }
 
                 return state;
