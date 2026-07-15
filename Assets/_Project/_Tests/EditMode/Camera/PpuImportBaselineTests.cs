@@ -14,6 +14,7 @@ namespace Castlebound.Tests.Scale
             "Assets/_Project/Art/Barrier_Assets",
             "Assets/_Project/Art/Goblin_Assets",
             "Assets/_Project/Art/Knight_Assets",
+            "Assets/_Project/Art/Lurker_Assets",
             "Assets/_Project/Art/UI",
         };
 

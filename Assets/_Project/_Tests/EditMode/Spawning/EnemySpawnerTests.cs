@@ -106,5 +106,45 @@ namespace Castlebound.Tests.Spawning
 
             Object.DestroyImmediate(runnerGo);
         }
+
+        [Test]
+        public void WaveSpawner_EmitsEachSequenceEnemyType_WhenSequencesAreReadyTogether()
+        {
+            var wave = new WaveConfig
+            {
+                sequences = new List<SpawnSequenceConfig>
+                {
+                    new SpawnSequenceConfig
+                    {
+                        enemyTypeId = "grunt",
+                        spawnCount = 1,
+                        intervalSeconds = 1f,
+                        initialDelaySeconds = 0f
+                    },
+                    new SpawnSequenceConfig
+                    {
+                        enemyTypeId = "lurker",
+                        spawnCount = 1,
+                        intervalSeconds = 1f,
+                        initialDelaySeconds = 0f
+                    }
+                }
+            };
+
+            var schedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 0,
+                waves: new[] { wave },
+                ramp: null);
+            var spawner = new EnemyWaveSpawner(
+                schedule,
+                new[] { new SpawnPoint("GateA", new Vector2(0f, 0f)) });
+
+            var ready = spawner.Tick(0.1f, currentAlive: 0);
+
+            Assert.That(ready.Count, Is.EqualTo(2));
+            Assert.That(ready[0].EnemyTypeId, Is.EqualTo("grunt"));
+            Assert.That(ready[1].EnemyTypeId, Is.EqualTo("lurker"));
+        }
     }
 }

@@ -20,3 +20,10 @@ MonoBehaviour:
     attackCooldownSeconds: 0.8
     xpReward: 5
     lootProfile: {fileID: 11400000, guid: f6af5ba4e3e841eab07d6af86f261ca0, type: 2}
+  - enemyTypeId: lurker
+    maxHealth: 35
+    moveSpeed: 3
+    attackDamage: 1
+    attackCooldownSeconds: 0.8
+    xpReward: 5
+    lootProfile: {fileID: 11400000, guid: f6af5ba4e3e841eab07d6af86f261ca0, type: 2}

@@ -6,6 +6,7 @@ public class PrefabSmokeTests
 {
     const string PlayerPath = "Assets/_Project/Prefabs/Player.prefab";
     const string EnemyPath  = "Assets/_Project/Prefabs/Enemy.prefab";
+    const string LurkerPath = "Assets/_Project/Prefabs/Enemy_Lurker.prefab";
 
     // --- Player ---
     [Test] public void PlayerPrefab_Loads() {
@@ -126,6 +127,35 @@ public class PrefabSmokeTests
     [Test] public void Enemy_Has_Health() {
         var go = PrefabTestUtil.Load(EnemyPath);
         Assert.NotNull(go.GetComponent<Health>());
+        PrefabTestUtil.Unload(go);
+    }
+
+    [Test] public void LurkerPrefab_Loads() {
+        var go = PrefabTestUtil.Load(LurkerPath); PrefabTestUtil.Unload(go);
+    }
+
+    [Test] public void Lurker_Has_EnemyRuntimeComponents() {
+        var go = PrefabTestUtil.Load(LurkerPath);
+        Assert.NotNull(go.GetComponent<Rigidbody2D>());
+        Assert.NotNull(go.GetComponent<Collider2D>());
+        Assert.NotNull(go.GetComponent<EnemyController2D>());
+        Assert.NotNull(go.GetComponent<EnemyAttack>());
+        Assert.NotNull(go.GetComponent<Health>());
+        PrefabTestUtil.Unload(go);
+    }
+
+    [Test] public void Lurker_UsesLurkerBalanceId_AndSpriteSheetLoop() {
+        var go = PrefabTestUtil.Load(LurkerPath);
+        var applier = go.GetComponent<Castlebound.Gameplay.Balance.EnemyBalanceApplier>();
+        var loop = go.GetComponentInChildren<Castlebound.Gameplay.AI.EnemySpriteSheetLoop>(true);
+
+        Assert.NotNull(applier);
+        Assert.That(applier.EnemyTypeId, Is.EqualTo("lurker"));
+        Assert.NotNull(loop);
+        Assert.NotNull(loop.SpriteSheet);
+        Assert.That(loop.FrameWidth, Is.EqualTo(128));
+        Assert.That(loop.FrameHeight, Is.EqualTo(128));
+        Assert.That(loop.FrameCount, Is.EqualTo(2));
         PrefabTestUtil.Unload(go);
     }
 }
