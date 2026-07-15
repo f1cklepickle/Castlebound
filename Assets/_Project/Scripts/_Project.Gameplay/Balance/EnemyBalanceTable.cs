@@ -7,7 +7,16 @@ namespace Castlebound.Gameplay.Balance
     {
         [SerializeField] private EnemyBalanceEntry[] enemies =
         {
-            new EnemyBalanceEntry()
+            new EnemyBalanceEntry(),
+            new EnemyBalanceEntry
+            {
+                EnemyTypeId = "lurker",
+                MaxHealth = 35,
+                MoveSpeed = 3f,
+                AttackDamage = 1,
+                AttackCooldownSeconds = 0.8f,
+                XpReward = 5
+            }
         };
 
         public EnemyBalanceEntry[] Enemies

@@ -26,8 +26,17 @@ namespace Castlebound.Tests.Balance
                 Assert.That(grunt.MaxHealth, Is.EqualTo(10));
                 Assert.That(grunt.MoveSpeed, Is.EqualTo(8f).Within(0.001f));
                 Assert.That(grunt.AttackDamage, Is.EqualTo(1));
-                Assert.That(grunt.AttackCooldownSeconds, Is.EqualTo(0.8f).Within(0.001f));
-                Assert.That(grunt.XpReward, Is.EqualTo(5));
+            Assert.That(grunt.AttackCooldownSeconds, Is.EqualTo(0.8f).Within(0.001f));
+            Assert.That(grunt.XpReward, Is.EqualTo(5));
+
+            var lurker = table.Find("lurker");
+            Assert.NotNull(lurker);
+            Assert.That(lurker.MaxHealth, Is.EqualTo(35));
+            Assert.That(lurker.MoveSpeed, Is.EqualTo(3f).Within(0.001f));
+            Assert.That(lurker.MoveSpeed, Is.LessThan(grunt.MoveSpeed));
+            Assert.That(lurker.AttackDamage, Is.EqualTo(1));
+            Assert.That(lurker.AttackCooldownSeconds, Is.EqualTo(0.8f).Within(0.001f));
+            Assert.That(lurker.XpReward, Is.EqualTo(5));
             }
             finally
             {
@@ -85,8 +94,16 @@ namespace Castlebound.Tests.Balance
             Assert.AreSame(table, station.Enemy, "Central station should reference the authored enemy table.");
 
             var grunt = table.Find("grunt");
-            Assert.NotNull(grunt, "The only current enemy type should be authored as grunt.");
+            Assert.NotNull(grunt, "Grunt enemy balance must remain authored.");
             Assert.AreSame(profile, grunt.LootProfile, "Grunt should use the authored grunt loot profile.");
+
+            var lurker = table.Find("lurker");
+            Assert.NotNull(lurker, "Lurker enemy balance must be authored.");
+            Assert.That(lurker.MaxHealth, Is.EqualTo(35));
+            Assert.That(lurker.MoveSpeed, Is.EqualTo(3f).Within(0.001f));
+            Assert.That(lurker.MoveSpeed, Is.LessThan(grunt.MoveSpeed));
+            Assert.AreSame(profile, lurker.LootProfile, "Lurker should reuse the current enemy loot profile until it has bespoke drops.");
+
             Assert.That(profile.LootTables, Is.Not.Null);
             Assert.That(profile.LootTables.Length, Is.GreaterThanOrEqualTo(1));
             Assert.That(profile.GlobalMaxTables, Is.EqualTo(6));

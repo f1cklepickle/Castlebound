@@ -48,12 +48,15 @@ namespace Castlebound.Tests.Spawning
 
             var wave3 = schedule.GetWave(3);
             Assert.IsNotNull(wave3);
-            Assert.AreEqual(7, wave3.Sequences[0].spawnCount, "Wave3 adds countPerStep (5 + 2).");
-            CollectionAssert.Contains(new[] { "grunt", "archer" }, wave3.Sequences[0].enemyTypeId, "Type selection uses available pool when multiple tiers unlocked.");
+            Assert.AreEqual(2, wave3.Sequences.Count, "Wave3 should support multiple enemy types in one generated schedule.");
+            Assert.AreEqual("grunt", wave3.Sequences[0].enemyTypeId);
+            Assert.AreEqual("archer", wave3.Sequences[1].enemyTypeId);
+            Assert.AreEqual(4, wave3.Sequences[0].spawnCount);
+            Assert.AreEqual(3, wave3.Sequences[1].spawnCount);
         }
 
         [Test]
-        public void Ramp_UsesWeightsWhenSelectingTypes()
+        public void Ramp_UsesWeightsWhenSplittingTypes()
         {
             var ramp = new RampConfig
             {
@@ -81,16 +84,64 @@ namespace Castlebound.Tests.Spawning
                 waves: null,
                 ramp: ramp);
 
-            var picks = new List<string>();
-            for (int i = 0; i < 10; i++)
-            {
-                var wave = schedule.GetWave(1);
-                picks.Add(wave.Sequences[0].enemyTypeId);
-            }
+            var wave = schedule.GetWave(1);
 
-            // With deterministic seed and weight bias, expect majority archers.
-            var archerCount = picks.FindAll(x => x == "archer").Count;
-            Assert.Greater(archerCount, 6, "Weights should bias selection toward archer.");
+            Assert.AreEqual(2, wave.Sequences.Count);
+            Assert.AreEqual("grunt", wave.Sequences[0].enemyTypeId);
+            Assert.AreEqual("archer", wave.Sequences[1].enemyTypeId);
+            Assert.AreEqual(1, wave.Sequences[0].spawnCount);
+            Assert.AreEqual(4, wave.Sequences[1].spawnCount, "Weights should bias split counts toward archer.");
+        }
+
+        [Test]
+        public void Ramp_UsesExplicitTierCounts_WhenConfigured()
+        {
+            var ramp = new RampConfig
+            {
+                baseSpawnCount = 6,
+                countPerStep = 2,
+                stepSize = 2,
+                startWave = 1,
+                unlocks = new List<RampTierUnlock>
+                {
+                    new RampTierUnlock
+                    {
+                        waveIndex = 1,
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                    },
+                    new RampTierUnlock
+                    {
+                        waveIndex = 3,
+                        tiers = new List<RampTier>
+                        {
+                            new RampTier
+                            {
+                                enemyTypeId = "lurker",
+                                weight = 0.35f,
+                                baseSpawnCount = 1,
+                                countPerStep = 1,
+                                stepSize = 2
+                            }
+                        }
+                    }
+                }
+            };
+
+            var schedule = new WaveScheduleRuntime(
+                defaultStrategy: SpawnMarkerStrategy.RoundRobin,
+                defaultSeed: 0,
+                waves: null,
+                ramp: ramp);
+
+            var wave3 = schedule.GetWave(3);
+            Assert.AreEqual("grunt", wave3.Sequences[0].enemyTypeId);
+            Assert.AreEqual("lurker", wave3.Sequences[1].enemyTypeId);
+            Assert.AreEqual(7, wave3.Sequences[0].spawnCount);
+            Assert.AreEqual(1, wave3.Sequences[1].spawnCount);
+
+            var wave5 = schedule.GetWave(5);
+            Assert.AreEqual(8, wave5.Sequences[0].spawnCount);
+            Assert.AreEqual(2, wave5.Sequences[1].spawnCount);
         }
     }
 }

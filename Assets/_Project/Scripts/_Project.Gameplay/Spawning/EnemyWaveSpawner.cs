@@ -16,7 +16,7 @@ namespace Castlebound.Gameplay.Spawning
         private int _currentWaveIndex = 1;
         private WaveRuntime _currentWave;
         private List<SpawnRequest> _pendingWaveRequests;
-        private int _nextSpawnRequestIndex;
+        private int _emittedSpawnCount;
 
         // Timing per sequence
         private readonly List<SequenceTimer> _sequenceTimers = new List<SequenceTimer>();
@@ -73,7 +73,7 @@ namespace Castlebound.Gameplay.Spawning
                 return ready;
             }
 
-            if (_pendingWaveRequests == null || _nextSpawnRequestIndex >= _pendingWaveRequests.Count)
+            if (_pendingWaveRequests == null || _emittedSpawnCount >= _pendingWaveRequests.Count)
             {
                 // No more spawns in this wave; enter wait-for-clear/gap if needed.
                 EnterPostWaveWait();
@@ -84,7 +84,7 @@ namespace Castlebound.Gameplay.Spawning
             UpdateSequenceTimers(deltaTime);
             EmitReadySpawns(ready);
 
-            if (_nextSpawnRequestIndex >= _pendingWaveRequests.Count)
+            if (_emittedSpawnCount >= _pendingWaveRequests.Count)
             {
                 EnterPostWaveWait();
             }
@@ -95,7 +95,7 @@ namespace Castlebound.Gameplay.Spawning
         private void PrepareWave(int waveIndex)
         {
             _currentWave = _waveSchedule?.GetWave(waveIndex);
-            _nextSpawnRequestIndex = 0;
+            _emittedSpawnCount = 0;
             _pendingWaveRequests = null;
             _gapTimer = 0f;
             _waitingForClear = false;
@@ -191,10 +191,10 @@ namespace Castlebound.Gameplay.Spawning
             for (int i = 0; i < _sequenceTimers.Count; i++)
             {
                 var timer = _sequenceTimers[i];
-                while (!timer.IsComplete && timer.TimeUntilNext <= 0f && _nextSpawnRequestIndex < _pendingWaveRequests.Count)
+                while (!timer.IsComplete && timer.TimeUntilNext <= 0f)
                 {
-                    ready.Add(_pendingWaveRequests[_nextSpawnRequestIndex]);
-                    _nextSpawnRequestIndex++;
+                    ready.Add(_pendingWaveRequests[timer.NextIndex]);
+                    _emittedSpawnCount++;
                     timer = timer.Consume();
                 }
 

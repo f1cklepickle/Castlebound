@@ -94,5 +94,92 @@ namespace Castlebound.Tests.PlayMode.Spawning
             Object.DestroyImmediate(enemyPrefab);
             Object.DestroyImmediate(scheduleAsset);
         }
+
+        [UnityTest]
+        public IEnumerator SpawnsMixedEnemyTypesFromAuthoredWave()
+        {
+            var gruntPrefab = new GameObject("GruntPrefab");
+            var lurkerPrefab = new GameObject("LurkerPrefab");
+            var scheduleAsset = ScriptableObject.CreateInstance<EnemySpawnScheduleAsset>();
+            var wavesField = typeof(EnemySpawnScheduleAsset).GetField(
+                "waves",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            wavesField.SetValue(scheduleAsset, new List<WaveConfig>
+            {
+                new WaveConfig
+                {
+                    sequences = new List<SpawnSequenceConfig>
+                    {
+                        new SpawnSequenceConfig
+                        {
+                            enemyTypeId = "grunt",
+                            spawnCount = 1,
+                            intervalSeconds = 1f,
+                            initialDelaySeconds = 0f
+                        },
+                        new SpawnSequenceConfig
+                        {
+                            enemyTypeId = "lurker",
+                            spawnCount = 1,
+                            intervalSeconds = 1f,
+                            initialDelaySeconds = 0f
+                        }
+                    },
+                    waitForClear = false
+                }
+            });
+
+            var marker = new GameObject("MixedMarker").AddComponent<SpawnPointMarker>();
+            marker.transform.position = new Vector2(1f, 0f);
+            typeof(SpawnPointMarker).GetField("gateId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(marker, "GateA");
+
+            var runnerGO = new GameObject("MixedSpawnerRunner");
+            var runner = runnerGO.AddComponent<EnemySpawnerRunner>();
+
+            typeof(EnemySpawnerRunner).GetField("scheduleAsset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(runner, scheduleAsset);
+            typeof(EnemySpawnerRunner).GetField("spawnMarkers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(runner, new List<SpawnPointMarker> { marker });
+
+            var mappingType = typeof(EnemySpawnerRunner).GetNestedType("EnemyPrefabMapping", System.Reflection.BindingFlags.NonPublic);
+            var mappingListType = typeof(List<>).MakeGenericType(mappingType);
+            var mappingList = (IList)System.Activator.CreateInstance(mappingListType);
+            AddMapping(mappingType, mappingList, "grunt", gruntPrefab);
+            AddMapping(mappingType, mappingList, "lurker", lurkerPrefab);
+            typeof(EnemySpawnerRunner).GetField("prefabMappings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(runner, mappingList);
+
+            yield return null;
+            yield return new WaitForSeconds(0.2f);
+
+            Assert.NotNull(GameObject.Find("GruntPrefab(Clone)"));
+            Assert.NotNull(GameObject.Find("LurkerPrefab(Clone)"));
+
+            Object.DestroyImmediate(runnerGO);
+            Object.DestroyImmediate(marker.gameObject);
+            DestroyClone("GruntPrefab(Clone)");
+            DestroyClone("LurkerPrefab(Clone)");
+            Object.DestroyImmediate(gruntPrefab);
+            Object.DestroyImmediate(lurkerPrefab);
+            Object.DestroyImmediate(scheduleAsset);
+        }
+
+        private static void AddMapping(System.Type mappingType, IList mappingList, string enemyTypeId, GameObject prefab)
+        {
+            var mapping = System.Activator.CreateInstance(mappingType);
+            mappingType.GetField("enemyTypeId").SetValue(mapping, enemyTypeId);
+            mappingType.GetField("prefab").SetValue(mapping, prefab);
+            mappingList.Add(mapping);
+        }
+
+        private static void DestroyClone(string objectName)
+        {
+            var clone = GameObject.Find(objectName);
+            if (clone != null)
+            {
+                Object.DestroyImmediate(clone);
+            }
+        }
     }
 }

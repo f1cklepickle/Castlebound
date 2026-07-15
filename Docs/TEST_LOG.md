@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-07-14 - codex-spawning-lurker-enemy-type
+
+### Summary
+- Added the Lurker enemy type with a 2-frame sprite-sheet loop and dedicated prefab.
+- Added Lurker balance at 35 health with slower movement than the current grunt enemy.
+- Updated generated wave ramp scheduling to support multiple enemy type sequences in one wave, including explicit per-tier counts.
+- Tuned the BasicSpawnSchedule Lurker ramp to start with 1 Lurker on wave 3 and add 1 every other wave.
+
+### New or Updated Tests
+**EditMode**
+- `EnemySpriteSheetLoopTests` — validates runtime sheet slicing and looping.
+- `WaveScheduleRampTests` — validates generated ramp waves split counts across multiple unlocked enemy types and honor explicit Lurker count ramps.
+- `EnemySpawnerTests` — validates mixed wave sequences emit the correct enemy type requests.
+- `EnemyBalanceTableTests` — validates Lurker balance and authored asset wiring.
+- `PrefabSmokeTests` — validates the Lurker prefab runtime components and sprite-sheet loop wiring.
+- `EnemySpawnScheduleAssetBalanceTests` — validates MainPrototype Lurker prefab mapping and BasicSpawnSchedule Lurker unlock.
+- `PpuImportBaselineTests` — includes Lurker art in pixel import baseline coverage.
+
+**PlayMode**
+- `EnemySpawnerRunnerPlayTests` — validates the runtime spawner can emit both grunt and Lurker prefabs from one authored wave.
+
+### Notes
+- N/A
+
 ## 2026-07-14 - codex-backpack-move-to-vault
 
 ### Summary

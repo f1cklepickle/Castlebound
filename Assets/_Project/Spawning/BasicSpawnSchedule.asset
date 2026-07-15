@@ -38,6 +38,16 @@ MonoBehaviour:
       tiers:
       - enemyTypeId: grunt
         weight: 1
+        baseSpawnCount: 0
+        countPerStep: 0
+        stepSize: 0
+    - waveIndex: 3
+      tiers:
+      - enemyTypeId: lurker
+        weight: 0.35
+        baseSpawnCount: 1
+        countPerStep: 1
+        stepSize: 2
   sequences:
   - enemyTypeId: 
     spawnCount: 0

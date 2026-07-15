@@ -124,6 +124,39 @@ namespace Castlebound.Tests.Spawning
         }
 
         [Test]
+        public void MainPrototypeSpawnerRunner_MapsGruntAndLurkerPrefabs()
+        {
+            string sceneYaml = File.ReadAllText("Assets/_Project/Scenes/MainPrototype.unity");
+
+            StringAssert.Contains("enemyTypeId: grunt", sceneYaml);
+            StringAssert.Contains("enemyTypeId: lurker", sceneYaml);
+            StringAssert.Contains(
+                "prefab: {fileID: 6394411849047796180, guid: da2e30e6f4e649dd90cab820b6231b8e, type: 3}",
+                sceneYaml,
+                "MainPrototype EnemySpawnerRunner should map lurker spawns to the Lurker prefab.");
+        }
+
+        [Test]
+        public void BasicSpawnSchedule_UnlocksLurkerInGeneratedRamp()
+        {
+            var scheduleAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemySpawnScheduleAsset>(
+                "Assets/_Project/Spawning/BasicSpawnSchedule.asset");
+
+            Assert.NotNull(scheduleAsset, "BasicSpawnSchedule asset must exist.");
+
+            var wave = scheduleAsset.ToRuntimeWaveSchedule().GetWave(3);
+
+            Assert.That(wave.Sequences.Count, Is.GreaterThanOrEqualTo(2));
+            Assert.That(wave.Sequences[0].enemyTypeId, Is.EqualTo("grunt"));
+            Assert.That(wave.Sequences[1].enemyTypeId, Is.EqualTo("lurker"));
+            Assert.That(wave.Sequences[1].spawnCount, Is.EqualTo(1));
+
+            var laterWave = scheduleAsset.ToRuntimeWaveSchedule().GetWave(5);
+            Assert.That(laterWave.Sequences[1].enemyTypeId, Is.EqualTo("lurker"));
+            Assert.That(laterWave.Sequences[1].spawnCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public void ToRuntimeWaveSchedule_PreservesFallbackDefaultsWithoutBalanceTable()
         {
             var scheduleAsset = ScriptableObject.CreateInstance<EnemySpawnScheduleAsset>();

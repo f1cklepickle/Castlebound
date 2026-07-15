@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Castlebound.Gameplay.Balance;
+using UnityEngine;
 
 namespace Castlebound.Gameplay.Spawning
 {
@@ -30,7 +31,6 @@ namespace Castlebound.Gameplay.Spawning
         private readonly int _defaultSeed;
         private readonly List<WaveConfig> _waves;
         private readonly RampConfig _ramp;
-        private readonly System.Random _rng;
         private readonly float _defaultGapSeconds;
         private readonly bool _defaultWaitForClear;
         private readonly int _defaultMaxAlive;
@@ -75,7 +75,6 @@ namespace Castlebound.Gameplay.Spawning
             _defaultSeed = defaultSeed;
             _waves = waves?.ToList() ?? new List<WaveConfig>();
             _ramp = ramp;
-            _rng = new System.Random(_defaultSeed);
             _defaultGapSeconds = defaultGapSeconds < 0f ? 0f : defaultGapSeconds;
             _defaultWaitForClear = defaultWaitForClear;
             _defaultMaxAlive = defaultMaxAlive < 0 ? 0 : defaultMaxAlive;
@@ -147,18 +146,10 @@ namespace Castlebound.Gameplay.Spawning
                 return null;
             }
 
-            var chosenType = ChooseEnemyType(pool);
-
-            var sequence = new SpawnSequenceConfig
-            {
-                enemyTypeId = chosenType,
-                spawnCount = count,
-                intervalSeconds = _generationBuild != null ? _generationBuild.IntervalSeconds : 1f,
-                initialDelaySeconds = _generationBuild != null ? _generationBuild.InitialDelaySeconds : 0f
-            };
+            var sequences = BuildRampSequences(count, pool, waveIndex);
 
             return new WaveRuntime(
-                sequences: new List<SpawnSequenceConfig> { sequence },
+                sequences: sequences,
                 strategy: _defaultStrategy,
                 seed: _defaultSeed,
                 gapSeconds: _defaultGapSeconds,
@@ -191,9 +182,9 @@ namespace Castlebound.Gameplay.Spawning
             return rampCount;
         }
 
-        private List<RampTier> BuildTierPool(int waveIndex)
+        private List<RuntimeRampTier> BuildTierPool(int waveIndex)
         {
-            var pool = new List<RampTier>();
+            var pool = new List<RuntimeRampTier>();
             if (_ramp == null || _ramp.unlocks == null)
             {
                 return pool;
@@ -203,11 +194,14 @@ namespace Castlebound.Gameplay.Spawning
             {
                 if (waveIndex >= unlock.waveIndex && unlock.tiers != null)
                 {
-                    pool.AddRange(unlock.tiers.Where(t => !string.IsNullOrWhiteSpace(t.enemyTypeId)));
+                    foreach (var tier in unlock.tiers.Where(t => !string.IsNullOrWhiteSpace(t.enemyTypeId)))
+                    {
+                        pool.Add(new RuntimeRampTier(tier, unlock.waveIndex));
+                    }
                 }
             }
 
-            // If no weights set, weights are effectively equal; we just pick the first for now.
+            // If no weights are set, weights are treated as equal during spawn-count splitting.
             return pool;
         }
 
@@ -241,37 +235,121 @@ namespace Castlebound.Gameplay.Spawning
             }
         }
 
-        private string ChooseEnemyType(List<RampTier> pool)
+        private List<SpawnSequenceConfig> BuildRampSequences(int totalCount, List<RuntimeRampTier> pool, int waveIndex)
         {
-            if (pool.Count == 0)
+            var sequences = new List<SpawnSequenceConfig>();
+            if (totalCount <= 0 || pool.Count == 0)
             {
-                return string.Empty;
+                return sequences;
             }
 
-            float totalWeight = 0f;
-            foreach (var tier in pool)
+            var explicitCounts = new Dictionary<int, int>();
+            int explicitTotal = 0;
+            for (int i = 0; i < pool.Count; i++)
             {
-                totalWeight += tier.weight > 0f ? tier.weight : 1f;
+                if (pool[i].Tier.baseSpawnCount <= 0)
+                {
+                    continue;
+                }
+
+                int count = GetExplicitTierCount(pool[i], waveIndex);
+                explicitCounts[i] = count;
+                explicitTotal += count;
+            }
+
+            int weightedTotal = Mathf.Max(0, totalCount - explicitTotal);
+            var weightedIndexes = new List<int>();
+            float totalWeight = 0f;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                if (explicitCounts.ContainsKey(i))
+                {
+                    continue;
+                }
+
+                weightedIndexes.Add(i);
+                totalWeight += pool[i].Tier.weight > 0f ? pool[i].Tier.weight : 1f;
             }
 
             if (totalWeight <= 0f)
             {
-                return pool[0].enemyTypeId;
+                totalWeight = weightedIndexes.Count;
             }
 
-            var roll = (float)(_rng.NextDouble() * totalWeight);
-            float cumulative = 0f;
-            foreach (var tier in pool)
+            int guaranteedCount = weightedTotal >= weightedIndexes.Count ? 1 : 0;
+            int distributableCount = weightedTotal - guaranteedCount * weightedIndexes.Count;
+            var fractionalCounts = new List<(RuntimeRampTier Tier, int Count, float Remainder, int Order)>(weightedIndexes.Count);
+            int assignedCount = guaranteedCount * weightedIndexes.Count;
+            foreach (var index in weightedIndexes)
             {
-                var w = tier.weight > 0f ? tier.weight : 1f;
-                cumulative += w;
-                if (roll <= cumulative)
-                {
-                    return tier.enemyTypeId;
-                }
+                var tier = pool[index];
+                float weight = tier.Tier.weight > 0f ? tier.Tier.weight : 1f;
+                float exactCount = distributableCount * (weight / totalWeight);
+                int count = Mathf.FloorToInt(exactCount);
+                assignedCount += count;
+                fractionalCounts.Add((tier, guaranteedCount + count, exactCount - count, index));
             }
 
-            return pool[pool.Count - 1].enemyTypeId;
+            int remainder = weightedTotal - assignedCount;
+            fractionalCounts.Sort((a, b) => b.Remainder.CompareTo(a.Remainder));
+            for (int i = 0; i < fractionalCounts.Count && remainder > 0; i++, remainder--)
+            {
+                var current = fractionalCounts[i];
+                fractionalCounts[i] = (current.Tier, current.Count + 1, current.Remainder, current.Order);
+            }
+
+            var sequenceCounts = new Dictionary<int, int>();
+            foreach (var pair in explicitCounts)
+            {
+                sequenceCounts[pair.Key] = pair.Value;
+            }
+
+            foreach (var entry in fractionalCounts)
+            {
+                sequenceCounts[entry.Order] = entry.Count;
+            }
+
+            for (int i = 0; i < pool.Count; i++)
+            {
+                if (!sequenceCounts.TryGetValue(i, out var count) || count <= 0)
+                {
+                    continue;
+                }
+
+                sequences.Add(new SpawnSequenceConfig
+                {
+                    enemyTypeId = pool[i].Tier.enemyTypeId,
+                    spawnCount = count,
+                    intervalSeconds = _generationBuild != null ? _generationBuild.IntervalSeconds : 1f,
+                    initialDelaySeconds = _generationBuild != null ? _generationBuild.InitialDelaySeconds : 0f
+                });
+            }
+
+            return sequences;
+        }
+
+        private static int GetExplicitTierCount(RuntimeRampTier tier, int waveIndex)
+        {
+            int count = Mathf.Max(0, tier.Tier.baseSpawnCount);
+            if (tier.Tier.stepSize <= 0 || tier.Tier.countPerStep == 0)
+            {
+                return count;
+            }
+
+            int steps = Mathf.Max(0, waveIndex - tier.UnlockWaveIndex) / tier.Tier.stepSize;
+            return Mathf.Max(0, count + steps * tier.Tier.countPerStep);
+        }
+
+        private readonly struct RuntimeRampTier
+        {
+            public RuntimeRampTier(RampTier tier, int unlockWaveIndex)
+            {
+                Tier = tier;
+                UnlockWaveIndex = unlockWaveIndex;
+            }
+
+            public RampTier Tier { get; }
+            public int UnlockWaveIndex { get; }
         }
     }
 }
