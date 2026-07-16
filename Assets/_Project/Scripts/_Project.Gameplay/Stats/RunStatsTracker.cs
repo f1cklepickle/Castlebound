@@ -21,6 +21,7 @@ namespace Castlebound.Gameplay.Stats
             RunStatsEvents.WaveSurvived += Stats.RecordWaveSurvived;
             RunStatsEvents.EnemyKilled += Stats.RecordEnemyKilled;
             RunStatsEvents.DamageDealt += Stats.RecordDamageDealt;
+            RunStatsEvents.DamageTaken += Stats.RecordDamageTaken;
             RunStatsEvents.RepairPerformed += Stats.RecordRepair;
             RunStatsEvents.HealthRestored += Stats.RecordHealthRestored;
             RunStatsEvents.GoldEarned += Stats.RecordGoldEarned;
@@ -41,6 +42,7 @@ namespace Castlebound.Gameplay.Stats
             RunStatsEvents.WaveSurvived -= Stats.RecordWaveSurvived;
             RunStatsEvents.EnemyKilled -= Stats.RecordEnemyKilled;
             RunStatsEvents.DamageDealt -= Stats.RecordDamageDealt;
+            RunStatsEvents.DamageTaken -= Stats.RecordDamageTaken;
             RunStatsEvents.RepairPerformed -= Stats.RecordRepair;
             RunStatsEvents.HealthRestored -= Stats.RecordHealthRestored;
             RunStatsEvents.GoldEarned -= Stats.RecordGoldEarned;

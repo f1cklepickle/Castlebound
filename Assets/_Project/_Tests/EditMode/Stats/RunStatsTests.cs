@@ -14,6 +14,7 @@ namespace Castlebound.Tests.Stats
             Assert.That(stats.WavesSurvived, Is.Zero);
             Assert.That(stats.EnemiesKilled, Is.Zero);
             Assert.That(stats.DamageDealt, Is.Zero);
+            Assert.That(stats.DamageTaken, Is.Zero);
             Assert.That(stats.RepairsPerformed, Is.Zero);
             Assert.That(stats.HealthRestored, Is.Zero);
             Assert.That(stats.GoldEarned, Is.Zero);
@@ -30,6 +31,7 @@ namespace Castlebound.Tests.Stats
             stats.RecordEnemyKilled();
             stats.RecordDamageDealt(4);
             stats.RecordDamageDealt(6);
+            stats.RecordDamageTaken(3);
             stats.RecordRepair();
             stats.RecordHealthRestored(3);
             stats.RecordGoldEarned(8);
@@ -38,6 +40,7 @@ namespace Castlebound.Tests.Stats
             Assert.That(stats.WavesSurvived, Is.EqualTo(2));
             Assert.That(stats.EnemiesKilled, Is.EqualTo(1));
             Assert.That(stats.DamageDealt, Is.EqualTo(10));
+            Assert.That(stats.DamageTaken, Is.EqualTo(3));
             Assert.That(stats.RepairsPerformed, Is.EqualTo(1));
             Assert.That(stats.HealthRestored, Is.EqualTo(3));
             Assert.That(stats.GoldEarned, Is.EqualTo(8));
@@ -50,11 +53,13 @@ namespace Castlebound.Tests.Stats
             var stats = new RunStats();
 
             stats.RecordDamageDealt(-2);
+            stats.RecordDamageTaken(0);
             stats.RecordHealthRestored(0);
             stats.RecordGoldEarned(-1);
             stats.RecordGoldSpent(0);
 
             Assert.That(stats.DamageDealt, Is.Zero);
+            Assert.That(stats.DamageTaken, Is.Zero);
             Assert.That(stats.HealthRestored, Is.Zero);
             Assert.That(stats.GoldEarned, Is.Zero);
             Assert.That(stats.GoldSpent, Is.Zero);
@@ -92,6 +97,7 @@ namespace Castlebound.Tests.Stats
                 RunStatsEvents.RaiseWaveSurvived();
                 RunStatsEvents.RaiseEnemyKilled();
                 RunStatsEvents.RaiseDamageDealt(7);
+                RunStatsEvents.RaiseDamageTaken(5);
                 RunStatsEvents.RaiseRepairPerformed();
                 RunStatsEvents.RaiseHealthRestored(2);
                 RunStatsEvents.RaiseGoldEarned(9);
@@ -100,6 +106,7 @@ namespace Castlebound.Tests.Stats
                 Assert.That(tracker.Stats.WavesSurvived, Is.EqualTo(1));
                 Assert.That(tracker.Stats.EnemiesKilled, Is.EqualTo(1));
                 Assert.That(tracker.Stats.DamageDealt, Is.EqualTo(7));
+                Assert.That(tracker.Stats.DamageTaken, Is.EqualTo(5));
                 Assert.That(tracker.Stats.RepairsPerformed, Is.EqualTo(1));
                 Assert.That(tracker.Stats.HealthRestored, Is.EqualTo(2));
                 Assert.That(tracker.Stats.GoldEarned, Is.EqualTo(9));

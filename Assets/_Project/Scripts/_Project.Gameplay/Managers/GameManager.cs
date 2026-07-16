@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
 
         if (gameOverScreenController != null)
         {
-            gameOverScreenController.Show();
+            gameOverScreenController.Show(RunStatsTracker?.Stats);
         }
         else if (gameOverUI)
         {
