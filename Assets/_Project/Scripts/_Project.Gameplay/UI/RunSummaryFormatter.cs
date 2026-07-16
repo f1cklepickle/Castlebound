@@ -18,7 +18,7 @@ namespace Castlebound.Gameplay.UI
                    Line("Health Restored", stats.HealthRestored) +
                    Line("Gold Earned", stats.GoldEarned) +
                    Line("Gold Spent", stats.GoldSpent) +
-                   "\nRise again. The castle still stands.";
+                   "\nEnduring loss reveals the path to mastery.";
         }
 
         private static string Line(string label, int value) =>

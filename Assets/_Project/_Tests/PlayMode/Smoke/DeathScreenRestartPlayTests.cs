@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using TMPro;
+using UnityEngine.UI;
 
 namespace Castlebound.Tests.PlayMode.UI
 {
@@ -53,6 +54,38 @@ namespace Castlebound.Tests.PlayMode.UI
             StringAssert.Contains("Waves Survived", summary.text);
             StringAssert.Contains("Enemies Defeated", summary.text);
             StringAssert.Contains("Damage Dealt", summary.text);
+        }
+
+        [UnityTest]
+        public IEnumerator RiseAgainButton_ReloadsCurrentScene()
+        {
+            yield return LoadMainPrototype();
+
+            var manager = Object.FindObjectOfType<GameManager>();
+            Assert.NotNull(manager);
+            int previousManagerId = manager.GetInstanceID();
+
+            manager.OnPlayerDied();
+
+            var button = GetGameOverUi(manager).GetComponentInChildren<Button>(true);
+            Assert.NotNull(button, "Expected the Rise Again button on the failure screen.");
+
+            button.onClick.Invoke();
+
+            GameManager reloadedManager = null;
+            for (int frame = 0; frame < 120; frame++)
+            {
+                yield return null;
+                reloadedManager = Object.FindObjectOfType<GameManager>();
+                if (reloadedManager != null && reloadedManager.GetInstanceID() != previousManagerId)
+                {
+                    break;
+                }
+            }
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("MainPrototype"));
+            Assert.NotNull(reloadedManager, "Restart should load a fresh GameManager.");
+            Assert.That(reloadedManager.GetInstanceID(), Is.Not.EqualTo(previousManagerId));
         }
 
         private static IEnumerator LoadMainPrototype()
