@@ -37,6 +37,8 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
         if (CompareTag("Enemy"))
             RunStatsEvents.RaiseDamageDealt(previous - current);
+        else if (CompareTag("Player"))
+            RunStatsEvents.RaiseDamageTaken(previous - current);
 
         if (CompareTag("Player") && playerHitFeedbackChannel != null)
         {
@@ -65,6 +67,9 @@ public class Health : MonoBehaviour, IDamageable, IHealable
         if (CompareTag("Player"))
             GameManager.I?.OnPlayerDied();
 
-        Destroy(gameObject);
+        if (Application.isPlaying)
+            Destroy(gameObject);
+        else
+            DestroyImmediate(gameObject);
     }
 }

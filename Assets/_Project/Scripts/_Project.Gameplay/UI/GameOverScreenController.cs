@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Castlebound.Gameplay.Stats;
 
 namespace Castlebound.Gameplay.UI
 {
@@ -13,6 +14,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private Color restartButtonTextColor = new Color(0.84f, 0.95f, 1f, 1f);
 
         private UnityAction restartHandler;
+        private RunSummaryPresenter summaryPresenter;
 
         private void OnEnable()
         {
@@ -47,6 +49,13 @@ namespace Castlebound.Gameplay.UI
             gameObject.SetActive(true);
         }
 
+        public void Show(RunStats stats)
+        {
+            gameObject.SetActive(true);
+            ResolveSummaryPresenter();
+            summaryPresenter?.Present(stats);
+        }
+
         private void BindRestartHandler()
         {
             if (restartButton == null || restartHandler == null)
@@ -71,14 +80,22 @@ namespace Castlebound.Gameplay.UI
             }
         }
 
+        private void ResolveSummaryPresenter()
+        {
+            if (summaryPresenter == null)
+                summaryPresenter = GetComponent<RunSummaryPresenter>();
+            if (summaryPresenter == null)
+                summaryPresenter = gameObject.AddComponent<RunSummaryPresenter>();
+        }
+
         private static Button CreateDefaultRestartButton(Transform parent)
         {
             var buttonObject = new GameObject("RestartButton", typeof(RectTransform), typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(parent, false);
 
             var rect = buttonObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.2f);
-            rect.anchorMax = new Vector2(0.5f, 0.2f);
+            rect.anchorMin = new Vector2(0.5f, 0.14f);
+            rect.anchorMax = new Vector2(0.5f, 0.14f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(300f, 92f);
 

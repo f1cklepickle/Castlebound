@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using TMPro;
 
 namespace Castlebound.Tests.PlayMode.UI
 {
@@ -31,6 +32,27 @@ namespace Castlebound.Tests.PlayMode.UI
 
             Assert.That(buttonComponents.Length, Is.GreaterThan(0),
                 "Death screen should include a tappable Restart button.");
+        }
+
+        [UnityTest]
+        public IEnumerator OnPlayerDied_GameOverUiDisplaysRunSummary()
+        {
+            yield return LoadMainPrototype();
+
+            var manager = Object.FindObjectOfType<GameManager>();
+            manager.RunStatsTracker.Stats.RecordWaveSurvived();
+            manager.RunStatsTracker.Stats.RecordEnemyKilled();
+            manager.RunStatsTracker.Stats.RecordDamageDealt(7);
+
+            manager.OnPlayerDied();
+
+            var summary = GetGameOverUi(manager)
+                .GetComponentsInChildren<TextMeshProUGUI>(true)
+                .FirstOrDefault(text => text.text.Contains("RUN SUMMARY"));
+            Assert.NotNull(summary);
+            StringAssert.Contains("Waves Survived", summary.text);
+            StringAssert.Contains("Enemies Defeated", summary.text);
+            StringAssert.Contains("Damage Dealt", summary.text);
         }
 
         private static IEnumerator LoadMainPrototype()

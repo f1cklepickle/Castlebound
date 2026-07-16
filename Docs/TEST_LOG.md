@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-07-15 - codex-ui-failure-run-summary
+
+### Summary
+- Added a complete run summary to the failure screen for issues #96 and #99.
+- Added actual player damage-taken tracking, including lethal overkill clamping.
+- Preserved the existing Rise Again restart flow while rendering the summary only on failure.
+
+### New or Updated Tests
+**EditMode**
+- `RunStatsTests` — covers damage-taken initialization, accumulation, validation, and runtime relay tracking.
+- `DamageTakenRunStatsRegressionTests` — validates lethal damage records only actual player health lost.
+- `RunSummaryFormatterTests` — validates every run statistic maps to the failure summary.
+
+**PlayMode**
+- `DeathScreenRestartPlayTests` — validates the death screen displays populated run summary values and retains its tappable restart button.
+
+### Notes
+- N/A
+
 ## 2026-07-15 - codex-stats-run-stats-tracking-service
 
 ### Summary

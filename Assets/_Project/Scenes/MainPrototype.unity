@@ -2471,6 +2471,7 @@ GameObject:
   - component: {fileID: 904751788}
   - component: {fileID: 904751787}
   - component: {fileID: 904751789}
+  - component: {fileID: 904751790}
   m_Layer: 5
   m_Name: GameOver
   m_TagString: Untagged
@@ -2616,6 +2617,21 @@ MonoBehaviour:
   restartButtonSprite: {fileID: 21300000, guid: b2831b7f6899ee944a13fa562e3b84df, type: 3}
   restartButtonText: Rise Again
   restartButtonTextColor: {r: 0.84, g: 0.95, b: 1, a: 1}
+--- !u!114 &904751790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 904751785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82dbf3f13d5c44a084b9cc10a3c22da2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  summaryText: {fileID: 904751787}
+  panelColor: {r: 0.16, g: 0.18, b: 0.2, a: 0.96}
+  textColor: {r: 0.86, g: 0.88, b: 0.9, a: 1}
 --- !u!1 &977390122
 GameObject:
   m_ObjectHideFlags: 0
