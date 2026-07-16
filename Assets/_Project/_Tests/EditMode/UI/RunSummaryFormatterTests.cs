@@ -29,6 +29,8 @@ namespace Castlebound.Tests.UI
             StringAssert.Contains("Health Restored    <color=#78D68A><b>4</b></color>", summary);
             StringAssert.Contains("Gold Earned    <color=#78D68A><b>5</b></color>", summary);
             StringAssert.Contains("Gold Spent    <color=#78D68A><b>6</b></color>", summary);
+            StringAssert.Contains("Enduring loss reveals the path to mastery.", summary);
+            StringAssert.DoesNotContain("Rise again. The castle still stands.", summary);
         }
     }
 }

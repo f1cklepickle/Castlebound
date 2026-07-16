@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-16 - codex-ui-p5-meaningful-failure-closeout
+
+### Summary
+- Replaced duplicate Rise Again summary copy with the approved philosophical failure line.
+- Preserved the Rise Again button as the single restart call to action.
+- Strengthened fast-restart validation by exercising the actual failure-screen button.
+
+### New or Updated Tests
+**EditMode**
+- `RunSummaryFormatterTests` — validates the approved philosophical line and guards against duplicate Rise Again copy.
+
+**PlayMode**
+- `DeathScreenRestartPlayTests` — validates the Rise Again button reloads MainPrototype with a fresh GameManager.
+
+### Notes
+- N/A
+
 ## 2026-07-15 - codex-ui-failure-run-summary
 
 ### Summary
