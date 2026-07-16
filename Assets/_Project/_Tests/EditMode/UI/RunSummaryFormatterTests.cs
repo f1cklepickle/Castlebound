@@ -22,7 +22,7 @@ namespace Castlebound.Tests.UI
             string summary = RunSummaryFormatter.Format(stats);
 
             StringAssert.Contains("Waves Survived    <color=#78D68A><b>1</b></color>", summary);
-            StringAssert.Contains("Enemies Defeated  <color=#78D68A><b>1</b></color>", summary);
+            StringAssert.Contains("Enemies Defeated    <color=#78D68A><b>1</b></color>", summary);
             StringAssert.Contains("Damage Dealt    <color=#78D68A><b>2</b></color>", summary);
             StringAssert.Contains("Damage Taken    <color=#78D68A><b>3</b></color>", summary);
             StringAssert.Contains("Repairs Made    <color=#78D68A><b>1</b></color>", summary);
