@@ -33,8 +33,6 @@ public class EnemyAttack : MonoBehaviour
     static bool missingRegionStateWarningLogged;
     bool onCooldown;
 
-    static readonly Collider2D[] hits = new Collider2D[4];
-
     void Awake()
     {
         controller = GetComponent<EnemyController2D>();
@@ -54,6 +52,13 @@ public class EnemyAttack : MonoBehaviour
         if (onCooldown || controller == null) return;
         if (IsRooted()) return;
 
+        Transform selectedTarget = controller.Target;
+        if (controller.IsChaseRequested)
+        {
+            if (selectedTarget == null || !IsTargetInReach(selectedTarget)) return;
+            controller.ClearChaseRequest();
+        }
+
         // Only attack while we're holding position near the player
         if (!controller.IsInHoldRange()) return;
 
@@ -65,17 +70,12 @@ public class EnemyAttack : MonoBehaviour
                 return;
         }
 
-        // Confirm target really is in range (extra safety)
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);
-        if (count == 0 && controller != null && controller.Target != null && targetMask.value == 0) {
-            // Fallback when mask is unset: distance check to the intended target
-            float dist = Vector2.Distance(transform.position, controller.Target.position);
-            if (dist <= attackRange) count = 1;
-        }
-        if (count > 0) StartCoroutine(AttackRoutine());
+        if (selectedTarget == null || !IsTargetInReach(selectedTarget)) return;
+
+        StartCoroutine(AttackRoutine(selectedTarget));
     }
 
-    IEnumerator AttackRoutine()
+    IEnumerator AttackRoutine(Transform lockedTarget)
     {
         onCooldown = true;
 
@@ -84,37 +84,84 @@ public class EnemyAttack : MonoBehaviour
 
         yield return new WaitForSeconds(windupSeconds);
 
-        // Apply damage once per unique IDamageable in range (avoid double hits on multi-collider targets).
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, attackRange, hits, targetMask);
-        var uniqueTargets = new System.Collections.Generic.HashSet<IDamageable>();
-
-        for (int i = 0; i < count; i++)
+        bool targetInReach = IsTargetInReach(lockedTarget);
+        if (!IsLockedTargetValid(lockedTarget, controller != null ? controller.Target : null, targetInReach))
         {
-            var c = hits[i];
-            if (!c) continue;
-
-            IDamageable dmg = null;
-            if (c.TryGetComponent<IDamageable>(out var selfDmg))
-            {
-                dmg = selfDmg;
-            }
-            else
-            {
-                dmg = c.GetComponentInParent<IDamageable>();
-            }
-
-            if (dmg == null)
-                continue;
-
-            if (!uniqueTargets.Add(dmg))
-                continue;
-
-            Debug.Log($"[EnemyAttack] Hit IDamageable target: {c.name}, tag: {c.tag}, damage: {Damage}", this);
-            DealDamage(dmg);
+            CancelWindup();
+            yield break;
         }
 
-        yield return new WaitForSeconds(cooldownSeconds);
+        IDamageable damageable = ResolveDamageable(lockedTarget);
+        if (damageable == null)
+        {
+            CancelWindup();
+            yield break;
+        }
+
+        Debug.Log($"[EnemyAttack] Hit locked target: {lockedTarget.name}, damage: {Damage}", this);
+        DealDamage(damageable);
+
+        if (RequiresCompletedCooldown(attackCompleted: true))
+            yield return new WaitForSeconds(cooldownSeconds);
+
         onCooldown = false;
+    }
+
+    public static bool IsLockedTargetValid(Transform lockedTarget, Transform selectedTarget, bool isInReach)
+    {
+        return lockedTarget != null && lockedTarget == selectedTarget && isInReach;
+    }
+
+    public static bool RequiresCompletedCooldown(bool attackCompleted)
+    {
+        return attackCompleted;
+    }
+
+    private bool IsTargetInReach(Transform selectedTarget)
+    {
+        if (selectedTarget == null)
+            return false;
+
+        var targetColliders = selectedTarget.GetComponentsInChildren<Collider2D>();
+        if (targetColliders.Length == 0)
+        {
+            return Vector2.Distance(transform.position, selectedTarget.position) <= attackRange;
+        }
+
+        for (int i = 0; i < targetColliders.Length; i++)
+        {
+            var targetCollider = targetColliders[i];
+            if (targetCollider == null || !targetCollider.enabled)
+                continue;
+
+            Vector2 closestPoint = targetCollider.ClosestPoint(transform.position);
+            if (Vector2.Distance(transform.position, closestPoint) <= attackRange)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static IDamageable ResolveDamageable(Transform lockedTarget)
+    {
+        if (lockedTarget == null)
+            return null;
+
+        var damageable = lockedTarget.GetComponent<IDamageable>();
+        if (damageable != null)
+            return damageable;
+
+        damageable = lockedTarget.GetComponentInParent<IDamageable>();
+        return damageable ?? lockedTarget.GetComponentInChildren<IDamageable>();
+    }
+
+    private void CancelWindup()
+    {
+        if (animator && !string.IsNullOrEmpty(attackTriggerName))
+            animator.ResetTrigger(attackTriggerName);
+
+        onCooldown = false;
+        controller?.RequestChase();
     }
 
     void OnDrawGizmosSelected()
