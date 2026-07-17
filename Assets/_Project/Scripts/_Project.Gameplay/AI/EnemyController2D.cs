@@ -16,10 +16,7 @@ public class EnemyController2D : MonoBehaviour
     public static bool ShouldHoldForBarrierTarget(
         float distanceToBarrier,
         bool barrierBroken,
-        float holdRadius,
-        float releaseMargin,
-        int distTrend,
-        int outrunFrames)
+        float holdRadius)
     {
         // For now, this is intentionally minimal:
         // - If the barrier is broken, enemies should *not* HOLD at the barrier.
