@@ -106,15 +106,6 @@ public class EnemyAttack : MonoBehaviour
             if (dmg == null)
                 continue;
 
-            // Skip barrier damage if gate logic disallows it.
-            var barrierHealth = c.GetComponentInParent<BarrierHealth>();
-            if (barrierHealth != null && controller.CurrentTargetType == EnemyTargetType.Barrier)
-            {
-                GetRegionState(out bool enemyInside, out bool playerInside);
-                if (!CanDamageBarrier(enemyInside, playerInside))
-                    continue;
-            }
-
             if (!uniqueTargets.Add(dmg))
                 continue;
 
@@ -137,6 +128,15 @@ public class EnemyAttack : MonoBehaviour
         if (target == null || Damage <= 0 || IsRooted())
         {
             return;
+        }
+
+        if (target is BarrierHealth)
+        {
+            GetRegionState(out bool enemyInside, out bool playerInside);
+            if (!CanDamageBarrier(enemyInside, playerInside))
+            {
+                return;
+            }
         }
 
         target.TakeDamage(Damage);
