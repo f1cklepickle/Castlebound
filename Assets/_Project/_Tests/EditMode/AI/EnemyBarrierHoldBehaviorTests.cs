@@ -11,10 +11,6 @@ namespace Castlebound.Tests.AI
         {
             // Arrange
             float holdRadius = 2.0f;
-            float releaseMargin = 0.5f;
-            int outrunFrames = 8;
-            int distTrend = 0;
-
             float distanceToBarrier = 1.0f; // inside hold radius
             bool barrierBroken = true;
 
@@ -22,10 +18,7 @@ namespace Castlebound.Tests.AI
             bool shouldHold = EnemyController2D.ShouldHoldForBarrierTarget(
                 distanceToBarrier,
                 barrierBroken,
-                holdRadius,
-                releaseMargin,
-                distTrend,
-                outrunFrames);
+                holdRadius);
 
             // Assert
             Assert.IsFalse(shouldHold,
@@ -37,10 +30,6 @@ namespace Castlebound.Tests.AI
         {
             // Arrange
             float holdRadius = 2.0f;
-            float releaseMargin = 0.5f;
-            int outrunFrames = 8;
-            int distTrend = 0;
-
             float distanceToBarrier = 1.0f; // inside hold radius
             bool barrierBroken = false;
 
@@ -48,14 +37,30 @@ namespace Castlebound.Tests.AI
             bool shouldHold = EnemyController2D.ShouldHoldForBarrierTarget(
                 distanceToBarrier,
                 barrierBroken,
-                holdRadius,
-                releaseMargin,
-                distTrend,
-                outrunFrames);
+                holdRadius);
 
             // Assert
             Assert.IsTrue(shouldHold,
                 "Enemy may enter HOLD at an intact barrier when within hold radius.");
+        }
+
+        [Test]
+        public void DoesNotHold_WhenBarrierIntact_AndOutsideHoldRadius()
+        {
+            // Arrange
+            float holdRadius = 2.0f;
+            float distanceToBarrier = 2.1f;
+            bool barrierBroken = false;
+
+            // Act
+            bool shouldHold = EnemyController2D.ShouldHoldForBarrierTarget(
+                distanceToBarrier,
+                barrierBroken,
+                holdRadius);
+
+            // Assert
+            Assert.IsFalse(shouldHold,
+                "Enemy should not hold at an intact barrier when outside the hold radius.");
         }
     }
 }

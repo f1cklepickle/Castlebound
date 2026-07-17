@@ -6,10 +6,8 @@ namespace Castlebound.Gameplay.AI
     {
         [SerializeField] private Transform approachAnchor;
         [SerializeField] private float holdRadius = 2.6f;
-        [SerializeField] private float releaseMargin = 0.6f;
 
         public float HoldRadius => holdRadius;
-        public float ReleaseMargin => releaseMargin;
 
         public float DistanceToAnchor(Vector2 enemyPosition)
         {
@@ -22,16 +20,13 @@ namespace Castlebound.Gameplay.AI
             return approachAnchor != null ? (Vector2)approachAnchor.position : (Vector2)transform.position;
         }
 
-        public bool CanHold(Vector2 enemyPosition, bool barrierBroken, int distTrend, int outrunFrames)
+        public bool CanHold(Vector2 enemyPosition, bool barrierBroken)
         {
             float dist = DistanceToAnchor(enemyPosition);
             return EnemyController2D.ShouldHoldForBarrierTarget(
                 dist,
                 barrierBroken,
-                holdRadius,
-                releaseMargin,
-                distTrend,
-                outrunFrames);
+                holdRadius);
         }
 
         #region Debug/Test hooks
@@ -47,7 +42,7 @@ namespace Castlebound.Gameplay.AI
 
         public bool Debug_CanHold(Vector2 enemyPosition)
         {
-            return CanHold(enemyPosition, barrierBroken: false, distTrend: 0, outrunFrames: 0);
+            return CanHold(enemyPosition, barrierBroken: false);
         }
         #endregion
 

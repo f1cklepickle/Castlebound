@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-16 - chore-44-remove-barrier-release-margin
+
+### Summary
+- Removed the unused barrier-specific release-margin configuration.
+- Narrowed barrier hold decisions to barrier state, distance, and hold radius.
+- Preserved controller release-margin hysteresis for non-barrier targets.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyBarrierHoldBehaviorTests` — covers broken, inside-radius, and outside-radius barrier hold decisions using the narrowed contract.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- EditMode and PlayMode test suites passed; manual validation confirmed enemy behavior is unchanged.
+
 ## 2026-07-16 - codex-ui-p5-meaningful-failure-closeout
 
 ### Summary

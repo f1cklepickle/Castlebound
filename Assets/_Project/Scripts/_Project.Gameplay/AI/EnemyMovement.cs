@@ -76,10 +76,7 @@ public static class EnemyMovement
             bool shouldHold = EnemyController2D.ShouldHoldForBarrierTarget(
                 distToBarrier,
                 barrierBroken,
-                effectiveHoldRadius,
-                releaseMargin,
-                distTrend,
-                outrunFrames);
+                effectiveHoldRadius);
 
             state = shouldHold ? EnemyController2D.State.HOLD : EnemyController2D.State.CHASE;
         }
