@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-17 - fix-245-lock-melee-target
+
+### Summary
+- Locked each melee windup to the enemy's selected target.
+- Cancelled escaped or deselected targets without damage or completed-attack cooldown.
+- Resumed pursuit until collider-aware attack reach is reacquired.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyAttackTargetLockTests` — covers target identity, hit-time reach validation, and cancellation cooldown decisions.
+
+**PlayMode**
+- `EnemyAttackTargetLockPlayTests` — covers target-only damage, windup escape cancellation, pursuit resume, and fresh windup behavior.
+
+### Notes
+- EditMode 712/712 and PlayMode 54/54 passed in an isolated Unity project because the primary project was open in another editor instance.
+
 ## 2026-07-16 - fix-42-inside-barrier-damage-gate
 
 ### Summary

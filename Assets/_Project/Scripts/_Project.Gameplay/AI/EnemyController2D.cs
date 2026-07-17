@@ -69,6 +69,8 @@ public class EnemyController2D : MonoBehaviour
     private int _distTrend;
     private float _gapCW;
     private float _gapCCW;
+    private bool _chaseRequested;
+    public bool IsChaseRequested => _chaseRequested;
     // Last non-zero direction toward our current target (for pass-through).
     private Vector2 _lastNonZeroDir = Vector2.right;
 
@@ -76,6 +78,17 @@ public class EnemyController2D : MonoBehaviour
     {
         _gapCW = gapCW;
         _gapCCW = gapCCW;
+    }
+
+    public void RequestChase()
+    {
+        _chaseRequested = true;
+        _state = State.CHASE;
+    }
+
+    public void ClearChaseRequest()
+    {
+        _chaseRequested = false;
     }
 
     private void Awake()
@@ -212,6 +225,14 @@ public class EnemyController2D : MonoBehaviour
             ref _lastNonZeroDir,
             out Vector2 radial,
             out Vector2 tangent);
+
+        if (_chaseRequested && steerTarget != null)
+        {
+            Vector2 toTarget = (Vector2)steerTarget.position - pos;
+            radial = toTarget.sqrMagnitude > 0f ? toTarget.normalized * speed : Vector2.zero;
+            tangent = Vector2.zero;
+            _state = State.CHASE;
+        }
 
         _rb.MovePosition(pos + (radial + tangent) * dt + knockbackDelta);
     }
