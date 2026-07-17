@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-16 - fix-42-inside-barrier-damage-gate
+
+### Summary
+- Blocked protected barrier recipients at the final enemy damage boundary.
+- Prevented player-targeted swings from damaging overlapping gates when both actors are inside.
+- Preserved damage to non-barrier recipients and legitimate outside barrier attacks.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyAttackTargetTypeTests` — verifies a player-targeted attack blocks an inside barrier recipient without blocking non-barrier damage.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- EditMode and PlayMode test suites passed; manual validation confirmed enemies inside the castle do not damage barriers.
+
 ## 2026-07-16 - chore-44-remove-barrier-release-margin
 
 ### Summary
