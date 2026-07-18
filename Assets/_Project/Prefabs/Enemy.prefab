@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 4347245256977356794}
   - component: {fileID: 2387932495633829988}
   - component: {fileID: 6382125908214597412}
+  - component: {fileID: 8041287619235472011}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -342,3 +343,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: ""
   enemyTypeId: grunt
   balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
+--- !u!114 &8041287619235472011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e52f2f6e7641c4a90b5ce074f50c96, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
