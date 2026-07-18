@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-17 - fix-247-surround-eligibility
+
+### Summary
+- Restricted player-ring calculations to active, living, unrooted melee enemies targeting the player.
+- Cleared stale angular gaps when enemies become ineligible or their controller is disabled.
+- Added explicit melee-surround eligibility to both current enemy prefabs.
+
+### New or Updated Tests
+**EditMode**
+- `EnemySurroundEligibilityTests`, `EnemyRingEligibilityTests`, and `EnemySurroundPrefabContractTests` — cover the eligibility matrix, filtered ring inputs, stale-gap cleanup, ranged-safe exclusion, and melee prefab contracts.
+
+**PlayMode**
+- `EnemyRingEligibilityPlayTests` — verifies mixed-target rings assign gaps only to eligible player-targeting melee enemies.
+
+### Notes
+- EditMode 724/724 and PlayMode 55/55 passed; manual validation confirmed existing eligible-enemy behavior remains unchanged.
+
 ## 2026-07-17 - fix-245-lock-melee-target
 
 ### Summary

@@ -136,6 +136,8 @@ public class EnemyController2D : MonoBehaviour
     private void OnDisable()
     {
         All.Remove(this);
+        _gapCW = 0f;
+        _gapCCW = 0f;
     }
 
     private void Start()

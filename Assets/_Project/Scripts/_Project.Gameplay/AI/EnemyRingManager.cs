@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Castlebound.Gameplay.AI;
 using UnityEngine;
 
 public class EnemyRingManager : MonoBehaviour
@@ -47,6 +48,13 @@ public class EnemyRingManager : MonoBehaviour
         {
             EnemyController2D e = EnemyController2D.All[i];
             if (e == null) continue;
+
+            var eligibility = e.GetComponent<EnemySurroundEligibility>();
+            if (eligibility == null || !eligibility.IsEligibleFor(player))
+            {
+                e.SetAngularGaps(0f, 0f);
+                continue;
+            }
 
             Vector3 p = e.transform.position;
             float dx = p.x - playerPos.x;
