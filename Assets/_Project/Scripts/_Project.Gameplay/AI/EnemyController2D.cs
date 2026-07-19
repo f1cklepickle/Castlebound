@@ -46,6 +46,8 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private bool useBarrierTargeting = true;
     [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
     [SerializeField] private EnemyRootReceiver rootReceiver;
+    [SerializeField] private EnemyApproachSpread approachSpread;
+    [SerializeField] private EnemySurroundEligibility surroundEligibility;
 
     public Transform Target => target;
     public float Speed
@@ -69,6 +71,10 @@ public class EnemyController2D : MonoBehaviour
     private int _distTrend;
     private float _gapCW;
     private float _gapCCW;
+    private int _surroundParticipantCount;
+    private Vector2 _approachSeparation;
+    private bool _hasApproachNeighbors;
+    private Vector2 _approachSpreadBias;
     private bool _chaseRequested;
     public bool IsChaseRequested => _chaseRequested;
     // Last non-zero direction toward our current target (for pass-through).
@@ -79,6 +85,22 @@ public class EnemyController2D : MonoBehaviour
         _gapCW = gapCW;
         _gapCCW = gapCCW;
     }
+
+    public void SetAngularGaps(float gapCW, float gapCCW, int participantCount)
+    {
+        SetAngularGaps(gapCW, gapCCW);
+        _surroundParticipantCount = Mathf.Max(0, participantCount);
+    }
+
+    public void SetApproachSeparation(Vector2 separation, bool hasNeighbors)
+    {
+        _approachSeparation = separation;
+        _hasApproachNeighbors = hasNeighbors;
+    }
+
+    public float ApproachSeparationRadius => approachSpread != null
+        ? approachSpread.NeighborSeparationRadius
+        : 0f;
 
     public void RequestChase()
     {
@@ -101,6 +123,14 @@ public class EnemyController2D : MonoBehaviour
         if (rootReceiver == null)
         {
             rootReceiver = GetComponent<EnemyRootReceiver>();
+        }
+        if (approachSpread == null)
+        {
+            approachSpread = GetComponent<EnemyApproachSpread>();
+        }
+        if (surroundEligibility == null)
+        {
+            surroundEligibility = GetComponent<EnemySurroundEligibility>();
         }
         if (regionState == null)
         {
@@ -131,6 +161,11 @@ public class EnemyController2D : MonoBehaviour
     private void OnEnable()
     {
         if (!All.Contains(this)) All.Add(this);
+        if (_approachSpreadBias == Vector2.zero)
+        {
+            float angle = All.Count * 137.50776f * Mathf.Deg2Rad;
+            _approachSpreadBias = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+        }
     }
 
     private void OnDisable()
@@ -138,6 +173,9 @@ public class EnemyController2D : MonoBehaviour
         All.Remove(this);
         _gapCW = 0f;
         _gapCCW = 0f;
+        _surroundParticipantCount = 0;
+        _approachSeparation = Vector2.zero;
+        _hasApproachNeighbors = false;
     }
 
     private void Start()
@@ -227,6 +265,32 @@ public class EnemyController2D : MonoBehaviour
             ref _lastNonZeroDir,
             out Vector2 radial,
             out Vector2 tangent);
+
+        if (_state == State.CHASE &&
+            !_chaseRequested &&
+            _currentTargetType == EnemyTargetType.Player &&
+            approachSpread != null &&
+            surroundEligibility != null &&
+            surroundEligibility.IsEligibleFor(player))
+        {
+            Vector2 toPlayer = player != null ? (Vector2)player.position - pos : Vector2.zero;
+            float distanceToPlayer = toPlayer.magnitude;
+            Vector2 directionToPlayer = distanceToPlayer > 0f ? toPlayer / distanceToPlayer : Vector2.zero;
+            approachSpread.Compute(
+                radial,
+                directionToPlayer,
+                _approachSeparation,
+                _hasApproachNeighbors,
+                _approachSpreadBias,
+                distanceToPlayer,
+                holdRadius,
+                _gapCW,
+                _gapCCW,
+                _surroundParticipantCount > 1,
+                speed,
+                out radial,
+                out tangent);
+        }
 
         if (_chaseRequested && steerTarget != null)
         {

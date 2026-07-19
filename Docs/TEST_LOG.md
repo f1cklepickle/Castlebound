@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-18 - feat-246-approach-spreading
+
+### Summary
+- Added local separation plus bounded open-angle arrival steering for eligible melee enemies during player pursuit.
+- Preserved direct lone-enemy, barrier, HOLD, and forced attack-reacquisition movement.
+- Added stable overlap symmetry breaking, gradual surround-arrival tuning, and forward-motion limits to both melee prefabs.
+
+### New or Updated Tests
+**EditMode**
+- `EnemyApproachSpreadTests` and `EnemySurroundPrefabContractTests` — cover local separation, overlap fallback, arrival-band gap steering, distant direct pursuit, forward progress, speed caps, and melee prefab contracts.
+
+**PlayMode**
+- `EnemyApproachSpreadPlayTests` — covers early multi-path separation, direct spaced and lone pursuit, and direct #245 forced reacquisition.
+
+### Notes
+- EditMode 731/731 and PlayMode 59/59 passed in an isolated Unity project because the primary project was open in another editor instance.
+
 ## 2026-07-17 - fix-247-surround-eligibility
 
 ### Summary

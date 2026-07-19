@@ -52,7 +52,7 @@ public class EnemyRingManager : MonoBehaviour
             var eligibility = e.GetComponent<EnemySurroundEligibility>();
             if (eligibility == null || !eligibility.IsEligibleFor(player))
             {
-                e.SetAngularGaps(0f, 0f);
+                e.SetAngularGaps(0f, 0f, 0);
                 continue;
             }
 
@@ -68,6 +68,8 @@ public class EnemyRingManager : MonoBehaviour
 
         if (count == 0) return;
 
+        FeedApproachSeparation(count);
+
         // Sort by angle (ascending), keeping arrays in sync
         QuickSortByKey(sAngles, sEnemies, sDists, 0, count - 1);
 
@@ -82,7 +84,7 @@ public class EnemyRingManager : MonoBehaviour
         if (count == 1)
         {
             // Single enemy: no meaningful neighbors; send zeros
-            sEnemies[0].SetAngularGaps(0f, 0f);
+            sEnemies[0].SetAngularGaps(0f, 0f, 1);
             return;
         }
 
@@ -115,7 +117,35 @@ public class EnemyRingManager : MonoBehaviour
                 gapCCW = 0f;
             }
 
-            sEnemies[i].SetAngularGaps(gapCW, gapCCW);
+            sEnemies[i].SetAngularGaps(gapCW, gapCCW, count);
+        }
+    }
+
+    private static void FeedApproachSeparation(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            EnemyController2D enemy = sEnemies[i];
+            Vector2 position = enemy.transform.position;
+            float radius = enemy.ApproachSeparationRadius;
+            float radiusSquared = radius * radius;
+            Vector2 separation = Vector2.zero;
+            bool hasNeighbors = false;
+
+            for (int j = 0; j < count; j++)
+            {
+                if (i == j) continue;
+                Vector2 away = position - (Vector2)sEnemies[j].transform.position;
+                float distanceSquared = away.sqrMagnitude;
+                if (distanceSquared > radiusSquared) continue;
+
+                hasNeighbors = true;
+                if (distanceSquared <= 0.0001f) continue;
+                float distance = Mathf.Sqrt(distanceSquared);
+                separation += away / distance * (1f - distance / radius);
+            }
+
+            enemy.SetApproachSeparation(separation, hasNeighbors);
         }
     }
 

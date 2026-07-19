@@ -16,6 +16,8 @@ namespace Castlebound.Tests.AI
             Assert.NotNull(prefab, $"Expected melee prefab at {prefabPath}.");
             Assert.NotNull(prefab.GetComponent<EnemySurroundEligibility>(),
                 $"Melee prefab {prefabPath} must opt into player-surround calculations.");
+            Assert.NotNull(prefab.GetComponent<EnemyApproachSpread>(),
+                $"Melee prefab {prefabPath} must define approach spreading.");
         }
     }
 }
