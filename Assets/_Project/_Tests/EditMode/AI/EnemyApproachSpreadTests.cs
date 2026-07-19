@@ -70,10 +70,10 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
-        public void GroupInsideArrivalDistance_SteersTowardLargerAngularGap()
+        public void EnemyEastOfPlayer_SteersNorthTowardLargerCounterClockwiseGap()
         {
             EnemyApproachSpread.ComputeApproach(
-                Vector2.right * 8f, Vector2.right, Vector2.zero, false, Vector2.zero,
+                Vector2.left * 8f, Vector2.left, Vector2.zero, false, Vector2.zero,
                 distance: 8f, holdRadius: 2.6f,
                 gapCW: 0.1f, gapCCW: 0.5f, hasGroup: true, speed: 8f,
                 separationStrength: 0.8f, maxLateralRatio: 0.35f,
@@ -82,7 +82,7 @@ namespace Castlebound.Tests.AI
                 out Vector2 radial, out Vector2 tangent);
 
             Assert.That(tangent.y, Is.GreaterThan(0f));
-            Assert.That(radial.x, Is.GreaterThanOrEqualTo(6.4f));
+            Assert.That(radial.x, Is.LessThanOrEqualTo(-6.4f));
         }
 
         [Test]

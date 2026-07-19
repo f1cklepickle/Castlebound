@@ -13,13 +13,13 @@
 
 ### New or Updated Tests
 **EditMode**
-- `EnemyApproachSpreadTests` and `EnemySurroundPrefabContractTests` — cover local separation, overlap fallback, cleared non-local gaps, arrival-band gap steering, distant direct pursuit, forward progress, speed caps, and melee prefab contracts.
+- `EnemyApproachSpreadTests` and `EnemySurroundPrefabContractTests` — cover local separation, overlap fallback, cleared non-local gaps, world-direction open-gap steering, distant direct pursuit, forward progress, speed caps, and melee prefab contracts.
 
 **PlayMode**
 - `EnemyApproachSpreadPlayTests` — covers early multi-path separation, direct spaced and lone pursuit, and direct #245 forced reacquisition.
 
 ### Notes
-- EditMode 732/732 and PlayMode 59/59 passed; manual validation confirmed separated enemies no longer receive fallback sideways steering.
+- EditMode 732/732 and PlayMode 59/59 passed; manual validation confirmed open-gap steering still behaves as intended.
 
 ## 2026-07-17 - fix-247-surround-eligibility
 

@@ -67,7 +67,7 @@ public class EnemyApproachSpread : MonoBehaviour
             float gapDifference = gapCCW - gapCW;
             float deadband = Mathf.Max(0.0001f, gapDeadbandRadians);
             if (Mathf.Abs(gapDifference) > deadband)
-                angularPreference = Mathf.Sign(gapDifference) *
+                angularPreference = -Mathf.Sign(gapDifference) *
                                     Mathf.Clamp01((Mathf.Abs(gapDifference) - deadband) / deadband);
             else if (hasNeighbors && gapCW <= 0f && gapCCW <= 0f)
                 angularPreference = Vector2.Dot(stableBias.normalized, lateralAxis) * 0.5f;
