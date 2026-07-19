@@ -101,5 +101,22 @@ namespace Castlebound.Tests.AI
             Assert.That(radial, Is.EqualTo(pursuit));
             Assert.That(tangent, Is.EqualTo(Vector2.zero));
         }
+
+        [Test]
+        public void SeparatedGroupWithClearedGaps_DoesNotUseFallbackBias()
+        {
+            var pursuit = Vector2.right * 8f;
+            EnemyApproachSpread.ComputeApproach(
+                pursuit, Vector2.right, Vector2.zero, hasNeighbors: false, stableBias: Vector2.up,
+                distance: 8f, holdRadius: 2.6f,
+                gapCW: 0f, gapCCW: 0f, hasGroup: true, speed: 8f,
+                separationStrength: 0.8f, maxLateralRatio: 0.35f,
+                minimumForwardRatio: 0.8f, surroundArrivalDistance: 10f,
+                maxAngularArrivalRatio: 0.18f, gapDeadbandRadians: 8f * Mathf.Deg2Rad,
+                out Vector2 radial, out Vector2 tangent);
+
+            Assert.That(radial, Is.EqualTo(pursuit));
+            Assert.That(tangent, Is.EqualTo(Vector2.zero));
+        }
     }
 }
