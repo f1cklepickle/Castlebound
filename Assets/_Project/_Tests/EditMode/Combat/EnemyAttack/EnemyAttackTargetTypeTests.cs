@@ -80,9 +80,7 @@ namespace Castlebound.Tests.Combat
         {
             // Directly assign for test; real flow uses selector.
             controller.Debug_SetupRefs(target, null);
-            typeof(EnemyController2D)
-                .GetField("_currentTargetType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(controller, targetType);
+            controller.Debug_SetTargetDecision(target, target, targetType);
         }
 
         private static void SetRegionState(EnemyRegionState state, bool enemyInside, bool playerInside)

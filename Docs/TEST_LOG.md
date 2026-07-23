@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-23 - refactor-242-enemy-responsibilities
+
+### Summary
+- Extracted target selection and target state into EnemyTargeting.
+- Extracted CHASE/HOLD state, root handling, knockback, and body movement into EnemyLocomotion.
+- Reduced EnemyController2D to orchestration while preserving existing melee behavior.
+
+### New or Updated Tests
+**EditMode**
+- EnemyTargetingTests and EnemyLocomotionTests — cover unified target decisions, ingress commitment, CHASE/HOLD state, root handling, and movement ownership.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests and EnemyRingEligibilityPlayTests — preserve approach spreading and surround eligibility through the extracted components.
+
+### Notes
+- EditMode 740/740 and PlayMode 59/59 passed in an isolated Unity project; repaired-barrier pushback regression is deferred to the next commit.
+
 ## 2026-07-18 - feat-246-approach-spreading
 
 ### Summary

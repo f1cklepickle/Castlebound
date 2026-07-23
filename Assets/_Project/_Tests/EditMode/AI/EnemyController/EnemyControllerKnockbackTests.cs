@@ -22,9 +22,7 @@ namespace Castlebound.Tests.AI
                 var knockback = enemy.AddComponent<Castlebound.Gameplay.AI.EnemyKnockbackReceiver>();
 
                 // Force no valid target path.
-                typeof(EnemyController2D)
-                    .GetField("target", BindingFlags.NonPublic | BindingFlags.Instance)
-                    ?.SetValue(controller, null);
+                controller.Debug_SetupRefs(null);
 
                 knockback.AddKnockback(new Vector2(5f, 0f), 4f);
 

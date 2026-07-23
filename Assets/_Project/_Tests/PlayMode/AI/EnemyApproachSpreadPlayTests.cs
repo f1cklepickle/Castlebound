@@ -131,9 +131,9 @@ namespace Castlebound.Tests.PlayMode.AI
             enemy.AddComponent<EnemyApproachSpread>();
             var controller = enemy.AddComponent<EnemyController2D>();
             controller.Speed = 8f;
-            SetField(controller, "useBarrierTargeting", false);
+            controller.Debug_SetBarrierTargeting(false);
             controller.Debug_SetupRefs(player);
-            SetField(controller, "_currentTargetType", EnemyTargetType.Player);
+            controller.Debug_SetTargetDecision(player.transform, player.transform, EnemyTargetType.Player);
             return enemy;
         }
 

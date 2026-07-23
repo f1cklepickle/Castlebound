@@ -82,9 +82,7 @@ namespace Castlebound.Tests.PlayMode.AI
 
         private static void SetTargetType(EnemyController2D controller, EnemyTargetType targetType)
         {
-            typeof(EnemyController2D)
-                .GetField("_currentTargetType", BindingFlags.Instance | BindingFlags.NonPublic)
-                ?.SetValue(controller, targetType);
+            controller.Debug_SetTargetDecision(controller.Target, controller.Target, targetType);
         }
 
         private static void GetGaps(EnemyController2D controller, out float gapCw, out float gapCcw)
