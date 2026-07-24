@@ -116,4 +116,37 @@ public class EnemyTargetingTests
             Object.DestroyImmediate(barrier);
         }
     }
+
+    [Test]
+    public void Refresh_RepairedBarrierAndEnemyOutside_RetargetsHomeBarrier()
+    {
+        GameObject enemy = new GameObject("Enemy");
+        GameObject player = new GameObject("Player");
+        GameObject barrier = new GameObject("Barrier");
+        BarrierHealth barrierHealth = barrier.AddComponent<BarrierHealth>();
+        barrierHealth.TakeDamage(barrierHealth.MaxHealth);
+
+        try
+        {
+            EnemyTargeting targeting = enemy.AddComponent<EnemyTargeting>();
+            targeting.Debug_Setup(player.transform, barrier.transform);
+
+            targeting.Refresh(new Vector2(0.5f, 0f), playerInside: true, enemyInside: false);
+            Assert.AreEqual(EnemyTargetType.Player, targeting.CurrentTargetType);
+
+            barrierHealth.Repair();
+            targeting.Refresh(new Vector2(2f, 0f), playerInside: true, enemyInside: false);
+
+            Assert.AreSame(barrier.transform, targeting.SteerTarget);
+            Assert.AreSame(barrier.transform, targeting.AttackTarget);
+            Assert.AreEqual(EnemyTargetType.Barrier, targeting.CurrentTargetType);
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemy);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(barrier);
+        }
+    }
+
 }

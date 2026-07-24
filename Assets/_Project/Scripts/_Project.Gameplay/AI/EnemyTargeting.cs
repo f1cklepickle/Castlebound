@@ -40,6 +40,10 @@ public class EnemyTargeting : MonoBehaviour
         {
             committedThroughBrokenBarrier = false;
         }
+        else if (committedThroughBrokenBarrier && !enemyInside && !IsHomeBarrierBroken())
+        {
+            committedThroughBrokenBarrier = false;
+        }
         else if (IsAtBrokenHomeBarrier(enemyPosition))
         {
             committedThroughBrokenBarrier = true;
@@ -114,12 +118,20 @@ public class EnemyTargeting : MonoBehaviour
         if (!useBarrierTargeting || homeBarrier == null || passThroughRadius <= 0f)
             return false;
 
-        BarrierHealth health = homeBarrier.GetComponent<BarrierHealth>();
-        if (health == null || !health.IsBroken)
+        if (!IsHomeBarrierBroken())
             return false;
 
         return ((Vector2)homeBarrier.position - enemyPosition).sqrMagnitude <=
                passThroughRadius * passThroughRadius;
+    }
+
+    private bool IsHomeBarrierBroken()
+    {
+        if (!useBarrierTargeting || homeBarrier == null)
+            return false;
+
+        BarrierHealth health = homeBarrier.GetComponent<BarrierHealth>();
+        return health != null && health.IsBroken;
     }
 
     private static Transform[] GetAllBarrierTransforms()
