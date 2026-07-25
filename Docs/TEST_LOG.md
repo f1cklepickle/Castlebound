@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-25 - refactor-242-prefab-migration
+
+### Summary
+- Added EnemyTargeting and EnemyLocomotion to both serialized melee prefabs.
+- Migrated the authored barrier pass-through radius to EnemyTargeting.
+- Added prefab contract coverage for extracted component references and tuning.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundPrefabContractTests — verifies both melee prefabs serialize targeting, locomotion, controller references, and pass-through tuning.
+
+**PlayMode**
+- N/A — existing enemy behavior regression coverage remains unchanged.
+
+### Notes
+- EditMode and PlayMode passed; manual validation confirmed enemy behavior and player controls function correctly after restarting Unity.
+
 ## 2026-07-23 - refactor-242-enemy-responsibilities
 
 ### Summary
