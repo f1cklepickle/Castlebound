@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-07-25 - refactor-242-prefab-migration
+
+### Summary
+- Added EnemyTargeting and EnemyLocomotion to both serialized melee prefabs.
+- Migrated the authored barrier pass-through radius to EnemyTargeting.
+- Added prefab contract coverage for extracted component references and tuning.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundPrefabContractTests — verifies both melee prefabs serialize targeting, locomotion, controller references, and pass-through tuning.
+
+**PlayMode**
+- N/A — existing enemy behavior regression coverage remains unchanged.
+
+### Notes
+- EditMode and PlayMode passed; manual validation confirmed enemy behavior and player controls function correctly after restarting Unity.
+
+## 2026-07-23 - refactor-242-enemy-responsibilities
+
+### Summary
+- Extracted target selection and target state into EnemyTargeting.
+- Extracted CHASE/HOLD state, root handling, knockback, and body movement into EnemyLocomotion.
+- Reduced EnemyController2D to orchestration while preserving existing melee behavior.
+- Restored home-barrier targeting when a repaired barrier pushes a committed enemy outside.
+
+### New or Updated Tests
+**EditMode**
+- EnemyTargetingTests and EnemyLocomotionTests — cover unified target decisions, ingress commitment reset after repair, CHASE/HOLD state, root handling, and movement ownership.
+
+**PlayMode**
+- EnemyTargetingPlayTests, EnemyApproachSpreadPlayTests, and EnemyRingEligibilityPlayTests — cover repaired-barrier retargeting and preserve approach spreading and surround eligibility.
+
+### Notes
+- EditMode 741/741 and PlayMode 60/60 passed; manual validation confirmed repaired-barrier retargeting and outside-enemy knockback.
+
 ## 2026-07-18 - feat-246-approach-spreading
 
 ### Summary

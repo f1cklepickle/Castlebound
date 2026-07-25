@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace Castlebound.Tests.AI
 {
@@ -31,7 +30,7 @@ namespace Castlebound.Tests.AI
                 controller.Debug_EnsurePlayerReference();
 
                 // Assert: player reference is picked up by tag and target set.
-                var assignedPlayer = GetPrivateField<Transform>(controller, "player");
+                var assignedPlayer = enemyGO.GetComponent<EnemyTargeting>().Player;
                 Assert.IsNotNull(assignedPlayer, "Controller should assign player reference by Player tag if missing.");
                 Assert.AreSame(player.transform, assignedPlayer, "Controller should bind to the tagged Player we created.");
                 Assert.AreSame(player.transform, controller.Target, "Controller target should be set to the found player.");
@@ -50,12 +49,6 @@ namespace Castlebound.Tests.AI
                     }
                 }
             }
-        }
-
-        private static T GetPrivateField<T>(object obj, string fieldName) where T : class
-        {
-            var field = obj.GetType().GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            return field?.GetValue(obj) as T;
         }
     }
 }

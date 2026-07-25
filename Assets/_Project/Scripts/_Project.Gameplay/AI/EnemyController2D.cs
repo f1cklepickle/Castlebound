@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Castlebound.Gameplay.AI;
 
+[RequireComponent(typeof(EnemyTargeting))]
+[RequireComponent(typeof(EnemyLocomotion))]
 public class EnemyController2D : MonoBehaviour
 {
     public enum State
@@ -27,13 +29,10 @@ public class EnemyController2D : MonoBehaviour
         return distanceToBarrier <= holdRadius;
     }
 
-    [SerializeField] private Transform target;           // current orbit/spacing target (player)
-    [SerializeField] private Transform player;           // authoritative player reference
     [SerializeField] private Transform barrier;
-    [SerializeField] private Transform homeBarrier;      // per-enemy assigned barrier (nearest at spawn)
-    [SerializeField] private Transform steerTarget;      // movement target (home barrier outside, player inside)
-    [SerializeField] private float passThroughRadius = 0.6f; // distance to consider "at" the barrier opening
     [SerializeField] private EnemyRegionState regionState;
+    [SerializeField] private EnemyTargeting targeting;
+    [SerializeField] private EnemyLocomotion locomotion;
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float holdRadius = 2.6f;    // R_in
@@ -43,42 +42,56 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private int outrunFrames = 8;
     [SerializeField] private float epsilonDist = 0.01f;
     [SerializeField] private float reseatBias = 0.3f;
-    [SerializeField] private bool useBarrierTargeting = true;
-    [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
-    [SerializeField] private EnemyRootReceiver rootReceiver;
     [SerializeField] private EnemyApproachSpread approachSpread;
     [SerializeField] private EnemySurroundEligibility surroundEligibility;
 
-    public Transform Target => target;
+    private EnemyTargeting Targeting
+    {
+        get
+        {
+            if (targeting == null)
+                targeting = GetComponent<EnemyTargeting>();
+
+            return targeting;
+        }
+    }
+
+    private EnemyLocomotion Locomotion
+    {
+        get
+        {
+            if (locomotion == null)
+                locomotion = GetComponent<EnemyLocomotion>();
+
+            return locomotion;
+        }
+    }
+
+    public Transform Target => Targeting != null ? Targeting.AttackTarget : null;
     public float Speed
     {
         get => speed;
         set => speed = Mathf.Max(0f, value);
     }
 
-    private EnemyTargetType _currentTargetType = EnemyTargetType.None;
-    public EnemyTargetType CurrentTargetType => _currentTargetType;
+    public EnemyTargetType CurrentTargetType => Targeting != null
+        ? Targeting.CurrentTargetType
+        : EnemyTargetType.None;
 
     // NEW: used by EnemyAttack to decide when we're close enough to attack.
     public bool IsInHoldRange()
     {
-        return _state == State.HOLD;
+        return Locomotion.IsInHoldRange;
     }
 
     private Rigidbody2D _rb;
-    private State _state = State.CHASE;
-    private float _prevDist;
-    private int _distTrend;
     private float _gapCW;
     private float _gapCCW;
     private int _surroundParticipantCount;
     private Vector2 _approachSeparation;
     private bool _hasApproachNeighbors;
     private Vector2 _approachSpreadBias;
-    private bool _chaseRequested;
-    public bool IsChaseRequested => _chaseRequested;
-    // Last non-zero direction toward our current target (for pass-through).
-    private Vector2 _lastNonZeroDir = Vector2.right;
+    public bool IsChaseRequested => Locomotion.IsChaseRequested;
 
     public void SetAngularGaps(float gapCW, float gapCCW)
     {
@@ -104,26 +117,19 @@ public class EnemyController2D : MonoBehaviour
 
     public void RequestChase()
     {
-        _chaseRequested = true;
-        _state = State.CHASE;
+        Locomotion.RequestChase();
     }
 
     public void ClearChaseRequest()
     {
-        _chaseRequested = false;
+        Locomotion.ClearChaseRequest();
     }
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
-        if (knockbackReceiver == null)
-        {
-            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
-        }
-        if (rootReceiver == null)
-        {
-            rootReceiver = GetComponent<EnemyRootReceiver>();
-        }
+        targeting = GetComponent<EnemyTargeting>();
+        locomotion = GetComponent<EnemyLocomotion>();
         if (approachSpread == null)
         {
             approachSpread = GetComponent<EnemyApproachSpread>();
@@ -137,23 +143,7 @@ public class EnemyController2D : MonoBehaviour
             regionState = GetComponent<EnemyRegionState>();
         }
 
-        // Ensure player reference is valid.
-        EnsurePlayerReference();
-
-        // Initialize target from player.
-        if (player != null)
-        {
-            target = player;
-            steerTarget = player;
-            Vector2 pos = _rb != null ? _rb.position : (Vector2)transform.position;
-            _prevDist = Vector2.Distance(pos, target.position);
-        }
-        else
-        {
-            target = null;
-            steerTarget = null;
-            _prevDist = 0f;
-        }
+        Targeting.Initialize();
 
         // Home barrier assignment deferred to Start to ensure barriers are registered.
     }
@@ -180,13 +170,7 @@ public class EnemyController2D : MonoBehaviour
 
     private void Start()
     {
-        if (useBarrierTargeting && homeBarrier == null)
-        {
-            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
-                transform.position,
-                GetAllBarrierTransforms());
-            barrier = homeBarrier;
-        }
+        Targeting.AssignHomeBarrierIfNeeded(transform.position);
     }
 
     private void FixedUpdate()
@@ -201,51 +185,27 @@ public class EnemyController2D : MonoBehaviour
         {
             regionState = GetComponent<EnemyRegionState>();
         }
-        if (knockbackReceiver == null)
-        {
-            knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
-        }
-        if (rootReceiver == null)
-        {
-            rootReceiver = GetComponent<EnemyRootReceiver>();
-        }
 
         bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
         bool playerInsideCastle = regionState != null && regionState.PlayerInside;
 
-        if (player != null)
-        {
-            var decision = EvaluateTargetDecision(playerInsideCastle, enemyInsideCastle);
-            steerTarget = decision.SteerTarget != null ? decision.SteerTarget : player;
-            target = decision.AttackTarget != null ? decision.AttackTarget : player;
-            _currentTargetType = decision.TargetType;
-
-            if (useBarrierTargeting && _currentTargetType == EnemyTargetType.Barrier)
-            {
-                barrier = steerTarget;
-            }
-        }
+        Targeting.Refresh(_rb.position, playerInsideCastle, enemyInsideCastle);
+        Transform steerTarget = Targeting.SteerTarget;
+        Transform target = Targeting.AttackTarget;
+        Transform player = Targeting.Player;
+        if (CurrentTargetType == EnemyTargetType.Barrier)
+            barrier = steerTarget;
 
         Vector2 pos = _rb.position;
         float dt = Time.fixedDeltaTime;
 
-        if (rootReceiver != null && rootReceiver.IsRooted)
-        {
-            return;
-        }
-
-        Vector2 knockbackDelta = knockbackReceiver != null ? knockbackReceiver.ConsumeDisplacement(dt) : Vector2.zero;
-
         if (target == null)
         {
-            if (knockbackDelta != Vector2.zero)
-            {
-                _rb.MovePosition(pos + knockbackDelta);
-            }
+            Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
             return;
         }
         if (steerTarget == null) steerTarget = target;
-        EnemyMovement.ComputeMovement(
+        Locomotion.ComputeBaseMovement(
             pos,
             steerTarget,
             barrier,
@@ -259,16 +219,12 @@ public class EnemyController2D : MonoBehaviour
             epsilonDist,
             _gapCW,
             _gapCCW,
-            ref _state,
-            ref _prevDist,
-            ref _distTrend,
-            ref _lastNonZeroDir,
             out Vector2 radial,
             out Vector2 tangent);
 
-        if (_state == State.CHASE &&
-            !_chaseRequested &&
-            _currentTargetType == EnemyTargetType.Player &&
+        if (Locomotion.CurrentState == State.CHASE &&
+            !Locomotion.IsChaseRequested &&
+            CurrentTargetType == EnemyTargetType.Player &&
             approachSpread != null &&
             surroundEligibility != null &&
             surroundEligibility.IsEligibleFor(player))
@@ -292,27 +248,27 @@ public class EnemyController2D : MonoBehaviour
                 out tangent);
         }
 
-        if (_chaseRequested && steerTarget != null)
+        if (Locomotion.IsChaseRequested && steerTarget != null)
         {
             Vector2 toTarget = (Vector2)steerTarget.position - pos;
             radial = toTarget.sqrMagnitude > 0f ? toTarget.normalized * speed : Vector2.zero;
             tangent = Vector2.zero;
-            _state = State.CHASE;
+            Locomotion.SetMovementState(State.CHASE);
         }
 
-        _rb.MovePosition(pos + (radial + tangent) * dt + knockbackDelta);
+        Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
     }
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)
     {
-        var decision = EvaluateTargetDecision(playerInside, enemyInside);
-        return decision.AttackTarget;
+        Targeting.Refresh(transform.position, playerInside, enemyInside);
+        return Targeting.AttackTarget;
     }
 
     private Transform SelectSteerTarget(bool playerInside, bool enemyInside)
     {
-        var decision = EvaluateTargetDecision(playerInside, enemyInside);
-        return decision.SteerTarget;
+        Targeting.Refresh(transform.position, playerInside, enemyInside);
+        return Targeting.SteerTarget;
     }
 
     public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
@@ -328,108 +284,43 @@ public class EnemyController2D : MonoBehaviour
     // Debug/test helper to ensure player reference via tag/lookup.
     public void Debug_EnsurePlayerReference()
     {
-        EnsurePlayerReference();
+        Targeting.Initialize();
     }
 
     // Test helper: force references for deterministic behavior in EditMode tests.
     public void Debug_SetupRefs(Transform playerRef, Transform homeRef = null)
     {
-        player = playerRef;
-        target = playerRef;
-        steerTarget = playerRef;
-        homeBarrier = homeRef;
+        Targeting.Debug_Setup(playerRef, homeRef);
         barrier = homeRef;
+        Targeting.AssignHomeBarrierIfNeeded(transform.position);
+        barrier = Targeting.HomeBarrier;
+    }
 
-        if (homeBarrier == null && useBarrierTargeting)
-        {
-            homeBarrier = CastleTargetSelector.AssignHomeBarrier(
-                transform.position,
-                GetAllBarrierTransforms());
-            barrier = homeBarrier;
-        }
+    public void Debug_SetTargetDecision(Transform steer, Transform attack, EnemyTargetType targetType)
+    {
+        Targeting.Debug_SetDecision(steer, attack, targetType);
+    }
+
+    public void Debug_SetBarrierTargeting(bool value)
+    {
+        Targeting.Debug_SetUseBarrierTargeting(value);
     }
 
 #if UNITY_EDITOR
     // Editor-only validation helper to surface missing refs without relying on Unity lifecycle.
     public void Debug_ValidateRefs()
     {
-        if (player == null)
+        if (Targeting == null || Targeting.Player == null)
         {
             Debug.LogWarning("[EnemyController2D] Player reference not found in scene. Enemy will have no target.", this);
         }
 
-        if (useBarrierTargeting && homeBarrier == null)
+        if (Targeting != null && Targeting.UsesBarrierTargeting && Targeting.HomeBarrier == null)
         {
             Debug.LogWarning("[EnemyController2D] No home barrier found while barrier targeting is enabled.", this);
         }
     }
 #endif
-
-    private void EnsurePlayerReference()
-    {
-        if (player != null) return;
-
-        GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
-        if (playerGO != null)
-        {
-            player = playerGO.transform;
-            target = player;
-            steerTarget = player;
-            return;
-        }
-
-        var pc = FindObjectOfType<PlayerController>();
-        if (pc != null)
-        {
-            player = pc.transform;
-            target = player;
-            steerTarget = player;
-        }
-    }
-
-    private void EnsureHomeBarrier(Transform[] gates)
-    {
-        if (homeBarrier != null) return;
-        if (!useBarrierTargeting) return;
-
-        homeBarrier = CastleTargetSelector.AssignHomeBarrier(
-            transform.position,
-            gates);
-        barrier = homeBarrier;
-    }
-
-    private EnemyTargetSelector.Decision EvaluateTargetDecision(bool playerInside, bool enemyInside)
-    {
-        if (useBarrierTargeting)
-        {
-            EnsureHomeBarrier(GetAllBarrierTransforms());
-        }
-
-        return EnemyTargetSelector.Select(new EnemyTargetSelector.Input
-        {
-            EnemyPosition = transform.position,
-            EnemyInside = enemyInside,
-            PlayerInside = playerInside,
-            Player = player,
-            HomeBarrier = homeBarrier,
-            PassThroughRadius = passThroughRadius
-        });
-    }
-
-    private static Transform[] GetAllBarrierTransforms()
-    {
-        var all = BarrierHealth.All;
-        if (all == null || all.Count == 0)
-            return System.Array.Empty<Transform>();
-
-        var result = new Transform[all.Count];
-        for (int i = 0; i < all.Count; i++)
-        {
-            result[i] = all[i] != null ? all[i].transform : null;
-        }
-
-        return result;
-    }
 
     private void OnDrawGizmosSelected()
     {
@@ -447,9 +338,9 @@ public class EnemyController2D : MonoBehaviour
         tangent = Vector2.zero;
         if (_rb == null) return;
 
-        EnemyMovement.ComputeMovement(
+        Locomotion.ComputeBaseMovement(
             _rb.position,
-            steerTarget,
+            Targeting != null ? Targeting.SteerTarget : null,
             barrier,
             holdRadius,
             releaseMargin,
@@ -461,10 +352,6 @@ public class EnemyController2D : MonoBehaviour
             epsilonDist,
             _gapCW,
             _gapCCW,
-            ref _state,
-            ref _prevDist,
-            ref _distTrend,
-            ref _lastNonZeroDir,
             out radial,
             out tangent);
     }
