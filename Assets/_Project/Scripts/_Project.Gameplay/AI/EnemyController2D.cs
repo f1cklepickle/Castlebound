@@ -4,6 +4,7 @@ using Castlebound.Gameplay.AI;
 
 [RequireComponent(typeof(EnemyTargeting))]
 [RequireComponent(typeof(EnemyLocomotion))]
+[RequireComponent(typeof(EnemyFacing))]
 public class EnemyController2D : MonoBehaviour
 {
     public enum State
@@ -33,6 +34,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private EnemyRegionState regionState;
     [SerializeField] private EnemyTargeting targeting;
     [SerializeField] private EnemyLocomotion locomotion;
+    [SerializeField] private EnemyFacing facing;
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float holdRadius = 2.6f;    // R_in
@@ -64,6 +66,17 @@ public class EnemyController2D : MonoBehaviour
                 locomotion = GetComponent<EnemyLocomotion>();
 
             return locomotion;
+        }
+    }
+
+    private EnemyFacing Facing
+    {
+        get
+        {
+            if (facing == null)
+                facing = GetComponent<EnemyFacing>();
+
+            return facing;
         }
     }
 
@@ -130,6 +143,7 @@ public class EnemyController2D : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
         targeting = GetComponent<EnemyTargeting>();
         locomotion = GetComponent<EnemyLocomotion>();
+        facing = GetComponent<EnemyFacing>();
         if (approachSpread == null)
         {
             approachSpread = GetComponent<EnemyApproachSpread>();
@@ -198,6 +212,7 @@ public class EnemyController2D : MonoBehaviour
 
         Vector2 pos = _rb.position;
         float dt = Time.fixedDeltaTime;
+        Facing.FaceTarget(pos, target, dt);
 
         if (target == null)
         {
