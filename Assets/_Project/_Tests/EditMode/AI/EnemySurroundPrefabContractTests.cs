@@ -31,10 +31,14 @@ namespace Castlebound.Tests.AI
             var controller = prefab.GetComponent<EnemyController2D>();
             var targeting = prefab.GetComponent<EnemyTargeting>();
             var locomotion = prefab.GetComponent<EnemyLocomotion>();
+            var facing = prefab.GetComponent<EnemyFacing>();
+            var attack = prefab.GetComponent<EnemyAttack>();
 
             Assert.NotNull(controller, $"Melee prefab {prefabPath} must define its controller.");
             Assert.NotNull(targeting, $"Melee prefab {prefabPath} must define targeting.");
             Assert.NotNull(locomotion, $"Melee prefab {prefabPath} must define locomotion.");
+            Assert.NotNull(facing, $"Melee prefab {prefabPath} must define facing.");
+            Assert.NotNull(attack, $"Melee prefab {prefabPath} must define its attack.");
 
             var controllerData = new SerializedObject(controller);
             Assert.That(
@@ -43,12 +47,30 @@ namespace Castlebound.Tests.AI
             Assert.That(
                 controllerData.FindProperty("locomotion").objectReferenceValue,
                 Is.EqualTo(locomotion));
+            Assert.That(
+                controllerData.FindProperty("facing").objectReferenceValue,
+                Is.EqualTo(facing));
 
             var targetingData = new SerializedObject(targeting);
             Assert.That(
                 targetingData.FindProperty("passThroughRadius").floatValue,
                 Is.EqualTo(2f).Within(0.001f),
                 $"Melee prefab {prefabPath} must retain its authored pass-through radius.");
+
+            var facingData = new SerializedObject(facing);
+            Assert.That(
+                facingData.FindProperty("visualTransform").objectReferenceValue,
+                Is.EqualTo(prefab.transform.Find("Sprite")),
+                $"Melee prefab {prefabPath} must rotate only its Sprite child.");
+            Assert.That(
+                facingData.FindProperty("initialAimDirection").vector2Value,
+                Is.EqualTo(Vector2.down),
+                $"Melee prefab {prefabPath} must use the sprite-authored south-facing direction.");
+            Assert.That(
+                facingData.FindProperty("turnSpeedDegreesPerSecond").floatValue,
+                Is.EqualTo(120f).Within(0.001f),
+                $"Melee prefab {prefabPath} must retain its authored turn speed.");
+
         }
     }
 }

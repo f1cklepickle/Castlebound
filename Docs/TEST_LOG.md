@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-27 - feat-239-directional-facing
+
+### Summary
+- Added tunable 2D enemy turning with south as the authored sprite-forward direction.
+- Required melee attacks against players and barriers to satisfy the configured facing cone before and after windup.
+- Migrated both melee prefabs and added regression coverage for exact opposite-direction turns and attack alignment.
+
+### New or Updated Tests
+**EditMode**
+- EnemyFacingTests, EnemyAttackAlignmentTests, and EnemySurroundPrefabContractTests — cover bounded 2D turning, south-facing sprite orientation, shared attack eligibility, and prefab-facing contracts.
+
+**PlayMode**
+- EnemyAttackTargetLockPlayTests — verifies a misaligned enemy turns before attacking while preserving target-lock, cancellation, and cooldown behavior.
+
+### Notes
+- EditMode and PlayMode passed; manual validation confirmed enemies face and damage all four barriers, including the south barrier at round start.
+
 ## 2026-07-25 - refactor-242-prefab-migration
 
 ### Summary

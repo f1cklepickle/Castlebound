@@ -96,6 +96,36 @@ namespace Castlebound.Tests.PlayMode.Combat
             }
         }
 
+        [UnityTest]
+        public IEnumerator MisalignedEnemy_TurnsBeforeBeginningAttack()
+        {
+            var player = CreateDamageable("Player", new Vector2(0.5f, 0f), "Player");
+            var enemy = CreateEnemy(player.transform, windupSeconds: 0.02f, cooldownSeconds: 1f);
+            var facing = enemy.GetComponent<EnemyFacing>();
+            SetField(facing, "turnSpeedDegreesPerSecond", 90f);
+            SetField(facing, "attackAlignmentThreshold", 5f);
+
+            try
+            {
+                yield return new WaitForSeconds(0.2f);
+
+                Assert.That(player.GetComponent<Health>().Current, Is.EqualTo(10),
+                    "A melee enemy must not begin an attack while outside its facing cone.");
+
+                yield return new WaitForSeconds(0.9f);
+
+                Assert.That(Vector2.Angle(facing.AimDirection, Vector2.right), Is.LessThanOrEqualTo(5f),
+                    "The enemy should turn toward its confirmed target.");
+                Assert.That(player.GetComponent<Health>().Current, Is.EqualTo(9),
+                    "The aligned enemy should begin its attack once otherwise eligible.");
+            }
+            finally
+            {
+                Object.Destroy(enemy);
+                Object.Destroy(player);
+            }
+        }
+
         private static GameObject CreateDamageable(string name, Vector2 position, string tag)
         {
             var target = new GameObject(name);
@@ -116,6 +146,9 @@ namespace Castlebound.Tests.PlayMode.Combat
             enemy.AddComponent<BoxCollider2D>();
             var controller = enemy.AddComponent<EnemyController2D>();
             controller.Debug_SetupRefs(target);
+
+            var facing = enemy.GetComponent<EnemyFacing>();
+            SetField(facing, "attackAlignmentThreshold", 180f);
 
             var attack = enemy.AddComponent<EnemyAttack>();
             SetField(attack, "windupSeconds", windupSeconds);

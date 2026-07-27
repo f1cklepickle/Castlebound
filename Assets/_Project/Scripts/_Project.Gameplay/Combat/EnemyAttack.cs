@@ -3,6 +3,7 @@ using System.Collections;
 using Castlebound.Gameplay.AI;
 
 [RequireComponent(typeof(EnemyController2D))]
+[RequireComponent(typeof(EnemyFacing))]
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack")]
@@ -28,6 +29,7 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
     EnemyController2D controller;
+    EnemyFacing facing;
     EnemyRegionState regionState;
     EnemyRootReceiver rootReceiver;
     static bool missingRegionStateWarningLogged;
@@ -36,6 +38,7 @@ public class EnemyAttack : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<EnemyController2D>();
+        facing = GetComponent<EnemyFacing>();
         regionState = GetComponent<EnemyRegionState>();
         rootReceiver = GetComponent<EnemyRootReceiver>();
         if (!animator) animator = GetComponentInChildren<Animator>();
@@ -59,9 +62,6 @@ public class EnemyAttack : MonoBehaviour
             controller.ClearChaseRequest();
         }
 
-        // Only attack while we're holding position near the player
-        if (!controller.IsInHoldRange()) return;
-
         // Gate barrier damage by inside/outside state when targeting a barrier.
         if (controller.CurrentTargetType == EnemyTargetType.Barrier)
         {
@@ -70,7 +70,11 @@ public class EnemyAttack : MonoBehaviour
                 return;
         }
 
-        if (selectedTarget == null || !IsTargetInReach(selectedTarget)) return;
+        if (selectedTarget == null) return;
+
+        bool isInReach = IsTargetInReach(selectedTarget);
+        bool isAligned = facing != null && facing.IsAlignedWith(transform.position, selectedTarget);
+        if (!IsAttackEligible(controller.IsInHoldRange(), isInReach, isAligned)) return;
 
         StartCoroutine(AttackRoutine(selectedTarget));
     }
@@ -85,7 +89,9 @@ public class EnemyAttack : MonoBehaviour
         yield return new WaitForSeconds(windupSeconds);
 
         bool targetInReach = IsTargetInReach(lockedTarget);
-        if (!IsLockedTargetValid(lockedTarget, controller != null ? controller.Target : null, targetInReach))
+        bool targetAligned = facing != null && facing.IsAlignedWith(transform.position, lockedTarget);
+        if (!IsLockedTargetValid(lockedTarget, controller != null ? controller.Target : null, targetInReach) ||
+            !targetAligned)
         {
             CancelWindup();
             yield break;
@@ -115,6 +121,11 @@ public class EnemyAttack : MonoBehaviour
     public static bool RequiresCompletedCooldown(bool attackCompleted)
     {
         return attackCompleted;
+    }
+
+    public static bool IsAttackEligible(bool isInHoldRange, bool isInReach, bool isAligned)
+    {
+        return isInHoldRange && isInReach && isAligned;
     }
 
     private bool IsTargetInReach(Transform selectedTarget)

@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 8041287619235472012}
   - component: {fileID: 8041287619235472013}
   - component: {fileID: 8041287619235472014}
+  - component: {fileID: 8041287619235472015}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -208,6 +209,7 @@ MonoBehaviour:
   regionState: {fileID: 0}
   targeting: {fileID: 8041287619235472013}
   locomotion: {fileID: 8041287619235472014}
+  facing: {fileID: 8041287619235472015}
   speed: 8
   holdRadius: 2.6
   releaseMargin: 1.2
@@ -248,6 +250,22 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   knockbackReceiver: {fileID: 0}
   rootReceiver: {fileID: 0}
+--- !u!114 &8041287619235472015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64e611339dd5483ea9efc778881c6ff4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  visualTransform: {fileID: 4418641983238910643}
+  turnSpeedDegreesPerSecond: 120
+  attackAlignmentThreshold: 30
+  initialAimDirection: {x: 0, y: -1}
 --- !u!114 &5939097710446132315
 MonoBehaviour:
   m_ObjectHideFlags: 0
