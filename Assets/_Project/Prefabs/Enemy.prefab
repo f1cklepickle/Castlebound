@@ -108,6 +108,7 @@ GameObject:
   - component: {fileID: 8041287619235472013}
   - component: {fileID: 8041287619235472014}
   - component: {fileID: 8041287619235472015}
+  - component: {fileID: 8041287619235472016}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -210,9 +211,8 @@ MonoBehaviour:
   targeting: {fileID: 8041287619235472013}
   locomotion: {fileID: 8041287619235472014}
   facing: {fileID: 8041287619235472015}
+  engagement: {fileID: 8041287619235472016}
   speed: 8
-  holdRadius: 2.6
-  releaseMargin: 1.2
   orbitBase: 2.8
   maxTangent: 2
   outrunFrames: 8
@@ -266,6 +266,21 @@ MonoBehaviour:
   turnSpeedDegreesPerSecond: 120
   attackAlignmentThreshold: 30
   initialAimDirection: {x: 0, y: -1}
+--- !u!114 &8041287619235472016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f578326821c4b28843352243255085a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  bodyCollider: {fileID: 8747018169664145618}
+  engagementDistance: 0.5
+  releaseMargin: 0.25
 --- !u!114 &5939097710446132315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,7 +319,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 1
-  attackRange: 2.5
   windupSeconds: 0.15
   cooldownSeconds: 0.8
   targetMask:

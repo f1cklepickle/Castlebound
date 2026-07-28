@@ -74,7 +74,7 @@ namespace Castlebound.Tests.AI
         {
             EnemyApproachSpread.ComputeApproach(
                 Vector2.left * 8f, Vector2.left, Vector2.zero, false, Vector2.zero,
-                distance: 8f, holdRadius: 2.6f,
+                distance: 8f, engagementDistance: 2.6f,
                 gapCW: 0.1f, gapCCW: 0.5f, hasGroup: true, speed: 8f,
                 separationStrength: 0.8f, maxLateralRatio: 0.35f,
                 minimumForwardRatio: 0.8f, surroundArrivalDistance: 10f,
@@ -91,7 +91,7 @@ namespace Castlebound.Tests.AI
             var pursuit = Vector2.right * 8f;
             EnemyApproachSpread.ComputeApproach(
                 pursuit, Vector2.right, Vector2.zero, false, Vector2.up,
-                distance: 13f, holdRadius: 2.6f,
+                distance: 13f, engagementDistance: 2.6f,
                 gapCW: 0f, gapCCW: 0.5f, hasGroup: true, speed: 8f,
                 separationStrength: 0.8f, maxLateralRatio: 0.35f,
                 minimumForwardRatio: 0.8f, surroundArrivalDistance: 10f,
@@ -108,7 +108,7 @@ namespace Castlebound.Tests.AI
             var pursuit = Vector2.right * 8f;
             EnemyApproachSpread.ComputeApproach(
                 pursuit, Vector2.right, Vector2.zero, hasNeighbors: false, stableBias: Vector2.up,
-                distance: 8f, holdRadius: 2.6f,
+                distance: 8f, engagementDistance: 2.6f,
                 gapCW: 0f, gapCCW: 0f, hasGroup: true, speed: 8f,
                 separationStrength: 0.8f, maxLateralRatio: 0.35f,
                 minimumForwardRatio: 0.8f, surroundArrivalDistance: 10f,

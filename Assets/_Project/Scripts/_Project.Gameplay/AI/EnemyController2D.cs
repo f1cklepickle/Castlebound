@@ -5,6 +5,7 @@ using Castlebound.Gameplay.AI;
 [RequireComponent(typeof(EnemyTargeting))]
 [RequireComponent(typeof(EnemyLocomotion))]
 [RequireComponent(typeof(EnemyFacing))]
+[RequireComponent(typeof(EnemyEngagement))]
 public class EnemyController2D : MonoBehaviour
 {
     public enum State
@@ -16,29 +17,14 @@ public class EnemyController2D : MonoBehaviour
     // Static registry for manager access
     internal static readonly List<EnemyController2D> All = new List<EnemyController2D>();
 
-    public static bool ShouldHoldForBarrierTarget(
-        float distanceToBarrier,
-        bool barrierBroken,
-        float holdRadius)
-    {
-        // For now, this is intentionally minimal:
-        // - If the barrier is broken, enemies should *not* HOLD at the barrier.
-        // - Otherwise, they may HOLD when inside the hold radius.
-        if (barrierBroken)
-            return false;
-
-        return distanceToBarrier <= holdRadius;
-    }
-
     [SerializeField] private Transform barrier;
     [SerializeField] private EnemyRegionState regionState;
     [SerializeField] private EnemyTargeting targeting;
     [SerializeField] private EnemyLocomotion locomotion;
     [SerializeField] private EnemyFacing facing;
+    [SerializeField] private EnemyEngagement engagement;
 
     [SerializeField] private float speed = 3.5f;
-    [SerializeField] private float holdRadius = 2.6f;    // R_in
-    [SerializeField] private float releaseMargin = 0.6f; // R_out
     [SerializeField] private float orbitBase = 0.8f;
     [SerializeField] private float maxTangent = 2.5f;
     [SerializeField] private int outrunFrames = 8;
@@ -77,6 +63,17 @@ public class EnemyController2D : MonoBehaviour
                 facing = GetComponent<EnemyFacing>();
 
             return facing;
+        }
+    }
+
+    private EnemyEngagement Engagement
+    {
+        get
+        {
+            if (engagement == null)
+                engagement = GetComponent<EnemyEngagement>();
+
+            return engagement;
         }
     }
 
@@ -144,6 +141,7 @@ public class EnemyController2D : MonoBehaviour
         targeting = GetComponent<EnemyTargeting>();
         locomotion = GetComponent<EnemyLocomotion>();
         facing = GetComponent<EnemyFacing>();
+        engagement = GetComponent<EnemyEngagement>();
         if (approachSpread == null)
         {
             approachSpread = GetComponent<EnemyApproachSpread>();
@@ -220,12 +218,14 @@ public class EnemyController2D : MonoBehaviour
             return;
         }
         if (steerTarget == null) steerTarget = target;
+        float surfaceDistance = Engagement.SurfaceDistanceTo(target);
         Locomotion.ComputeBaseMovement(
             pos,
             steerTarget,
             barrier,
-            holdRadius,
-            releaseMargin,
+            surfaceDistance,
+            Engagement.EngagementDistance,
+            Engagement.ReleaseMargin,
             reseatBias,
             speed,
             orbitBase,
@@ -253,8 +253,8 @@ public class EnemyController2D : MonoBehaviour
                 _approachSeparation,
                 _hasApproachNeighbors,
                 _approachSpreadBias,
-                distanceToPlayer,
-                holdRadius,
+                surfaceDistance,
+                Engagement.EngagementDistance,
                 _gapCW,
                 _gapCCW,
                 _surroundParticipantCount > 1,
@@ -339,10 +339,15 @@ public class EnemyController2D : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (Engagement == null)
+            return;
+
         Gizmos.color = new Color(0.3f, 0.9f, 0.3f, 1f);
-        Gizmos.DrawWireSphere(transform.position, holdRadius);
+        Gizmos.DrawWireSphere(transform.position, Engagement.EngagementDistance);
         Gizmos.color = new Color(0.9f, 0.3f, 0.3f, 1f);
-        Gizmos.DrawWireSphere(transform.position, holdRadius + releaseMargin);
+        Gizmos.DrawWireSphere(
+            transform.position,
+            Engagement.EngagementDistance + Engagement.ReleaseMargin);
     }
 
 #if UNITY_EDITOR
@@ -357,8 +362,9 @@ public class EnemyController2D : MonoBehaviour
             _rb.position,
             Targeting != null ? Targeting.SteerTarget : null,
             barrier,
-            holdRadius,
-            releaseMargin,
+            Engagement.SurfaceDistanceTo(Targeting != null ? Targeting.AttackTarget : null),
+            Engagement.EngagementDistance,
+            Engagement.ReleaseMargin,
             reseatBias,
             speed,
             orbitBase,

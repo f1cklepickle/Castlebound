@@ -4,6 +4,7 @@ using Castlebound.Gameplay.AI;
 
 [RequireComponent(typeof(EnemyController2D))]
 [RequireComponent(typeof(EnemyFacing))]
+[RequireComponent(typeof(EnemyEngagement))]
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack")]
@@ -13,7 +14,6 @@ public class EnemyAttack : MonoBehaviour
         get => damage;
         set => damage = value;
     }
-    [SerializeField] float attackRange = 1.2f;     // should be >= stopDistance
     [SerializeField] float windupSeconds = 0.15f;  // time before damage applies
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
     public float CooldownSeconds
@@ -30,6 +30,7 @@ public class EnemyAttack : MonoBehaviour
 
     EnemyController2D controller;
     EnemyFacing facing;
+    EnemyEngagement engagement;
     EnemyRegionState regionState;
     EnemyRootReceiver rootReceiver;
     static bool missingRegionStateWarningLogged;
@@ -39,6 +40,7 @@ public class EnemyAttack : MonoBehaviour
     {
         controller = GetComponent<EnemyController2D>();
         facing = GetComponent<EnemyFacing>();
+        engagement = GetComponent<EnemyEngagement>();
         regionState = GetComponent<EnemyRegionState>();
         rootReceiver = GetComponent<EnemyRootReceiver>();
         if (!animator) animator = GetComponentInChildren<Animator>();
@@ -130,27 +132,7 @@ public class EnemyAttack : MonoBehaviour
 
     private bool IsTargetInReach(Transform selectedTarget)
     {
-        if (selectedTarget == null)
-            return false;
-
-        var targetColliders = selectedTarget.GetComponentsInChildren<Collider2D>();
-        if (targetColliders.Length == 0)
-        {
-            return Vector2.Distance(transform.position, selectedTarget.position) <= attackRange;
-        }
-
-        for (int i = 0; i < targetColliders.Length; i++)
-        {
-            var targetCollider = targetColliders[i];
-            if (targetCollider == null || !targetCollider.enabled)
-                continue;
-
-            Vector2 closestPoint = targetCollider.ClosestPoint(transform.position);
-            if (Vector2.Distance(transform.position, closestPoint) <= attackRange)
-                return true;
-        }
-
-        return false;
+        return engagement != null && engagement.IsWithinEngagementDistance(selectedTarget);
     }
 
     private static IDamageable ResolveDamageable(Transform lockedTarget)
@@ -177,8 +159,13 @@ public class EnemyAttack : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
+        if (engagement == null)
+            engagement = GetComponent<EnemyEngagement>();
+        if (engagement == null)
+            return;
+
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, engagement.EngagementDistance);
     }
 
     public void DealDamage(IDamageable target)

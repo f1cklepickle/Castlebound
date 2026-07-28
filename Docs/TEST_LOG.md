@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-27 - refactor-253-melee-engagement
+
+### Summary
+- Added one collider-aware EnemyEngagement contract for melee HOLD, release, and attack reach.
+- Removed duplicated engagement tuning from enemy controllers, attacks, and barrier approach geometry.
+- Migrated both melee prefabs to a 0.5-unit surface gap with a 0.25-unit release margin.
+
+### New or Updated Tests
+**EditMode**
+- EnemyEngagementTests, EnemyLocomotionTests, EnemyControllerOrbitVsBarrierTests, EnemySurroundPrefabContractTests, EnemyApproachSpreadTests, and EnemyBarrierApproachAnchorTests — cover surface distance, hysteresis, trigger exclusion, shared tuning ownership, locomotion, approach spreading, and prefab migration.
+
+**PlayMode**
+- EnemyEngagementPlayTests — verifies the shared surface gap completes barrier attacks from all four cardinal directions.
+
+### Notes
+- EditMode and PlayMode passed; manual validation confirmed normal player and barrier engagement behavior.
+
 ## 2026-07-27 - feat-239-directional-facing
 
 ### Summary

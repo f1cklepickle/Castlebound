@@ -58,7 +58,7 @@ public class EnemyLocomotionTests
 
             locomotion.ComputeBaseMovement(
                 Vector2.zero, player.transform, null,
-                1f, 0.5f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
+                0.5f, 1f, 0.5f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
                 0f, 0f, out _, out _);
 
             Assert.AreEqual(EnemyController2D.State.HOLD, locomotion.CurrentState);

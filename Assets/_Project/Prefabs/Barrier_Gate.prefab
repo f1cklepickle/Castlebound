@@ -147,8 +147,6 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   approachAnchor: {fileID: 824082721035161966}
-  holdRadius: 2.6
-  releaseMargin: 0.6
 --- !u!114 &1038297311701369034
 MonoBehaviour:
   m_ObjectHideFlags: 0

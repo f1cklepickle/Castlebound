@@ -7,7 +7,8 @@ public static class EnemyMovement
         Vector2 position,
         Transform steerTarget,
         Transform barrier,
-        float holdRadius,
+        float surfaceDistance,
+        float engagementDistance,
         float releaseMargin,
         float reseatBias,
         float speed,
@@ -39,12 +40,12 @@ public static class EnemyMovement
             lastNonZeroDir = dir;
         }
 
-        if (dist > prevDist + epsilonDist)
+        if (surfaceDistance > prevDist + epsilonDist)
             distTrend++;
-        else if (dist < prevDist - epsilonDist)
+        else if (surfaceDistance < prevDist - epsilonDist)
             distTrend = 0;
 
-        prevDist = dist;
+        prevDist = surfaceDistance;
 
         bool isBarrierTarget = (barrier != null && steerTarget == barrier);
         bool barrierBroken = false;
@@ -58,41 +59,20 @@ public static class EnemyMovement
             }
         }
 
-        float rIn = holdRadius;
-        float rOut = holdRadius + releaseMargin;
+        bool currentlyHolding = state == EnemyController2D.State.HOLD;
+        bool shouldHold = EnemyEngagement.ShouldHold(
+            currentlyHolding,
+            surfaceDistance,
+            engagementDistance,
+            releaseMargin,
+            isBarrierTarget && barrierBroken);
 
-        if (isBarrierTarget)
+        if (!isBarrierTarget && currentlyHolding && distTrend >= outrunFrames)
         {
-            var holdBehavior = barrier.GetComponent<EnemyBarrierHoldBehavior>();
-            float effectiveHoldRadius = holdRadius;
-            float distToBarrier = dist;
-
-            if (holdBehavior != null)
-            {
-                distToBarrier = holdBehavior.DistanceToAnchor(position);
-                effectiveHoldRadius = holdBehavior.HoldRadius;
-            }
-
-            bool shouldHold = EnemyController2D.ShouldHoldForBarrierTarget(
-                distToBarrier,
-                barrierBroken,
-                effectiveHoldRadius);
-
-            state = shouldHold ? EnemyController2D.State.HOLD : EnemyController2D.State.CHASE;
+            shouldHold = false;
         }
-        else
-        {
-            if (state == EnemyController2D.State.CHASE)
-            {
-                if (dist <= rIn)
-                    state = EnemyController2D.State.HOLD;
-            }
-            else
-            {
-                if (dist >= rOut || distTrend >= outrunFrames)
-                    state = EnemyController2D.State.CHASE;
-            }
-        }
+
+        state = shouldHold ? EnemyController2D.State.HOLD : EnemyController2D.State.CHASE;
 
         if (state == EnemyController2D.State.CHASE)
         {
@@ -102,7 +82,7 @@ public static class EnemyMovement
         {
             if (isBarrierTarget)
             {
-                if (dist > rIn)
+                if (surfaceDistance > engagementDistance)
                 {
                     radial = dir * (reseatBias * speed);
                 }
@@ -110,7 +90,7 @@ public static class EnemyMovement
             }
             else
             {
-                if (dist > rIn)
+                if (surfaceDistance > engagementDistance)
                     radial = dir * (reseatBias * speed);
 
                 float preference = gapCCW - gapCW;
@@ -130,8 +110,8 @@ public static class EnemyMovement
 
                 if (dist > 0f && !hasNoGaps && sign != 0f)
                 {
-                    float orbitDist = Mathf.Max(dist, rIn);
-                    tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(rIn, 0.01f));
+                    float orbitDist = Mathf.Max(dist, engagementDistance);
+                    tangentMag = orbitBase * (speed * orbitDist / Mathf.Max(engagementDistance, 0.01f));
                     tangentMag = Mathf.Min(tangentMag, maxTangent);
                 }
 
