@@ -114,7 +114,7 @@ namespace Castlebound.Gameplay.Spawning
                 var startsAt = requests.Count;
                 foreach (var gate in gateOrder)
                 {
-                    requests.Add(new SpawnRequest(seq.enemyTypeId, gate.GateId, gate.Position));
+                    requests.Add(new SpawnRequest(seq.enemyTypeId, gate));
                 }
 
                 _sequenceTimers.Add(new SequenceTimer

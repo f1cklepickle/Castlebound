@@ -1040,7 +1040,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d31ea5d0f52b344a869a4b936a05b05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gateId: Barrier_Gate
+  laneId: Center
 --- !u!1001 &8240005810329671612
 PrefabInstance:
   m_ObjectHideFlags: 0

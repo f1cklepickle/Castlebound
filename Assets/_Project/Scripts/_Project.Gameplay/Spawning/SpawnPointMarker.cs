@@ -4,33 +4,19 @@ namespace Castlebound.Gameplay.Spawning
 {
     public class SpawnPointMarker : MonoBehaviour
     {
-        [SerializeField] private string gateId;
+        [SerializeField] private string laneId = "Center";
 
-        private void OnValidate()
+        public void Initialize(string lane)
         {
-            if (string.IsNullOrWhiteSpace(gateId))
-            {
-                var provider = GetComponentInParent<GateIdProvider>();
-                if (provider != null)
-                {
-                    gateId = provider.GateId;
-                }
-            }
+            laneId = lane;
         }
 
         public SpawnPoint ToSpawnPoint()
         {
-            var id = gateId;
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                var provider = GetComponentInParent<GateIdProvider>();
-                if (provider != null)
-                {
-                    id = provider.GateId;
-                }
-            }
+            var provider = GetComponentInParent<GateIdProvider>();
+            var id = provider != null ? provider.GateId : string.Empty;
 
-            return new SpawnPoint(id, (Vector2)transform.position);
+            return new SpawnPoint(id, laneId, (Vector2)transform.position, -transform.up);
         }
     }
 }

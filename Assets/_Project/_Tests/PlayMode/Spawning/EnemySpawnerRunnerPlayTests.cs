@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
@@ -33,13 +34,11 @@ namespace Castlebound.Tests.PlayMode.Spawning
             // Markers.
             var markerA = new GameObject("MarkerA").AddComponent<SpawnPointMarker>();
             markerA.transform.position = new Vector2(-1f, 0f);
-            typeof(SpawnPointMarker).GetField("gateId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(markerA, "GateA");
+            markerA.gameObject.AddComponent<GateIdProvider>().Initialize("GateA");
 
             var markerB = new GameObject("MarkerB").AddComponent<SpawnPointMarker>();
             markerB.transform.position = new Vector2(2f, 0f);
-            typeof(SpawnPointMarker).GetField("gateId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(markerB, "GateB");
+            markerB.gameObject.AddComponent<GateIdProvider>().Initialize("GateB");
 
             // Runner setup.
             var runnerGO = new GameObject("SpawnerRunner");
@@ -131,8 +130,7 @@ namespace Castlebound.Tests.PlayMode.Spawning
 
             var marker = new GameObject("MixedMarker").AddComponent<SpawnPointMarker>();
             marker.transform.position = new Vector2(1f, 0f);
-            typeof(SpawnPointMarker).GetField("gateId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(marker, "GateA");
+            marker.gameObject.AddComponent<GateIdProvider>().Initialize("GateA");
 
             var runnerGO = new GameObject("MixedSpawnerRunner");
             var runner = runnerGO.AddComponent<EnemySpawnerRunner>();
@@ -163,6 +161,53 @@ namespace Castlebound.Tests.PlayMode.Spawning
             Object.DestroyImmediate(gruntPrefab);
             Object.DestroyImmediate(lurkerPrefab);
             Object.DestroyImmediate(scheduleAsset);
+        }
+
+        [UnityTest]
+        public IEnumerator SpawnReady_InitializesFacingFromEveryCardinalMarkerDirection()
+        {
+            var enemyPrefab = new GameObject("DirectionalEnemyPrefab");
+            enemyPrefab.AddComponent<EnemyFacing>();
+            var runnerObject = new GameObject("DirectionalSpawnerRunner");
+            var runner = runnerObject.AddComponent<EnemySpawnerRunner>();
+            var prefabMap = new Dictionary<string, GameObject> { ["grunt"] = enemyPrefab };
+            typeof(EnemySpawnerRunner).GetField("_prefabMap", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(runner, prefabMap);
+
+            var directions = new[] { Vector2.up, Vector2.right, Vector2.down, Vector2.left };
+            var requests = new List<SpawnRequest>();
+            for (var i = 0; i < directions.Length; i++)
+            {
+                requests.Add(new SpawnRequest("grunt", $"Gate{i}", "Center", new Vector2(i * 2f, 5f), directions[i]));
+            }
+
+            var spawnReady = typeof(EnemySpawnerRunner).GetMethod("SpawnReady", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(spawnReady);
+            spawnReady.Invoke(runner, new object[] { requests });
+            yield return null;
+
+            var clones = new List<GameObject>();
+            foreach (var candidate in Object.FindObjectsOfType<EnemyFacing>())
+            {
+                if (candidate.gameObject.name.Contains("(Clone)"))
+                {
+                    clones.Add(candidate.gameObject);
+                }
+            }
+
+            Assert.That(clones.Count, Is.EqualTo(4));
+            clones.Sort((a, b) => a.transform.position.x.CompareTo(b.transform.position.x));
+            for (var i = 0; i < directions.Length; i++)
+            {
+                Assert.That(clones[i].GetComponent<EnemyFacing>().AimDirection, Is.EqualTo(directions[i]));
+            }
+
+            foreach (var clone in clones)
+            {
+                Object.DestroyImmediate(clone);
+            }
+            Object.DestroyImmediate(runnerObject);
+            Object.DestroyImmediate(enemyPrefab);
         }
 
         private static void AddMapping(System.Type mappingType, IList mappingList, string enemyTypeId, GameObject prefab)

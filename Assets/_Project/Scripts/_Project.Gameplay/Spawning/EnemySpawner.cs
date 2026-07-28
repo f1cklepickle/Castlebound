@@ -7,13 +7,14 @@ namespace Castlebound.Gameplay.Spawning
     {
         private readonly EnemySpawnSchedule _schedule;
         private readonly List<SpawnPoint> _spawnPoints;
-        private int _gateIndex;
+        private SpawnSequence _orderedSequence;
+        private List<SpawnPoint> _currentSpawnOrder;
+        private int _currentSpawnOrderIndex;
 
         public EnemySpawner(EnemySpawnSchedule schedule, IEnumerable<SpawnPoint> spawnPoints)
         {
             _schedule = schedule;
             _spawnPoints = spawnPoints?.ToList() ?? new List<SpawnPoint>();
-            _gateIndex = 0;
         }
 
         public List<SpawnRequest> Tick(float deltaTime)
@@ -30,10 +31,10 @@ namespace Castlebound.Gameplay.Spawning
 
             while (current.IsReadyToSpawn())
             {
-                var spawnPoint = _spawnPoints[_gateIndex];
-                _gateIndex = (_gateIndex + 1) % _spawnPoints.Count;
+                EnsureSpawnOrder(current);
+                var spawnPoint = _currentSpawnOrder[_currentSpawnOrderIndex++];
 
-                readySpawns.Add(new SpawnRequest(current.EnemyTypeId, spawnPoint.GateId, spawnPoint.Position));
+                readySpawns.Add(new SpawnRequest(current.EnemyTypeId, spawnPoint));
 
                 current.ConsumeSpawn();
 
@@ -51,6 +52,21 @@ namespace Castlebound.Gameplay.Spawning
             }
 
             return readySpawns;
+        }
+
+        private void EnsureSpawnOrder(SpawnSequence sequence)
+        {
+            if (ReferenceEquals(_orderedSequence, sequence))
+            {
+                return;
+            }
+
+            _orderedSequence = sequence;
+            _currentSpawnOrder = SpawnMarkerOrderBuilder.BuildGateOrder(
+                _spawnPoints,
+                sequence.SpawnCount,
+                SpawnMarkerStrategy.RoundRobin);
+            _currentSpawnOrderIndex = 0;
         }
     }
 }

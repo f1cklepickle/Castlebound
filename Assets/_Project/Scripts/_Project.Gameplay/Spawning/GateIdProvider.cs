@@ -8,6 +8,11 @@ namespace Castlebound.Gameplay.Spawning
 
         public string GateId => gateId;
 
+        public void Initialize(string id)
+        {
+            gateId = id;
+        }
+
         private void OnValidate()
         {
             if (string.IsNullOrWhiteSpace(gateId))
