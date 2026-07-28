@@ -85,6 +85,29 @@ namespace Castlebound.Tests.Spawning
         }
 
         [Test]
+        public void PropagatesSelectedLaneAndDirectionIntoRequest()
+        {
+            var spawnPoints = new[]
+            {
+                new SpawnPoint("NorthGate", "Center", Vector2.zero, Vector2.down),
+                new SpawnPoint("NorthGate", "Left", Vector2.left, Vector2.right)
+            };
+            var schedule = new EnemySpawnSchedule(new[]
+            {
+                new SpawnSequence("grunt", spawnCount: 2, intervalSeconds: 0f, initialDelaySeconds: 0f)
+            });
+            var spawner = new EnemySpawner(schedule, spawnPoints);
+
+            var ready = spawner.Tick(0.1f);
+
+            Assert.That(ready.Count, Is.EqualTo(2));
+            Assert.That(ready[0].LaneId, Is.EqualTo("Center"));
+            Assert.That(ready[0].ForwardDirection, Is.EqualTo(Vector2.down));
+            Assert.That(ready[1].LaneId, Is.EqualTo("Left"));
+            Assert.That(ready[1].ForwardDirection, Is.EqualTo(Vector2.right));
+        }
+
+        [Test]
         public void UpdatesWaveIndexProvider_WhenWaveStarts()
         {
             var runnerGo = new GameObject("EnemySpawnerRunner");

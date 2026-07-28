@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-28 - feat-255-directional-grouped-spawn-markers
+
+### Summary
+- Added prefab-authored spawn lane and inward-direction data through the runtime spawn contract.
+- Changed marker ordering to select barriers before lanes with round-robin and seeded lane coverage.
+- Assigned unique runtime gate IDs to generated barriers and initialized enemy facing without coupling spawn groups to targeting.
+
+### New or Updated Tests
+**EditMode**
+- BarrierAssemblyBuilderTests, SpawnMarkerOrderBuilderTests, EnemySpawnerTests, and EnemyFacingTests — cover unique gate identity, marker ownership, grouped fairness, seeded lane determinism, request propagation, and facing initialization.
+
+**PlayMode**
+- EnemySpawnerRunnerPlayTests — covers cardinal initial facing and preserves spawn-count, position, and mixed-wave behavior.
+
+### Notes
+- EditMode and PlayMode tests pass; manual validation confirmed existing gameplay behavior remains unchanged.
+
 ## 2026-07-27 - refactor-253-melee-engagement
 
 ### Summary

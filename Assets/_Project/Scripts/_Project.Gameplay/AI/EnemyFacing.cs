@@ -15,6 +15,12 @@ public class EnemyFacing : MonoBehaviour
         ApplyVisualDirection();
     }
 
+    public void InitializeAimDirection(Vector2 direction)
+    {
+        AimDirection = NormalizeOrZero(direction);
+        ApplyVisualDirection();
+    }
+
     public void FaceTarget(Vector2 origin, Transform target, float deltaTime)
     {
         if (target == null)

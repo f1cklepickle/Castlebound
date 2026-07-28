@@ -63,5 +63,24 @@ namespace Castlebound.Tests.AI
             Assert.That(EnemyFacing.GetVisualRotationDegrees(Vector2.down), Is.EqualTo(0f).Within(0.001f));
             Assert.That(EnemyFacing.GetVisualRotationDegrees(Vector2.right), Is.EqualTo(90f).Within(0.001f));
         }
+
+        [Test]
+        public void InitializeAimDirection_AppliesNormalizedSpawnDirectionImmediately()
+        {
+            var enemy = new GameObject("Enemy");
+            try
+            {
+                var facing = enemy.AddComponent<EnemyFacing>();
+
+                facing.InitializeAimDirection(new Vector2(2f, 0f));
+
+                Assert.That(facing.AimDirection, Is.EqualTo(Vector2.right));
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemy);
+            }
+        }
+
     }
 }

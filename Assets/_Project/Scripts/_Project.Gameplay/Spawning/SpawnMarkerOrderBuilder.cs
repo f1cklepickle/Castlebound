@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,72 +14,145 @@ namespace Castlebound.Gameplay.Spawning
                 return result;
             }
 
+            BuildGroups(spawnPoints, out var gateIds, out var lanesByGate);
+            var gateIndices = new List<int>(spawnCount);
+            var rng = seed.HasValue ? new System.Random(seed.Value) : null;
+
             switch (strategy)
             {
                 case SpawnMarkerStrategy.RoundRobin:
-                    BuildRoundRobin(spawnPoints, spawnCount, result);
+                    BuildRoundRobin(gateIds.Count, spawnCount, gateIndices);
                     break;
                 case SpawnMarkerStrategy.ShufflePrecompute:
-                    BuildShuffleWithCoverage(spawnPoints, spawnCount, result, seed);
+                    BuildShuffleWithCoverage(gateIds.Count, spawnCount, gateIndices, rng);
                     break;
                 default:
-                    BuildRoundRobin(spawnPoints, spawnCount, result);
+                    BuildRoundRobin(gateIds.Count, spawnCount, gateIndices);
                     break;
             }
+
+            SelectLanes(gateIndices, lanesByGate, strategy, rng, result);
 
             return result;
         }
 
-        private static void BuildRoundRobin(IReadOnlyList<SpawnPoint> spawnPoints, int spawnCount, List<SpawnPoint> output)
+        private static void BuildGroups(
+            IReadOnlyList<SpawnPoint> spawnPoints,
+            out List<string> gateIds,
+            out List<List<SpawnPoint>> lanesByGate)
+        {
+            gateIds = new List<string>();
+            lanesByGate = new List<List<SpawnPoint>>();
+            var gateIndexById = new Dictionary<string, int>();
+
+            for (var markerIndex = 0; markerIndex < spawnPoints.Count; markerIndex++)
+            {
+                var point = spawnPoints[markerIndex];
+                var groupingId = string.IsNullOrWhiteSpace(point.GateId)
+                    ? $"__ungrouped_{markerIndex}"
+                    : point.GateId;
+
+                if (!gateIndexById.TryGetValue(groupingId, out var gateIndex))
+                {
+                    gateIndex = gateIds.Count;
+                    gateIndexById.Add(groupingId, gateIndex);
+                    gateIds.Add(groupingId);
+                    lanesByGate.Add(new List<SpawnPoint>());
+                }
+
+                lanesByGate[gateIndex].Add(point);
+            }
+        }
+
+        private static void BuildRoundRobin(int gateCount, int spawnCount, List<int> output)
         {
             var gateIndex = 0;
             for (int i = 0; i < spawnCount; i++)
             {
-                output.Add(spawnPoints[gateIndex]);
-                gateIndex = (gateIndex + 1) % spawnPoints.Count;
+                output.Add(gateIndex);
+                gateIndex = (gateIndex + 1) % gateCount;
             }
         }
 
-        private static void BuildShuffleWithCoverage(IReadOnlyList<SpawnPoint> spawnPoints, int spawnCount, List<SpawnPoint> output, int? seed)
+        private static void BuildShuffleWithCoverage(int gateCount, int spawnCount, List<int> output, System.Random rng)
         {
-            var rng = seed.HasValue ? new System.Random(seed.Value) : null;
-            var markerCount = spawnPoints.Count;
-
-            var indices = new List<int>(spawnCount);
-
-            if (spawnCount < markerCount)
+            if (spawnCount < gateCount)
             {
-                Debug.LogWarning($"SpawnMarkerOrderBuilder: spawnCount ({spawnCount}) is less than marker count ({markerCount}); cannot cover all gates.");
-                AppendShuffledDistinct(indices, markerCount, spawnCount, rng);
+                Debug.LogWarning($"SpawnMarkerOrderBuilder: spawnCount ({spawnCount}) is less than gate count ({gateCount}); cannot cover all gates.");
+                AppendShuffledDistinct(output, gateCount, spawnCount, rng);
             }
             else
             {
                 // Ensure each gate appears once.
-                for (int i = 0; i < markerCount; i++)
+                for (int i = 0; i < gateCount; i++)
                 {
-                    indices.Add(i);
+                    output.Add(i);
                 }
 
                 // Fill remaining slots with random gates.
-                while (indices.Count < spawnCount)
+                while (output.Count < spawnCount)
                 {
-                    indices.Add(GetRandomIndex(markerCount, rng));
+                    output.Add(GetRandomIndex(gateCount, rng));
                 }
 
                 // Shuffle the full order.
-                Shuffle(indices, rng);
-            }
-
-            foreach (var idx in indices)
-            {
-                output.Add(spawnPoints[idx]);
+                Shuffle(output, rng);
             }
         }
 
-        private static void AppendShuffledDistinct(List<int> output, int markerCount, int takeCount, System.Random rng)
+        private static void SelectLanes(
+            IReadOnlyList<int> gateIndices,
+            IReadOnlyList<List<SpawnPoint>> lanesByGate,
+            SpawnMarkerStrategy strategy,
+            System.Random rng,
+            List<SpawnPoint> output)
         {
-            var pool = new List<int>(markerCount);
-            for (int i = 0; i < markerCount; i++)
+            var nextLaneByGate = new int[lanesByGate.Count];
+            var shuffledLaneIndices = new List<List<int>>(lanesByGate.Count);
+            for (var gateIndex = 0; gateIndex < lanesByGate.Count; gateIndex++)
+            {
+                var indices = new List<int>(lanesByGate[gateIndex].Count);
+                for (var laneIndex = 0; laneIndex < lanesByGate[gateIndex].Count; laneIndex++)
+                {
+                    indices.Add(laneIndex);
+                }
+
+                if (strategy == SpawnMarkerStrategy.ShufflePrecompute)
+                {
+                    Shuffle(indices, rng);
+                }
+
+                shuffledLaneIndices.Add(indices);
+            }
+
+            foreach (var gateIndex in gateIndices)
+            {
+                var lanes = lanesByGate[gateIndex];
+                int laneIndex;
+                if (strategy == SpawnMarkerStrategy.ShufflePrecompute)
+                {
+                    if (nextLaneByGate[gateIndex] >= lanes.Count)
+                    {
+                        Shuffle(shuffledLaneIndices[gateIndex], rng);
+                        nextLaneByGate[gateIndex] = 0;
+                    }
+
+                    laneIndex = shuffledLaneIndices[gateIndex][nextLaneByGate[gateIndex]++];
+                }
+                else
+                {
+                    laneIndex = nextLaneByGate[gateIndex] % lanes.Count;
+                    nextLaneByGate[gateIndex]++;
+                }
+
+                output.Add(lanes[laneIndex]);
+            }
+        }
+
+        private static void AppendShuffledDistinct(List<int> output, int gateCount, int takeCount, System.Random rng)
+        {
+            var pool = new List<int>(gateCount);
+            for (int i = 0; i < gateCount; i++)
             {
                 pool.Add(i);
             }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Castlebound.Gameplay.Spawning;
 using UnityEngine;
 
 namespace Castlebound.Gameplay.Castle
@@ -41,6 +42,12 @@ namespace Castlebound.Gameplay.Castle
 
                 instance.SetParent(parent, true);
                 instance.position = new Vector3(slot.Position.x, slot.Position.y, instance.position.z);
+
+                var gateIdProvider = instance.GetComponent<GateIdProvider>();
+                if (gateIdProvider != null)
+                {
+                    gateIdProvider.Initialize(slot.Id);
+                }
 
                 var visualBinder = instance.GetComponent<BarrierVisualBinder>();
                 if (visualBinder != null)

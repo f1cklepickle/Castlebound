@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using Castlebound.Gameplay.Castle;
+using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -99,6 +100,33 @@ namespace Castlebound.Tests.Castle
                         CastlePlacementRules.IsOnLattice(worldPos),
                         $"Spawned barrier '{child.name}' must land on 3-unit lattice. Position=({worldPos.x:0.###}, {worldPos.y:0.###})");
                 }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(prefabGo);
+                UnityEngine.Object.DestroyImmediate(parentGo);
+            }
+        }
+
+        [Test]
+        public void BarrierAssemblyBuilder_Rebuild_AssignsUniqueSlotIdToEachBarrier()
+        {
+            var parentGo = new GameObject("GeneratedBarriers");
+            var prefabGo = new GameObject("Barrier_Gate_Template");
+            prefabGo.AddComponent<GateIdProvider>();
+
+            try
+            {
+                var slots = new[]
+                {
+                    new BarrierPlacementSlot { Id = "barrier_n", Position = Vector2.zero, Side = BarrierSide.North },
+                    new BarrierPlacementSlot { Id = "barrier_e", Position = Vector2.right * 3f, Side = BarrierSide.East }
+                };
+
+                BarrierAssemblyBuilder.Rebuild(parentGo.transform, prefabGo, slots);
+
+                Assert.That(parentGo.transform.Find("barrier_n").GetComponent<GateIdProvider>().GateId, Is.EqualTo("barrier_n"));
+                Assert.That(parentGo.transform.Find("barrier_e").GetComponent<GateIdProvider>().GateId, Is.EqualTo("barrier_e"));
             }
             finally
             {

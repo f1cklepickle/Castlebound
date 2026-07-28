@@ -169,6 +169,12 @@ namespace Castlebound.Gameplay.Spawning
                 var instance = Instantiate(prefab, request.Position, Quaternion.identity);
                 _aliveCount++;
 
+                var facing = instance.GetComponent<EnemyFacing>();
+                if (facing != null && request.ForwardDirection.sqrMagnitude > Mathf.Epsilon)
+                {
+                    facing.InitializeAimDirection(request.ForwardDirection);
+                }
+
                 var balanceApplier = instance.GetComponent<EnemyBalanceApplier>();
                 if (balanceApplier != null)
                 {
