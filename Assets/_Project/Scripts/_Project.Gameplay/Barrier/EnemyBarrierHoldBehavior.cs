@@ -2,12 +2,11 @@ using UnityEngine;
 
 namespace Castlebound.Gameplay.AI
 {
+    // Legacy component name retained for prefab compatibility; this now owns only
+    // authored barrier approach geometry, never enemy engagement distance.
     public class EnemyBarrierHoldBehavior : MonoBehaviour
     {
         [SerializeField] private Transform approachAnchor;
-        [SerializeField] private float holdRadius = 2.6f;
-
-        public float HoldRadius => holdRadius;
 
         public float DistanceToAnchor(Vector2 enemyPosition)
         {
@@ -20,30 +19,12 @@ namespace Castlebound.Gameplay.AI
             return approachAnchor != null ? (Vector2)approachAnchor.position : (Vector2)transform.position;
         }
 
-        public bool CanHold(Vector2 enemyPosition, bool barrierBroken)
-        {
-            float dist = DistanceToAnchor(enemyPosition);
-            return EnemyController2D.ShouldHoldForBarrierTarget(
-                dist,
-                barrierBroken,
-                holdRadius);
-        }
-
         #region Debug/Test hooks
         public void Debug_SetAnchor(Transform anchor)
         {
             approachAnchor = anchor;
         }
 
-        public void Debug_SetHoldRadius(float radius)
-        {
-            holdRadius = radius;
-        }
-
-        public bool Debug_CanHold(Vector2 enemyPosition)
-        {
-            return CanHold(enemyPosition, barrierBroken: false);
-        }
         #endregion
 
 #if UNITY_EDITOR
