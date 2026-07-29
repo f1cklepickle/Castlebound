@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using Castlebound.Gameplay.AI;
@@ -8,20 +9,34 @@ namespace Castlebound.Tests.AI
     public class CastleTargetSelectorHomeBarrierTests
     {
         [Test]
+        public void HomeBarrierAssignment_ConsumesHealthRegistryWithoutTransformCollectionBuilder()
+        {
+            var selectorMethod = typeof(CastleTargetSelector).GetMethod(
+                "AssignHomeBarrier",
+                new[] { typeof(Vector2), typeof(IReadOnlyList<BarrierHealth>) });
+            var obsoleteBuilder = typeof(EnemyTargeting).GetMethod(
+                "GetAllBarrierTransforms",
+                BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.NotNull(selectorMethod, "Home-barrier selection must consume the lifecycle-aware BarrierHealth registry directly.");
+            Assert.IsNull(obsoleteBuilder, "EnemyTargeting must not rebuild a Transform collection during home-barrier assignment.");
+        }
+
+        [Test]
         public void AssignsHomeBarrier_BasedOnSpawnPosition()
         {
-            var barrierNear = new GameObject("BarrierNear").transform;
-            barrierNear.position = new Vector2(-2f, 0f);
+            var barrierNear = new GameObject("BarrierNear").AddComponent<BarrierHealth>();
+            barrierNear.transform.position = new Vector2(-2f, 0f);
 
-            var barrierFar = new GameObject("BarrierFar").transform;
-            barrierFar.position = new Vector2(10f, 0f);
+            var barrierFar = new GameObject("BarrierFar").AddComponent<BarrierHealth>();
+            barrierFar.transform.position = new Vector2(10f, 0f);
 
             var spawnPosition = new Vector2(-3f, 0f);
-            var barriers = new List<Transform> { barrierFar, barrierNear };
+            var barriers = new List<BarrierHealth> { barrierFar, barrierNear };
 
             var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
 
-            Assert.AreSame(barrierNear, homeBarrier, "Enemy should assign the nearest barrier to its spawn as the home barrier.");
+            Assert.AreSame(barrierNear.transform, homeBarrier, "Enemy should assign the nearest barrier to its spawn as the home barrier.");
 
             Object.DestroyImmediate(barrierNear.gameObject);
             Object.DestroyImmediate(barrierFar.gameObject);
@@ -30,14 +45,14 @@ namespace Castlebound.Tests.AI
         [Test]
         public void KeepsHomeBarrier_EvenIfAnotherBecomesCloser()
         {
-            var barrierHome = new GameObject("BarrierHome").transform;
-            barrierHome.position = new Vector2(-2f, 0f);
+            var barrierHome = new GameObject("BarrierHome").AddComponent<BarrierHealth>();
+            barrierHome.transform.position = new Vector2(-2f, 0f);
 
-            var barrierOther = new GameObject("BarrierOther").transform;
-            barrierOther.position = new Vector2(8f, 0f);
+            var barrierOther = new GameObject("BarrierOther").AddComponent<BarrierHealth>();
+            barrierOther.transform.position = new Vector2(8f, 0f);
 
             var spawnPosition = new Vector2(-3f, 0f);
-            var barriers = new List<Transform> { barrierOther, barrierHome };
+            var barriers = new List<BarrierHealth> { barrierOther, barrierHome };
 
             var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
 
@@ -55,7 +70,7 @@ namespace Castlebound.Tests.AI
                 playerInside,
                 player,
                 homeBarrier,
-                barriers);
+                new List<Transform> { barrierOther.transform, barrierHome.transform });
 
             Assert.AreSame(homeBarrier, result, "Enemy should keep its assigned home barrier even if another barrier becomes closer.");
 
@@ -75,7 +90,7 @@ namespace Castlebound.Tests.AI
             health.TakeDamage(health.MaxHealth);
 
             var spawnPosition = new Vector2(-3f, 0f);
-            var barriers = new List<Transform> { barrierHome };
+            var barriers = new List<BarrierHealth> { health };
 
             var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
 
@@ -93,7 +108,7 @@ namespace Castlebound.Tests.AI
                 playerInside,
                 player,
                 homeBarrier,
-                barriers);
+                new List<Transform> { barrierHome });
 
             Assert.AreSame(homeBarrier, result, "While outside, enemy should continue to target its assigned barrier, even if it is already broken.");
 
@@ -111,7 +126,7 @@ namespace Castlebound.Tests.AI
             health.TakeDamage(health.MaxHealth);
 
             var spawnPosition = new Vector2(-3f, 0f);
-            var barriers = new List<Transform> { barrierHome };
+            var barriers = new List<BarrierHealth> { health };
 
             var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
 
@@ -129,12 +144,30 @@ namespace Castlebound.Tests.AI
                 playerInside,
                 player,
                 homeBarrier,
-                barriers);
+                new List<Transform> { barrierHome });
 
             Assert.AreSame(player, result, "Once the home barrier is broken and the enemy is inside, target should switch to the player.");
 
             Object.DestroyImmediate(barrierHome.gameObject);
             Object.DestroyImmediate(player.gameObject);
+        }
+
+        [Test]
+        public void AssignHomeBarrier_EqualDistanceUsesOrdinalNameTieBreak()
+        {
+            var barrierB = new GameObject("Barrier_B").AddComponent<BarrierHealth>();
+            barrierB.transform.position = Vector2.left;
+            var barrierA = new GameObject("Barrier_A").AddComponent<BarrierHealth>();
+            barrierA.transform.position = Vector2.right;
+
+            var result = CastleTargetSelector.AssignHomeBarrier(
+                Vector2.zero,
+                new List<BarrierHealth> { barrierB, barrierA });
+
+            Assert.AreSame(barrierA.transform, result);
+
+            Object.DestroyImmediate(barrierB.gameObject);
+            Object.DestroyImmediate(barrierA.gameObject);
         }
     }
 }

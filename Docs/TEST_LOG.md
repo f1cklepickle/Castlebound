@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-28 - perf-241-barrier-registry-targeting
+
+### Summary
+- Changed home-barrier selection to consume the live BarrierHealth registry without building temporary Transform arrays.
+- Preserved nearest-anchor selection, deterministic tie-breaking, retained homes, and targeting fallback behavior.
+- Removed the unused allocating active-gate transform helper.
+
+### New or Updated Tests
+**EditMode**
+- CastleTargetSelectorHomeBarrierTests — covers direct registry consumption, nearest selection, tie-breaking, retained homes, and broken-barrier behavior.
+
+**PlayMode**
+- EnemyTargetingPlayTests — verifies disabled and destroyed barriers leave the live registry and targeting safely reassigns.
+
+### Notes
+- EditMode and PlayMode tests pass; manual validation confirmed targeting behavior remains unchanged.
+
 ## 2026-07-28 - feat-256-expanded-barrier-spawn-formations
 
 ### Summary
