@@ -1,6 +1,7 @@
 using System.Collections;
 using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Castle;
+using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -129,6 +130,17 @@ namespace Castlebound.Tests.PlayMode.Castle
                 var systemsZ = Mathf.DeltaAngle(0f, systemsRoot.localEulerAngles.z);
                 Assert.That(systemsZ, Is.EqualTo(ExpectedRotation(side)).Within(0.5f),
                     $"SystemsRoot rotation mismatch for barrier '{child.name}' side {side}.");
+
+                var spawnMarkers = systemsRoot.GetComponentsInChildren<SpawnPointMarker>(true);
+                Assert.That(spawnMarkers.Length, Is.EqualTo(3), $"Generated barrier '{child.name}' must expose three spawn lanes.");
+                foreach (var marker in spawnMarkers)
+                {
+                    var inwardToBarrier = (Vector2)(child.position - marker.transform.position);
+                    Assert.That(
+                        Vector2.Dot(marker.ToSpawnPoint().ForwardDirection, inwardToBarrier.normalized),
+                        Is.GreaterThan(0.999f),
+                        $"Spawn lane '{marker.name}' on {side} barrier '{child.name}' must point inward after rotation.");
+                }
 
                 var health = child.GetComponent<BarrierHealth>();
                 var binder = child.GetComponent<BarrierVisualBinder>();
