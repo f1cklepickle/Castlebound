@@ -34,7 +34,7 @@ public class BarrierHitShake : MonoBehaviour
         originalLocalPos = ShakeTarget.localPosition;
 
         if (feedbackChannel != null)
-            feedbackChannel.Raised += OnFeedbackRaised;
+            feedbackChannel.SubscribeTarget(gameObject.GetInstanceID(), OnFeedbackRaised);
 
         if (barrierHealth != null)
             barrierHealth.OnRepaired += ResetShake;
@@ -43,7 +43,7 @@ public class BarrierHitShake : MonoBehaviour
     void OnDisable()
     {
         if (feedbackChannel != null)
-            feedbackChannel.Raised -= OnFeedbackRaised;
+            feedbackChannel.UnsubscribeTarget(gameObject.GetInstanceID(), OnFeedbackRaised);
 
         if (barrierHealth != null)
             barrierHealth.OnRepaired -= ResetShake;

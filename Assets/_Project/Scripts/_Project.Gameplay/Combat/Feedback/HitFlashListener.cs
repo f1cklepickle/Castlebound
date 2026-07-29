@@ -23,13 +23,15 @@ public class HitFlashListener : MonoBehaviour
     void OnEnable()
     {
         if (feedbackChannel != null)
-            feedbackChannel.Raised += OnFeedbackRaised;
+            feedbackChannel.SubscribeTarget(gameObject.GetInstanceID(), OnFeedbackRaised);
     }
 
     void OnDisable()
     {
         if (feedbackChannel != null)
-            feedbackChannel.Raised -= OnFeedbackRaised;
+            feedbackChannel.UnsubscribeTarget(gameObject.GetInstanceID(), OnFeedbackRaised);
+
+        ResetFlash();
     }
 
     void OnFeedbackRaised(FeedbackCue cue)
@@ -38,9 +40,6 @@ public class HitFlashListener : MonoBehaviour
             return;
 
         if (targetRenderer == null)
-            return;
-
-        if (cue.TargetInstanceId != 0 && cue.TargetInstanceId != gameObject.GetInstanceID())
             return;
 
         if (flashRoutine != null)
@@ -60,5 +59,17 @@ public class HitFlashListener : MonoBehaviour
             targetRenderer.color = originalColor;
 
         flashRoutine = null;
+    }
+
+    void ResetFlash()
+    {
+        if (flashRoutine != null)
+        {
+            StopCoroutine(flashRoutine);
+            flashRoutine = null;
+        }
+
+        if (targetRenderer != null)
+            targetRenderer.color = originalColor;
     }
 }
