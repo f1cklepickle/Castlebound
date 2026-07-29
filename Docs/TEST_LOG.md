@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-07-29 - fix-102-targeted-feedback-routing
+
+### Summary
+- Routed targeted enemy-hit and barrier-hit cues directly to their registered listener instead of broadcasting to every active target.
+- Preserved the existing untargeted player red-screen flash behavior and all authored visual tuning.
+- Restored flash visuals to their baseline when listeners are disabled mid-effect.
+
+### New or Updated Tests
+**EditMode**
+- FeedbackEventChannelContractTests — covers matching-target delivery, non-target exclusion, listener removal, and untargeted broadcasts.
+
+**PlayMode**
+- FeedbackRoutingPlayTests — verifies enemy-specific flash routing, unchanged player screen feedback, and disable-time visual restoration.
+- BarrierHitShakeVisualSegmentPlayTests — retains targeted barrier shake and authored-baseline regression coverage.
+
+### Notes
+- EditMode and PlayMode tests pass; manual validation confirmed feedback behavior is unchanged.
+
 ## 2026-07-28 - perf-241-barrier-registry-targeting
 
 ### Summary

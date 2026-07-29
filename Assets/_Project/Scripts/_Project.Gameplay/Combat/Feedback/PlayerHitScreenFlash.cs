@@ -30,6 +30,8 @@ public class PlayerHitScreenFlash : MonoBehaviour
     {
         if (feedbackChannel != null)
             feedbackChannel.Raised -= OnFeedbackRaised;
+
+        ResetFlash();
     }
 
     void OnFeedbackRaised(FeedbackCue cue)
@@ -63,5 +65,17 @@ public class PlayerHitScreenFlash : MonoBehaviour
 
         overlayImage.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
         flashRoutine = null;
+    }
+
+    void ResetFlash()
+    {
+        if (flashRoutine != null)
+        {
+            StopCoroutine(flashRoutine);
+            flashRoutine = null;
+        }
+
+        if (overlayImage != null)
+            overlayImage.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
     }
 }

@@ -91,5 +91,51 @@ namespace Castlebound.Tests.Combat
 
             ScriptableObject.DestroyImmediate(channel);
         }
+
+        [Test]
+        public void Raise_TargetedCue_NotifiesOnlyMatchingTargetListener()
+        {
+            var channel = ScriptableObject.CreateInstance<FeedbackEventChannel>();
+            int matchingCalls = 0;
+            int otherCalls = 0;
+            Action<FeedbackCue> matchingListener = _ => matchingCalls++;
+            Action<FeedbackCue> otherListener = _ => otherCalls++;
+
+            channel.SubscribeTarget(10, matchingListener);
+            channel.SubscribeTarget(20, otherListener);
+            channel.Raise(new FeedbackCue(FeedbackCueType.PlayerHitEnemy, Vector3.zero, 10));
+
+            Assert.That(matchingCalls, Is.EqualTo(1));
+            Assert.That(otherCalls, Is.Zero);
+            ScriptableObject.DestroyImmediate(channel);
+        }
+
+        [Test]
+        public void UnsubscribeTarget_RemovesTargetedListener()
+        {
+            var channel = ScriptableObject.CreateInstance<FeedbackEventChannel>();
+            int calls = 0;
+            Action<FeedbackCue> listener = _ => calls++;
+
+            channel.SubscribeTarget(10, listener);
+            channel.UnsubscribeTarget(10, listener);
+            channel.Raise(new FeedbackCue(FeedbackCueType.PlayerHitEnemy, Vector3.zero, 10));
+
+            Assert.That(calls, Is.Zero);
+            ScriptableObject.DestroyImmediate(channel);
+        }
+
+        [Test]
+        public void Raise_UntargetedCue_StillNotifiesGlobalListener()
+        {
+            var channel = ScriptableObject.CreateInstance<FeedbackEventChannel>();
+            int calls = 0;
+            channel.Raised += _ => calls++;
+
+            channel.Raise(new FeedbackCue(FeedbackCueType.PlayerHit, Vector3.zero));
+
+            Assert.That(calls, Is.EqualTo(1));
+            ScriptableObject.DestroyImmediate(channel);
+        }
     }
 }
