@@ -4,13 +4,11 @@ using UnityEngine;
 namespace Castlebound.Gameplay.AI
 {
     /// <summary>
-    /// Simple stub for castle targeting logic.
-    /// Only returns player for now so the first test can go green.
-    /// Will be expanded as more tests are implemented.
+    /// Resolves deterministic castle targets from the active barrier registry and region state.
     /// </summary>
     public static class CastleTargetSelector
     {
-        public static Transform AssignHomeBarrier(Vector2 spawnPosition, IReadOnlyList<Transform> barriers)
+        public static Transform AssignHomeBarrier(Vector2 spawnPosition, IReadOnlyList<BarrierHealth> barriers)
         {
             if (barriers == null || barriers.Count == 0)
                 return null;
@@ -21,9 +19,11 @@ namespace Castlebound.Gameplay.AI
 
             for (int i = 0; i < barriers.Count; i++)
             {
-                var barrier = barriers[i];
-                if (barrier == null)
+                var barrierHealth = barriers[i];
+                if (barrierHealth == null)
                     continue;
+
+                var barrier = barrierHealth.transform;
 
                 Vector2 targetPos = barrier.position;
                 var hold = barrier.GetComponent<EnemyBarrierHoldBehavior>();

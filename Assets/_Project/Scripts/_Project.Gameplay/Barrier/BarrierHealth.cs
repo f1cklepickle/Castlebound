@@ -194,21 +194,4 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         }
     }
 
-    public static Transform[] GetActiveGateTransforms()
-    {
-        if (_all.Count == 0)
-            return System.Array.Empty<Transform>();
-
-        var active = new List<Transform>(_all.Count);
-        for (int i = 0; i < _all.Count; i++)
-        {
-            var barrier = _all[i];
-            if (barrier == null || barrier.IsBroken)
-                continue;
-
-            active.Add(barrier.transform);
-        }
-
-        return active.ToArray();
-    }
 }

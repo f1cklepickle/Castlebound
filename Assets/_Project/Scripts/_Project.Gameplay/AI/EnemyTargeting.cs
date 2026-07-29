@@ -28,7 +28,7 @@ public class EnemyTargeting : MonoBehaviour
         if (!useBarrierTargeting || homeBarrier != null)
             return;
 
-        homeBarrier = CastleTargetSelector.AssignHomeBarrier(enemyPosition, GetAllBarrierTransforms());
+        homeBarrier = CastleTargetSelector.AssignHomeBarrier(enemyPosition, BarrierHealth.All);
     }
 
     public void Refresh(Vector2 enemyPosition, bool playerInside, bool enemyInside)
@@ -134,16 +134,4 @@ public class EnemyTargeting : MonoBehaviour
         return health != null && health.IsBroken;
     }
 
-    private static Transform[] GetAllBarrierTransforms()
-    {
-        var barriers = BarrierHealth.All;
-        if (barriers == null || barriers.Count == 0)
-            return System.Array.Empty<Transform>();
-
-        var result = new Transform[barriers.Count];
-        for (int i = 0; i < barriers.Count; i++)
-            result[i] = barriers[i] != null ? barriers[i].transform : null;
-
-        return result;
-    }
 }
