@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.Castle;
+using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -170,13 +171,52 @@ namespace Castlebound.Tests.Castle
                 var systemsRoot = GetTransform(binder, "systemsRoot");
                 Assert.NotNull(systemsRoot, "BarrierVisualBinder field 'systemsRoot' must be assigned.");
 
-                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "SpawnPointMarker");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "Spawn_Center");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "Spawn_Left");
+                AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "Spawn_Right");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "HoldAnchor");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "DamageHitbox");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "PulseOrigin");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "BarrierHealthbar");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "TowerPlotLeftFlank");
                 AssertIsDescendantOfSystemsRoot(prefab, systemsRoot, "TowerPlotRightFlank");
+            }
+            finally
+            {
+                PrefabTestUtil.Unload(prefab);
+            }
+        }
+
+        [Test]
+        public void BarrierPrefab_SpawnFormation_HasThreeUniqueLanesAtTwentyOneUnitsOutward()
+        {
+            var prefab = PrefabTestUtil.Load(BarrierPrefabPath);
+            try
+            {
+                var binder = prefab.GetComponent<BarrierVisualBinder>();
+                var systemsRoot = GetTransform(binder, "systemsRoot");
+                var markers = systemsRoot.GetComponentsInChildren<SpawnPointMarker>(true);
+
+                Assert.That(markers.Length, Is.EqualTo(3), "Barrier prefab must author exactly three spawn lanes.");
+                CollectionAssert.AreEquivalent(
+                    new[] { "Center", "Left", "Right" },
+                    System.Array.ConvertAll(markers, marker => marker.ToSpawnPoint().LaneId));
+
+                var positions = new System.Collections.Generic.HashSet<Vector2>();
+                foreach (var marker in markers)
+                {
+                    var localPosition = (Vector2)marker.transform.localPosition;
+                    Assert.That(localPosition.y, Is.EqualTo(21f).Within(0.001f), $"{marker.name} must be authored 21 units outward.");
+                    Assert.IsTrue(positions.Add(localPosition), $"{marker.name} must have a unique authored position.");
+
+                    var inwardToOpening = -localPosition.normalized;
+                    var authoredForward = (Vector2)systemsRoot.InverseTransformDirection(marker.ToSpawnPoint().ForwardDirection);
+                    Assert.That(Vector2.Dot(authoredForward.normalized, inwardToOpening), Is.GreaterThan(0.999f), $"{marker.name} must point inward toward the barrier opening.");
+                }
+
+                Assert.That(FindChildRecursive(prefab.transform, "Spawn_Center").localPosition.x, Is.EqualTo(0f).Within(0.001f));
+                Assert.That(FindChildRecursive(prefab.transform, "Spawn_Left").localPosition.x, Is.EqualTo(-6f).Within(0.001f));
+                Assert.That(FindChildRecursive(prefab.transform, "Spawn_Right").localPosition.x, Is.EqualTo(6f).Within(0.001f));
             }
             finally
             {

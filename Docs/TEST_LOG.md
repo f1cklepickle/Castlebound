@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-07-28 - feat-256-expanded-barrier-spawn-formations
+
+### Summary
+- Replaced the single barrier spawn marker with prefab-authored center, left, and right lanes.
+- Positioned every lane 21 units outward with six-unit flank offsets and converging inward directions.
+- Preserved runtime spawning, targeting, wave timing, balance, and engagement behavior.
+
+### New or Updated Tests
+**EditMode**
+- BarrierPrefabVisualContractTests — covers exact lane count, identities, unique positions, 21-unit distance, flank offsets, SystemsRoot ownership, and inward direction.
+
+**PlayMode**
+- CastleTilemapRuntimeContractsPlayTests — verifies every cardinal barrier produces three correctly rotated inward-facing lanes.
+
+### Notes
+- EditMode and PlayMode tests pass; manual validation confirmed the three-lane formation behaves correctly.
+
 ## 2026-07-28 - feat-255-directional-grouped-spawn-markers
 
 ### Summary
