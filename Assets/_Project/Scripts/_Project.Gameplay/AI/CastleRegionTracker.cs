@@ -77,6 +77,15 @@ namespace Castlebound.Gameplay.AI
             return _enemiesInside.Contains(enemy);
         }
 
+        public void ReconcileEnemyOutsideAfterBarrierRepair(EnemyController2D enemy)
+        {
+            if (enemy == null)
+                return;
+
+            _enemiesInside.Remove(enemy);
+            OnEnemyExited?.Invoke(enemy);
+        }
+
 #if UNITY_EDITOR
         public void Debug_ForceInstanceForTests()
         {
@@ -99,6 +108,24 @@ namespace Castlebound.Gameplay.AI
             else
             {
                 OnPlayerExited?.Invoke();
+            }
+        }
+
+
+        public void Debug_SetEnemyInsideForTests(EnemyController2D enemy, bool inside)
+        {
+            if (enemy == null)
+            {
+                return;
+            }
+
+            if (inside && _enemiesInside.Add(enemy))
+            {
+                OnEnemyEntered?.Invoke(enemy);
+            }
+            else if (!inside)
+            {
+                ReconcileEnemyOutsideAfterBarrierRepair(enemy);
             }
         }
 #endif
