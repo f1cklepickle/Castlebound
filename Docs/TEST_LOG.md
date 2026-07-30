@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-07-29 - feat-60-pixel-perfect-camera
+
+### Summary
+- Configured the MainPrototype camera for PPU32 pixel-perfect rendering with a tunable 960x540 reference resolution.
+- Applied a strict size-8.4375 view while preserving scene-authored camera ownership and the existing follow behavior.
+- Filled adaptive landscape displays with additional world visibility instead of borders or fractional stretching.
+
+### New or Updated Tests
+**EditMode**
+- CameraScaleBaselineTests — verifies the scene-authored PixelPerfectCamera component, PPU, reference resolution, framing, and scaling options.
+- CameraFollowTests — verifies automatic Player resolution and authored-offset following.
+- MobilePresentationSettingsTests — verifies landscape-only autorotation on mobile.
+
+**PlayMode**
+- ScaleBaselineSmokePlayTests — verifies the pixel-perfect camera contract and strict 540-pixel framing in MainPrototype.
+
+### Notes
+- EditMode and PlayMode tests pass; manual validation confirmed uniform pixels, adaptive full-screen framing, acceptable zoom, and landscape presentation.
+
 ## 2026-07-29 - fix-102-targeted-feedback-routing
 
 ### Summary
