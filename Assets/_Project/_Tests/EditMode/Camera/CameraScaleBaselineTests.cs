@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Castlebound.Tests.Scale
 {
@@ -18,8 +19,20 @@ namespace Castlebound.Tests.Scale
                 var camera = FindInScene<UnityEngine.Camera>(scene);
                 Assert.NotNull(camera, "Expected a Camera in MainPrototype.");
                 Assert.IsTrue(camera.orthographic, "Main camera must be orthographic for 2D scale baseline.");
-                Assert.That(camera.orthographicSize, Is.GreaterThanOrEqualTo(9f).And.LessThanOrEqualTo(12f),
-                    "Orthographic size should be in a readable baseline range for PPU=32.");
+                Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.001f),
+                    "Main camera should author the strict 540-pixel vertical view.");
+
+                var pixelPerfect = camera.GetComponent<PixelPerfectCamera>();
+                Assert.NotNull(pixelPerfect, "Main camera must own the pixel-perfect rendering contract.");
+                Assert.That(pixelPerfect.assetsPPU, Is.EqualTo(32));
+                Assert.That(pixelPerfect.refResolutionX, Is.EqualTo(960));
+                Assert.That(pixelPerfect.refResolutionY, Is.EqualTo(540));
+                Assert.IsTrue(pixelPerfect.upscaleRT);
+                Assert.IsFalse(pixelPerfect.cropFrameX,
+                    "Wider displays should reveal additional world instead of adding side borders.");
+                Assert.IsFalse(pixelPerfect.cropFrameY,
+                    "Taller landscape displays should reveal additional world instead of adding top/bottom borders.");
+                Assert.IsFalse(pixelPerfect.stretchFill);
             }
             finally
             {

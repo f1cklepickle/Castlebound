@@ -1,7 +1,7 @@
 {
   "name": "_Project.Tests.EditMode",
   "rootNamespace": "",
-  "references": ["_Project.Core", "_Project.Gameplay", "Unity.TextMeshPro"],
+  "references": ["_Project.Core", "_Project.Gameplay", "Unity.TextMeshPro", "GUID:476f7c6c6dfeed041b063446a926e656"],
   "includePlatforms": ["Editor"],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

@@ -2,11 +2,12 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    public Transform target; // The player to follow
-    public Vector3 offset = new Vector3(0, 0, -10); // A default offset to position the camera
+    [SerializeField] Transform target;
+    [SerializeField] Vector3 offset = new Vector3(0f, 0f, -10f);
 
-    // LateUpdate is called once per frame, after all Update functions have been called.
-    // This ensures the camera moves after the player has moved.
+    public Transform Target => target;
+    public Vector3 Offset => offset;
+
     void LateUpdate()
     {
         Tick();
@@ -28,7 +29,6 @@ public class CameraFollow : MonoBehaviour
             return;
         }
 
-        // Set the camera's position to the target's position plus the offset
         transform.position = target.position + offset;
     }
 }
