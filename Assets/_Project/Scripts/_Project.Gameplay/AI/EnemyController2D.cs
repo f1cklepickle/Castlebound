@@ -23,6 +23,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private EnemyLocomotion locomotion;
     [SerializeField] private EnemyFacing facing;
     [SerializeField] private EnemyEngagement engagement;
+    [SerializeField] private EnemyAnimationPresenter animationPresenter;
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float orbitBase = 0.8f;
@@ -142,6 +143,7 @@ public class EnemyController2D : MonoBehaviour
         locomotion = GetComponent<EnemyLocomotion>();
         facing = GetComponent<EnemyFacing>();
         engagement = GetComponent<EnemyEngagement>();
+        animationPresenter = GetComponent<EnemyAnimationPresenter>();
         if (approachSpread == null)
         {
             approachSpread = GetComponent<EnemyApproachSpread>();
@@ -214,7 +216,8 @@ public class EnemyController2D : MonoBehaviour
 
         if (target == null)
         {
-            Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
+            bool moved = Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
+            animationPresenter?.SetMovementRequested(moved);
             return;
         }
         if (steerTarget == null) steerTarget = target;
@@ -271,7 +274,8 @@ public class EnemyController2D : MonoBehaviour
             Locomotion.SetMovementState(State.CHASE);
         }
 
-        Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
+        bool movementApplied = Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
+        animationPresenter?.SetMovementRequested(movementApplied);
     }
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)

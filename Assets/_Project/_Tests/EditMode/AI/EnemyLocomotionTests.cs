@@ -82,9 +82,33 @@ public class EnemyLocomotionTests
             EnemyLocomotion locomotion = enemy.AddComponent<EnemyLocomotion>();
             root.RootForSeconds(1f);
 
-            locomotion.ExecuteMovement(body, Vector2.right * 3f, Vector2.zero, 0.02f);
+            bool movementApplied = locomotion.ExecuteMovement(body, Vector2.right * 3f, Vector2.zero, 0.02f);
 
             Assert.AreEqual(Vector2.zero, body.position);
+            Assert.IsFalse(movementApplied);
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemy);
+        }
+    }
+
+    [Test]
+    public void ExecuteMovement_ReportsAppliedMovementForPresentation()
+    {
+        GameObject enemy = new GameObject("Enemy");
+        try
+        {
+            Rigidbody2D body = enemy.AddComponent<Rigidbody2D>();
+            EnemyLocomotion locomotion = enemy.AddComponent<EnemyLocomotion>();
+
+            bool movementApplied = locomotion.ExecuteMovement(
+                body,
+                Vector2.right * 3f,
+                Vector2.zero,
+                0.02f);
+
+            Assert.IsTrue(movementApplied);
         }
         finally
         {

@@ -73,15 +73,15 @@ public class EnemyLocomotion : MonoBehaviour
         CurrentState = movementState;
     }
 
-    public void ExecuteMovement(Rigidbody2D body, Vector2 radial, Vector2 tangent, float deltaTime)
+    public bool ExecuteMovement(Rigidbody2D body, Vector2 radial, Vector2 tangent, float deltaTime)
     {
         if (body == null)
-            return;
+            return false;
 
         if (rootReceiver == null)
             rootReceiver = GetComponent<EnemyRootReceiver>();
         if (rootReceiver != null && rootReceiver.IsRooted)
-            return;
+            return false;
 
         if (knockbackReceiver == null)
             knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
@@ -89,6 +89,8 @@ public class EnemyLocomotion : MonoBehaviour
         Vector2 knockback = knockbackReceiver != null
             ? knockbackReceiver.ConsumeDisplacement(deltaTime)
             : Vector2.zero;
-        body.MovePosition(body.position + (radial + tangent) * deltaTime + knockback);
+        Vector2 displacement = (radial + tangent) * deltaTime + knockback;
+        body.MovePosition(body.position + displacement);
+        return displacement.sqrMagnitude > Mathf.Epsilon;
     }
 }
