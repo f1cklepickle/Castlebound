@@ -14,7 +14,7 @@ public class EnemyAttack : MonoBehaviour
         get => damage;
         set => damage = value;
     }
-    [SerializeField] float windupSeconds = 0.15f;  // time before damage applies
+    [SerializeField] float windupSeconds = 0.3f;   // time before damage applies
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
     public float CooldownSeconds
     {
@@ -33,6 +33,7 @@ public class EnemyAttack : MonoBehaviour
     EnemyEngagement engagement;
     EnemyRegionState regionState;
     EnemyRootReceiver rootReceiver;
+    EnemyAnimationPresenter animationPresenter;
     static bool missingRegionStateWarningLogged;
     bool onCooldown;
 
@@ -43,6 +44,7 @@ public class EnemyAttack : MonoBehaviour
         engagement = GetComponent<EnemyEngagement>();
         regionState = GetComponent<EnemyRegionState>();
         rootReceiver = GetComponent<EnemyRootReceiver>();
+        animationPresenter = GetComponent<EnemyAnimationPresenter>();
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (targetMask.value == 0) {
             int lm = LayerMask.NameToLayer(playerLayerName);
@@ -87,6 +89,7 @@ public class EnemyAttack : MonoBehaviour
 
         if (animator && !string.IsNullOrEmpty(attackTriggerName))
             animator.SetTrigger(attackTriggerName);
+        animationPresenter?.PlayAttack(windupSeconds);
 
         yield return new WaitForSeconds(windupSeconds);
 
@@ -152,6 +155,8 @@ public class EnemyAttack : MonoBehaviour
     {
         if (animator && !string.IsNullOrEmpty(attackTriggerName))
             animator.ResetTrigger(attackTriggerName);
+
+        animationPresenter?.CancelAttack();
 
         onCooldown = false;
         controller?.RequestChase();

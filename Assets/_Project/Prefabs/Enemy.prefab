@@ -109,6 +109,7 @@ GameObject:
   - component: {fileID: 8041287619235472014}
   - component: {fileID: 8041287619235472015}
   - component: {fileID: 8041287619235472016}
+  - component: {fileID: 8041287619235472017}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -281,6 +282,44 @@ MonoBehaviour:
   bodyCollider: {fileID: 8747018169664145618}
   engagementDistance: 0.5
   releaseMargin: 0.25
+--- !u!114 &8041287619235472017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f41a7f2ca40f4bb9813371486bf05824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  targetRenderer: {fileID: 7926314504726225482}
+  idleSheet: {fileID: 2800000, guid: ab96650151494fc99a18216774b756ce, type: 3}
+  walkSheet: {fileID: 2800000, guid: e87a7248817c4b138993e04d624b0308, type: 3}
+  attackSheet: {fileID: 2800000, guid: 13e2e749f0134bf6abca1ee8c76ea826, type: 3}
+  idleFrameCount: 9
+  walkFrameCount: 6
+  attackFrameCount: 7
+  attackImpactFrameIndex: 6
+  frameWidth: 64
+  frameHeight: 64
+  pixelsPerUnit: 32
+  idleFramesPerSecond: 6
+  walkFramesPerSecond: 10
+  attackTiming:
+    windupFrameNormalizedTimes:
+    - 0
+    - 0.07
+    - 0.2
+    - 0.37
+    - 0.57
+    - 0.8
+    - 1
+    impactHoldWindupRatio: 0.2
+    recoveryFrameNormalizedDelays: []
+    finalFrameHoldWindupRatio: 0
+  idleDelaySeconds: 2
 --- !u!114 &5939097710446132315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -319,7 +358,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 1
-  windupSeconds: 0.15
+  windupSeconds: 0.3
   cooldownSeconds: 0.8
   targetMask:
     serializedVersion: 2
