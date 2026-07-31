@@ -12,7 +12,7 @@ namespace Castlebound.Tests.AI
         public void HomeBarrierAssignment_ConsumesHealthRegistryWithoutTransformCollectionBuilder()
         {
             var selectorMethod = typeof(CastleTargetSelector).GetMethod(
-                "AssignHomeBarrier",
+                "SelectNearestBarrier",
                 new[] { typeof(Vector2), typeof(IReadOnlyList<BarrierHealth>) });
             var obsoleteBuilder = typeof(EnemyTargeting).GetMethod(
                 "GetAllBarrierTransforms",
@@ -34,7 +34,7 @@ namespace Castlebound.Tests.AI
             var spawnPosition = new Vector2(-3f, 0f);
             var barriers = new List<BarrierHealth> { barrierFar, barrierNear };
 
-            var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
+            var homeBarrier = CastleTargetSelector.SelectNearestBarrier(spawnPosition, barriers);
 
             Assert.AreSame(barrierNear.transform, homeBarrier, "Enemy should assign the nearest barrier to its spawn as the home barrier.");
 
@@ -54,7 +54,7 @@ namespace Castlebound.Tests.AI
             var spawnPosition = new Vector2(-3f, 0f);
             var barriers = new List<BarrierHealth> { barrierOther, barrierHome };
 
-            var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
+            var homeBarrier = CastleTargetSelector.SelectNearestBarrier(spawnPosition, barriers);
 
             var player = new GameObject("Player").transform;
             player.position = new Vector2(0f, 0f);
@@ -92,7 +92,7 @@ namespace Castlebound.Tests.AI
             var spawnPosition = new Vector2(-3f, 0f);
             var barriers = new List<BarrierHealth> { health };
 
-            var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
+            var homeBarrier = CastleTargetSelector.SelectNearestBarrier(spawnPosition, barriers);
 
             var player = new GameObject("Player").transform;
             player.position = new Vector2(0f, 0f);
@@ -128,7 +128,7 @@ namespace Castlebound.Tests.AI
             var spawnPosition = new Vector2(-3f, 0f);
             var barriers = new List<BarrierHealth> { health };
 
-            var homeBarrier = CastleTargetSelector.AssignHomeBarrier(spawnPosition, barriers);
+            var homeBarrier = CastleTargetSelector.SelectNearestBarrier(spawnPosition, barriers);
 
             var player = new GameObject("Player").transform;
             player.position = new Vector2(0f, 0f);
@@ -160,7 +160,7 @@ namespace Castlebound.Tests.AI
             var barrierA = new GameObject("Barrier_A").AddComponent<BarrierHealth>();
             barrierA.transform.position = Vector2.right;
 
-            var result = CastleTargetSelector.AssignHomeBarrier(
+            var result = CastleTargetSelector.SelectNearestBarrier(
                 Vector2.zero,
                 new List<BarrierHealth> { barrierB, barrierA });
 

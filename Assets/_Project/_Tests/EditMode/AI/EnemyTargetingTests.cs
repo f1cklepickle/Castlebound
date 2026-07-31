@@ -102,7 +102,9 @@ public class EnemyTargetingTests
             targeting.Debug_Setup(player.transform, barrier.transform);
 
             targeting.Refresh(new Vector2(0.5f, 0f), playerInside: true, enemyInside: false);
+            targeting.RequestRetarget();
             targeting.Refresh(new Vector2(2f, 0f), playerInside: false, enemyInside: false);
+            targeting.RequestRetarget();
             targeting.Refresh(new Vector2(2f, 0f), playerInside: true, enemyInside: false);
 
             Assert.AreSame(barrier.transform, targeting.SteerTarget,
@@ -135,6 +137,7 @@ public class EnemyTargetingTests
             Assert.AreEqual(EnemyTargetType.Player, targeting.CurrentTargetType);
 
             barrierHealth.Repair();
+            targeting.RequestRetarget();
             targeting.Refresh(new Vector2(2f, 0f), playerInside: true, enemyInside: false);
 
             Assert.AreSame(barrier.transform, targeting.SteerTarget);
@@ -146,6 +149,51 @@ public class EnemyTargetingTests
             Object.DestroyImmediate(enemy);
             Object.DestroyImmediate(player);
             Object.DestroyImmediate(barrier);
+        }
+    }
+
+    [Test]
+    public void Refresh_CachesBarrierUntilEnemyLocalRetargetIsRequested()
+    {
+        GameObject enemy = new GameObject("Enemy");
+        GameObject player = new GameObject("Player");
+        GameObject firstBarrier = new GameObject("FirstBarrier");
+        firstBarrier.transform.position = Vector2.zero;
+        BarrierHealth firstHealth = firstBarrier.AddComponent<BarrierHealth>();
+        GameObject secondBarrier = new GameObject("SecondBarrier");
+        secondBarrier.transform.position = Vector2.right * 10f;
+        BarrierHealth secondHealth = secondBarrier.AddComponent<BarrierHealth>();
+
+        try
+        {
+            EnemyTargeting targeting = enemy.AddComponent<EnemyTargeting>();
+            targeting.Debug_Setup(player.transform);
+            targeting.Debug_SetBarrierCandidates(new[] { firstHealth, secondHealth });
+
+            targeting.RequestRetarget();
+            targeting.Refresh(Vector2.left, playerInside: true, enemyInside: false);
+            int initialRevision = targeting.TargetRevision;
+            Assert.AreSame(firstBarrier.transform, targeting.AttackTarget);
+
+            targeting.Refresh(Vector2.right * 9f, playerInside: true, enemyInside: false);
+
+            Assert.AreSame(firstBarrier.transform, targeting.AttackTarget,
+                "A valid cached barrier must not trigger a nearest-barrier scan each refresh.");
+            Assert.That(targeting.TargetRevision, Is.EqualTo(initialRevision));
+
+            targeting.RequestRetarget();
+            targeting.Refresh(Vector2.right * 9f, playerInside: true, enemyInside: false);
+
+            Assert.AreSame(secondBarrier.transform, targeting.AttackTarget,
+                "An explicit enemy-local retarget should select the nearest barrier from the current position.");
+            Assert.That(targeting.TargetRevision, Is.EqualTo(initialRevision + 1));
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemy);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(firstBarrier);
+            Object.DestroyImmediate(secondBarrier);
         }
     }
 

@@ -26,7 +26,7 @@ namespace Castlebound.Tests.AI
                 EnemyInside = enemyInside,
                 PlayerInside = playerInside,
                 Player = player,
-                HomeBarrier = barrier
+                BarrierTarget = barrier
             });
 
             Assert.AreSame(barrier, decision.SteerTarget, "Outside while player is inside should steer to home barrier.");
@@ -57,7 +57,7 @@ namespace Castlebound.Tests.AI
                 EnemyInside = enemyInside,
                 PlayerInside = playerInside,
                 Player = player,
-                HomeBarrier = barrier
+                BarrierTarget = barrier
             });
 
             Assert.AreSame(player, decision.SteerTarget, "Once inside, steering should switch to player even if home barrier is broken.");
@@ -88,7 +88,7 @@ namespace Castlebound.Tests.AI
                 EnemyInside = enemyInside,
                 PlayerInside = playerInside,
                 Player = player,
-                HomeBarrier = barrier,
+                BarrierTarget = barrier,
                 PassThroughRadius = 0.6f
             });
 

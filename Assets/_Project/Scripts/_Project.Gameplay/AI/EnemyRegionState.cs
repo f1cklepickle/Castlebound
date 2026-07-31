@@ -98,6 +98,7 @@ namespace Castlebound.Gameplay.AI
             if (enemy == controller)
             {
                 enemyInside = true;
+                controller?.RequestTargetRefresh();
             }
         }
 
@@ -106,17 +107,20 @@ namespace Castlebound.Gameplay.AI
             if (enemy == controller)
             {
                 enemyInside = false;
+                controller?.RequestTargetRefresh();
             }
         }
 
         void HandlePlayerEntered()
         {
             playerInside = true;
+            controller?.RequestTargetRefresh();
         }
 
         void HandlePlayerExited()
         {
             playerInside = false;
+            controller?.RequestTargetRefresh();
         }
 
         void HandleRegionReady()

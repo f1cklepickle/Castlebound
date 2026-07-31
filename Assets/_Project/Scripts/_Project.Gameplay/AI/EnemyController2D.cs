@@ -184,7 +184,7 @@ public class EnemyController2D : MonoBehaviour
 
     private void Start()
     {
-        Targeting.AssignHomeBarrierIfNeeded(transform.position);
+        Targeting.RequestRetarget();
     }
 
     private void FixedUpdate()
@@ -292,11 +292,13 @@ public class EnemyController2D : MonoBehaviour
 
     public Transform Debug_SelectTarget(bool playerInside, bool enemyInside)
     {
+        Targeting.RequestRetarget();
         return SelectTarget(playerInside, enemyInside);
     }
 
     public Transform Debug_SteerTarget(bool playerInside, bool enemyInside)
     {
+        Targeting.RequestRetarget();
         return SelectSteerTarget(playerInside, enemyInside);
     }
 
@@ -311,13 +313,17 @@ public class EnemyController2D : MonoBehaviour
     {
         Targeting.Debug_Setup(playerRef, homeRef);
         barrier = homeRef;
-        Targeting.AssignHomeBarrierIfNeeded(transform.position);
-        barrier = Targeting.HomeBarrier;
+        barrier = Targeting.SelectedBarrier;
     }
 
     public void Debug_SetTargetDecision(Transform steer, Transform attack, EnemyTargetType targetType)
     {
         Targeting.Debug_SetDecision(steer, attack, targetType);
+    }
+
+    public void RequestTargetRefresh()
+    {
+        Targeting?.RequestRetarget();
     }
 
     public void Debug_SetBarrierTargeting(bool value)
@@ -334,9 +340,9 @@ public class EnemyController2D : MonoBehaviour
             Debug.LogWarning("[EnemyController2D] Player reference not found in scene. Enemy will have no target.", this);
         }
 
-        if (Targeting != null && Targeting.UsesBarrierTargeting && Targeting.HomeBarrier == null)
+        if (Targeting != null && Targeting.UsesBarrierTargeting && Targeting.SelectedBarrier == null)
         {
-            Debug.LogWarning("[EnemyController2D] No home barrier found while barrier targeting is enabled.", this);
+            Debug.LogWarning("[EnemyController2D] No barrier target found while barrier targeting is enabled.", this);
         }
     }
 #endif
