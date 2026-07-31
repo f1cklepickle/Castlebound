@@ -1,3 +1,20 @@
+## 2026-07-30 - event-driven-enemy-retargeting
+
+### Summary
+- Replaced spawn-owned home barriers with cached, event-driven barrier target decisions.
+- Selected the nearest barrier from the affected enemy's current position only when retargeting is requested.
+- Connected enemy and player region transitions to enemy-local target refresh requests.
+
+### New or Updated Tests
+**EditMode**
+- EnemyTargetingTests — valid targets remain cached without polling and explicit retarget requests recompute the nearest barrier.
+
+**PlayMode**
+- EnemyTargetingPlayTests and BarrierRepairEnemyRetargetPlayTests — destroyed targets and repair expulsion trigger safe local retargeting.
+
+### Notes
+- Relevant targeting, steering, repair, engagement, and attack-lock regressions pass.
+
 ## 2026-07-30 - barrier-repair-enemy-retarget
 
 ### Summary

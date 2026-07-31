@@ -28,16 +28,18 @@ namespace Castlebound.Tests.PlayMode.AI
 
             try
             {
-                targeting.AssignHomeBarrierIfNeeded(Vector2.zero);
-                Assert.AreSame(nearBarrier.transform, targeting.HomeBarrier,
+                targeting.RequestRetarget();
+                targeting.Refresh(Vector2.zero, playerInside: true, enemyInside: false);
+                Assert.AreSame(nearBarrier.transform, targeting.SelectedBarrier,
                     "Disabled barriers must leave the live registry before home-barrier selection.");
 
                 Object.Destroy(nearBarrier);
                 yield return null;
 
+                targeting.RequestRetarget();
                 targeting.Refresh(Vector2.zero, playerInside: true, enemyInside: false);
 
-                Assert.AreSame(farBarrier.transform, targeting.HomeBarrier,
+                Assert.AreSame(farBarrier.transform, targeting.SelectedBarrier,
                     "Destroyed barriers must leave the registry so targeting can safely reassign.");
             }
             finally
@@ -69,6 +71,7 @@ namespace Castlebound.Tests.PlayMode.AI
                 enemy.transform.position = new Vector2(2f, 0f);
                 yield return null;
 
+                targeting.RequestRetarget();
                 targeting.Refresh(enemy.transform.position, playerInside: true, enemyInside: false);
 
                 Assert.AreSame(barrier.transform, targeting.SteerTarget);

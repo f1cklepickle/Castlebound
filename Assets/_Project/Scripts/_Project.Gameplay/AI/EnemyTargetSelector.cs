@@ -17,7 +17,7 @@ namespace Castlebound.Gameplay.AI
             public bool EnemyInside;
             public bool PlayerInside;
             public Transform Player;
-            public Transform HomeBarrier;
+            public Transform BarrierTarget;
             public float PassThroughRadius;
         }
 
@@ -61,16 +61,16 @@ namespace Castlebound.Gameplay.AI
             }
 
             // Enemy outside, player inside: go for home barrier if known.
-            if (input.HomeBarrier != null)
+            if (input.BarrierTarget != null)
             {
-                var health = input.HomeBarrier.GetComponent<BarrierHealth>();
+                var health = input.BarrierTarget.GetComponent<BarrierHealth>();
                 bool broken = health != null && health.IsBroken;
 
                 // If broken and we're effectively at the barrier opening, switch to player.
                 if (broken && input.PassThroughRadius > 0f)
                 {
-                    float distToHome = Vector2.Distance(input.EnemyPosition, input.HomeBarrier.position);
-                    if (distToHome <= input.PassThroughRadius)
+                    float distToBarrier = Vector2.Distance(input.EnemyPosition, input.BarrierTarget.position);
+                    if (distToBarrier <= input.PassThroughRadius)
                     {
                         decision.SteerTarget = input.Player;
                         decision.AttackTarget = input.Player;
@@ -79,8 +79,8 @@ namespace Castlebound.Gameplay.AI
                     }
                 }
 
-                decision.SteerTarget = input.HomeBarrier;
-                decision.AttackTarget = input.HomeBarrier;
+                decision.SteerTarget = input.BarrierTarget;
+                decision.AttackTarget = input.BarrierTarget;
                 decision.TargetType = EnemyTargetType.Barrier;
                 return decision;
             }

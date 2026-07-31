@@ -1,50 +1,65 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Castlebound.Gameplay.AI;
 
 public class EnemyTargeting : MonoBehaviour
 {
     [SerializeField] private Transform player;
-    [SerializeField] private Transform homeBarrier;
+    [FormerlySerializedAs("homeBarrier")]
+    [SerializeField] private Transform selectedBarrier;
     [SerializeField] private float passThroughRadius = 0.6f;
     [SerializeField] private bool useBarrierTargeting = true;
 
     private bool committedThroughBrokenBarrier;
+    private bool retargetRequested = true;
+    private IReadOnlyList<BarrierHealth> barrierCandidatesOverride;
 
     public Transform Player => player;
-    public Transform HomeBarrier => homeBarrier;
+    public Transform SelectedBarrier => selectedBarrier;
     public bool UsesBarrierTargeting => useBarrierTargeting;
     public Transform SteerTarget { get; private set; }
     public Transform AttackTarget { get; private set; }
     public EnemyTargetType CurrentTargetType { get; private set; } = EnemyTargetType.None;
+    public int TargetRevision { get; private set; }
 
     public void Initialize()
     {
         EnsurePlayerReference();
         ApplyFallbackDecision();
+        RequestRetarget();
     }
 
-    public void AssignHomeBarrierIfNeeded(Vector2 enemyPosition)
+    public void RequestRetarget()
     {
-        if (!useBarrierTargeting || homeBarrier != null)
-            return;
-
-        homeBarrier = CastleTargetSelector.AssignHomeBarrier(enemyPosition, BarrierHealth.All);
+        retargetRequested = true;
     }
 
     public void Refresh(Vector2 enemyPosition, bool playerInside, bool enemyInside)
     {
         EnsurePlayerReference();
-        AssignHomeBarrierIfNeeded(enemyPosition);
+
+        if (!retargetRequested && CurrentTargetType == EnemyTargetType.Barrier && IsAtBrokenSelectedBarrier(enemyPosition))
+        {
+            committedThroughBrokenBarrier = true;
+            retargetRequested = true;
+        }
+
+        if (!retargetRequested && SteerTarget != null && AttackTarget != null)
+            return;
+
+        retargetRequested = false;
+        TargetRevision++;
 
         if (!playerInside)
         {
             committedThroughBrokenBarrier = false;
         }
-        else if (committedThroughBrokenBarrier && !enemyInside && !IsHomeBarrierBroken())
+        else if (committedThroughBrokenBarrier && !enemyInside && !IsSelectedBarrierBroken())
         {
             committedThroughBrokenBarrier = false;
         }
-        else if (IsAtBrokenHomeBarrier(enemyPosition))
+        else if (IsAtBrokenSelectedBarrier(enemyPosition))
         {
             committedThroughBrokenBarrier = true;
         }
@@ -55,13 +70,32 @@ public class EnemyTargeting : MonoBehaviour
             return;
         }
 
+        if (!playerInside || enemyInside)
+        {
+            ApplyFallbackDecision();
+            return;
+        }
+
+        selectedBarrier = useBarrierTargeting
+            ? CastleTargetSelector.SelectNearestBarrier(
+                enemyPosition,
+                barrierCandidatesOverride ?? BarrierHealth.All)
+            : null;
+
+        if (IsAtBrokenSelectedBarrier(enemyPosition))
+        {
+            committedThroughBrokenBarrier = true;
+            ApplyFallbackDecision();
+            return;
+        }
+
         EnemyTargetSelector.Decision decision = EnemyTargetSelector.Select(new EnemyTargetSelector.Input
         {
             EnemyPosition = enemyPosition,
             EnemyInside = enemyInside,
             PlayerInside = playerInside,
             Player = player,
-            HomeBarrier = useBarrierTargeting ? homeBarrier : null,
+            BarrierTarget = useBarrierTargeting ? selectedBarrier : null,
             PassThroughRadius = passThroughRadius
         });
 
@@ -70,11 +104,24 @@ public class EnemyTargeting : MonoBehaviour
         CurrentTargetType = decision.TargetType;
     }
 
-    public void Debug_Setup(Transform playerReference, Transform homeBarrierReference = null)
+    public void Debug_Setup(Transform playerReference, Transform selectedBarrierReference = null)
     {
         player = playerReference;
-        homeBarrier = homeBarrierReference;
+        selectedBarrier = selectedBarrierReference;
+        BarrierHealth explicitBarrier = selectedBarrierReference != null
+            ? selectedBarrierReference.GetComponent<BarrierHealth>()
+            : null;
+        barrierCandidatesOverride = explicitBarrier != null
+            ? new[] { explicitBarrier }
+            : null;
         ApplyFallbackDecision();
+        RequestRetarget();
+    }
+
+    public void Debug_SetBarrierCandidates(IReadOnlyList<BarrierHealth> barriers)
+    {
+        barrierCandidatesOverride = barriers;
+        RequestRetarget();
     }
 
     public void Debug_SetDecision(Transform steer, Transform attack, EnemyTargetType targetType)
@@ -113,24 +160,24 @@ public class EnemyTargeting : MonoBehaviour
             player = playerController.transform;
     }
 
-    private bool IsAtBrokenHomeBarrier(Vector2 enemyPosition)
+    private bool IsAtBrokenSelectedBarrier(Vector2 enemyPosition)
     {
-        if (!useBarrierTargeting || homeBarrier == null || passThroughRadius <= 0f)
+        if (!useBarrierTargeting || selectedBarrier == null || passThroughRadius <= 0f)
             return false;
 
-        if (!IsHomeBarrierBroken())
+        if (!IsSelectedBarrierBroken())
             return false;
 
-        return ((Vector2)homeBarrier.position - enemyPosition).sqrMagnitude <=
+        return ((Vector2)selectedBarrier.position - enemyPosition).sqrMagnitude <=
                passThroughRadius * passThroughRadius;
     }
 
-    private bool IsHomeBarrierBroken()
+    private bool IsSelectedBarrierBroken()
     {
-        if (!useBarrierTargeting || homeBarrier == null)
+        if (!useBarrierTargeting || selectedBarrier == null)
             return false;
 
-        BarrierHealth health = homeBarrier.GetComponent<BarrierHealth>();
+        BarrierHealth health = selectedBarrier.GetComponent<BarrierHealth>();
         return health != null && health.IsBroken;
     }
 

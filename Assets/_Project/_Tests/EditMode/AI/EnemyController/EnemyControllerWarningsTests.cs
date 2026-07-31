@@ -40,7 +40,7 @@ namespace Castlebound.Tests.AI
             var useBarrierField = typeof(EnemyController2D).GetField("useBarrierTargeting", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             useBarrierField?.SetValue(controller, true);
 
-            LogAssert.Expect(LogType.Warning, "[EnemyController2D] No home barrier found while barrier targeting is enabled.");
+            LogAssert.Expect(LogType.Warning, "[EnemyController2D] No barrier target found while barrier targeting is enabled.");
             controller.Debug_ValidateRefs();
 
             Object.DestroyImmediate(enemy);

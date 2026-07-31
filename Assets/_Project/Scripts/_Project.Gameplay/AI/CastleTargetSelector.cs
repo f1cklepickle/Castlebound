@@ -8,7 +8,7 @@ namespace Castlebound.Gameplay.AI
     /// </summary>
     public static class CastleTargetSelector
     {
-        public static Transform AssignHomeBarrier(Vector2 spawnPosition, IReadOnlyList<BarrierHealth> barriers)
+        public static Transform SelectNearestBarrier(Vector2 enemyPosition, IReadOnlyList<BarrierHealth> barriers)
         {
             if (barriers == null || barriers.Count == 0)
                 return null;
@@ -33,7 +33,7 @@ namespace Castlebound.Gameplay.AI
                     targetPos = anchor;
                 }
 
-                float sqrDist = (targetPos - spawnPosition).sqrMagnitude;
+                float sqrDist = (targetPos - enemyPosition).sqrMagnitude;
                 if (sqrDist < bestSqrDist)
                 {
                     bestSqrDist = sqrDist;
