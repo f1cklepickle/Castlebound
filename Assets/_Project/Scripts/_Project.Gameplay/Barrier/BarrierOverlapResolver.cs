@@ -39,9 +39,9 @@ public static class BarrierOverlapResolver
         return insideCount >= 3;
     }
 
-    public static void ResolveOverlap(Collider2D barrier, Collider2D actor, bool isPlayer)
+    public static bool ResolveOverlap(Collider2D barrier, Collider2D actor, bool isPlayer)
     {
-        if (barrier == null || actor == null) return;
+        if (barrier == null || actor == null) return false;
 
         Vector2 outward = Vector2.zero;
         Vector2 anchorPos = Vector2.zero;
@@ -75,7 +75,7 @@ public static class BarrierOverlapResolver
         {
             if (desiredDir == Vector2.zero)
             {
-                return;
+                return false;
             }
 
             for (int i = 0; i < maxIterations; i++)
@@ -93,6 +93,8 @@ public static class BarrierOverlapResolver
                 Vector2 target = (Vector2)barrier.bounds.center + dir * (barrierExtent + actorExtent + skin);
                 SetPositionImmediate(actor, target);
             }
+
+            return false;
         }
         else
         {
@@ -105,7 +107,7 @@ public static class BarrierOverlapResolver
                     ColliderDistance2D dist = Physics2D.Distance(barrier, actor);
                     if (!dist.isOverlapped)
                     {
-                        return;
+                        return false;
                     }
 
                     Vector2 normal = dist.normal;
@@ -113,8 +115,10 @@ public static class BarrierOverlapResolver
                     ApplyDelta(actor, separation);
                 }
 
-                return;
+                return false;
             }
+
+            bool pushedOutside = Vector2.Dot(desiredDir, outward) > 0f;
 
             for (int i = 0; i < maxIterations; i++)
             {
@@ -122,7 +126,7 @@ public static class BarrierOverlapResolver
                 ColliderDistance2D dist = Physics2D.Distance(barrier, actor);
                 if (!dist.isOverlapped)
                 {
-                    return;
+                    return pushedOutside;
                 }
 
                 Vector2 dir = desiredDir.normalized;
@@ -131,6 +135,8 @@ public static class BarrierOverlapResolver
                 Vector2 target = (Vector2)barrier.bounds.center + dir * (barrierExtent + actorExtent + skin);
                 SetPositionImmediate(actor, target);
             }
+
+            return pushedOutside;
         }
     }
 

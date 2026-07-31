@@ -31,10 +31,11 @@ namespace Castlebound.Tests.Gate
             Physics2D.SyncTransforms();
 
             Vector2 before = enemyGo.transform.position;
-            BarrierOverlapResolver.ResolveOverlap(barrierCollider, enemy, isPlayer: false);
+            bool pushedOutside = BarrierOverlapResolver.ResolveOverlap(barrierCollider, enemy, isPlayer: false);
             Vector2 after = enemyGo.transform.position;
 
             Assert.Greater(after.x, before.x, "Enemy should be pushed out before passing the anchor threshold.");
+            Assert.IsTrue(pushedOutside, "Outward resolution should request castle-region reconciliation.");
 
             Object.DestroyImmediate(enemyGo);
             Object.DestroyImmediate(anchorGo);

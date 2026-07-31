@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Castlebound.Gameplay.Stats;
+using Castlebound.Gameplay.AI;
 
 public class BarrierHealth : MonoBehaviour, IDamageable
 {
@@ -187,9 +188,14 @@ public class BarrierHealth : MonoBehaviour, IDamageable
                 continue;
             }
 
-            if (other.GetComponentInParent<EnemyController2D>() != null)
+            var enemy = other.GetComponentInParent<EnemyController2D>();
+            if (enemy != null)
             {
-                BarrierOverlapResolver.ResolveOverlap(barrierCollider, other, false);
+                bool pushedOutside = BarrierOverlapResolver.ResolveOverlap(barrierCollider, other, false);
+                if (pushedOutside)
+                {
+                    CastleRegionTracker.Instance?.ReconcileEnemyOutsideAfterBarrierRepair(enemy);
+                }
             }
         }
     }

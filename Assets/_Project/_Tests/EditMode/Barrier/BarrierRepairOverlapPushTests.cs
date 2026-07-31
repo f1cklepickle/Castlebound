@@ -54,10 +54,11 @@ namespace Castlebound.Tests.Gate
             Physics2D.SyncTransforms();
 
             Vector2 before = enemyGo.transform.position;
-            BarrierOverlapResolver.ResolveOverlap(barrier, enemy, isPlayer: false);
+            bool pushedOutside = BarrierOverlapResolver.ResolveOverlap(barrier, enemy, isPlayer: false);
 
             Vector2 after = enemyGo.transform.position;
             Assert.Greater(after.x, before.x, "Enemy should be pushed out of the barrier.");
+            Assert.IsFalse(pushedOutside, "Without an authored approach anchor, region ownership cannot be reconciled.");
 
             Object.DestroyImmediate(enemyGo);
             Object.DestroyImmediate(barrierGo);

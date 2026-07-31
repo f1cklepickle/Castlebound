@@ -1,3 +1,20 @@
+## 2026-07-30 - barrier-repair-enemy-retarget
+
+### Summary
+- Reconciled castle-region membership when barrier repair expels an overlapping enemy.
+- Restored barrier targeting after enemies are pushed outside.
+- Preserved inward overlap resolution and ordinary trigger-owned region tracking.
+
+### New or Updated Tests
+**EditMode**
+- BarrierEnemyPushThresholdTests — outward overlap resolution reports that region reconciliation is required.
+
+**PlayMode**
+- BarrierRepairEnemyRetargetPlayTests — expelled enemies reacquire the repaired barrier whether or not they had entered the castle trigger.
+
+### Notes
+- Relevant barrier, enemy targeting, engagement, and attack-lock regressions pass.
+
 ## 2026-07-30 - melee-goblin-animation
 
 ### Summary
