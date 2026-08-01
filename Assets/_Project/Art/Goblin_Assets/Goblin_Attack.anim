@@ -74,20 +74,29 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: HandSocket
+    path: VisualRoot/HandSocket
   m_PositionCurves:
   - curve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: {x: -0.6, y: -0.4, z: 0}
+        value: {x: -0.499, y: -0.455, z: 0}
         inSlope: {x: Infinity, y: Infinity, z: 0}
         outSlope: {x: Infinity, y: Infinity, z: 0}
         tangentMode: 0
         weightedMode: 0
         inWeight: {x: 0, y: 0, z: 0.33333334}
         outWeight: {x: 0, y: 0, z: 0.33333334}
+      - serializedVersion: 3
+        time: 0.016666668
+        value: {x: -0.606, y: -0.419, z: 0}
+        inSlope: {x: 0, y: 0.60000294, z: 0}
+        outSlope: {x: 0, y: 0.60000294, z: 0}
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
+        outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
       - serializedVersion: 3
         time: 0.033333335
         value: {x: -0.65, y: -0.27, z: 0}
@@ -145,7 +154,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: HandSocket
+    path: VisualRoot/HandSocket
   m_ScaleCurves: []
   m_FloatCurves: []
   m_PPtrCurves:
@@ -166,7 +175,7 @@ AnimationClip:
     - time: 0.33333334
       value: {fileID: 404122595796159297, guid: 13e2e749f0134bf6abca1ee8c76ea826, type: 3}
     attribute: m_Sprite
-    path: Sprite
+    path: VisualRoot/Sprite
     classID: 212
     script: {fileID: 0}
     flags: 2
@@ -178,7 +187,7 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 753708180
+      path: 1798698724
       attribute: 1
       script: {fileID: 0}
       typeID: 4
@@ -187,7 +196,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     - serializedVersion: 2
-      path: 753708180
+      path: 1798698724
       attribute: 4
       script: {fileID: 0}
       typeID: 4
@@ -196,7 +205,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     - serializedVersion: 2
-      path: 850496168
+      path: 1449066163
       attribute: 0
       script: {fileID: 0}
       typeID: 212
@@ -239,13 +248,22 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: -0.6
+        value: -0.499
         inSlope: Infinity
         outSlope: Infinity
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 0.016666668
+        value: -0.606
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
       - serializedVersion: 3
         time: 0.033333335
         value: -0.65
@@ -304,7 +322,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalPosition.x
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16
@@ -314,13 +332,22 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: -0.4
+        value: -0.455
         inSlope: Infinity
         outSlope: Infinity
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 0.016666668
+        value: -0.419
+        inSlope: 0.60000294
+        outSlope: 0.60000294
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
       - serializedVersion: 3
         time: 0.033333335
         value: -0.27
@@ -379,7 +406,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalPosition.y
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16
@@ -445,7 +472,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.z
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16
@@ -466,7 +493,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalPosition.z
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 24
@@ -487,7 +514,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.x
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 24
@@ -508,7 +535,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.y
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 24
@@ -521,7 +548,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -533,7 +560,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -545,7 +572,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 0

@@ -38,7 +38,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: HandSocket
+    path: VisualRoot/HandSocket
   m_PositionCurves:
   - curve:
       serializedVersion: 2
@@ -91,7 +91,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: HandSocket
+    path: VisualRoot/HandSocket
   m_ScaleCurves: []
   m_FloatCurves: []
   m_PPtrCurves:
@@ -110,7 +110,7 @@ AnimationClip:
     - time: 0.5
       value: {fileID: 2231334402386060238, guid: e87a7248817c4b138993e04d624b0308, type: 3}
     attribute: m_Sprite
-    path: Sprite
+    path: VisualRoot/Sprite
     classID: 212
     script: {fileID: 0}
     flags: 2
@@ -122,7 +122,7 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 753708180
+      path: 1798698724
       attribute: 1
       script: {fileID: 0}
       typeID: 4
@@ -131,7 +131,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     - serializedVersion: 2
-      path: 753708180
+      path: 1798698724
       attribute: 4
       script: {fileID: 0}
       typeID: 4
@@ -140,7 +140,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     - serializedVersion: 2
-      path: 850496168
+      path: 1449066163
       attribute: 0
       script: {fileID: 0}
       typeID: 212
@@ -229,7 +229,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalPosition.x
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16
@@ -286,7 +286,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalPosition.y
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16
@@ -316,7 +316,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.z
-    path: HandSocket
+    path: VisualRoot/HandSocket
     classID: 4
     script: {fileID: 0}
     flags: 16

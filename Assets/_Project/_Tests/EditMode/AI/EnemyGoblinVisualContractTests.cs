@@ -37,9 +37,9 @@ namespace Castlebound.Tests.AI
             var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{ArtRoot}/{fileName}");
             Assert.NotNull(clip);
             var spriteBinding = AnimationUtility.GetObjectReferenceCurveBindings(clip)
-                .Single(binding => binding.path == "Sprite" && binding.propertyName == "m_Sprite");
+                .Single(binding => binding.path == "VisualRoot/Sprite" && binding.propertyName == "m_Sprite");
             Assert.That(AnimationUtility.GetObjectReferenceCurve(clip, spriteBinding).Length, Is.EqualTo(frameCount));
-            Assert.That(AnimationUtility.GetCurveBindings(clip).Count(binding => binding.path == "HandSocket"),
+            Assert.That(AnimationUtility.GetCurveBindings(clip).Count(binding => binding.path == "VisualRoot/HandSocket"),
                 Is.GreaterThanOrEqualTo(3));
         }
 
@@ -48,7 +48,7 @@ namespace Castlebound.Tests.AI
         {
             var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{ArtRoot}/Goblin_Attack.anim");
             string[] properties = AnimationUtility.GetCurveBindings(clip)
-                .Where(binding => binding.path == "HandSocket")
+                .Where(binding => binding.path == "VisualRoot/HandSocket")
                 .Select(binding => binding.propertyName)
                 .ToArray();
             CollectionAssert.Contains(properties, "m_LocalPosition.x");
@@ -57,20 +57,23 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
-        public void EnemyPrefab_AuthorsAnimatorSocketAndUnarmedSpawnLoadout()
+        public void EnemyPrefab_AuthorsAnimatorSocketAndUnarmedSpawnEquipment()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             Assert.NotNull(prefab);
             Assert.NotNull(prefab.GetComponent<Animator>()?.runtimeAnimatorController);
-            Assert.NotNull(prefab.transform.Find("HandSocket"));
-            Assert.NotNull(prefab.transform.Find("HandSocket/Weapon")?.GetComponent<SpriteRenderer>());
-            Assert.That(prefab.GetComponent<EnemyEquipment>().SpawnLoadout, Is.EqualTo(EnemyEquipment.Loadout.Unarmed));
+            Transform visualRoot = prefab.transform.Find("VisualRoot");
+            Assert.NotNull(visualRoot);
+            Assert.That(prefab.GetComponent<EnemyFacing>().VisualTransform, Is.EqualTo(visualRoot));
+            Assert.NotNull(prefab.transform.Find("VisualRoot/HandSocket"));
+            Assert.NotNull(prefab.transform.Find("VisualRoot/HandSocket/Weapon")?.GetComponent<SpriteRenderer>());
+            Assert.That(prefab.GetComponent<EnemyEquipment>().SpawnEquipment.EquipmentId, Is.EqualTo("unarmed"));
             var presenter = prefab.GetComponent<EnemyAnimationPresenter>();
             Assert.That(presenter.AuthoredImpactTimeSeconds, Is.EqualTo(20f / 60f).Within(0.0001f));
 
             var attackClip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{ArtRoot}/Goblin_Attack.anim");
             var spriteBinding = AnimationUtility.GetObjectReferenceCurveBindings(attackClip)
-                .Single(binding => binding.path == "Sprite" && binding.propertyName == "m_Sprite");
+                .Single(binding => binding.path == "VisualRoot/Sprite" && binding.propertyName == "m_Sprite");
             var spriteKeys = AnimationUtility.GetObjectReferenceCurve(attackClip, spriteBinding);
             Assert.That(spriteKeys.Last().time, Is.EqualTo(presenter.AuthoredImpactTimeSeconds).Within(0.0001f));
             Assert.That(spriteKeys.Select(key => key.time).Distinct().Count(), Is.EqualTo(spriteKeys.Length));

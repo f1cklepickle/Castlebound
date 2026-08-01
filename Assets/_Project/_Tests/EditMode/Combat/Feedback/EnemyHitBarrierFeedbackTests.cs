@@ -15,9 +15,10 @@ namespace Castlebound.Tests.Combat
             var attack = enemy.AddComponent<EnemyAttack>();
             attack.Damage = 1;
 
-            var field = typeof(EnemyAttack).GetField("enemyHitBarrierFeedbackChannel", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.NotNull(field, "EnemyAttack should define an enemyHitBarrierFeedbackChannel field for barrier-hit feedback.");
-            field.SetValue(attack, channel);
+            var delivery = enemy.GetComponent<EnemyMeleeAttackDelivery>();
+            var field = typeof(EnemyMeleeAttackDelivery).GetField("enemyHitBarrierFeedbackChannel", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field, "EnemyMeleeAttackDelivery should own barrier-hit feedback for melee delivery.");
+            field.SetValue(delivery, channel);
 
             var barrierGo = new GameObject("Barrier");
             var barrier = barrierGo.AddComponent<BarrierHealth>();
