@@ -13,6 +13,22 @@ namespace Castlebound.Tests.Combat
         }
 
         [Test]
+        public void DefaultDelivery_RemainsMeleeForExistingEnemies()
+        {
+            var enemy = new GameObject("Enemy");
+            try
+            {
+                var attack = enemy.AddComponent<EnemyAttack>();
+
+                Assert.IsInstanceOf<EnemyMeleeAttackDelivery>(attack.AttackDeliverySource);
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemy);
+            }
+        }
+
+        [Test]
         public void EnemyAttack_DealsDamage_ToIDamageableTarget()
         {
             // Arrange

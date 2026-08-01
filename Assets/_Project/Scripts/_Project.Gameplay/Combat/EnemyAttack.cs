@@ -8,11 +8,22 @@ using Castlebound.Gameplay.AI;
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack")]
-    [SerializeField] int damage = 1;
+    [SerializeField] MonoBehaviour attackDeliverySource;
     public int Damage
     {
-        get => damage;
-        set => damage = value;
+        get
+        {
+            var meleeDelivery = ResolveMeleeDeliveryForStats();
+            return meleeDelivery != null ? meleeDelivery.Damage : 0;
+        }
+        set
+        {
+            var meleeDelivery = ResolveMeleeDeliveryForStats();
+            if (meleeDelivery != null)
+            {
+                meleeDelivery.Damage = value;
+            }
+        }
     }
     [SerializeField] float windupSeconds = 0.3f;   // time before damage applies
     [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
@@ -23,7 +34,6 @@ public class EnemyAttack : MonoBehaviour
     }
 
     [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
-    [SerializeField] FeedbackEventChannel enemyHitBarrierFeedbackChannel;
     [SerializeField] string playerLayerName = "Player";
 
     EnemyController2D controller;
@@ -32,6 +42,8 @@ public class EnemyAttack : MonoBehaviour
     EnemyRegionState regionState;
     EnemyRootReceiver rootReceiver;
     EnemyAnimationPresenter animationPresenter;
+    EnemyEquipment equipment;
+    IEnemyAttackDelivery attackDelivery;
     static bool missingRegionStateWarningLogged;
     bool onCooldown;
 
@@ -43,6 +55,8 @@ public class EnemyAttack : MonoBehaviour
         regionState = GetComponent<EnemyRegionState>();
         rootReceiver = GetComponent<EnemyRootReceiver>();
         animationPresenter = GetComponent<EnemyAnimationPresenter>();
+        equipment = GetComponent<EnemyEquipment>();
+        attackDelivery = ResolveAttackDelivery();
         if (targetMask.value == 0) {
             int lm = LayerMask.NameToLayer(playerLayerName);
             if (lm >= 0) {
@@ -77,10 +91,13 @@ public class EnemyAttack : MonoBehaviour
         bool isAligned = facing != null && facing.IsAlignedWith(transform.position, selectedTarget);
         if (!IsAttackEligible(controller.IsInHoldRange(), isInReach, isAligned)) return;
 
-        StartCoroutine(AttackRoutine(selectedTarget));
+        var equipmentSnapshot = CaptureEquipmentSnapshot();
+        if (attackDelivery == null || !attackDelivery.CanDeliver(selectedTarget, equipmentSnapshot)) return;
+
+        StartCoroutine(AttackRoutine(selectedTarget, equipmentSnapshot));
     }
 
-    IEnumerator AttackRoutine(Transform lockedTarget)
+    IEnumerator AttackRoutine(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
     {
         onCooldown = true;
 
@@ -97,15 +114,11 @@ public class EnemyAttack : MonoBehaviour
             yield break;
         }
 
-        IDamageable damageable = ResolveDamageable(lockedTarget);
-        if (damageable == null)
+        if (attackDelivery == null || !attackDelivery.TryDeliver(lockedTarget, equipmentSnapshot))
         {
             CancelWindup();
             yield break;
         }
-
-        Debug.Log($"[EnemyAttack] Hit locked target: {lockedTarget.name}, damage: {Damage}", this);
-        DealDamage(damageable);
 
         if (RequiresCompletedCooldown(attackCompleted: true))
             yield return new WaitForSeconds(cooldownSeconds);
@@ -134,19 +147,6 @@ public class EnemyAttack : MonoBehaviour
         return engagement != null && engagement.IsWithinEngagementDistance(selectedTarget);
     }
 
-    private static IDamageable ResolveDamageable(Transform lockedTarget)
-    {
-        if (lockedTarget == null)
-            return null;
-
-        var damageable = lockedTarget.GetComponent<IDamageable>();
-        if (damageable != null)
-            return damageable;
-
-        damageable = lockedTarget.GetComponentInParent<IDamageable>();
-        return damageable ?? lockedTarget.GetComponentInChildren<IDamageable>();
-    }
-
     private void CancelWindup()
     {
         animationPresenter?.CancelAttack();
@@ -168,25 +168,34 @@ public class EnemyAttack : MonoBehaviour
 
     public void DealDamage(IDamageable target)
     {
-        if (target == null || Damage <= 0 || IsRooted())
+        GetOrCreateMeleeDelivery().TryDealDamage(target);
+    }
+
+    public EnemyEquipmentDefinition CaptureEquipmentSnapshot()
+    {
+        if (equipment == null)
         {
-            return;
+            equipment = GetComponent<EnemyEquipment>();
         }
 
-        if (target is BarrierHealth)
+        return equipment != null ? equipment.ActiveEquipment : null;
+    }
+
+    public MonoBehaviour AttackDeliverySource
+    {
+        get
         {
-            GetRegionState(out bool enemyInside, out bool playerInside);
-            if (!CanDamageBarrier(enemyInside, playerInside))
+            if (attackDeliverySource == null)
             {
-                return;
+                attackDelivery = ResolveAttackDelivery();
             }
+
+            return attackDeliverySource;
         }
-
-        target.TakeDamage(Damage);
-
-        if (enemyHitBarrierFeedbackChannel != null && target is BarrierHealth barrier)
+        set
         {
-            enemyHitBarrierFeedbackChannel.Raise(new FeedbackCue(FeedbackCueType.EnemyHitBarrier, barrier.transform.position, barrier.gameObject.GetInstanceID()));
+            attackDeliverySource = value;
+            attackDelivery = value as IEnemyAttackDelivery;
         }
     }
 
@@ -230,6 +239,44 @@ public class EnemyAttack : MonoBehaviour
         }
 
         return rootReceiver != null && rootReceiver.IsRooted;
+    }
+
+    private IEnemyAttackDelivery ResolveAttackDelivery()
+    {
+        if (attackDeliverySource is IEnemyAttackDelivery configuredDelivery)
+        {
+            return configuredDelivery;
+        }
+
+        var behaviours = GetComponents<MonoBehaviour>();
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            if (behaviours[i] is IEnemyAttackDelivery delivery)
+            {
+                attackDeliverySource = behaviours[i];
+                return delivery;
+            }
+        }
+
+        var meleeDelivery = GetOrCreateMeleeDelivery();
+        attackDeliverySource = meleeDelivery;
+        return meleeDelivery;
+    }
+
+    private EnemyMeleeAttackDelivery GetOrCreateMeleeDelivery()
+    {
+        var meleeDelivery = GetComponent<EnemyMeleeAttackDelivery>();
+        return meleeDelivery != null ? meleeDelivery : gameObject.AddComponent<EnemyMeleeAttackDelivery>();
+    }
+
+    private EnemyMeleeAttackDelivery ResolveMeleeDeliveryForStats()
+    {
+        if (attackDeliverySource is IEnemyAttackDelivery && !(attackDeliverySource is EnemyMeleeAttackDelivery))
+        {
+            return null;
+        }
+
+        return GetOrCreateMeleeDelivery();
     }
 
 #if UNITY_EDITOR

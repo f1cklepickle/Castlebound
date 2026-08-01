@@ -8,6 +8,7 @@ public class EnemyFacing : MonoBehaviour
     [SerializeField] private Vector2 initialAimDirection = Vector2.down;
 
     public Vector2 AimDirection { get; private set; }
+    public Transform VisualTransform => visualTransform;
 
     private void Awake()
     {

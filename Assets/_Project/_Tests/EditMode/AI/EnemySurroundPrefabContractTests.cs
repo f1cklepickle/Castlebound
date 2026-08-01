@@ -20,9 +20,9 @@ namespace Castlebound.Tests.AI
                 $"Melee prefab {prefabPath} must define approach spreading.");
         }
 
-        [TestCase("Assets/_Project/Prefabs/Enemy.prefab")]
-        [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab")]
-        public void CurrentMeleePrefab_DefinesExtractedResponsibilities(string prefabPath)
+        [TestCase("Assets/_Project/Prefabs/Enemy.prefab", "VisualRoot")]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab", "Sprite")]
+        public void CurrentMeleePrefab_DefinesExtractedResponsibilities(string prefabPath, string visualPath)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 
@@ -67,10 +67,18 @@ namespace Castlebound.Tests.AI
                 $"Melee prefab {prefabPath} must retain its authored pass-through radius.");
 
             var facingData = new SerializedObject(facing);
+            Transform visualTransform = prefab.transform.Find(visualPath);
             Assert.That(
                 facingData.FindProperty("visualTransform").objectReferenceValue,
-                Is.EqualTo(prefab.transform.Find("Sprite")),
-                $"Melee prefab {prefabPath} must rotate only its Sprite child.");
+                Is.EqualTo(visualTransform),
+                $"Melee prefab {prefabPath} must rotate its authored visual hierarchy.");
+            if (visualPath == "VisualRoot")
+            {
+                Assert.NotNull(visualTransform.Find("Sprite"),
+                    $"Melee prefab {prefabPath} must rotate its Sprite with VisualRoot.");
+                Assert.NotNull(visualTransform.Find("HandSocket"),
+                    $"Melee prefab {prefabPath} must rotate its HandSocket with VisualRoot.");
+            }
             Assert.That(
                 facingData.FindProperty("initialAimDirection").vector2Value,
                 Is.EqualTo(Vector2.down),

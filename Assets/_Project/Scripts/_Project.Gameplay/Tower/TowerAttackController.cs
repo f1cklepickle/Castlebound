@@ -111,18 +111,23 @@ namespace Castlebound.Gameplay.Tower
             }
 
             var origin = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
-            var direction = ResolveLaunchDirection(origin, target.position);
-            var projectile = Instantiate(projectilePrefab, origin, CreateProjectileRotation(direction));
-            var context = ProjectileLaunchContext.Directional(
+            var targetPoint = (Vector2)target.position;
+            if ((targetPoint - origin).sqrMagnitude <= Mathf.Epsilon && firePoint != null)
+            {
+                targetPoint = origin + (Vector2)firePoint.up;
+            }
+
+            var request = new ProjectileLaunchRequest(
+                projectilePrefab,
                 origin,
-                direction,
+                targetPoint,
                 transform,
                 projectileSpeed,
                 damage,
                 projectileLifetime,
-                targetLayerMask);
-
-            projectile.Launch(context);
+                targetLayerMask,
+                projectileVisualAngleOffsetDegrees);
+            var projectile = ProjectileLauncher.Launch(request);
 
             if (projectile.TryGetComponent<ProjectileLaunchSorting>(out var launchSorting))
             {
@@ -150,21 +155,5 @@ namespace Castlebound.Gameplay.Tower
             projectileLifetime = Mathf.Max(0f, projectileLifetime);
         }
 
-        private Vector2 ResolveLaunchDirection(Vector2 origin, Vector2 targetPoint)
-        {
-            var targetDirection = targetPoint - origin;
-            if (targetDirection.sqrMagnitude > 0f)
-            {
-                return targetDirection.normalized;
-            }
-
-            return firePoint != null ? (Vector2)firePoint.up : Vector2.up;
-        }
-
-        private Quaternion CreateProjectileRotation(Vector2 launchDirection)
-        {
-            var angle = Mathf.Atan2(launchDirection.y, launchDirection.x) * Mathf.Rad2Deg;
-            return Quaternion.Euler(0f, 0f, angle + projectileVisualAngleOffsetDegrees);
-        }
     }
 }

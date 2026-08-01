@@ -1,3 +1,22 @@
+## 2026-08-01 - feat-enemies-ranged-goblin-rock-throw
+
+### Summary
+- Added an independently spawnable ranged goblin and a shared VisualRoot that keeps its animated rock hand aligned through every facing direction.
+- Extracted shared projectile launching and interchangeable melee/projectile enemy attack delivery while preserving tower and melee behavior contracts.
+- Replaced enum-based enemy loadouts with Unarmed, Club, and Rock data-driven equipment definitions.
+- Restored the authored bottom-center goblin sprite pivots after isolating the directional drift to the visual hierarchy.
+- Added inspector-tunable, frame-rate-independent visual spin to thrown rock projectiles.
+
+### New or Updated Tests
+**EditMode**
+- ProjectileLauncherTests, ProjectileSpinTests, EnemyEquipmentTests, EnemyProjectileAttackDeliveryTests, EnemyRangedPrefabContractTests, EnemySurroundPrefabContractTests, EnemyAttackTests, EnemyGoblinVisualContractTests, and EnemyHitBarrierFeedbackTests — shared launching, visual spin, equipment compatibility and snapshots, delivery behavior, prefab contracts, facing hierarchy, and melee regressions.
+
+**PlayMode**
+- EnemyRangedAttackPlayTests and EnemyGoblinAnimationPlayTests — ranged rock launch smoke coverage and existing unarmed goblin regression coverage.
+
+### Notes
+- Tests not run per the user-owned validation boundary; compile-only batch validation was blocked because the project is open in another Unity instance.
+
 ## 2026-08-01 - melee-goblin-authored-animation
 
 ### Summary

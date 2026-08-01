@@ -20,9 +20,9 @@ namespace Castlebound.Tests.PlayMode.AI
 
                 var equipment = enemy.GetComponent<EnemyEquipment>();
                 Assert.NotNull(equipment);
-                Assert.That(equipment.EquippedLoadout, Is.EqualTo(EnemyEquipment.Loadout.Unarmed));
+                Assert.That(equipment.ActiveEquipment.EquipmentId, Is.EqualTo("unarmed"));
                 Assert.NotNull(enemy.GetComponent<Animator>().runtimeAnimatorController);
-                Transform weapon = enemy.transform.Find("HandSocket/Weapon");
+                Transform weapon = enemy.transform.Find("VisualRoot/HandSocket/Weapon");
                 Assert.NotNull(weapon);
                 Assert.IsFalse(weapon.GetComponent<SpriteRenderer>().enabled);
             }
