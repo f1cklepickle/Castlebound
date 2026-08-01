@@ -1,3 +1,20 @@
+## 2026-08-01 - melee-goblin-authored-animation
+
+### Summary
+- Replaced runtime goblin sprite-sheet slicing with Unity multi-sprite imports and authored Idle, Walk, and Attack clips.
+- Added a real clip-animated HandSocket with explicit unarmed and club spawn-time equipment presentation.
+- Preserved EnemyAttack as the authority for windup, impact, recovery, damage, and cooldown timing.
+
+### New or Updated Tests
+**EditMode**
+- EnemyAnimationPresenterTests, EnemyGoblinVisualContractTests, and EnemyEquipmentTests — impact-anchored speed scaling, clip/socket/import contracts, and explicit unarmed equipment behavior.
+
+**PlayMode**
+- EnemyGoblinAnimationPlayTests — spawned goblin animation rig and default unarmed loadout smoke coverage.
+
+### Notes
+- EditMode and PlayMode suites pass per user validation.
+
 ## 2026-07-30 - event-driven-enemy-retargeting
 
 ### Summary

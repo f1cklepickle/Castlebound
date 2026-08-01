@@ -23,10 +23,8 @@ public class EnemyAttack : MonoBehaviour
     }
 
     [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
-    [SerializeField] Animator animator;            // optional, can be null
     [SerializeField] FeedbackEventChannel enemyHitBarrierFeedbackChannel;
     [SerializeField] string playerLayerName = "Player";
-    [SerializeField] string attackTriggerName = "Attack"; // matches goblin anim if you add one
 
     EnemyController2D controller;
     EnemyFacing facing;
@@ -45,7 +43,6 @@ public class EnemyAttack : MonoBehaviour
         regionState = GetComponent<EnemyRegionState>();
         rootReceiver = GetComponent<EnemyRootReceiver>();
         animationPresenter = GetComponent<EnemyAnimationPresenter>();
-        if (!animator) animator = GetComponentInChildren<Animator>();
         if (targetMask.value == 0) {
             int lm = LayerMask.NameToLayer(playerLayerName);
             if (lm >= 0) {
@@ -87,8 +84,6 @@ public class EnemyAttack : MonoBehaviour
     {
         onCooldown = true;
 
-        if (animator && !string.IsNullOrEmpty(attackTriggerName))
-            animator.SetTrigger(attackTriggerName);
         animationPresenter?.PlayAttack(windupSeconds);
 
         yield return new WaitForSeconds(windupSeconds);
@@ -115,6 +110,7 @@ public class EnemyAttack : MonoBehaviour
         if (RequiresCompletedCooldown(attackCompleted: true))
             yield return new WaitForSeconds(cooldownSeconds);
 
+        animationPresenter?.CompleteAttack();
         onCooldown = false;
     }
 
@@ -153,9 +149,6 @@ public class EnemyAttack : MonoBehaviour
 
     private void CancelWindup()
     {
-        if (animator && !string.IsNullOrEmpty(attackTriggerName))
-            animator.ResetTrigger(attackTriggerName);
-
         animationPresenter?.CancelAttack();
 
         onCooldown = false;
