@@ -118,5 +118,42 @@ namespace Castlebound.Tests.AI
             Assert.That(radial, Is.EqualTo(pursuit));
             Assert.That(tangent, Is.EqualTo(Vector2.zero));
         }
+
+        [Test]
+        public void CrowdedHold_UsesOnlyTangentialSeparation()
+        {
+            Vector2 tangent = EnemyApproachSpread.ComputeHoldSeparation(
+                directionToTarget: Vector2.right,
+                localSeparation: new Vector2(-1f, 1f),
+                hasNeighbors: true,
+                stableBias: Vector2.zero,
+                speed: 8f,
+                separationStrength: 0.8f,
+                maxLateralRatio: 0.35f);
+
+            Assert.That(tangent.x, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(tangent.y, Is.GreaterThan(0f));
+            Assert.That(tangent.magnitude, Is.LessThanOrEqualTo(2.801f));
+        }
+
+        [Test]
+        public void UncrowdedHold_RemainsStationary()
+        {
+            Vector2 tangent = EnemyApproachSpread.ComputeHoldSeparation(
+                Vector2.right, Vector2.up, hasNeighbors: false, stableBias: Vector2.down,
+                speed: 8f, separationStrength: 0.8f, maxLateralRatio: 0.35f);
+
+            Assert.That(tangent, Is.EqualTo(Vector2.zero));
+        }
+
+        [Test]
+        public void CoincidentHoldNeighbors_UseStableTangentialBias()
+        {
+            Vector2 tangent = EnemyApproachSpread.ComputeHoldSeparation(
+                Vector2.right, Vector2.zero, hasNeighbors: true, stableBias: Vector2.down,
+                speed: 8f, separationStrength: 0.8f, maxLateralRatio: 0.35f);
+
+            Assert.That(tangent.y, Is.LessThan(0f));
+        }
     }
 }

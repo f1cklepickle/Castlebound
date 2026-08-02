@@ -274,6 +274,16 @@ public class EnemyController2D : MonoBehaviour
             Locomotion.SetMovementState(State.CHASE);
         }
 
+        Locomotion.ApplyHoldMovementPolicy(
+            pos,
+            target,
+            _approachSeparation,
+            _hasApproachNeighbors,
+            _approachSpreadBias,
+            speed,
+            ref radial,
+            ref tangent);
+
         bool movementApplied = Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
         animationPresenter?.SetMovementRequested(movementApplied);
     }
@@ -385,6 +395,15 @@ public class EnemyController2D : MonoBehaviour
             _gapCCW,
             out radial,
             out tangent);
+        Locomotion.ApplyHoldMovementPolicy(
+            _rb.position,
+            Targeting != null ? Targeting.AttackTarget : null,
+            _approachSeparation,
+            _hasApproachNeighbors,
+            _approachSpreadBias,
+            speed,
+            ref radial,
+            ref tangent);
     }
 #endif
 }

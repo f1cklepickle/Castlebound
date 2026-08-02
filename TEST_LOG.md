@@ -1,3 +1,21 @@
+## 2026-08-02 - feat-ai-ranged-engagement
+
+### Summary
+- Added maximum-only ranged engagement movement: ranged goblins approach from outside attack distance and remain stationary anywhere inside it.
+- Added an optional hold-movement policy contract so melee enemies retain their existing surround orbit without duplicating range ownership.
+- Assigned the stationary hold policy only to the ranged goblin prefab, preventing lateral orbit movement while preserving inward recovery at the range boundary.
+- Reused the existing player-ring neighbor feed for speed-limited tangential ranged spacing while clearing stale separation when enemies leave player-targeting eligibility.
+
+### New or Updated Tests
+**EditMode**
+- EnemyApproachSpreadTests, EnemyEngagementTests, EnemyLocomotionTests, EnemyRingEligibilityTests, and EnemyRangedPrefabContractTests — close-range eligibility, tangential hold spacing, stale-state cleanup, policy wiring, and melee orbit regression coverage.
+
+**PlayMode**
+- EnemyRangedAttackPlayTests — spawned ranged goblin stationary hold and neighbor separation behavior inside maximum attack distance.
+
+### Notes
+- EditMode and PlayMode suites pass per user validation, including the ranged spacing follow-up.
+
 ## 2026-08-01 - feat-enemies-ranged-goblin-rock-throw
 
 ### Summary
