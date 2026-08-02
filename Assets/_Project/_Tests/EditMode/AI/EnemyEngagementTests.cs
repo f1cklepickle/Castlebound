@@ -113,6 +113,7 @@ namespace Castlebound.Tests.AI
         }
 
         [TestCase(false, 0.5f, 0.5f, 0.25f, true)]
+        [TestCase(false, 0f, 5f, 0.25f, true)]
         [TestCase(false, 0.51f, 0.5f, 0.25f, false)]
         [TestCase(true, 0.74f, 0.5f, 0.25f, true)]
         [TestCase(true, 0.75f, 0.5f, 0.25f, false)]

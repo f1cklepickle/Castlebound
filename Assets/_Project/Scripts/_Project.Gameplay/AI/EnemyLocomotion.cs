@@ -5,14 +5,17 @@ public class EnemyLocomotion : MonoBehaviour
 {
     [SerializeField] private EnemyKnockbackReceiver knockbackReceiver;
     [SerializeField] private EnemyRootReceiver rootReceiver;
+    [SerializeField] private MonoBehaviour holdMovementPolicySource;
 
     private float previousDistance;
     private int distanceTrend;
     private Vector2 lastNonZeroDirection = Vector2.right;
+    private IEnemyHoldMovementPolicy holdMovementPolicy;
 
     public EnemyController2D.State CurrentState { get; private set; } = EnemyController2D.State.CHASE;
     public bool IsChaseRequested { get; private set; }
     public bool IsInHoldRange => CurrentState == EnemyController2D.State.HOLD;
+    public MonoBehaviour HoldMovementPolicySource => holdMovementPolicySource;
 
     public void RequestChase()
     {
@@ -71,6 +74,57 @@ public class EnemyLocomotion : MonoBehaviour
             out radial,
             out tangent);
         CurrentState = movementState;
+
+        if (CurrentState == EnemyController2D.State.HOLD)
+        {
+            ResolveHoldMovementPolicy()?.Apply(default, ref radial, ref tangent);
+        }
+    }
+
+    public void ApplyHoldMovementPolicy(
+        EnemyHoldMovementContext context,
+        ref Vector2 radial,
+        ref Vector2 tangent)
+    {
+        if (CurrentState != EnemyController2D.State.HOLD)
+            return;
+
+        ResolveHoldMovementPolicy()?.Apply(context, ref radial, ref tangent);
+    }
+
+    public void ApplyHoldMovementPolicy(
+        Vector2 position,
+        Transform target,
+        Vector2 localSeparation,
+        bool hasNeighbors,
+        Vector2 stableBias,
+        float speed,
+        ref Vector2 radial,
+        ref Vector2 tangent)
+    {
+        Vector2 toTarget = target != null
+            ? (Vector2)target.position - position
+            : Vector2.zero;
+        Vector2 directionToTarget = toTarget.sqrMagnitude > 0f
+            ? toTarget.normalized
+            : Vector2.zero;
+        ApplyHoldMovementPolicy(
+            new EnemyHoldMovementContext(
+                directionToTarget,
+                localSeparation,
+                hasNeighbors,
+                stableBias,
+                speed),
+            ref radial,
+            ref tangent);
+    }
+
+    private IEnemyHoldMovementPolicy ResolveHoldMovementPolicy()
+    {
+        if (holdMovementPolicy == null && holdMovementPolicySource != null)
+            holdMovementPolicy = holdMovementPolicySource as IEnemyHoldMovementPolicy;
+
+        return holdMovementPolicy;
     }
 
     public bool ExecuteMovement(Rigidbody2D body, Vector2 radial, Vector2 tangent, float deltaTime)
@@ -93,4 +147,12 @@ public class EnemyLocomotion : MonoBehaviour
         body.MovePosition(body.position + displacement);
         return displacement.sqrMagnitude > Mathf.Epsilon;
     }
+
+#if UNITY_EDITOR
+    public void Debug_SetHoldMovementPolicy(MonoBehaviour source)
+    {
+        holdMovementPolicySource = source;
+        holdMovementPolicy = source as IEnemyHoldMovementPolicy;
+    }
+#endif
 }

@@ -92,4 +92,48 @@ public class EnemyApproachSpread : MonoBehaviour
         radial = rawRadial * scale;
         tangent = rawTangent * scale;
     }
+
+    public Vector2 ComputeHoldSeparation(
+        Vector2 directionToTarget,
+        Vector2 localSeparation,
+        bool hasNeighbors,
+        Vector2 stableBias,
+        float speed)
+    {
+        return ComputeHoldSeparation(
+            directionToTarget,
+            localSeparation,
+            hasNeighbors,
+            stableBias,
+            speed,
+            separationStrength,
+            maxLateralRatio);
+    }
+
+    public static Vector2 ComputeHoldSeparation(
+        Vector2 directionToTarget,
+        Vector2 localSeparation,
+        bool hasNeighbors,
+        Vector2 stableBias,
+        float speed,
+        float separationStrength,
+        float maxLateralRatio)
+    {
+        if (!hasNeighbors || directionToTarget.sqrMagnitude <= 0f)
+            return Vector2.zero;
+
+        Vector2 separation = localSeparation.sqrMagnitude > 0.0001f
+            ? localSeparation.normalized
+            : stableBias.normalized;
+        if (separation.sqrMagnitude <= 0f)
+            return Vector2.zero;
+
+        Vector2 forward = directionToTarget.normalized;
+        Vector2 lateralAxis = new Vector2(-forward.y, forward.x);
+        float lateralPreference = Mathf.Clamp(Vector2.Dot(separation, lateralAxis), -1f, 1f);
+        float lateralSpeed = Mathf.Max(0f, speed) *
+                             Mathf.Clamp01(separationStrength) *
+                             Mathf.Clamp01(maxLateralRatio);
+        return lateralAxis * (lateralPreference * lateralSpeed);
+    }
 }

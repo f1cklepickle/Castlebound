@@ -53,6 +53,7 @@ public class EnemyRingManager : MonoBehaviour
             if (eligibility == null || !eligibility.IsEligibleFor(player))
             {
                 e.SetAngularGaps(0f, 0f, 0);
+                e.SetApproachSeparation(Vector2.zero, false);
                 continue;
             }
 

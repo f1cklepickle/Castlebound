@@ -24,8 +24,17 @@ namespace Castlebound.Tests.AI
             Assert.That(meleePrefab.GetComponent<EnemyEquipment>().SpawnEquipment.EquipmentId, Is.EqualTo("unarmed"));
 
             var rangedDelivery = rangedPrefab.GetComponent<EnemyProjectileAttackDelivery>();
+            var rangedEngagement = rangedPrefab.GetComponent<EnemyRangedEngagement>();
+            var rangedLocomotion = rangedPrefab.GetComponent<EnemyLocomotion>();
             var rangedEquipment = rangedPrefab.GetComponent<EnemyEquipment>().SpawnEquipment;
             Assert.NotNull(rangedDelivery);
+            Assert.NotNull(rangedEngagement);
+            Assert.NotNull(rangedPrefab.GetComponent<EnemySurroundEligibility>());
+            Assert.NotNull(rangedPrefab.GetComponent<EnemyApproachSpread>());
+            Assert.That(rangedEngagement.MaxHoldSeparationSpeed, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(rangedLocomotion.HoldMovementPolicySource, Is.EqualTo(rangedEngagement));
+            Assert.Null(meleePrefab.GetComponent<EnemyRangedEngagement>());
+            Assert.Null(meleePrefab.GetComponent<EnemyLocomotion>().HoldMovementPolicySource);
             Assert.IsInstanceOf<EnemyProjectileAttackDelivery>(rangedPrefab.GetComponent<EnemyAttack>().AttackDeliverySource);
             Assert.That(rangedEquipment.EquipmentId, Is.EqualTo("rock"));
             Assert.That(rangedEquipment.CompatibleRole, Is.EqualTo(EnemyAttackRole.Ranged));

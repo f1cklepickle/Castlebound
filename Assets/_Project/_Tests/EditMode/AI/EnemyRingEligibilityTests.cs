@@ -24,7 +24,9 @@ namespace Castlebound.Tests.AI
                 created[2] = CreateEnemy("Rooted", player.transform, PolarPosition(100f, 15f));
 
                 created[2].GetComponent<EnemyRootReceiver>().RootForSeconds(10f);
-                created[2].GetComponent<EnemyController2D>().SetAngularGaps(1f, 1f);
+                var rootedController = created[2].GetComponent<EnemyController2D>();
+                rootedController.SetAngularGaps(1f, 1f);
+                rootedController.SetApproachSeparation(Vector2.up, true);
 
                 InvokeRefresh(manager);
 
@@ -36,6 +38,10 @@ namespace Castlebound.Tests.AI
                 Assert.That(rootedCw, Is.Zero);
                 Assert.That(rootedCcw, Is.Zero,
                     "An enemy leaving eligibility must not retain stale ring influence.");
+                GetApproachSeparation(rootedController, out Vector2 separation, out bool hasNeighbors);
+                Assert.That(separation, Is.EqualTo(Vector2.zero));
+                Assert.IsFalse(hasNeighbors,
+                    "An enemy leaving eligibility must not retain stale neighbor separation.");
             }
             finally
             {
@@ -160,6 +166,18 @@ namespace Castlebound.Tests.AI
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
             gapCw = (float)typeof(EnemyController2D).GetField("_gapCW", flags).GetValue(controller);
             gapCcw = (float)typeof(EnemyController2D).GetField("_gapCCW", flags).GetValue(controller);
+        }
+
+        private static void GetApproachSeparation(
+            EnemyController2D controller,
+            out Vector2 separation,
+            out bool hasNeighbors)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            separation = (Vector2)typeof(EnemyController2D)
+                .GetField("_approachSeparation", flags).GetValue(controller);
+            hasNeighbors = (bool)typeof(EnemyController2D)
+                .GetField("_hasApproachNeighbors", flags).GetValue(controller);
         }
 
         private static void DestroyEnemy(GameObject enemy)
