@@ -152,7 +152,7 @@ namespace Castlebound.Gameplay.Spawning
                     continue;
                 }
 
-                _prefabMap[mapping.enemyTypeId] = mapping.prefab;
+                _prefabMap[EnemyArchetypeIds.Canonicalize(mapping.enemyTypeId)] = mapping.prefab;
             }
         }
 

@@ -124,12 +124,21 @@ namespace Castlebound.Tests.Spawning
         }
 
         [Test]
-        public void MainPrototypeSpawnerRunner_MapsGruntAndLurkerPrefabs()
+        public void MainPrototypeSpawnerRunner_MapsCanonicalGoblinAndLurkerPrefabs()
         {
             string sceneYaml = File.ReadAllText("Assets/_Project/Scenes/MainPrototype.unity");
 
-            StringAssert.Contains("enemyTypeId: grunt", sceneYaml);
+            StringAssert.Contains("enemyTypeId: goblin_melee", sceneYaml);
+            StringAssert.Contains("enemyTypeId: goblin_ranged", sceneYaml);
             StringAssert.Contains("enemyTypeId: lurker", sceneYaml);
+            StringAssert.Contains(
+                "prefab: {fileID: 6394411849047796180, guid: 92ae0aa6b169f3b4a9beb3199ee80614, type: 3}",
+                sceneYaml,
+                "MainPrototype should map melee goblin spawns to the melee goblin prefab.");
+            StringAssert.Contains(
+                "prefab: {fileID: 6394411849047796180, guid: c8b7288658d34d9db71c878eb34b43ab, type: 3}",
+                sceneYaml,
+                "MainPrototype should map ranged goblin spawns to the ranged goblin prefab.");
             StringAssert.Contains(
                 "prefab: {fileID: 6394411849047796180, guid: da2e30e6f4e649dd90cab820b6231b8e, type: 3}",
                 sceneYaml,
@@ -137,23 +146,56 @@ namespace Castlebound.Tests.Spawning
         }
 
         [Test]
-        public void BasicSpawnSchedule_UnlocksLurkerInGeneratedRamp()
+        public void BasicSpawnSchedule_AuthorsExactOpeningGoblinComposition()
         {
             var scheduleAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemySpawnScheduleAsset>(
                 "Assets/_Project/Spawning/BasicSpawnSchedule.asset");
 
             Assert.NotNull(scheduleAsset, "BasicSpawnSchedule asset must exist.");
 
-            var wave = scheduleAsset.ToRuntimeWaveSchedule().GetWave(3);
+            var runtime = scheduleAsset.ToRuntimeWaveSchedule();
+            var wave1 = runtime.GetWave(1);
+            var wave2 = runtime.GetWave(2);
 
-            Assert.That(wave.Sequences.Count, Is.GreaterThanOrEqualTo(2));
-            Assert.That(wave.Sequences[0].enemyTypeId, Is.EqualTo("grunt"));
-            Assert.That(wave.Sequences[1].enemyTypeId, Is.EqualTo("lurker"));
-            Assert.That(wave.Sequences[1].spawnCount, Is.EqualTo(1));
+            Assert.That(wave1.Sequences, Has.Count.EqualTo(1));
+            Assert.That(wave1.Sequences[0].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinMelee));
+            Assert.That(wave1.Sequences[0].spawnCount, Is.EqualTo(5));
 
-            var laterWave = scheduleAsset.ToRuntimeWaveSchedule().GetWave(5);
-            Assert.That(laterWave.Sequences[1].enemyTypeId, Is.EqualTo("lurker"));
-            Assert.That(laterWave.Sequences[1].spawnCount, Is.EqualTo(2));
+            Assert.That(wave2.Sequences, Has.Count.EqualTo(2));
+            Assert.That(wave2.Sequences[0].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinMelee));
+            Assert.That(wave2.Sequences[0].spawnCount, Is.EqualTo(6));
+            Assert.That(wave2.Sequences[1].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinRanged));
+            Assert.That(wave2.Sequences[1].spawnCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void BasicSpawnSchedule_RampsRangedAndLurkerWithMeleeRemainder()
+        {
+            var scheduleAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<EnemySpawnScheduleAsset>(
+                "Assets/_Project/Spawning/BasicSpawnSchedule.asset");
+            var station = UnityEditor.AssetDatabase.LoadAssetAtPath<GameBalanceStation>(
+                "Assets/_Project/Balance/GameBalanceStation.asset");
+
+            Assert.NotNull(scheduleAsset, "BasicSpawnSchedule asset must exist.");
+            Assert.NotNull(station, "GameBalanceStation asset must exist.");
+
+            var runtime = scheduleAsset.ToRuntimeWaveSchedule(station);
+            var wave = runtime.GetWave(3);
+
+            Assert.That(wave.Sequences, Has.Count.EqualTo(3));
+            Assert.That(wave.Sequences[0].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinMelee));
+            Assert.That(wave.Sequences[0].spawnCount, Is.EqualTo(8));
+            Assert.That(wave.Sequences[1].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinRanged));
+            Assert.That(wave.Sequences[1].spawnCount, Is.EqualTo(2));
+            Assert.That(wave.Sequences[2].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.Lurker));
+            Assert.That(wave.Sequences[2].spawnCount, Is.EqualTo(1));
+
+            var laterWave = runtime.GetWave(5);
+            Assert.That(laterWave.Sequences[0].spawnCount, Is.EqualTo(12));
+            Assert.That(laterWave.Sequences[1].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinRanged));
+            Assert.That(laterWave.Sequences[1].spawnCount, Is.EqualTo(3));
+            Assert.That(laterWave.Sequences[2].enemyTypeId, Is.EqualTo(EnemyArchetypeIds.Lurker));
+            Assert.That(laterWave.Sequences[2].spawnCount, Is.EqualTo(2));
         }
 
         [Test]
@@ -193,7 +235,7 @@ namespace Castlebound.Tests.Spawning
                     new RampTierUnlock
                     {
                         waveIndex = 1,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 1f } }
                     }
                 }
             });

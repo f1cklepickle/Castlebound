@@ -20,7 +20,7 @@ namespace Castlebound.Tests.Spawning
 
             var schedule = new EnemySpawnSchedule(new[]
             {
-                new SpawnSequence("grunt", spawnCount: 5, intervalSeconds: 1f, initialDelaySeconds: 0f),
+                new SpawnSequence(EnemyArchetypeIds.GoblinMelee, spawnCount: 5, intervalSeconds: 1f, initialDelaySeconds: 0f),
             });
 
             var spawner = new EnemySpawner(schedule, spawnPoints);
@@ -51,7 +51,7 @@ namespace Castlebound.Tests.Spawning
 
             var schedule = new EnemySpawnSchedule(new[]
             {
-                new SpawnSequence("grunt", spawnCount: 3, intervalSeconds: 0.4f, initialDelaySeconds: 0.5f),
+                new SpawnSequence(EnemyArchetypeIds.GoblinMelee, spawnCount: 3, intervalSeconds: 0.4f, initialDelaySeconds: 0.5f),
             });
 
             var spawner = new EnemySpawner(schedule, spawnPoints);
@@ -94,7 +94,7 @@ namespace Castlebound.Tests.Spawning
             };
             var schedule = new EnemySpawnSchedule(new[]
             {
-                new SpawnSequence("grunt", spawnCount: 2, intervalSeconds: 0f, initialDelaySeconds: 0f)
+                new SpawnSequence(EnemyArchetypeIds.GoblinMelee, spawnCount: 2, intervalSeconds: 0f, initialDelaySeconds: 0f)
             });
             var spawner = new EnemySpawner(schedule, spawnPoints);
 
@@ -139,14 +139,14 @@ namespace Castlebound.Tests.Spawning
                 {
                     new SpawnSequenceConfig
                     {
-                        enemyTypeId = "grunt",
+                        enemyTypeId = EnemyArchetypeIds.GoblinMelee,
                         spawnCount = 1,
                         intervalSeconds = 1f,
                         initialDelaySeconds = 0f
                     },
                     new SpawnSequenceConfig
                     {
-                        enemyTypeId = "lurker",
+                        enemyTypeId = EnemyArchetypeIds.Lurker,
                         spawnCount = 1,
                         intervalSeconds = 1f,
                         initialDelaySeconds = 0f
@@ -166,8 +166,8 @@ namespace Castlebound.Tests.Spawning
             var ready = spawner.Tick(0.1f, currentAlive: 0);
 
             Assert.That(ready.Count, Is.EqualTo(2));
-            Assert.That(ready[0].EnemyTypeId, Is.EqualTo("grunt"));
-            Assert.That(ready[1].EnemyTypeId, Is.EqualTo("lurker"));
+            Assert.That(ready[0].EnemyTypeId, Is.EqualTo(EnemyArchetypeIds.GoblinMelee));
+            Assert.That(ready[1].EnemyTypeId, Is.EqualTo(EnemyArchetypeIds.Lurker));
         }
     }
 }

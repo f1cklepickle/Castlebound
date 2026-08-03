@@ -18,7 +18,7 @@ namespace Castlebound.Tests.Spawning
                     {
                         new SpawnSequenceConfig
                         {
-                            enemyTypeId = "grunt",
+                            enemyTypeId = EnemyArchetypeIds.GoblinMelee,
                             spawnCount = 3,
                             intervalSeconds = 1f,
                             initialDelaySeconds = 0f
@@ -90,7 +90,7 @@ namespace Castlebound.Tests.Spawning
                     {
                         sequences = new List<SpawnSequenceConfig>
                         {
-                            new SpawnSequenceConfig { enemyTypeId = "grunt", spawnCount = 1 }
+                            new SpawnSequenceConfig { enemyTypeId = EnemyArchetypeIds.GoblinMelee, spawnCount = 1 }
                         }
                     }
                 },
@@ -127,7 +127,7 @@ namespace Castlebound.Tests.Spawning
                     new RampTierUnlock
                     {
                         waveIndex = 1,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 1f } }
                     }
                 }
             };
@@ -265,7 +265,7 @@ namespace Castlebound.Tests.Spawning
                     new RampTierUnlock
                     {
                         waveIndex = 1,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 1f } }
                     }
                 }
             };

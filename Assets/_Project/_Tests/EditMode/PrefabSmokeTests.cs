@@ -5,7 +5,7 @@ using UnityEngine;
 public class PrefabSmokeTests
 {
     const string PlayerPath = "Assets/_Project/Prefabs/Player.prefab";
-    const string EnemyPath  = "Assets/_Project/Prefabs/Enemy.prefab";
+    const string EnemyPath  = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
     const string LurkerPath = "Assets/_Project/Prefabs/Enemy_Lurker.prefab";
 
     // --- Player ---

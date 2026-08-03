@@ -147,7 +147,7 @@ GameObject:
   - component: {fileID: 7088990367442351453}
   - component: {fileID: 9100000000000000010}
   m_Layer: 7
-  m_Name: Enemy_Ranged
+  m_Name: Enemy_Goblin_Ranged
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -390,7 +390,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2f0a13b9b534d04a2de7227e5839871, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  enemyTypeId: grunt
+  enemyTypeId: goblin_ranged
   balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
 --- !u!114 &8041287619235472011
 MonoBehaviour:

@@ -12,7 +12,7 @@ namespace Castlebound.Tests.PlayMode.AI
         [UnityTest]
         public IEnumerator SpawnedGoblin_InitializesUnarmedWithAuthoredAnimationRig()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab");
             var enemy = Object.Instantiate(prefab);
             try
             {

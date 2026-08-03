@@ -8,7 +8,7 @@ namespace Castlebound.Tests.Castle
     public class BarrierPrefabVisualContractTests
     {
         private const string BarrierPrefabPath = "Assets/_Project/Prefabs/Barrier_Gate.prefab";
-        private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
+        private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
         private const string PlayerPrefabPath = "Assets/_Project/Prefabs/Player.prefab";
         private static readonly string[] PickupPrefabPaths =
         {

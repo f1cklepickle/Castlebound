@@ -1,5 +1,7 @@
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Balance;
 using Castlebound.Gameplay.Projectile;
+using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -8,8 +10,8 @@ namespace Castlebound.Tests.AI
 {
     public class EnemyRangedPrefabContractTests
     {
-        private const string MeleePrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
-        private const string RangedPrefabPath = "Assets/_Project/Prefabs/Enemy_Ranged.prefab";
+        private const string MeleePrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
+        private const string RangedPrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab";
         private const string RockProjectilePath = "Assets/_Project/Prefabs/Projectile_Rock.prefab";
 
         [Test]
@@ -20,6 +22,12 @@ namespace Castlebound.Tests.AI
 
             Assert.NotNull(meleePrefab);
             Assert.NotNull(rangedPrefab);
+            Assert.That(
+                meleePrefab.GetComponent<EnemyBalanceApplier>().EnemyTypeId,
+                Is.EqualTo(EnemyArchetypeIds.GoblinMelee));
+            Assert.That(
+                rangedPrefab.GetComponent<EnemyBalanceApplier>().EnemyTypeId,
+                Is.EqualTo(EnemyArchetypeIds.GoblinRanged));
             Assert.IsInstanceOf<EnemyMeleeAttackDelivery>(meleePrefab.GetComponent<EnemyAttack>().AttackDeliverySource);
             Assert.That(meleePrefab.GetComponent<EnemyEquipment>().SpawnEquipment.EquipmentId, Is.EqualTo("unarmed"));
 

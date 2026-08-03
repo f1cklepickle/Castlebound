@@ -2930,8 +2930,10 @@ MonoBehaviour:
   balanceStation: {fileID: 11400000, guid: d70caaeb4e66400f8127d62f459cae21, type: 2}
   spawnMarkers: []
   prefabMappings:
-  - enemyTypeId: grunt
+  - enemyTypeId: goblin_melee
     prefab: {fileID: 6394411849047796180, guid: 92ae0aa6b169f3b4a9beb3199ee80614, type: 3}
+  - enemyTypeId: goblin_ranged
+    prefab: {fileID: 6394411849047796180, guid: c8b7288658d34d9db71c878eb34b43ab, type: 3}
   - enemyTypeId: lurker
     prefab: {fileID: 6394411849047796180, guid: da2e30e6f4e649dd90cab820b6231b8e, type: 3}
   autoFindMarkers: 1

@@ -77,7 +77,7 @@ namespace Castlebound.Tests.Castle
                 Assert.That(wallRenderer.sortingOrder, Is.EqualTo(10));
 
                 Assert.That(GetHighestPrefabSortingOrder("Assets/_Project/Prefabs/Player.prefab"), Is.LessThan(wallRenderer.sortingOrder));
-                Assert.That(GetHighestPrefabSortingOrder("Assets/_Project/Prefabs/Enemy.prefab"), Is.LessThan(wallRenderer.sortingOrder));
+                Assert.That(GetHighestPrefabSortingOrder("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab"), Is.LessThan(wallRenderer.sortingOrder));
             }
             finally
             {

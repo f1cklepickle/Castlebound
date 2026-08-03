@@ -6,7 +6,7 @@ namespace Castlebound.Tests.Scale
     public class ScaleCompensationGuardTests
     {
         [TestCase("Assets/_Project/Prefabs/Player.prefab")]
-        [TestCase("Assets/_Project/Prefabs/Enemy.prefab")]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab")]
         public void PrefabRootScale_IsNormalized(string prefabPath)
         {
             var prefab = PrefabTestUtil.Load(prefabPath);
@@ -21,7 +21,7 @@ namespace Castlebound.Tests.Scale
         }
 
         [TestCase("Assets/_Project/Prefabs/Player.prefab")]
-        [TestCase("Assets/_Project/Prefabs/Enemy.prefab")]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab")]
         public void SpriteRenderers_DoNotUseScaleCompensation(string prefabPath)
         {
             var prefab = PrefabTestUtil.Load(prefabPath);
