@@ -12,17 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f625f3546fd4b6a831e7c69359ebdfa, type: 3}
   m_Name: EnemyEquipment_Unarmed
   m_EditorClassIdentifier:
-  equipmentId: unarmed
-  compatibleRole: 0
-  handSprite: {fileID: 0}
+  combatProfile: {fileID: 11400000, guid: 5ccf52be623b420cb9a60c8f7fe30f90, type: 2}
+  compatibleRole: 1
   handlePosition: {x: 0, y: 0}
   handleRotation: 0
   handleScale: {x: 1, y: 1}
-  projectilePrefab: {fileID: 0}
-  projectileSpeed: 0
-  projectileDamage: 0
-  projectileLifetime: 0
   projectileTargetLayerMask:
     serializedVersion: 2
     m_Bits: 0
-  projectileVisualAngleOffsetDegrees: 0

@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
+using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
@@ -16,6 +18,8 @@ namespace Castlebound.Tests.PlayMode.Spawning
         {
             var unarmed = CreateEquipment("unarmed", EnemyAttackRole.Melee);
             var club = CreateEquipment("club", EnemyAttackRole.Melee);
+            var playerClub = ScriptableObject.CreateInstance<WeaponDefinition>();
+            playerClub.CombatProfile = club.CombatProfile;
             var prefab = CreateEnemyPrefab("EquipmentMeleePrefab", unarmed, ranged: false);
             var runnerObject = new GameObject("EquipmentSpawnerRunner");
             var runner = runnerObject.AddComponent<EnemySpawnerRunner>();
@@ -34,6 +38,9 @@ namespace Castlebound.Tests.PlayMode.Spawning
                 var clone = GameObject.Find("EquipmentMeleePrefab(Clone)");
                 Assert.NotNull(clone);
                 Assert.That(clone.GetComponent<EnemyEquipment>().ActiveEquipment, Is.SameAs(club));
+                Assert.That(
+                    clone.GetComponent<EnemyEquipment>().ActiveEquipment.CombatProfile,
+                    Is.SameAs(playerClub.CombatProfile));
                 yield return null;
                 Assert.That(clone.GetComponent<EnemyEquipment>().ActiveEquipment, Is.SameAs(club));
             }
@@ -42,8 +49,9 @@ namespace Castlebound.Tests.PlayMode.Spawning
                 DestroyByName("EquipmentMeleePrefab(Clone)");
                 Object.DestroyImmediate(runnerObject);
                 Object.DestroyImmediate(prefab);
-                Object.DestroyImmediate(club);
-                Object.DestroyImmediate(unarmed);
+                Object.DestroyImmediate(playerClub);
+                DestroyEquipment(club);
+                DestroyEquipment(unarmed);
             }
         }
 
@@ -80,17 +88,33 @@ namespace Castlebound.Tests.PlayMode.Spawning
                 DestroyByName("EquipmentRangedPrefab(Clone)");
                 Object.DestroyImmediate(runnerObject);
                 Object.DestroyImmediate(prefab);
-                Object.DestroyImmediate(club);
-                Object.DestroyImmediate(rock);
+                DestroyEquipment(club);
+                DestroyEquipment(rock);
             }
         }
 
         private static EnemyEquipmentDefinition CreateEquipment(string id, EnemyAttackRole role)
         {
             var definition = ScriptableObject.CreateInstance<EnemyEquipmentDefinition>();
-            definition.EquipmentId = id;
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
+            profile.EquipmentId = id;
+            profile.RequiredCapabilities = role == EnemyAttackRole.Ranged
+                ? CombatEquipmentCapability.ProjectileDelivery
+                : CombatEquipmentCapability.MeleeDelivery;
+            definition.CombatProfile = profile;
             definition.CompatibleRole = role;
             return definition;
+        }
+
+        private static void DestroyEquipment(EnemyEquipmentDefinition definition)
+        {
+            if (definition == null)
+            {
+                return;
+            }
+
+            Object.DestroyImmediate(definition.CombatProfile);
+            Object.DestroyImmediate(definition);
         }
 
         private static GameObject CreateEnemyPrefab(

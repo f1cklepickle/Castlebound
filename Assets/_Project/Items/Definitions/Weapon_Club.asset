@@ -15,10 +15,7 @@ MonoBehaviour:
   itemId: weapon_club
   displayName: Club
   icon: {fileID: 21300000, guid: 90a11f2c3d4e5f60718293a4b5c6d702, type: 3}
-  damage: 3
-  attackSpeed: 1.45
+  combatProfile: {fileID: 11400000, guid: 4e36c42f7c0c455dbb3ad90c9017df87, type: 2}
   hitboxSize: {x: 2, y: 2}
-  knockback: 0.85
-  handSprite: {fileID: 21300000, guid: 90a11f2c3d4e5f60718293a4b5c6d702, type: 3}
   handleOffset: {x: 0.04, y: 0.04}
   hitboxOffset: {x: 0, y: -0.04}

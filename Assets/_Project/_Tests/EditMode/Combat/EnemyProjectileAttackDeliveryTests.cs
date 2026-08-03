@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Projectile;
 using NUnit.Framework;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace Castlebound.Tests.Combat
             prefabObject.AddComponent<Rigidbody2D>();
             var projectilePrefab = prefabObject.AddComponent<ProjectileRuntime>();
             var equipment = ScriptableObject.CreateInstance<EnemyEquipmentDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             ProjectileRuntime launched = null;
 
             try
@@ -25,10 +27,12 @@ namespace Castlebound.Tests.Combat
                 enemy.transform.position = new Vector3(1f, 2f);
                 target.transform.position = new Vector3(4f, 2f);
                 equipment.CompatibleRole = EnemyAttackRole.Ranged;
-                equipment.ProjectilePrefab = projectilePrefab;
-                equipment.ProjectileSpeed = 7f;
-                equipment.ProjectileDamage = 2;
-                equipment.ProjectileLifetime = 3f;
+                equipment.CombatProfile = profile;
+                profile.RequiredCapabilities = CombatEquipmentCapability.ProjectileDelivery;
+                profile.ProjectilePrefab = projectilePrefab;
+                profile.ProjectileSpeed = 7f;
+                profile.DamageBonus = 2;
+                profile.ProjectileLifetime = 3f;
                 equipment.ProjectileTargetLayerMask = 1 << 6;
 
                 Assert.IsTrue(delivery.TryDeliver(target.transform, equipment));
@@ -43,6 +47,7 @@ namespace Castlebound.Tests.Combat
                     Object.DestroyImmediate(launched.gameObject);
                 }
 
+                Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(equipment);
                 Object.DestroyImmediate(prefabObject);
                 Object.DestroyImmediate(target);
@@ -56,8 +61,11 @@ namespace Castlebound.Tests.Combat
             var enemy = new GameObject("RangedEnemy");
             var target = new GameObject("LockedTarget");
             var equipment = ScriptableObject.CreateInstance<EnemyEquipmentDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             try
             {
+                equipment.CombatProfile = profile;
+                profile.RequiredCapabilities = CombatEquipmentCapability.MeleeDelivery;
                 equipment.CompatibleRole = EnemyAttackRole.Melee;
                 var delivery = enemy.AddComponent<EnemyProjectileAttackDelivery>();
 
@@ -65,6 +73,7 @@ namespace Castlebound.Tests.Combat
             }
             finally
             {
+                Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(equipment);
                 Object.DestroyImmediate(target);
                 Object.DestroyImmediate(enemy);

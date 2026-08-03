@@ -1,3 +1,4 @@
+using Castlebound.Gameplay.Combat;
 using UnityEngine;
 
 namespace Castlebound.Gameplay.Inventory
@@ -5,25 +6,14 @@ namespace Castlebound.Gameplay.Inventory
     [CreateAssetMenu(menuName = "Castlebound/Items/Weapon Definition")]
     public class WeaponDefinition : ItemDefinition
     {
-        [SerializeField] private int damage = 1;
-        [SerializeField] private float attackSpeed = 1f;
+        [SerializeField] private CombatEquipmentProfile combatProfile;
         [SerializeField] private Vector2 hitboxSize = new Vector2(1f, 1f);
-        [SerializeField] private float knockback = 1f;
-        [SerializeField] private Sprite handSprite;
         [SerializeField] private Vector2 handleOffset = Vector2.zero;
         [SerializeField] private Vector2 hitboxOffset = Vector2.zero;
 
-        public int Damage
-        {
-            get => damage;
-            set => damage = value;
-        }
-
-        public float AttackSpeed
-        {
-            get => attackSpeed;
-            set => attackSpeed = value;
-        }
+        public CombatEquipmentProfile CombatProfile { get => combatProfile; set => combatProfile = value; }
+        public int Damage => combatProfile != null ? combatProfile.DamageBonus : 0;
+        public float AttackSpeed => combatProfile != null ? combatProfile.AttackRateMultiplier : 1f;
 
         public Vector2 HitboxSize
         {
@@ -31,17 +21,8 @@ namespace Castlebound.Gameplay.Inventory
             set => hitboxSize = value;
         }
 
-        public float Knockback
-        {
-            get => knockback;
-            set => knockback = value;
-        }
-
-        public Sprite HandSprite
-        {
-            get => handSprite;
-            set => handSprite = value;
-        }
+        public float Knockback => combatProfile != null ? combatProfile.KnockbackBonus : 0f;
+        public Sprite HandSprite => combatProfile != null ? combatProfile.HandSprite : null;
 
         public Vector2 HandleOffset
         {
