@@ -1,4 +1,5 @@
 using UnityEngine;
+using Castlebound.Gameplay.Spawning;
 
 namespace Castlebound.Gameplay.Balance
 {
@@ -10,7 +11,16 @@ namespace Castlebound.Gameplay.Balance
             new EnemyBalanceEntry(),
             new EnemyBalanceEntry
             {
-                EnemyTypeId = "lurker",
+                EnemyTypeId = EnemyArchetypeIds.GoblinRanged,
+                MaxHealth = 10,
+                MoveSpeed = 8f,
+                AttackDamage = 1,
+                AttackCooldownSeconds = 0.8f,
+                XpReward = 5
+            },
+            new EnemyBalanceEntry
+            {
+                EnemyTypeId = EnemyArchetypeIds.Lurker,
                 MaxHealth = 35,
                 MoveSpeed = 3f,
                 AttackDamage = 1,
@@ -32,10 +42,11 @@ namespace Castlebound.Gameplay.Balance
                 return null;
             }
 
+            string canonicalId = EnemyArchetypeIds.Canonicalize(enemyTypeId);
             for (int i = 0; i < enemies.Length; i++)
             {
                 var entry = enemies[i];
-                if (entry != null && entry.EnemyTypeId == enemyTypeId)
+                if (entry != null && entry.EnemyTypeId == canonicalId)
                 {
                     return entry;
                 }

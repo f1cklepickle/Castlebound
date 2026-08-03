@@ -2,6 +2,7 @@ using System.Reflection;
 using Castlebound.Gameplay.Balance;
 using Castlebound.Gameplay.Loot;
 using Castlebound.Gameplay.Inventory;
+using Castlebound.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -36,7 +37,7 @@ namespace Castlebound.Tests.Balance
                 {
                     new EnemyBalanceEntry
                     {
-                        EnemyTypeId = "grunt",
+                        EnemyTypeId = EnemyArchetypeIds.GoblinMelee,
                         MaxHealth = 23,
                         MoveSpeed = 6.5f,
                         AttackDamage = 4,
@@ -47,7 +48,7 @@ namespace Castlebound.Tests.Balance
                 };
                 station.Enemy = table;
                 applier.BalanceStation = station;
-                applier.EnemyTypeId = "grunt";
+                applier.EnemyTypeId = EnemyArchetypeIds.GoblinMelee;
 
                 Assert.IsTrue(applier.Apply(3));
 
@@ -89,7 +90,7 @@ namespace Castlebound.Tests.Balance
                 controller.Speed = 8f;
                 attack.Damage = 1;
                 attack.CooldownSeconds = 0.8f;
-                table.Enemies = new[] { new EnemyBalanceEntry { EnemyTypeId = "grunt", MaxHealth = 99 } };
+                table.Enemies = new[] { new EnemyBalanceEntry { EnemyTypeId = EnemyArchetypeIds.GoblinMelee, MaxHealth = 99 } };
                 station.Enemy = table;
                 applier.BalanceStation = station;
                 applier.EnemyTypeId = "missing";

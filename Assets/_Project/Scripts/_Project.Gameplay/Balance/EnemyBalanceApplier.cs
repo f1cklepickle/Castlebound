@@ -6,7 +6,7 @@ namespace Castlebound.Gameplay.Balance
 {
     public class EnemyBalanceApplier : MonoBehaviour
     {
-        [SerializeField] private string enemyTypeId = "grunt";
+        [SerializeField] private string enemyTypeId = EnemyArchetypeIds.GoblinMelee;
         [SerializeField] private GameBalanceStation balanceStation;
         private bool hasApplied;
 

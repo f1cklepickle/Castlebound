@@ -7,7 +7,7 @@ namespace Castlebound.Tests.AI
 {
     public class EnemySurroundPrefabContractTests
     {
-        [TestCase("Assets/_Project/Prefabs/Enemy.prefab")]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab")]
         [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab")]
         public void CurrentMeleePrefab_DefinesSurroundEligibility(string prefabPath)
         {
@@ -20,7 +20,7 @@ namespace Castlebound.Tests.AI
                 $"Melee prefab {prefabPath} must define approach spreading.");
         }
 
-        [TestCase("Assets/_Project/Prefabs/Enemy.prefab", "VisualRoot")]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab", "VisualRoot")]
         [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab", "Sprite")]
         public void CurrentMeleePrefab_DefinesExtractedResponsibilities(string prefabPath, string visualPath)
         {

@@ -22,7 +22,7 @@ namespace Castlebound.Gameplay.Spawning
 
         public SpawnRequest(string enemyTypeId, string gateId, string laneId, Vector2 position, Vector2 forwardDirection)
         {
-            EnemyTypeId = enemyTypeId;
+            EnemyTypeId = EnemyArchetypeIds.Canonicalize(enemyTypeId);
             GateId = gateId;
             LaneId = laneId;
             Position = position;

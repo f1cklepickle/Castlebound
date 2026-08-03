@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.Loot;
+using Castlebound.Gameplay.Spawning;
 using UnityEngine;
 
 namespace Castlebound.Gameplay.Balance
@@ -6,7 +7,7 @@ namespace Castlebound.Gameplay.Balance
     [System.Serializable]
     public class EnemyBalanceEntry
     {
-        [SerializeField] private string enemyTypeId = "grunt";
+        [SerializeField] private string enemyTypeId = EnemyArchetypeIds.GoblinMelee;
         [SerializeField] private int maxHealth = 10;
         [SerializeField] private float moveSpeed = 8f;
         [SerializeField] private int attackDamage = 1;

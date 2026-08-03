@@ -8,7 +8,7 @@ namespace Castlebound.Tests.Projectile
     public class ProjectileArrowPrefabContractTests
     {
         private const string ArrowPrefabPath = "Assets/_Project/Prefabs/Projectile_Arrow.prefab";
-        private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
+        private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
 
         [Test]
         public void ProjectileArrowPrefab_HasReusableProjectileContract()

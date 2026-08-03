@@ -13,7 +13,7 @@ namespace Castlebound.Tests.PlayMode.Combat
         [UnityTest]
         public IEnumerator SpawnedRangedEnemy_InitializesRockAndLaunchesFromHandSocket()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Ranged.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab");
             var enemy = Object.Instantiate(prefab);
             var target = new GameObject("LockedTarget");
             ProjectileRuntime launched = null;
@@ -49,7 +49,7 @@ namespace Castlebound.Tests.PlayMode.Combat
         [UnityTest]
         public IEnumerator SpawnedRangedEnemy_HoldsPositionInsideMaximumAttackDistance()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Ranged.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab");
             var enemy = Object.Instantiate(prefab);
             var target = new GameObject("CloseTarget");
 
@@ -93,7 +93,7 @@ namespace Castlebound.Tests.PlayMode.Combat
         [UnityTest]
         public IEnumerator SpawnedRangedEnemy_UsesNeighborSeparationWithoutRetreating()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Ranged.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab");
             var enemy = Object.Instantiate(prefab);
 
             try

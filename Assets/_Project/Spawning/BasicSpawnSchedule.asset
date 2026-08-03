@@ -17,10 +17,26 @@ MonoBehaviour:
   defaultSeed: 0
   waves:
   - sequences:
-    - enemyTypeId: grunt
+    - enemyTypeId: goblin_melee
       spawnCount: 5
       intervalSeconds: 1
       initialDelaySeconds: 0.5
+    useStrategyOverride: 0
+    strategyOverride: 0
+    useSeedOverride: 0
+    seedOverride: 0
+    gapSeconds: 5
+    waitForClear: 1
+    maxAlive: 0
+  - sequences:
+    - enemyTypeId: goblin_melee
+      spawnCount: 6
+      intervalSeconds: 0.5
+      initialDelaySeconds: 0
+    - enemyTypeId: goblin_ranged
+      spawnCount: 2
+      intervalSeconds: 0.5
+      initialDelaySeconds: 0
     useStrategyOverride: 0
     strategyOverride: 0
     useSeedOverride: 0
@@ -36,11 +52,18 @@ MonoBehaviour:
     unlocks:
     - waveIndex: 1
       tiers:
-      - enemyTypeId: grunt
+      - enemyTypeId: goblin_melee
         weight: 1
         baseSpawnCount: 0
         countPerStep: 0
         stepSize: 0
+    - waveIndex: 2
+      tiers:
+      - enemyTypeId: goblin_ranged
+        weight: 0
+        baseSpawnCount: 2
+        countPerStep: 1
+        stepSize: 2
     - waveIndex: 3
       tiers:
       - enemyTypeId: lurker

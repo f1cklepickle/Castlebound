@@ -23,7 +23,7 @@ namespace Castlebound.Tests.PlayMode.Spawning
             {
                 new SpawnSequenceConfig
                 {
-                    enemyTypeId = "grunt",
+                    enemyTypeId = EnemyArchetypeIds.GoblinMelee,
                     spawnCount = 2,
                     intervalSeconds = 0.25f,
                     initialDelaySeconds = 0.1f
@@ -55,7 +55,7 @@ namespace Castlebound.Tests.PlayMode.Spawning
             var mappingListType = typeof(List<>).MakeGenericType(mappingType);
             var mappingList = (IList)System.Activator.CreateInstance(mappingListType);
             var mapping = System.Activator.CreateInstance(mappingType);
-            mappingType.GetField("enemyTypeId").SetValue(mapping, "grunt");
+            mappingType.GetField("enemyTypeId").SetValue(mapping, EnemyArchetypeIds.GoblinMelee);
             mappingType.GetField("prefab").SetValue(mapping, enemyPrefab);
             mappingList.Add(mapping);
             typeof(EnemySpawnerRunner).GetField("prefabMappings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -95,10 +95,10 @@ namespace Castlebound.Tests.PlayMode.Spawning
         }
 
         [UnityTest]
-        public IEnumerator SpawnsMixedEnemyTypesFromAuthoredWave()
+        public IEnumerator SpawnsMixedGoblinArchetypesFromAuthoredWave()
         {
-            var gruntPrefab = new GameObject("GruntPrefab");
-            var lurkerPrefab = new GameObject("LurkerPrefab");
+            var meleePrefab = new GameObject("GoblinMeleePrefab");
+            var rangedPrefab = new GameObject("GoblinRangedPrefab");
             var scheduleAsset = ScriptableObject.CreateInstance<EnemySpawnScheduleAsset>();
             var wavesField = typeof(EnemySpawnScheduleAsset).GetField(
                 "waves",
@@ -111,14 +111,14 @@ namespace Castlebound.Tests.PlayMode.Spawning
                     {
                         new SpawnSequenceConfig
                         {
-                            enemyTypeId = "grunt",
+                            enemyTypeId = EnemyArchetypeIds.GoblinMelee,
                             spawnCount = 1,
                             intervalSeconds = 1f,
                             initialDelaySeconds = 0f
                         },
                         new SpawnSequenceConfig
                         {
-                            enemyTypeId = "lurker",
+                            enemyTypeId = EnemyArchetypeIds.GoblinRanged,
                             spawnCount = 1,
                             intervalSeconds = 1f,
                             initialDelaySeconds = 0f
@@ -143,23 +143,23 @@ namespace Castlebound.Tests.PlayMode.Spawning
             var mappingType = typeof(EnemySpawnerRunner).GetNestedType("EnemyPrefabMapping", System.Reflection.BindingFlags.NonPublic);
             var mappingListType = typeof(List<>).MakeGenericType(mappingType);
             var mappingList = (IList)System.Activator.CreateInstance(mappingListType);
-            AddMapping(mappingType, mappingList, "grunt", gruntPrefab);
-            AddMapping(mappingType, mappingList, "lurker", lurkerPrefab);
+            AddMapping(mappingType, mappingList, EnemyArchetypeIds.GoblinMelee, meleePrefab);
+            AddMapping(mappingType, mappingList, EnemyArchetypeIds.GoblinRanged, rangedPrefab);
             typeof(EnemySpawnerRunner).GetField("prefabMappings", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.SetValue(runner, mappingList);
 
             yield return null;
             yield return new WaitForSeconds(0.2f);
 
-            Assert.NotNull(GameObject.Find("GruntPrefab(Clone)"));
-            Assert.NotNull(GameObject.Find("LurkerPrefab(Clone)"));
+            Assert.NotNull(GameObject.Find("GoblinMeleePrefab(Clone)"));
+            Assert.NotNull(GameObject.Find("GoblinRangedPrefab(Clone)"));
 
             Object.DestroyImmediate(runnerGO);
             Object.DestroyImmediate(marker.gameObject);
-            DestroyClone("GruntPrefab(Clone)");
-            DestroyClone("LurkerPrefab(Clone)");
-            Object.DestroyImmediate(gruntPrefab);
-            Object.DestroyImmediate(lurkerPrefab);
+            DestroyClone("GoblinMeleePrefab(Clone)");
+            DestroyClone("GoblinRangedPrefab(Clone)");
+            Object.DestroyImmediate(meleePrefab);
+            Object.DestroyImmediate(rangedPrefab);
             Object.DestroyImmediate(scheduleAsset);
         }
 
@@ -170,7 +170,7 @@ namespace Castlebound.Tests.PlayMode.Spawning
             enemyPrefab.AddComponent<EnemyFacing>();
             var runnerObject = new GameObject("DirectionalSpawnerRunner");
             var runner = runnerObject.AddComponent<EnemySpawnerRunner>();
-            var prefabMap = new Dictionary<string, GameObject> { ["grunt"] = enemyPrefab };
+            var prefabMap = new Dictionary<string, GameObject> { [EnemyArchetypeIds.GoblinMelee] = enemyPrefab };
             typeof(EnemySpawnerRunner).GetField("_prefabMap", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(runner, prefabMap);
 
@@ -178,7 +178,7 @@ namespace Castlebound.Tests.PlayMode.Spawning
             var requests = new List<SpawnRequest>();
             for (var i = 0; i < directions.Length; i++)
             {
-                requests.Add(new SpawnRequest("grunt", $"Gate{i}", "Center", new Vector2(i * 2f, 5f), directions[i]));
+                requests.Add(new SpawnRequest(EnemyArchetypeIds.GoblinMelee, $"Gate{i}", "Center", new Vector2(i * 2f, 5f), directions[i]));
             }
 
             var spawnReady = typeof(EnemySpawnerRunner).GetMethod("SpawnReady", BindingFlags.NonPublic | BindingFlags.Instance);

@@ -20,12 +20,12 @@ namespace Castlebound.Tests.Spawning
                     new RampTierUnlock
                     {
                         waveIndex = 1,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 1f } }
                     },
                     new RampTierUnlock
                     {
                         waveIndex = 3,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "archer", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinRanged, weight = 1f } }
                     }
                 }
             };
@@ -39,18 +39,18 @@ namespace Castlebound.Tests.Spawning
             var wave1 = schedule.GetWave(1);
             Assert.IsNotNull(wave1);
             Assert.AreEqual(5, wave1.Sequences[0].spawnCount, "Wave1 count should start at base.");
-            Assert.AreEqual("grunt", wave1.Sequences[0].enemyTypeId, "Wave1 should use first unlocked tier.");
+            Assert.AreEqual(EnemyArchetypeIds.GoblinMelee, wave1.Sequences[0].enemyTypeId, "Wave1 should use first unlocked tier.");
 
             var wave2 = schedule.GetWave(2);
             Assert.IsNotNull(wave2);
             Assert.AreEqual(5, wave2.Sequences[0].spawnCount, "No step until wave3 (stepSize=2 starting at wave1).");
-            Assert.AreEqual("grunt", wave2.Sequences[0].enemyTypeId, "Wave2 still only grunt.");
+            Assert.AreEqual(EnemyArchetypeIds.GoblinMelee, wave2.Sequences[0].enemyTypeId, "Wave2 still only contains melee goblins.");
 
             var wave3 = schedule.GetWave(3);
             Assert.IsNotNull(wave3);
             Assert.AreEqual(2, wave3.Sequences.Count, "Wave3 should support multiple enemy types in one generated schedule.");
-            Assert.AreEqual("grunt", wave3.Sequences[0].enemyTypeId);
-            Assert.AreEqual("archer", wave3.Sequences[1].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.GoblinMelee, wave3.Sequences[0].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.GoblinRanged, wave3.Sequences[1].enemyTypeId);
             Assert.AreEqual(4, wave3.Sequences[0].spawnCount);
             Assert.AreEqual(3, wave3.Sequences[1].spawnCount);
         }
@@ -71,8 +71,8 @@ namespace Castlebound.Tests.Spawning
                         waveIndex = 1,
                         tiers = new List<RampTier>
                         {
-                            new RampTier { enemyTypeId = "grunt", weight = 0.1f },
-                            new RampTier { enemyTypeId = "archer", weight = 2f }
+                            new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 0.1f },
+                            new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinRanged, weight = 2f }
                         }
                     }
                 }
@@ -87,10 +87,10 @@ namespace Castlebound.Tests.Spawning
             var wave = schedule.GetWave(1);
 
             Assert.AreEqual(2, wave.Sequences.Count);
-            Assert.AreEqual("grunt", wave.Sequences[0].enemyTypeId);
-            Assert.AreEqual("archer", wave.Sequences[1].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.GoblinMelee, wave.Sequences[0].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.GoblinRanged, wave.Sequences[1].enemyTypeId);
             Assert.AreEqual(1, wave.Sequences[0].spawnCount);
-            Assert.AreEqual(4, wave.Sequences[1].spawnCount, "Weights should bias split counts toward archer.");
+            Assert.AreEqual(4, wave.Sequences[1].spawnCount, "Weights should bias split counts toward ranged goblins.");
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace Castlebound.Tests.Spawning
                     new RampTierUnlock
                     {
                         waveIndex = 1,
-                        tiers = new List<RampTier> { new RampTier { enemyTypeId = "grunt", weight = 1f } }
+                        tiers = new List<RampTier> { new RampTier { enemyTypeId = EnemyArchetypeIds.GoblinMelee, weight = 1f } }
                     },
                     new RampTierUnlock
                     {
@@ -116,7 +116,7 @@ namespace Castlebound.Tests.Spawning
                         {
                             new RampTier
                             {
-                                enemyTypeId = "lurker",
+                                enemyTypeId = EnemyArchetypeIds.Lurker,
                                 weight = 0.35f,
                                 baseSpawnCount = 1,
                                 countPerStep = 1,
@@ -134,8 +134,8 @@ namespace Castlebound.Tests.Spawning
                 ramp: ramp);
 
             var wave3 = schedule.GetWave(3);
-            Assert.AreEqual("grunt", wave3.Sequences[0].enemyTypeId);
-            Assert.AreEqual("lurker", wave3.Sequences[1].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.GoblinMelee, wave3.Sequences[0].enemyTypeId);
+            Assert.AreEqual(EnemyArchetypeIds.Lurker, wave3.Sequences[1].enemyTypeId);
             Assert.AreEqual(7, wave3.Sequences[0].spawnCount);
             Assert.AreEqual(1, wave3.Sequences[1].spawnCount);
 

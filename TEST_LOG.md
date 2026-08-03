@@ -1,3 +1,20 @@
+## 2026-08-02 - feat-spawning-goblin-wave-composition
+
+### Summary
+- Added canonical melee and ranged goblin archetype IDs with legacy grunt schedule compatibility.
+- Authored exact opening-wave goblin counts and deterministic ranged and Lurker ramp progression.
+- Standardized goblin prefab and loot-profile names while separating serialized wave data types into focused files.
+
+### New or Updated Tests
+**EditMode**
+- GoblinWaveCompositionTests, EnemySpawnScheduleAssetBalanceTests, EnemySpawnerTests, WaveScheduleRampTests, WaveScheduleRuntimeTests, EnemyBalanceTableTests, and EnemyRangedPrefabContractTests — canonical IDs, exact counts, deterministic ordering, zero-count timing, ramp composition, balance aliases, mappings, and prefab regressions.
+
+**PlayMode**
+- EnemySpawnerRunnerPlayTests — mixed melee and ranged goblin prefab resolution from an authored wave.
+
+### Notes
+- EditMode and PlayMode suites pass per user validation; manual behavior validation confirmed the authored goblin composition and ramp progression.
+
 ## 2026-08-02 - feat-ai-ranged-engagement
 
 ### Summary

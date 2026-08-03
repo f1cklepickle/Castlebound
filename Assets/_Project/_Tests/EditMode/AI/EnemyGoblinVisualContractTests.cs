@@ -10,7 +10,7 @@ namespace Castlebound.Tests.AI
     public class EnemyGoblinVisualContractTests
     {
         private const string ArtRoot = "Assets/_Project/Art/Goblin_Assets";
-        private const string PrefabPath = "Assets/_Project/Prefabs/Enemy.prefab";
+        private const string PrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
 
         [TestCase("Goblin-Attack.png", 7)]
         [TestCase("Goblin-Idle.png", 9)]

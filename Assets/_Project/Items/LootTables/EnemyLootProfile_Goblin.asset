@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e827b1960af4d178e39f703b9c17519, type: 3}
-  m_Name: EnemyLootProfile_Grunt
+  m_Name: EnemyLootProfile_Goblin
   m_EditorClassIdentifier: ""
   lootTables:
   - table: {fileID: 11400000, guid: ae5e77863cbe4e8098be50ce36d5847c, type: 2}
