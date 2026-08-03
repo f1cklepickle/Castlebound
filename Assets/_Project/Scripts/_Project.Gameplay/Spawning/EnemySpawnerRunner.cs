@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Balance;
 using UnityEngine;
 using Castlebound.Gameplay.Stats;
@@ -169,6 +170,8 @@ namespace Castlebound.Gameplay.Spawning
                 var instance = Instantiate(prefab, request.Position, Quaternion.identity);
                 _aliveCount++;
 
+                ApplyRequestedEquipment(instance, request);
+
                 var facing = instance.GetComponent<EnemyFacing>();
                 if (facing != null && request.ForwardDirection.sqrMagnitude > Mathf.Epsilon)
                 {
@@ -192,6 +195,36 @@ namespace Castlebound.Gameplay.Spawning
                     _aliveCount = Mathf.Max(0, _aliveCount - 1);
                 });
             }
+        }
+
+        private static void ApplyRequestedEquipment(GameObject instance, SpawnRequest request)
+        {
+            if (request.Equipment == null)
+            {
+                return;
+            }
+
+            var equipment = instance.GetComponent<EnemyEquipment>();
+            var attack = instance.GetComponent<EnemyAttack>();
+            var delivery = attack != null ? attack.AttackDeliverySource as IEnemyAttackDelivery : null;
+
+            if (equipment == null || delivery == null)
+            {
+                Debug.LogError(
+                    $"EnemySpawnerRunner: enemy type '{request.EnemyTypeId}' cannot receive equipment " +
+                    $"'{request.Equipment.EquipmentId}'; keeping prefab default.");
+                return;
+            }
+
+            if (!request.Equipment.IsCompatibleWith(delivery.AttackRole))
+            {
+                Debug.LogError(
+                    $"EnemySpawnerRunner: equipment '{request.Equipment.EquipmentId}' is incompatible with " +
+                    $"{delivery.AttackRole} enemy type '{request.EnemyTypeId}'; keeping prefab default.");
+                return;
+            }
+
+            equipment.Equip(request.Equipment);
         }
     }
 }

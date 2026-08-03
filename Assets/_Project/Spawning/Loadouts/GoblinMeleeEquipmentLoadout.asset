@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1e172ddccdb4108901cb5ba2fdc8ccc, type: 3}
+  m_Name: GoblinMeleeEquipmentLoadout
+  m_EditorClassIdentifier:
+  entries:
+  - equipment: {fileID: 11400000, guid: 9f044d61a53b44d7aa0dfb050f92ec93, type: 2}
+    startWave: 1
+    startWeight: 80
+    endWave: 10
+    endWeight: 0
+  - equipment: {fileID: 11400000, guid: 0b6d55c5c6c1488f8a64daf3e5f28b03, type: 2}
+    startWave: 1
+    startWeight: 20
+    endWave: 10
+    endWeight: 100

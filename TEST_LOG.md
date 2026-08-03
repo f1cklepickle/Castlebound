@@ -1,3 +1,20 @@
+## 2026-08-03 - feat-spawning-enemy-equipment-distribution
+
+### Summary
+- Added reusable weighted enemy equipment loadout assets with deterministic seeded selection.
+- Authored melee goblin club chance from 20% on wave 1 to 100% on wave 10 while keeping ranged goblins on rock equipment.
+- Propagated selected equipment through spawn requests with compatible application and safe prefab-default fallback.
+
+### New or Updated Tests
+**EditMode**
+- EnemyEquipmentLoadoutTableTests and GoblinEquipmentDistributionTests — weight progression, seeded replay, authored and generated loadout propagation, and archetype-count regression coverage.
+
+**PlayMode**
+- GoblinEquipmentWavePlayTests — compatible equipment application before first update and incompatible-equipment fallback.
+
+### Notes
+- EditMode and PlayMode suites pass per user validation; manual behavior validation confirmed the authored equipment distribution.
+
 ## 2026-08-02 - feat-spawning-goblin-wave-composition
 
 ### Summary

@@ -16,5 +16,8 @@ namespace Castlebound.Gameplay.Spawning
 
         [Tooltip("Apply countPerStep every N waves after this tier unlocks.")]
         public int stepSize;
+
+        [Tooltip("Optional seeded equipment distribution for enemies emitted by this tier.")]
+        public EnemyEquipmentLoadoutTable equipmentLoadout;
     }
 }
