@@ -7,5 +7,6 @@ namespace Castlebound.Gameplay.Spawning
         public int spawnCount;
         public float intervalSeconds;
         public float initialDelaySeconds;
+        public EnemyEquipmentLoadoutTable equipmentLoadout;
     }
 }

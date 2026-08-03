@@ -108,13 +108,23 @@ namespace Castlebound.Gameplay.Spawning
 
             var requests = new List<SpawnRequest>();
 
-            foreach (var seq in _currentWave.Sequences)
+            for (int sequenceIndex = 0; sequenceIndex < _currentWave.Sequences.Count; sequenceIndex++)
             {
+                var seq = _currentWave.Sequences[sequenceIndex];
                 var gateOrder = SpawnMarkerOrderBuilder.BuildGateOrder(_spawnPoints, seq.spawnCount, _currentWave.Strategy, _currentWave.Seed);
                 var startsAt = requests.Count;
+                var loadoutRandom = seq.equipmentLoadout != null
+                    ? new System.Random(EnemyEquipmentLoadoutSeed.Combine(
+                        _currentWave.Seed,
+                        waveIndex,
+                        sequenceIndex))
+                    : null;
                 foreach (var gate in gateOrder)
                 {
-                    requests.Add(new SpawnRequest(seq.enemyTypeId, gate));
+                    var equipment = seq.equipmentLoadout != null
+                        ? seq.equipmentLoadout.Select(loadoutRandom, waveIndex)
+                        : null;
+                    requests.Add(new SpawnRequest(seq.enemyTypeId, gate, equipment));
                 }
 
                 _sequenceTimers.Add(new SequenceTimer

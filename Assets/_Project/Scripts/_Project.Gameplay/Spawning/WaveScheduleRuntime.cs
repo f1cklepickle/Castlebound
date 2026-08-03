@@ -301,7 +301,8 @@ namespace Castlebound.Gameplay.Spawning
                     enemyTypeId = pool[i].Tier.enemyTypeId,
                     spawnCount = count,
                     intervalSeconds = _generationBuild != null ? _generationBuild.IntervalSeconds : 1f,
-                    initialDelaySeconds = _generationBuild != null ? _generationBuild.InitialDelaySeconds : 0f
+                    initialDelaySeconds = _generationBuild != null ? _generationBuild.InitialDelaySeconds : 0f,
+                    equipmentLoadout = pool[i].Tier.equipmentLoadout
                 });
             }
 

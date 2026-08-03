@@ -21,6 +21,7 @@ MonoBehaviour:
       spawnCount: 5
       intervalSeconds: 1
       initialDelaySeconds: 0.5
+      equipmentLoadout: {fileID: 11400000, guid: d24a0a3038dd4c91b76364bc00412471, type: 2}
     useStrategyOverride: 0
     strategyOverride: 0
     useSeedOverride: 0
@@ -33,10 +34,12 @@ MonoBehaviour:
       spawnCount: 6
       intervalSeconds: 0.5
       initialDelaySeconds: 0
+      equipmentLoadout: {fileID: 11400000, guid: d24a0a3038dd4c91b76364bc00412471, type: 2}
     - enemyTypeId: goblin_ranged
       spawnCount: 2
       intervalSeconds: 0.5
       initialDelaySeconds: 0
+      equipmentLoadout: {fileID: 11400000, guid: a402cb2b12cc4926a1ef9392a33dc48b, type: 2}
     useStrategyOverride: 0
     strategyOverride: 0
     useSeedOverride: 0
@@ -57,6 +60,7 @@ MonoBehaviour:
         baseSpawnCount: 0
         countPerStep: 0
         stepSize: 0
+        equipmentLoadout: {fileID: 11400000, guid: d24a0a3038dd4c91b76364bc00412471, type: 2}
     - waveIndex: 2
       tiers:
       - enemyTypeId: goblin_ranged
@@ -64,6 +68,7 @@ MonoBehaviour:
         baseSpawnCount: 2
         countPerStep: 1
         stepSize: 2
+        equipmentLoadout: {fileID: 11400000, guid: a402cb2b12cc4926a1ef9392a33dc48b, type: 2}
     - waveIndex: 3
       tiers:
       - enemyTypeId: lurker
@@ -71,6 +76,7 @@ MonoBehaviour:
         baseSpawnCount: 1
         countPerStep: 1
         stepSize: 2
+        equipmentLoadout: {fileID: 0}
   sequences:
   - enemyTypeId: 
     spawnCount: 0
