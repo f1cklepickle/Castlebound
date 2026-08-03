@@ -65,7 +65,7 @@ namespace Castlebound.Tests.Player
 
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(resolverObject);
-            Object.DestroyImmediate(weaponA);
+            DestroyWeaponDefinition(weaponA);
         }
 
         [Test]
@@ -101,7 +101,7 @@ namespace Castlebound.Tests.Player
 
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(resolverObject);
-            Object.DestroyImmediate(weaponA);
+            DestroyWeaponDefinition(weaponA);
         }
 
         [Test]
@@ -139,8 +139,8 @@ namespace Castlebound.Tests.Player
 
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(resolverObject);
-            Object.DestroyImmediate(weaponA);
-            Object.DestroyImmediate(weaponB);
+            DestroyWeaponDefinition(weaponA);
+            DestroyWeaponDefinition(weaponB);
         }
 
         [Test]
@@ -179,15 +179,28 @@ namespace Castlebound.Tests.Player
 
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(resolverObject);
-            Object.DestroyImmediate(weaponA);
+            DestroyWeaponDefinition(weaponA);
         }
 
         private static WeaponDefinition CreateWeaponDefinition(string id, Sprite sprite)
         {
             var definition = ScriptableObject.CreateInstance<WeaponDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             definition.ItemId = id;
-            definition.HandSprite = sprite;
+            definition.CombatProfile = profile;
+            profile.HandSprite = sprite;
             return definition;
+        }
+
+        private static void DestroyWeaponDefinition(WeaponDefinition definition)
+        {
+            if (definition == null)
+            {
+                return;
+            }
+
+            Object.DestroyImmediate(definition.CombatProfile);
+            Object.DestroyImmediate(definition);
         }
 
         private static Sprite CreateSprite(int size, Vector2 pivot)

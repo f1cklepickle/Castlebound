@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Inventory;
 
 namespace Castlebound.Tests.Inventory
@@ -10,19 +11,24 @@ namespace Castlebound.Tests.Inventory
         public void WeaponDefinition_ValidFields_AreAccepted()
         {
             var asset = ScriptableObject.CreateInstance<WeaponDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
 
             asset.ItemId = "weapon_basic";
             asset.DisplayName = "Basic Sword";
-            asset.Damage = 5;
-            asset.AttackSpeed = 1.2f;
+            asset.CombatProfile = profile;
+            profile.DamageBonus = 5;
+            profile.AttackRateMultiplier = 1.2f;
             asset.HitboxSize = new Vector2(1.2f, 0.6f);
-            asset.Knockback = 3f;
+            profile.KnockbackBonus = 3f;
 
             Assert.IsTrue(asset.IsValidId);
             Assert.Greater(asset.Damage, 0);
             Assert.Greater(asset.AttackSpeed, 0f);
             Assert.Greater(asset.HitboxSize.x, 0f);
             Assert.Greater(asset.HitboxSize.y, 0f);
+
+            Object.DestroyImmediate(profile);
+            Object.DestroyImmediate(asset);
         }
 
         [Test]

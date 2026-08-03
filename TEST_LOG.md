@@ -1,3 +1,20 @@
+## 2026-08-03 - refactor-equipment-entity-agnostic-profiles
+
+### Summary
+- Added wearer-neutral combat equipment profiles, capability validation, immutable resolved combat snapshots, and a shared runtime equipment-source contract.
+- Separated shared combat effects from player inventory/presentation data and enemy spawning, role, grip, and target-layer data.
+- Migrated player weapons and enemy unarmed, club, and rock definitions, with one shared club profile used by both player and enemy adapters.
+
+### New or Updated Tests
+**EditMode**
+- CombatEquipmentProfileTests, CombatEquipmentAssetTests, ItemDefinitionTests, PlayerWeaponControllerTests, WeaponHandTests, EnemyEquipmentTests, and EnemyProjectileAttackDeliveryTests — capability checks, stat resolution, immutable snapshots, source events, shared-profile ownership, authored asset migration, and player/enemy regressions.
+
+**PlayMode**
+- GoblinEquipmentWavePlayTests — spawned enemy equipment retains the same shared profile referenced by a player weapon adapter.
+
+### Notes
+- EditMode and PlayMode suites pass per user validation; manual behavior validation confirmed existing equipment and combat behavior remain unchanged.
+
 ## 2026-08-03 - feat-spawning-enemy-equipment-distribution
 
 ### Summary

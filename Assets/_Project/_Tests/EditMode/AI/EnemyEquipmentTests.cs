@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -11,16 +12,23 @@ namespace Castlebound.Tests.AI
         {
             var enemy = new GameObject("EnemyEquipmentTests");
             var definition = ScriptableObject.CreateInstance<EnemyEquipmentDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             try
             {
                 var equipment = enemy.AddComponent<EnemyEquipment>();
-                definition.EquipmentId = "unarmed";
+                profile.EquipmentId = "unarmed";
+                definition.CombatProfile = profile;
+                CombatEquipmentProfile publishedProfile = null;
+                equipment.EquipmentChanged += changedProfile => publishedProfile = changedProfile;
 
                 Assert.IsTrue(equipment.Equip(definition));
                 Assert.That(equipment.ActiveEquipment, Is.SameAs(definition));
+                Assert.That(equipment.ActiveCombatProfile, Is.SameAs(profile));
+                Assert.That(publishedProfile, Is.SameAs(profile));
             }
             finally
             {
+                Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(definition);
                 Object.DestroyImmediate(enemy);
             }
@@ -30,8 +38,11 @@ namespace Castlebound.Tests.AI
         public void Definition_ReportsCompatibleAttackRoleWithoutEnumBranches()
         {
             var definition = ScriptableObject.CreateInstance<EnemyEquipmentDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             try
             {
+                profile.RequiredCapabilities = CombatEquipmentCapability.ProjectileDelivery;
+                definition.CombatProfile = profile;
                 definition.CompatibleRole = EnemyAttackRole.Ranged;
 
                 Assert.IsTrue(definition.IsCompatibleWith(EnemyAttackRole.Ranged));
@@ -39,6 +50,7 @@ namespace Castlebound.Tests.AI
             }
             finally
             {
+                Object.DestroyImmediate(profile);
                 Object.DestroyImmediate(definition);
             }
         }

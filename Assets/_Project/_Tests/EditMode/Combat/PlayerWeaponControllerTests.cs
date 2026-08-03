@@ -14,22 +14,29 @@ namespace Castlebound.Tests.Combat
             var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
 
             var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             weapon.ItemId = "weapon_basic";
-            weapon.Damage = 5;
-            weapon.AttackSpeed = 1.2f;
+            weapon.CombatProfile = profile;
+            profile.DamageBonus = 5;
+            profile.AttackRateMultiplier = 1.2f;
             weapon.HitboxSize = new Vector2(1.2f, 0.6f);
-            weapon.Knockback = 3f;
+            profile.KnockbackBonus = 3f;
 
             var controller = playerGo.AddComponent<PlayerWeaponController>();
             controller.SetWeaponDefinitionResolver(new TestWeaponResolver(weapon));
+            CombatEquipmentProfile publishedProfile = null;
+            controller.EquipmentChanged += changedProfile => publishedProfile = changedProfile;
 
             inventoryComponent.State.AddWeapon("weapon_basic");
 
             controller.RefreshEquippedWeapon(inventoryComponent.State);
 
             Assert.AreEqual("weapon_basic", controller.CurrentWeaponId);
+            Assert.That(controller.ActiveCombatProfile, Is.SameAs(profile));
+            Assert.That(publishedProfile, Is.SameAs(profile));
 
             Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(profile);
             Object.DestroyImmediate(weapon);
         }
 
@@ -40,11 +47,13 @@ namespace Castlebound.Tests.Combat
             var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
 
             var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             weapon.ItemId = "weapon_basic";
-            weapon.Damage = 7;
-            weapon.AttackSpeed = 2.5f;
+            weapon.CombatProfile = profile;
+            profile.DamageBonus = 7;
+            profile.AttackRateMultiplier = 2.5f;
             weapon.HitboxSize = new Vector2(2f, 1f);
-            weapon.Knockback = 4f;
+            profile.KnockbackBonus = 4f;
 
             var controller = playerGo.AddComponent<PlayerWeaponController>();
             controller.SetWeaponDefinitionResolver(new TestWeaponResolver(weapon));
@@ -61,6 +70,7 @@ namespace Castlebound.Tests.Combat
             Assert.AreEqual(4f, stats.Knockback);
 
             Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(profile);
             Object.DestroyImmediate(weapon);
         }
 
@@ -71,11 +81,13 @@ namespace Castlebound.Tests.Combat
             var inventoryComponent = playerGo.AddComponent<InventoryStateComponent>();
 
             var weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
+            var profile = ScriptableObject.CreateInstance<CombatEquipmentProfile>();
             weapon.ItemId = "weapon_basic";
-            weapon.Damage = 7;
-            weapon.AttackSpeed = 2.5f;
+            weapon.CombatProfile = profile;
+            profile.DamageBonus = 7;
+            profile.AttackRateMultiplier = 2.5f;
             weapon.HitboxSize = new Vector2(2f, 1f);
-            weapon.Knockback = 4f;
+            profile.KnockbackBonus = 4f;
 
             var controller = playerGo.AddComponent<PlayerWeaponController>();
             controller.SetWeaponDefinitionResolver(new TestWeaponResolver(weapon));
@@ -95,6 +107,7 @@ namespace Castlebound.Tests.Combat
             Assert.AreEqual(0f, stats.Knockback);
 
             Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(profile);
             Object.DestroyImmediate(weapon);
         }
 

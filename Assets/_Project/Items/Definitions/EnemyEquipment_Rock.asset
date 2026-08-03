@@ -12,17 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f625f3546fd4b6a831e7c69359ebdfa, type: 3}
   m_Name: EnemyEquipment_Rock
   m_EditorClassIdentifier:
-  equipmentId: rock
+  combatProfile: {fileID: 11400000, guid: d7556d6cc5174d8c8abc51a5e06296db, type: 2}
   compatibleRole: 2
-  handSprite: {fileID: 21300000, guid: 61bd5abbe3554b65af2a5f6ec3b7d042, type: 3}
   handlePosition: {x: 0.05, y: 0.04}
   handleRotation: 0
   handleScale: {x: 0.65, y: 0.65}
-  projectilePrefab: {fileID: 3000000004, guid: e101a4e24f254666b4f76da58f4f311b, type: 3}
-  projectileSpeed: 8
-  projectileDamage: 2
-  projectileLifetime: 4
   projectileTargetLayerMask:
     serializedVersion: 2
     m_Bits: 264
-  projectileVisualAngleOffsetDegrees: 0

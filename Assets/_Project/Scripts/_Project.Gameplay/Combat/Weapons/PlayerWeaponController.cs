@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 using Castlebound.Gameplay.Inventory;
 
 namespace Castlebound.Gameplay.Combat
 {
-    public class PlayerWeaponController : MonoBehaviour
+    public class PlayerWeaponController : MonoBehaviour, ICombatEquipmentSource
     {
         [SerializeField] private InventoryStateComponent inventorySource;
         [SerializeField] private MonoBehaviour resolverSource;
@@ -13,6 +14,11 @@ namespace Castlebound.Gameplay.Combat
         private InventoryState inventory;
 
         public string CurrentWeaponId => equippedDefinition != null ? equippedDefinition.ItemId : null;
+        public CombatEquipmentProfile ActiveCombatProfile => equippedDefinition != null
+            ? equippedDefinition.CombatProfile
+            : null;
+
+        public event Action<CombatEquipmentProfile> EquipmentChanged;
 
         public WeaponStats CurrentWeaponStats
         {
@@ -40,14 +46,25 @@ namespace Castlebound.Gameplay.Combat
 
         public void RefreshEquippedWeapon(InventoryState inventory)
         {
+            CombatEquipmentProfile previousProfile = ActiveCombatProfile;
             if (inventory == null || resolver == null)
             {
                 equippedDefinition = null;
+                PublishEquipmentChange(previousProfile);
                 return;
             }
 
             string weaponId = inventory.GetWeaponId(inventory.ActiveWeaponSlotIndex);
             equippedDefinition = resolver.Resolve(weaponId);
+            PublishEquipmentChange(previousProfile);
+        }
+
+        private void PublishEquipmentChange(CombatEquipmentProfile previousProfile)
+        {
+            if (previousProfile != ActiveCombatProfile)
+            {
+                EquipmentChanged?.Invoke(ActiveCombatProfile);
+            }
         }
 
         private void OnEnable()
