@@ -11,6 +11,9 @@ public class Hitbox : MonoBehaviour
     [SerializeField] FeedbackEventChannel playerHitEnemyFeedbackChannel;
     PlayerWeaponController weaponController;
     Vector2 lastHitboxSize = Vector2.zero;
+    CombatEquipmentSnapshot swingEquipmentSnapshot;
+    WeaponStats swingWeaponStats;
+    bool hasSwingSnapshot;
 
     void Awake()
     {
@@ -40,6 +43,15 @@ public class Hitbox : MonoBehaviour
         activeWindow = true;
     }
 
+    public void ConfigureSwing(CombatEquipmentSnapshot equipmentSnapshot, WeaponStats weaponStats)
+    {
+        swingEquipmentSnapshot = equipmentSnapshot;
+        swingWeaponStats = weaponStats;
+        hasSwingSnapshot = true;
+        hitThisSwing.Clear();
+        UpdateColliderSize();
+    }
+
     // Called by PlayerController once the current swing's hit window closes.
     public void Deactivate()
     {
@@ -65,7 +77,11 @@ public class Hitbox : MonoBehaviour
 
         // Optional: damage interface or Health component
         int damage = 1;
-        if (weaponController != null)
+        if (hasSwingSnapshot)
+        {
+            damage = Mathf.Max(1, swingEquipmentSnapshot.Damage);
+        }
+        else if (weaponController != null)
         {
             damage = Mathf.Max(1, weaponController.CurrentWeaponStats.Damage);
         }
@@ -82,12 +98,13 @@ public class Hitbox : MonoBehaviour
 
     void UpdateColliderSize()
     {
-        if (weaponController == null || col == null)
+        if ((!hasSwingSnapshot && weaponController == null) || col == null)
         {
             return;
         }
 
-        var size = weaponController.CurrentWeaponStats.HitboxSize;
+        var stats = hasSwingSnapshot ? swingWeaponStats : weaponController.CurrentWeaponStats;
+        var size = stats.HitboxSize;
         if (size == Vector2.zero || size == lastHitboxSize)
         {
             return;
@@ -97,7 +114,7 @@ public class Hitbox : MonoBehaviour
         if (col is BoxCollider2D box)
         {
             box.size = size;
-            box.offset = weaponController.CurrentWeaponStats.HitboxOffset;
+            box.offset = stats.HitboxOffset;
         }
         else if (col is CircleCollider2D circle)
         {

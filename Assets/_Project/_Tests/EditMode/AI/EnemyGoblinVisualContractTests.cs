@@ -3,6 +3,7 @@ using System.Linq;
 using Castlebound.Gameplay.AI;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace Castlebound.Tests.AI
@@ -11,6 +12,7 @@ namespace Castlebound.Tests.AI
     {
         private const string ArtRoot = "Assets/_Project/Art/Goblin_Assets";
         private const string PrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab";
+        private const string RangedPrefabPath = "Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab";
 
         [TestCase("Goblin-Attack.png", 7)]
         [TestCase("Goblin-Idle.png", 9)]
@@ -57,6 +59,39 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
+        public void AttackClip_ImpactFrame_IsTheDownwardStrike()
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{ArtRoot}/Goblin_Attack.anim");
+            var verticalBinding = AnimationUtility.GetCurveBindings(clip)
+                .Single(binding =>
+                    binding.path == "VisualRoot/HandSocket" &&
+                    binding.propertyName == "m_LocalPosition.y");
+            Keyframe[] keys = AnimationUtility.GetEditorCurve(clip, verticalBinding).keys;
+            int impactIndex = System.Array.FindIndex(keys,
+                key => Mathf.Abs(key.time - (20f / 60f)) < 0.0001f);
+
+            Assert.That(impactIndex, Is.GreaterThan(0));
+            Assert.That(keys[impactIndex].value, Is.LessThan(keys[impactIndex - 1].value),
+                "The authored impact must occur after the raised arm moves downward.");
+        }
+
+        [Test]
+        public void GoblinAnimator_AttackStateUsesExplicitProgressTimeParameter()
+        {
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(
+                $"{ArtRoot}/Goblin.controller");
+            var attackState = controller.layers[0].stateMachine.states
+                .Select(child => child.state)
+                .Single(state => state.name == "Attack");
+
+            Assert.That(controller.parameters.Any(parameter =>
+                parameter.name == "AttackProgress" &&
+                parameter.type == AnimatorControllerParameterType.Float), Is.True);
+            Assert.IsTrue(attackState.timeParameterActive);
+            Assert.That(attackState.timeParameter, Is.EqualTo("AttackProgress"));
+        }
+
+        [Test]
         public void EnemyPrefab_AuthorsAnimatorSocketAndUnarmedSpawnEquipment()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
@@ -70,13 +105,33 @@ namespace Castlebound.Tests.AI
             Assert.That(prefab.GetComponent<EnemyEquipment>().SpawnEquipment.EquipmentId, Is.EqualTo("unarmed"));
             var presenter = prefab.GetComponent<EnemyAnimationPresenter>();
             Assert.That(presenter.AuthoredImpactTimeSeconds, Is.EqualTo(20f / 60f).Within(0.0001f));
+            Assert.That(presenter.AuthoredAttackDurationSeconds, Is.EqualTo(0.35f).Within(0.0001f));
 
             var attackClip = AssetDatabase.LoadAssetAtPath<AnimationClip>($"{ArtRoot}/Goblin_Attack.anim");
             var spriteBinding = AnimationUtility.GetObjectReferenceCurveBindings(attackClip)
                 .Single(binding => binding.path == "VisualRoot/Sprite" && binding.propertyName == "m_Sprite");
             var spriteKeys = AnimationUtility.GetObjectReferenceCurve(attackClip, spriteBinding);
-            Assert.That(spriteKeys.Last().time, Is.EqualTo(presenter.AuthoredImpactTimeSeconds).Within(0.0001f));
+            Assert.That(attackClip.length, Is.EqualTo(presenter.AuthoredAttackDurationSeconds).Within(0.0001f));
+            Assert.That(spriteKeys.Any(key =>
+                Mathf.Abs(key.time - presenter.AuthoredImpactTimeSeconds) < 0.0001f), Is.True);
             Assert.That(spriteKeys.Select(key => key.time).Distinct().Count(), Is.EqualTo(spriteKeys.Length));
+        }
+
+        [TestCase(PrefabPath)]
+        [TestCase(RangedPrefabPath)]
+        public void EnemyPrefab_MapsClockImpactToAuthoredDownwardStrike(string prefabPath)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            var presenter = prefab.GetComponent<EnemyAnimationPresenter>();
+
+            Assert.That(presenter.AuthoredImpactTimeSeconds, Is.EqualTo(20f / 60f).Within(0.0001f));
+            Assert.That(presenter.AuthoredAttackDurationSeconds, Is.EqualTo(0.35f).Within(0.0001f));
+            Assert.That(
+                EnemyAnimationPresenter.MapAttackProgress(
+                    0.3f / 1.1f,
+                    0.3f / 1.1f,
+                    presenter.AuthoredImpactTimeSeconds / presenter.AuthoredAttackDurationSeconds),
+                Is.EqualTo((20f / 60f) / 0.35f).Within(0.0001f));
         }
 
         [Test]

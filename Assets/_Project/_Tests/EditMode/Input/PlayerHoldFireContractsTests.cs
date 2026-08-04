@@ -7,6 +7,8 @@ namespace Castlebound.Tests.Input
     {
         private const string PlayerControllerPath =
             "Assets/_Project/Scripts/_Project.Gameplay/Player/PlayerController.cs";
+        private const string PlayerAttackRuntimePath =
+            "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackRuntime.cs";
 
         [Test]
         public void PlayerController_UsesDedicatedFireInputController()
@@ -30,9 +32,9 @@ namespace Castlebound.Tests.Input
             Assert.IsTrue(forwardsPressedState,
                 "PlayerController should forward pressed state updates to PlayerFireInputController.");
 
-            var ticksAttackLoop = source.Contains("attackLoop.Tick(");
+            var ticksAttackLoop = source.Contains("attackRuntime.Tick(");
             Assert.IsTrue(ticksAttackLoop,
-                "PlayerController should tick PlayerAttackLoop from FixedUpdate.");
+                "PlayerController should tick the extracted attack runtime from FixedUpdate.");
         }
 
         [Test]
@@ -51,9 +53,12 @@ namespace Castlebound.Tests.Input
         public void PlayerController_KeepsAttackAuthorityDelegated_ToAttackLoop()
         {
             var source = File.ReadAllText(PlayerControllerPath);
+            var runtimeSource = File.ReadAllText(PlayerAttackRuntimePath);
 
-            StringAssert.Contains("attackLoop.Tick(", source,
-                "PlayerController should continue delegating held-fire cadence progression to PlayerAttackLoop.");
+            StringAssert.Contains("attackRuntime.Tick(", source,
+                "PlayerController should delegate held-fire cadence progression to the attack runtime.");
+            StringAssert.Contains("attackLoop?.Tick(", runtimeSource,
+                "The attack runtime should delegate deterministic cadence to PlayerAttackLoop.");
             StringAssert.DoesNotContain("attackCooldownGate.TryConsume", source,
                 "PlayerController should no longer own direct cooldown consumption.");
         }

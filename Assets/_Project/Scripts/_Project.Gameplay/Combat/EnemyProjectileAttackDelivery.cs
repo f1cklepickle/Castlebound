@@ -1,5 +1,6 @@
 using System;
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Projectile;
 using UnityEngine;
 
@@ -13,32 +14,38 @@ public class EnemyProjectileAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
     public Transform LaunchPoint { get => launchPoint; set => launchPoint = value; }
     public ProjectileRuntime LastLaunchedProjectile { get; private set; }
 
-    public bool CanDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    public bool CanDeliver(
+        Transform lockedTarget,
+        EnemyEquipmentDefinition equipmentDefinitionSnapshot,
+        CombatEquipmentSnapshot combatEquipmentSnapshot)
     {
         return lockedTarget != null &&
-               equipmentSnapshot != null &&
-               equipmentSnapshot.IsCompatibleWith(AttackRole) &&
-               equipmentSnapshot.ProjectilePrefab != null;
+               equipmentDefinitionSnapshot != null &&
+               equipmentDefinitionSnapshot.IsCompatibleWith(AttackRole) &&
+               combatEquipmentSnapshot.ProjectilePrefab != null;
     }
 
-    public bool TryDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    public bool TryDeliver(
+        Transform lockedTarget,
+        EnemyEquipmentDefinition equipmentDefinitionSnapshot,
+        CombatEquipmentSnapshot combatEquipmentSnapshot)
     {
-        if (!CanDeliver(lockedTarget, equipmentSnapshot))
+        if (!CanDeliver(lockedTarget, equipmentDefinitionSnapshot, combatEquipmentSnapshot))
         {
             return false;
         }
 
         Vector2 origin = launchPoint != null ? launchPoint.position : transform.position;
         var request = new ProjectileLaunchRequest(
-            equipmentSnapshot.ProjectilePrefab,
+            combatEquipmentSnapshot.ProjectilePrefab,
             origin,
             lockedTarget.position,
             transform,
-            equipmentSnapshot.ProjectileSpeed,
-            equipmentSnapshot.ProjectileDamage,
-            equipmentSnapshot.ProjectileLifetime,
-            equipmentSnapshot.ProjectileTargetLayerMask,
-            equipmentSnapshot.ProjectileVisualAngleOffsetDegrees);
+            combatEquipmentSnapshot.ProjectileSpeed,
+            combatEquipmentSnapshot.Damage,
+            combatEquipmentSnapshot.ProjectileLifetime,
+            equipmentDefinitionSnapshot.ProjectileTargetLayerMask,
+            combatEquipmentSnapshot.ProjectileVisualAngleOffsetDegrees);
 
         LastLaunchedProjectile = ProjectileLauncher.Launch(request);
         if (LastLaunchedProjectile == null)
@@ -48,5 +55,35 @@ public class EnemyProjectileAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
 
         Fired?.Invoke(LastLaunchedProjectile);
         return true;
+    }
+
+    public bool CanDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    {
+        return CanDeliver(lockedTarget, equipmentSnapshot, ResolveLegacySnapshot(equipmentSnapshot));
+    }
+
+    public bool TryDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    {
+        return TryDeliver(lockedTarget, equipmentSnapshot, ResolveLegacySnapshot(equipmentSnapshot));
+    }
+
+    private static CombatEquipmentSnapshot ResolveLegacySnapshot(EnemyEquipmentDefinition equipmentSnapshot)
+    {
+        if (equipmentSnapshot == null || equipmentSnapshot.CombatProfile == null)
+            return default;
+
+        var profile = equipmentSnapshot.CombatProfile;
+        return new CombatEquipmentSnapshot(
+            profile.EquipmentId,
+            profile.DamageBonus,
+            AttackRatePolicy.Normalize(profile.AttackRateMultiplier),
+            profile.RangeBonus,
+            profile.KnockbackBonus,
+            profile.RequiredCapabilities,
+            profile.HandSprite,
+            profile.ProjectilePrefab,
+            profile.ProjectileSpeed,
+            profile.ProjectileLifetime,
+            profile.ProjectileVisualAngleOffsetDegrees);
     }
 }

@@ -9,16 +9,19 @@ namespace Castlebound.Tests.Player
             "Assets/_Project/Scripts/_Project.Gameplay/Player/PlayerController.cs";
         private const string AttackAnimationDriverPath =
             "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackAnimationDriver.cs";
+        private const string AttackRuntimePath =
+            "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackRuntime.cs";
 
         [Test]
-        public void PlayerController_DelegatesAttackAnimationSpeed_ToDedicatedDriver()
+        public void PlayerAttackRuntime_DelegatesAttackAnimationSpeed_ToDedicatedDriver()
         {
-            var source = File.ReadAllText(PlayerControllerPath);
+            var controllerSource = File.ReadAllText(PlayerControllerPath);
+            var runtimeSource = File.ReadAllText(AttackRuntimePath);
 
-            StringAssert.Contains("PlayerAttackAnimationDriver", source,
-                "PlayerController should delegate animator attack-speed updates to a dedicated component.");
-            StringAssert.Contains("attackAnimationDriver.ApplyLoopPresentation", source,
-                "PlayerController should invoke attackAnimationDriver.ApplyLoopPresentation(...) each frame/tick path.");
+            StringAssert.Contains("PlayerAttackAnimationDriver", controllerSource,
+                "PlayerController should retain its dedicated presentation adapter reference.");
+            StringAssert.Contains("animationDriver.ApplyLoopPresentation", runtimeSource,
+                "The extracted runtime should invoke the presentation adapter each tick.");
         }
 
         [Test]

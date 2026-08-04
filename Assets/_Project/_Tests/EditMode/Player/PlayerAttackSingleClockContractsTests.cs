@@ -11,6 +11,8 @@ namespace Castlebound.Tests.Player
             "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackLoop.cs";
         private const string AttackAnimationDriverPath =
             "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackAnimationDriver.cs";
+        private const string AttackRuntimePath =
+            "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackRuntime.cs";
 
         [Test]
         public void PlayerController_DoesNotUseAnimatorTrigger_AsCadenceAuthority()
@@ -51,12 +53,12 @@ namespace Castlebound.Tests.Player
         }
 
         [Test]
-        public void PlayerController_DelegatesLoopPresentation_ToAnimationDriver()
+        public void PlayerAttackRuntime_DelegatesLoopPresentation_ToAnimationDriver()
         {
-            var source = File.ReadAllText(PlayerControllerPath);
+            var source = File.ReadAllText(AttackRuntimePath);
 
-            StringAssert.Contains("attackAnimationDriver.ApplyLoopPresentation", source,
-                "PlayerController should delegate loop presentation to the animation driver.");
+            StringAssert.Contains("animationDriver.ApplyLoopPresentation", source,
+                "The extracted runtime should delegate loop presentation to the animation driver.");
         }
     }
 }

@@ -260,6 +260,7 @@ MonoBehaviour:
   facingPolicyResolver: {fileID: 9150000000000000203}
   attackAnimationDriver: {fileID: 9150000000000000204}
   attackLoop: {fileID: 9150000000000000205}
+  baseAttackDamage: 1
   baseAttackRate: 1.5
   movementOrchestrator:
     deadZone: 0.1
