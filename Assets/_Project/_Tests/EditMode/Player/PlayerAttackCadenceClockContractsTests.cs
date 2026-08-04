@@ -9,14 +9,14 @@ namespace Castlebound.Tests.Player
             "Assets/_Project/Scripts/_Project.Gameplay/Player/Components/PlayerAttackLoop.cs";
 
         [Test]
-        public void PlayerAttackLoop_UsesInternalElapsedClock_ForCooldownAuthority()
+        public void PlayerAttackLoop_UsesSharedDeterministicClock_ForCadenceAuthority()
         {
             var source = File.ReadAllText(PlayerAttackLoopPath);
 
-            StringAssert.Contains("elapsedTime += deltaTime", source,
-                "Loop-owned cooldown authority should advance from the loop runtime clock.");
-            StringAssert.Contains("attackCooldownGate.TryConsume(elapsedTime", source,
-                "Cooldown authority should consume against the loop's internal elapsed clock.");
+            StringAssert.Contains("AttackClock", source,
+                "Player cadence should advance through the shared deterministic clock.");
+            StringAssert.Contains("step.UnusedDeltaTime", source,
+                "Player cadence should carry overshoot into chained swings.");
         }
 
         [Test]

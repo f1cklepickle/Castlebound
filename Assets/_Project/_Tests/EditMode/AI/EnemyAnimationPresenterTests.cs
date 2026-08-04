@@ -29,6 +29,17 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
+        public void NormalizedClockProgress_MapsImpactAndRecoveryAcrossOneAuthoredCycle()
+        {
+            Assert.That(EnemyAnimationPresenter.MapAttackProgress(0.25f, 0.25f, 0.5f),
+                Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(EnemyAnimationPresenter.MapAttackProgress(0.625f, 0.25f, 0.5f),
+                Is.EqualTo(0.75f).Within(0.0001f));
+            Assert.That(EnemyAnimationPresenter.MapAttackProgress(1f, 0.25f, 0.5f),
+                Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
         public void AttackPresentation_PersistsUntilCombatAuthorityCompletesIt()
         {
             presenter.PlayAttack(0.3f);

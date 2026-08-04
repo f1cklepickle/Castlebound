@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
     [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
     [SerializeField] private PlayerAttackLoop attackLoop;
+    [SerializeField, Min(0)] private int baseAttackDamage = 1;
     [SerializeField] private float baseAttackRate = 1.5f;
     
     [Header("Movement")]
@@ -38,6 +39,7 @@ public class PlayerController : MonoBehaviour
     private InventoryState inventoryState;
     private bool inputLocked;
     private float repairCooldownRemaining;
+    private readonly PlayerAttackRuntime attackRuntime = new PlayerAttackRuntime();
 
     public float RepairRange
     {
@@ -71,6 +73,11 @@ public class PlayerController : MonoBehaviour
 
     public float RepairCooldownRemaining => repairCooldownRemaining;
     public bool IsRepairOnCooldown => repairCooldownRemaining > 0f;
+    public int BaseAttackDamage
+    {
+        get => baseAttackDamage;
+        set => baseAttackDamage = Mathf.Max(0, value);
+    }
 
     void Awake()
     {
@@ -135,32 +142,19 @@ public class PlayerController : MonoBehaviour
         if (attackLoop == null)
             attackLoop = GetComponent<PlayerAttackLoop>();
 
-        var effectiveAttackRate = GetEffectiveAttackRate();
         var isFireHeld = fireInputController != null && fireInputController.IsFireHeld;
-        if (attackLoop != null)
-            attackLoop.Tick(Time.fixedDeltaTime, effectiveAttackRate, isFireHeld);
-
-        ApplyAttackRuntimeState();
+        attackRuntime.Tick(
+            Time.fixedDeltaTime,
+            baseAttackDamage,
+            baseAttackRate,
+            isFireHeld,
+            playerWeaponController,
+            attackLoop,
+            attackAnimationDriver,
+            animator,
+            hitboxObject);
 
         movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
-        SyncAttackAnimationSpeed();
-    }
-
-
-    public void EnableHitbox()
-    {
-        if (hitboxObject == null)
-            return;
-
-        hitboxObject.GetComponent<Hitbox>()?.Activate();
-    }
-
-    public void DisableHitbox()
-    {
-        if (hitboxObject == null)
-            return;
-
-        hitboxObject.GetComponent<Hitbox>()?.Deactivate();
     }
 
     /// <summary>
@@ -294,46 +288,14 @@ public class PlayerController : MonoBehaviour
             attackLoop = GetComponent<PlayerAttackLoop>();
 
         fireInputController?.ClearHeldFire();
-        attackLoop?.ResetLoopState();
-        ApplyAttackRuntimeState();
-        SyncAttackAnimationSpeed();
-    }
-
-    private float GetEffectiveAttackRate()
-    {
-        var weaponAttackSpeed = playerWeaponController != null
-            ? playerWeaponController.CurrentWeaponStats.AttackSpeed
-            : 1f;
-
-        return PlayerAttackRateCalculator.ComputeEffectiveRate(baseAttackRate, weaponAttackSpeed);
-    }
-
-    private void SyncAttackAnimationSpeed()
-    {
-        if (attackAnimationDriver == null)
-            attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
-
-        if (attackAnimationDriver == null)
-            return;
-
-        var rate = GetEffectiveAttackRate();
-        var isSwingActive = attackLoop != null && attackLoop.IsPresentationActive;
-        var normalizedSwingProgress = attackLoop != null ? attackLoop.NormalizedSwingProgress : 0f;
-        attackAnimationDriver.ApplyLoopPresentation(
+        attackRuntime.Reset(
+            baseAttackDamage,
+            baseAttackRate,
+            playerWeaponController,
+            attackLoop,
+            attackAnimationDriver,
             animator,
-            isSwingActive,
-            normalizedSwingProgress,
-            rate,
-            baseAttackRate);
-    }
-
-    private void ApplyAttackRuntimeState()
-    {
-        var shouldKeepHitboxActive = attackLoop != null && attackLoop.ShouldKeepHitboxActiveThisStep;
-        if (shouldKeepHitboxActive)
-            EnableHitbox();
-        else
-            DisableHitbox();
+            hitboxObject);
     }
 
     private Vector2 ResolveAimInput()

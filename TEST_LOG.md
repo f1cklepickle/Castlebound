@@ -1,3 +1,21 @@
+## 2026-08-03 - refactor-269-normalized-attack-timing
+
+### Summary
+- Added one holder-neutral deterministic attack clock and authoritative attack-rate normalization policy with phase and swing overshoot carry.
+- Migrated player and enemy attacks to immutable per-swing equipment snapshots, with player base damage authored as 1 and added to equipment damage.
+- Removed the redundant player cooldown and rate calculators plus enemy coroutine waits, with focused runtime and resolver extractions to avoid controller growth.
+- Bound enemy attack presentation to the deterministic clock through the Goblin Animator's explicit `AttackProgress` parameter, aligning every equipment rate with zero-based frame 6's authored downward strike at 0.3333 seconds.
+
+### New or Updated Tests
+**EditMode**
+- AttackRatePolicyTests, AttackClockTests, EnemyAttackTimingTests, PlayerAttackBaseDamageTests, PlayerAttackSnapshotTests, PlayerAttackLoopTimingTests, EnemyAnimationPresenterTests, EnemyGoblinVisualContractTests, and player attack contract tests — normalization, base-plus-equipment damage, immutable timing, overshoot, exact-once impact, cancellation, snapshot delivery, explicit Animator progress, authored strike mapping, and ownership regressions.
+
+**PlayMode**
+- EnemyEquipmentCadencePlayTests and EnemyAttackPresentationSyncPlayTests — equipment changes cadence while unarmed and club rates both render zero-based frame 6 at the exact impact boundary.
+
+### Notes
+- Full EditMode and PlayMode suites passed in the Unity Test Runner; manual gameplay validation confirmed equipment-scaled cadence, base-plus-equipment damage, cancellation, and zero-based frame 6 enemy impacts.
+
 ## 2026-08-03 - refactor-equipment-entity-agnostic-profiles
 
 ### Summary

@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
 using UnityEngine;
 
 public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
@@ -12,26 +13,49 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
     public EnemyAttackRole AttackRole => EnemyAttackRole.Melee;
     public int Damage { get => damage; set => damage = Mathf.Max(0, value); }
 
-    public bool CanDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    public bool CanDeliver(
+        Transform lockedTarget,
+        EnemyEquipmentDefinition equipmentDefinitionSnapshot,
+        CombatEquipmentSnapshot combatEquipmentSnapshot)
     {
         return lockedTarget != null &&
-               (equipmentSnapshot == null || equipmentSnapshot.IsCompatibleWith(AttackRole)) &&
+               (equipmentDefinitionSnapshot == null || equipmentDefinitionSnapshot.IsCompatibleWith(AttackRole)) &&
                ResolveDamageable(lockedTarget) != null;
     }
 
-    public bool TryDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    public bool TryDeliver(
+        Transform lockedTarget,
+        EnemyEquipmentDefinition equipmentDefinitionSnapshot,
+        CombatEquipmentSnapshot combatEquipmentSnapshot)
     {
-        if (!CanDeliver(lockedTarget, equipmentSnapshot))
+        if (!CanDeliver(lockedTarget, equipmentDefinitionSnapshot, combatEquipmentSnapshot))
         {
             return false;
         }
 
+        return TryDealDamage(ResolveDamageable(lockedTarget), combatEquipmentSnapshot.Damage);
+    }
+
+    public bool CanDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    {
+        return CanDeliver(lockedTarget, equipmentSnapshot, default);
+    }
+
+    public bool TryDeliver(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    {
+        if (!CanDeliver(lockedTarget, equipmentSnapshot, default))
+            return false;
         return TryDealDamage(ResolveDamageable(lockedTarget));
     }
 
     public bool TryDealDamage(IDamageable target)
     {
-        if (target == null || damage <= 0 || IsRooted())
+        return TryDealDamage(target, damage);
+    }
+
+    private bool TryDealDamage(IDamageable target, int resolvedDamage)
+    {
+        if (target == null || resolvedDamage <= 0 || IsRooted())
         {
             return false;
         }
@@ -44,7 +68,7 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
                 return false;
             }
 
-            target.TakeDamage(damage);
+            target.TakeDamage(resolvedDamage);
             enemyHitBarrierFeedbackChannel?.Raise(new FeedbackCue(
                 FeedbackCueType.EnemyHitBarrier,
                 barrier.transform.position,
@@ -52,7 +76,7 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
             return true;
         }
 
-        target.TakeDamage(damage);
+        target.TakeDamage(resolvedDamage);
         return true;
     }
 

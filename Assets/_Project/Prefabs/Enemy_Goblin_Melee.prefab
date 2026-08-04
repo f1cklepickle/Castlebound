@@ -500,7 +500,9 @@ MonoBehaviour:
   idleStateName: Idle
   walkStateName: Walk
   attackStateName: Attack
+  normalizedProgressParameter: AttackProgress
   authoredImpactTimeSeconds: 0.33333334
+  authoredAttackDurationSeconds: 0.35
   idleDelaySeconds: 2
 --- !u!95 &4079797737097160548
 Animator:

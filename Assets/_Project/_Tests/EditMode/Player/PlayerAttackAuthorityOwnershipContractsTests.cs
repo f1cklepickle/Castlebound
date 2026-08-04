@@ -33,14 +33,14 @@ namespace Castlebound.Tests.Player
         }
 
         [Test]
-        public void PlayerAttackLoop_OwnsCooldownAuthorityInternally()
+        public void PlayerAttackLoop_DelegatesTimingToSharedAttackClock()
         {
             var source = File.ReadAllText(AttackLoopPath);
 
-            StringAssert.Contains("PlayerAttackCooldownGate", source,
-                "Attack loop runtime should own cooldown authority directly.");
-            StringAssert.Contains("TryConsume(", source,
-                "Attack loop runtime should consume cadence internally rather than relying on controller callbacks.");
+            StringAssert.Contains("AttackClock", source,
+                "Player attacks should consume the holder-neutral timing authority.");
+            StringAssert.DoesNotContain("PlayerAttackCooldownGate", source,
+                "Player attacks should not layer a second cooldown authority over the shared clock.");
         }
 
         [Test]

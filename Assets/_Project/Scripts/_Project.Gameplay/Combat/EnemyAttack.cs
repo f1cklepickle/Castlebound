@@ -1,6 +1,6 @@
-using UnityEngine;
-using System.Collections;
 using Castlebound.Gameplay.AI;
+using Castlebound.Gameplay.Combat;
+using UnityEngine;
 
 [RequireComponent(typeof(EnemyController2D))]
 [RequireComponent(typeof(EnemyFacing))]
@@ -8,46 +8,57 @@ using Castlebound.Gameplay.AI;
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Attack")]
-    [SerializeField] MonoBehaviour attackDeliverySource;
+    [SerializeField] private MonoBehaviour attackDeliverySource;
+    [SerializeField] private float windupSeconds = 0.3f;
+    [SerializeField] private float cooldownSeconds = 0.8f;
+    [SerializeField] private LayerMask targetMask;
+    [SerializeField] private string playerLayerName = "Player";
+
+    private readonly AttackClock attackClock = new AttackClock();
+    private EnemyController2D controller;
+    private EnemyFacing facing;
+    private EnemyEngagement engagement;
+    private EnemyRegionState regionState;
+    private EnemyRootReceiver rootReceiver;
+    private EnemyAnimationPresenter animationPresenter;
+    private EnemyEquipment equipment;
+    private IEnemyAttackDelivery attackDelivery;
+    private Transform lockedTarget;
+    private EnemyEquipmentDefinition equipmentDefinitionSnapshot;
+    private CombatEquipmentSnapshot combatEquipmentSnapshot;
+    private bool impactDelivered;
+    private static bool missingRegionStateWarningLogged;
+
     public int Damage
     {
         get
         {
-            var meleeDelivery = ResolveMeleeDeliveryForStats();
+            var meleeDelivery = EnemyAttackDeliveryResolver.ResolveMeleeForStats(
+                gameObject,
+                attackDeliverySource);
             return meleeDelivery != null ? meleeDelivery.Damage : 0;
         }
         set
         {
-            var meleeDelivery = ResolveMeleeDeliveryForStats();
+            var meleeDelivery = EnemyAttackDeliveryResolver.ResolveMeleeForStats(
+                gameObject,
+                attackDeliverySource);
             if (meleeDelivery != null)
-            {
                 meleeDelivery.Damage = value;
-            }
         }
     }
-    [SerializeField] float windupSeconds = 0.3f;   // time before damage applies
-    [SerializeField] float cooldownSeconds = 0.8f; // time between attacks
+
     public float CooldownSeconds
     {
         get => cooldownSeconds;
         set => cooldownSeconds = Mathf.Max(0f, value);
     }
 
-    [SerializeField] LayerMask targetMask;         // set to Player layer in Inspector
-    [SerializeField] string playerLayerName = "Player";
+    public float CurrentAttackRate => attackClock.CurrentSwing.AttackRate;
+    public float NormalizedAttackProgress => attackClock.NormalizedProgress;
+    public bool IsAttackActive => attackClock.IsRunning;
 
-    EnemyController2D controller;
-    EnemyFacing facing;
-    EnemyEngagement engagement;
-    EnemyRegionState regionState;
-    EnemyRootReceiver rootReceiver;
-    EnemyAnimationPresenter animationPresenter;
-    EnemyEquipment equipment;
-    IEnemyAttackDelivery attackDelivery;
-    static bool missingRegionStateWarningLogged;
-    bool onCooldown;
-
-    void Awake()
+    private void Awake()
     {
         controller = GetComponent<EnemyController2D>();
         facing = GetComponent<EnemyFacing>();
@@ -56,86 +67,164 @@ public class EnemyAttack : MonoBehaviour
         rootReceiver = GetComponent<EnemyRootReceiver>();
         animationPresenter = GetComponent<EnemyAnimationPresenter>();
         equipment = GetComponent<EnemyEquipment>();
-        attackDelivery = ResolveAttackDelivery();
-        if (targetMask.value == 0) {
-            int lm = LayerMask.NameToLayer(playerLayerName);
-            if (lm >= 0) {
-                targetMask = LayerMask.GetMask(playerLayerName);
-            }
-        }
+        attackDelivery = EnemyAttackDeliveryResolver.Resolve(gameObject, ref attackDeliverySource);
+        EnsureTargetMask();
     }
 
-    void Update()
+    private void Update()
     {
-        if (onCooldown || controller == null) return;
-        if (IsRooted()) return;
+        if (attackClock.IsRunning)
+        {
+            AdvanceAttack(Time.deltaTime);
+            return;
+        }
+
+        if (TryBeginAttack())
+            AdvanceAttack(Time.deltaTime);
+    }
+
+    private void OnDisable()
+    {
+        CancelCurrentAttack(requestChase: false);
+    }
+
+    private bool TryBeginAttack()
+    {
+        if (controller == null || IsRooted())
+            return false;
 
         Transform selectedTarget = controller.Target;
         if (controller.IsChaseRequested)
         {
-            if (selectedTarget == null || !IsTargetInReach(selectedTarget)) return;
+            if (selectedTarget == null || !IsTargetInReach(selectedTarget))
+                return false;
             controller.ClearChaseRequest();
         }
 
-        // Gate barrier damage by inside/outside state when targeting a barrier.
         if (controller.CurrentTargetType == EnemyTargetType.Barrier)
         {
             GetRegionState(out bool enemyInside, out bool playerInside);
             if (!CanDamageBarrier(enemyInside, playerInside))
-                return;
+                return false;
         }
 
-        if (selectedTarget == null) return;
+        if (selectedTarget == null)
+            return false;
 
         bool isInReach = IsTargetInReach(selectedTarget);
         bool isAligned = facing != null && facing.IsAlignedWith(transform.position, selectedTarget);
-        if (!IsAttackEligible(controller.IsInHoldRange(), isInReach, isAligned)) return;
+        if (!IsAttackEligible(controller.IsInHoldRange(), isInReach, isAligned))
+            return false;
 
-        var equipmentSnapshot = CaptureEquipmentSnapshot();
-        if (attackDelivery == null || !attackDelivery.CanDeliver(selectedTarget, equipmentSnapshot)) return;
+        EnemyEquipmentDefinition nextDefinitionSnapshot = CaptureEquipmentSnapshot();
+        CombatEquipmentSnapshot nextCombatSnapshot = CaptureCombatEquipmentSnapshot();
+        if (attackDelivery == null ||
+            !attackDelivery.CanDeliver(selectedTarget, nextDefinitionSnapshot, nextCombatSnapshot))
+        {
+            return false;
+        }
 
-        StartCoroutine(AttackRoutine(selectedTarget, equipmentSnapshot));
+        lockedTarget = selectedTarget;
+        equipmentDefinitionSnapshot = nextDefinitionSnapshot;
+        combatEquipmentSnapshot = nextCombatSnapshot;
+        impactDelivered = false;
+        attackClock.Start(
+            combatEquipmentSnapshot.AttackRate,
+            new AttackPhaseProfile(windupSeconds, 0f, cooldownSeconds));
+        animationPresenter?.PlayAttack(
+            attackClock.CurrentSwing.WindupDuration,
+            attackClock.CurrentSwing.Duration);
+        return true;
     }
 
-    IEnumerator AttackRoutine(Transform lockedTarget, EnemyEquipmentDefinition equipmentSnapshot)
+    private void AdvanceAttack(float deltaTime)
     {
-        onCooldown = true;
+        float remainingDelta = NormalizeDelta(deltaTime);
+        while (attackClock.IsRunning)
+        {
+            if (!impactDelivered && !IsPreImpactStateValid())
+            {
+                CancelCurrentAttack(requestChase: true);
+                return;
+            }
 
-        animationPresenter?.PlayAttack(windupSeconds);
+            AttackClockStep step = attackClock.Advance(remainingDelta);
+            animationPresenter?.ApplyAttackProgress(attackClock.NormalizedProgress);
+            if (step.ImpactOccurred)
+            {
+                if (!IsPreImpactStateValid() ||
+                    attackDelivery == null ||
+                    !attackDelivery.TryDeliver(
+                        lockedTarget,
+                        equipmentDefinitionSnapshot,
+                        combatEquipmentSnapshot))
+                {
+                    CancelCurrentAttack(requestChase: true);
+                    return;
+                }
 
-        yield return new WaitForSeconds(windupSeconds);
+                impactDelivered = true;
+            }
 
+            if (!step.SwingCompleted)
+                return;
+
+            CompleteCurrentAttack();
+            remainingDelta = step.UnusedDeltaTime;
+            if (remainingDelta <= 0f || !TryBeginAttack())
+                return;
+        }
+    }
+
+    private bool IsPreImpactStateValid()
+    {
         bool targetInReach = IsTargetInReach(lockedTarget);
         bool targetAligned = facing != null && facing.IsAlignedWith(transform.position, lockedTarget);
-        if (!IsLockedTargetValid(lockedTarget, controller != null ? controller.Target : null, targetInReach) ||
-            !targetAligned)
-        {
-            CancelWindup();
-            yield break;
-        }
+        return !IsRooted()
+            && IsLockedTargetValid(
+                lockedTarget,
+                controller != null ? controller.Target : null,
+                targetInReach)
+            && targetAligned;
+    }
 
-        if (attackDelivery == null || !attackDelivery.TryDeliver(lockedTarget, equipmentSnapshot))
-        {
-            CancelWindup();
-            yield break;
-        }
-
-        if (RequiresCompletedCooldown(attackCompleted: true))
-            yield return new WaitForSeconds(cooldownSeconds);
-
+    private void CompleteCurrentAttack()
+    {
         animationPresenter?.CompleteAttack();
-        onCooldown = false;
+        ClearAttackSnapshot();
     }
 
-    public static bool IsLockedTargetValid(Transform lockedTarget, Transform selectedTarget, bool isInReach)
+    private void CancelCurrentAttack(bool requestChase)
     {
-        return lockedTarget != null && lockedTarget == selectedTarget && isInReach;
+        if (attackClock.IsRunning)
+            animationPresenter?.CancelAttack();
+
+        attackClock.Cancel();
+        ClearAttackSnapshot();
+        if (requestChase)
+            controller?.RequestChase();
     }
 
-    public static bool RequiresCompletedCooldown(bool attackCompleted)
+    private void ClearAttackSnapshot()
     {
-        return attackCompleted;
+        lockedTarget = null;
+        equipmentDefinitionSnapshot = null;
+        combatEquipmentSnapshot = default;
+        impactDelivered = false;
     }
+
+    public static float CalculateBaseAttackRate(float windupDuration, float cooldownDuration)
+    {
+        float cycleDuration = Mathf.Max(0f, windupDuration) + Mathf.Max(0f, cooldownDuration);
+        return AttackRatePolicy.Normalize(1f / cycleDuration);
+    }
+
+    public static bool IsLockedTargetValid(Transform lockedAttackTarget, Transform selectedTarget, bool isInReach)
+    {
+        return lockedAttackTarget != null && lockedAttackTarget == selectedTarget && isInReach;
+    }
+
+    public static bool RequiresCompletedCooldown(bool attackCompleted) => attackCompleted;
 
     public static bool IsAttackEligible(bool isInHoldRange, bool isInReach, bool isAligned)
     {
@@ -147,15 +236,7 @@ public class EnemyAttack : MonoBehaviour
         return engagement != null && engagement.IsWithinEngagementDistance(selectedTarget);
     }
 
-    private void CancelWindup()
-    {
-        animationPresenter?.CancelAttack();
-
-        onCooldown = false;
-        controller?.RequestChase();
-    }
-
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
         if (engagement == null)
             engagement = GetComponent<EnemyEngagement>();
@@ -168,17 +249,35 @@ public class EnemyAttack : MonoBehaviour
 
     public void DealDamage(IDamageable target)
     {
-        GetOrCreateMeleeDelivery().TryDealDamage(target);
+        EnemyAttackDeliveryResolver.GetOrCreateMelee(gameObject).TryDealDamage(target);
     }
 
     public EnemyEquipmentDefinition CaptureEquipmentSnapshot()
     {
         if (equipment == null)
-        {
             equipment = GetComponent<EnemyEquipment>();
-        }
 
         return equipment != null ? equipment.ActiveEquipment : null;
+    }
+
+    public CombatEquipmentSnapshot CaptureCombatEquipmentSnapshot()
+    {
+        if (attackDelivery == null)
+        {
+            attackDelivery = EnemyAttackDeliveryResolver.Resolve(
+                gameObject,
+                ref attackDeliverySource);
+        }
+
+        float baseRate = CalculateBaseAttackRate(windupSeconds, cooldownSeconds);
+        EnemyAttackRole attackRole = attackDelivery != null
+            ? attackDelivery.AttackRole
+            : EnemyAttackRole.None;
+        return EnemyAttackEquipmentSnapshotResolver.Resolve(
+            CaptureEquipmentSnapshot(),
+            Damage,
+            baseRate,
+            attackRole);
     }
 
     public MonoBehaviour AttackDeliverySource
@@ -186,10 +285,9 @@ public class EnemyAttack : MonoBehaviour
         get
         {
             if (attackDeliverySource == null)
-            {
-                attackDelivery = ResolveAttackDelivery();
-            }
-
+                attackDelivery = EnemyAttackDeliveryResolver.Resolve(
+                    gameObject,
+                    ref attackDeliverySource);
             return attackDeliverySource;
         }
         set
@@ -199,27 +297,25 @@ public class EnemyAttack : MonoBehaviour
         }
     }
 
-    // Barrier damage gate: allow if enemy outside, or enemy inside while player is outside.
     public static bool CanDamageBarrier(bool enemyInside, bool playerInside)
     {
         if (!enemyInside)
             return true;
-
         return !playerInside;
     }
 
     private void GetRegionState(out bool enemyInside, out bool playerInside)
     {
         if (regionState == null)
-        {
             regionState = GetComponent<EnemyRegionState>();
-        }
 
         if (regionState == null)
         {
             if (!missingRegionStateWarningLogged)
             {
-                Debug.LogWarning("[EnemyAttack] EnemyRegionState is missing; treating enemy/player as outside for barrier gating.", this);
+                Debug.LogWarning(
+                    "[EnemyAttack] EnemyRegionState is missing; treating enemy/player as outside for barrier gating.",
+                    this);
                 missingRegionStateWarningLogged = true;
             }
             enemyInside = false;
@@ -234,65 +330,31 @@ public class EnemyAttack : MonoBehaviour
     private bool IsRooted()
     {
         if (rootReceiver == null)
-        {
             rootReceiver = GetComponent<EnemyRootReceiver>();
-        }
-
         return rootReceiver != null && rootReceiver.IsRooted;
     }
 
-    private IEnemyAttackDelivery ResolveAttackDelivery()
+    private void EnsureTargetMask()
     {
-        if (attackDeliverySource is IEnemyAttackDelivery configuredDelivery)
-        {
-            return configuredDelivery;
-        }
+        if (targetMask.value != 0)
+            return;
 
-        var behaviours = GetComponents<MonoBehaviour>();
-        for (int i = 0; i < behaviours.Length; i++)
-        {
-            if (behaviours[i] is IEnemyAttackDelivery delivery)
-            {
-                attackDeliverySource = behaviours[i];
-                return delivery;
-            }
-        }
-
-        var meleeDelivery = GetOrCreateMeleeDelivery();
-        attackDeliverySource = meleeDelivery;
-        return meleeDelivery;
+        int layer = LayerMask.NameToLayer(playerLayerName);
+        if (layer >= 0)
+            targetMask = LayerMask.GetMask(playerLayerName);
     }
 
-    private EnemyMeleeAttackDelivery GetOrCreateMeleeDelivery()
+    private static float NormalizeDelta(float deltaTime)
     {
-        var meleeDelivery = GetComponent<EnemyMeleeAttackDelivery>();
-        return meleeDelivery != null ? meleeDelivery : gameObject.AddComponent<EnemyMeleeAttackDelivery>();
-    }
-
-    private EnemyMeleeAttackDelivery ResolveMeleeDeliveryForStats()
-    {
-        if (attackDeliverySource is IEnemyAttackDelivery && !(attackDeliverySource is EnemyMeleeAttackDelivery))
-        {
-            return null;
-        }
-
-        return GetOrCreateMeleeDelivery();
+        if (float.IsNaN(deltaTime) || float.IsInfinity(deltaTime) || deltaTime <= 0f)
+            return 0f;
+        return deltaTime;
     }
 
 #if UNITY_EDITOR
-    // Test helpers (Editor-only)
-    public void Debug_GetRegionState(out bool enemyInside, out bool playerInside) => GetRegionState(out enemyInside, out playerInside);
+    public void Debug_GetRegionState(out bool enemyInside, out bool playerInside) =>
+        GetRegionState(out enemyInside, out playerInside);
     public static void Debug_ResetMissingRegionWarning() => missingRegionStateWarningLogged = false;
-    public void Debug_EnsureTargetMask()
-    {
-        if (targetMask.value == 0)
-        {
-            int lm = LayerMask.NameToLayer(playerLayerName);
-            if (lm >= 0)
-            {
-                targetMask = LayerMask.GetMask(playerLayerName);
-            }
-        }
-    }
+    public void Debug_EnsureTargetMask() => EnsureTargetMask();
 #endif
 }

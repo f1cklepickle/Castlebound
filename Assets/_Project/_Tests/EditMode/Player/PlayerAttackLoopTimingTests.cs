@@ -95,5 +95,21 @@ namespace Castlebound.Tests.Player
                 "Loop should continue active across multiple ticks while held.");
         }
 
+        [Test]
+        public void RateChangeDuringSwing_AppliesOnlyToNextSwing()
+        {
+            loop.Tick(0f, 1f, true);
+            Assert.That(loop.CurrentSwingDuration, Is.EqualTo(1f).Within(0.0001f));
+
+            loop.Tick(0.5f, 4f, true);
+            Assert.That(loop.CurrentSwingDuration, Is.EqualTo(1f).Within(0.0001f),
+                "An active swing should keep its captured timing snapshot.");
+
+            loop.Tick(0.5f, 4f, true);
+            Assert.That(loop.CompletedSwingCount, Is.EqualTo(1));
+            Assert.That(loop.CurrentSwingDuration, Is.EqualTo(0.25f).Within(0.0001f),
+                "The next swing should capture the newly resolved equipment rate.");
+        }
+
     }
 }
