@@ -1,3 +1,39 @@
+## 2026-08-05 - feat-player-defense-soft-anchor
+
+### Summary
+- Made the physical mobile defense button advance only when aim exceeds its current soft-anchor radius, retaining each new position until exceeded again or released.
+- Clamped button drift to a maximum radius around its authored right-side screen position.
+- Restored the button to its authored position on release, missing release, disable, pause, or focus loss.
+- Tuned the authored soft-anchor radius to 160 pixels and maximum drift to 170 pixels.
+
+### New or Updated Tests
+**EditMode**
+- TouchDefenseAimButtonTests — soft-follow threshold, radial maximum drift, continued aim direction, and snap-back lifecycle coverage.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- Full EditMode and PlayMode suites pass in the Unity Test Runner; simulator validation confirms block/parry feedback, reliable release, and bounded stateful soft-anchor behavior.
+
+## 2026-08-04 - feat-player-frontal-block-parry
+
+### Summary
+- Added deterministic Idle, Parry Window, Blocking, and Recovery defense states with a 120-degree frontal melee resolver and Health-owned applied damage.
+- Integrated attack cancellation, continuous guard aiming, 60% guarding movement, contextual enemy melee delivery, and projectile bypass behavior.
+- Added right-mouse, left-trigger, and captured mobile defense/aim input plus a world-space guard arc for parry, block, success, and recovery feedback.
+- Hardened mobile defense release with stable Input System touch identity and cleanup for missing release, cancellation, disable, pause, and focus loss.
+
+### New or Updated Tests
+**EditMode**
+- PlayerDefenseStateMachineTests, PlayerDefenseHitResolverTests, PlayerDefenseControllerTests, PlayerGuardArcPresenterTests, PlayerDefensePrefabContractTests, TouchDefenseAimButtonTests, and DefenseInputContractsTests — state timing, inclusive arc boundaries, applied damage, attack cancellation, presentation, prefab wiring, stable touch release, stale-capture cleanup, and desktop/gamepad/mobile input contracts.
+
+**PlayMode**
+- PlayerDefenseEnemyAttackPlayTests — deterministic enemy-clock impact is negated by a frontal parry while preserving attacker identity.
+
+### Notes
+- Gameplay and test assemblies pass Roslyn compile validation; Unity EditMode and PlayMode execution remains pending manual Test Runner validation because the project is open in Unity.
+
 ## 2026-08-03 - refactor-269-normalized-attack-timing
 
 ### Summary

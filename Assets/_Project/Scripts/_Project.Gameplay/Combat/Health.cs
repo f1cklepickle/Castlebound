@@ -30,15 +30,21 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
     public void TakeDamage(int amount)
     {
-        if (current <= 0 || amount <= 0) return;
+        ApplyDamage(amount);
+    }
+
+    public int ApplyDamage(int amount)
+    {
+        if (current <= 0 || amount <= 0) return 0;
         int previous = current;
         current = Mathf.Max(0, current - amount);
+        int appliedDamage = previous - current;
         OnHealthChanged?.Invoke(current, maxHealth);
 
         if (CompareTag("Enemy"))
-            RunStatsEvents.RaiseDamageDealt(previous - current);
+            RunStatsEvents.RaiseDamageDealt(appliedDamage);
         else if (CompareTag("Player"))
-            RunStatsEvents.RaiseDamageTaken(previous - current);
+            RunStatsEvents.RaiseDamageTaken(appliedDamage);
 
         if (CompareTag("Player") && playerHitFeedbackChannel != null)
         {
@@ -46,6 +52,7 @@ public class Health : MonoBehaviour, IDamageable, IHealable
         }
 
         if (current <= 0) Die();
+        return appliedDamage;
     }
 
     public void Heal(int amount)
