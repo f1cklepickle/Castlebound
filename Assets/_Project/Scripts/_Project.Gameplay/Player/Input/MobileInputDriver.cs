@@ -21,6 +21,7 @@ namespace Castlebound.Gameplay.Input
     {
         [SerializeField] private TouchMovementZone movementZone;
         [SerializeField] private TouchAimAttackZone aimAttackZone;
+        [SerializeField] private TouchDefenseAimButton defenseAimButton;
         [SerializeField] private TouchRepairButton repairButton;
 
         [Tooltip("The PlayerInput component that drives PlayerController. " +
@@ -110,7 +111,13 @@ namespace Castlebound.Gameplay.Input
             // Right stick drives facing direction.
             // Right trigger remains held while the right zone is firing.
             // Cadence authority lives in PlayerAttackLoop / cooldown gate.
-            if (aimAttackZone != null)
+            if (defenseAimButton != null && defenseAimButton.IsDefending)
+            {
+                state.rightStick = defenseAimButton.FacingDirection;
+                state.leftTrigger = 1f;
+                state.rightTrigger = 0f;
+            }
+            else if (aimAttackZone != null)
             {
                 state.rightStick = aimAttackZone.FacingDirection;
                 state.rightTrigger = aimAttackZone.IsFiring ? 1f : 0f;

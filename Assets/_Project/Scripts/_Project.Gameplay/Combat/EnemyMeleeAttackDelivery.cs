@@ -76,8 +76,38 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
             return true;
         }
 
+        if (TryResolvePlayerHitReceiver(target, out var playerHitReceiver))
+        {
+            playerHitReceiver.ReceiveHit(new PlayerHitRequest(
+                resolvedDamage,
+                gameObject,
+                transform.position,
+                CombatDamageType.Melee));
+            return true;
+        }
+
         target.TakeDamage(resolvedDamage);
         return true;
+    }
+
+    private static bool TryResolvePlayerHitReceiver(
+        IDamageable target,
+        out IPlayerHitReceiver playerHitReceiver)
+    {
+        playerHitReceiver = null;
+        if (!(target is Component targetComponent))
+            return false;
+
+        playerHitReceiver = targetComponent.GetComponent<IPlayerHitReceiver>();
+        if (playerHitReceiver != null)
+            return true;
+
+        playerHitReceiver = targetComponent.GetComponentInParent<IPlayerHitReceiver>();
+        if (playerHitReceiver != null)
+            return true;
+
+        playerHitReceiver = targetComponent.GetComponentInChildren<IPlayerHitReceiver>();
+        return playerHitReceiver != null;
     }
 
     private static IDamageable ResolveDamageable(Transform lockedTarget)

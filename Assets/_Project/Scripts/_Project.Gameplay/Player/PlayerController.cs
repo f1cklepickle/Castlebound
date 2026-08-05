@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
     [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
     [SerializeField] private PlayerAttackLoop attackLoop;
+    [SerializeField] private PlayerDefenseController defenseController;
     [SerializeField, Min(0)] private int baseAttackDamage = 1;
     [SerializeField] private float baseAttackRate = 1.5f;
     
@@ -73,6 +74,9 @@ public class PlayerController : MonoBehaviour
 
     public float RepairCooldownRemaining => repairCooldownRemaining;
     public bool IsRepairOnCooldown => repairCooldownRemaining > 0f;
+    public Vector2 CurrentFacingDirection => movementOrchestrator != null
+        ? movementOrchestrator.LastFacingDirection
+        : -(Vector2)transform.up;
     public int BaseAttackDamage
     {
         get => baseAttackDamage;
@@ -93,6 +97,7 @@ public class PlayerController : MonoBehaviour
         if (facingPolicyResolver == null) facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
         if (attackAnimationDriver == null) attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
         if (attackLoop == null) attackLoop = GetComponent<PlayerAttackLoop>();
+        if (defenseController == null) defenseController = GetComponent<PlayerDefenseController>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
@@ -121,7 +126,7 @@ public class PlayerController : MonoBehaviour
 
     public void OnFire(InputValue value)
     {
-        if (inputLocked)
+        if (inputLocked || (defenseController != null && !defenseController.CanAttack))
         {
             fireInputController?.ClearHeldFire();
             return;
@@ -142,7 +147,8 @@ public class PlayerController : MonoBehaviour
         if (attackLoop == null)
             attackLoop = GetComponent<PlayerAttackLoop>();
 
-        var isFireHeld = fireInputController != null && fireInputController.IsFireHeld;
+        bool canAttack = defenseController == null || defenseController.CanAttack;
+        var isFireHeld = canAttack && fireInputController != null && fireInputController.IsFireHeld;
         attackRuntime.Tick(
             Time.fixedDeltaTime,
             baseAttackDamage,
@@ -154,7 +160,16 @@ public class PlayerController : MonoBehaviour
             animator,
             hitboxObject);
 
-        movementOrchestrator.Tick(mover, transform, movementInput, ResolveFacingInput(), Time.fixedDeltaTime);
+        float movementSpeedMultiplier = defenseController != null
+            ? defenseController.MovementSpeedMultiplier
+            : 1f;
+        movementOrchestrator.Tick(
+            mover,
+            transform,
+            movementInput,
+            ResolveFacingInput(),
+            Time.fixedDeltaTime,
+            movementSpeedMultiplier);
     }
 
     /// <summary>
@@ -317,7 +332,8 @@ public class PlayerController : MonoBehaviour
         if (facingPolicyResolver == null)
             return resolvedAimInput;
 
-        var aimIntentActive = fireInputController != null && fireInputController.IsFireHeld;
+        var aimIntentActive = (fireInputController != null && fireInputController.IsFireHeld)
+            || (defenseController != null && defenseController.IsGuarding);
         var currentFacing = movementOrchestrator != null ? movementOrchestrator.LastMoveDirection : (Vector2)transform.up;
         return facingPolicyResolver.ResolveFacing(
             currentFacing,
