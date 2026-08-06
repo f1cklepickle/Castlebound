@@ -22,6 +22,7 @@ public class EnemyAttack : MonoBehaviour
     private EnemyRootReceiver rootReceiver;
     private EnemyAnimationPresenter animationPresenter;
     private EnemyEquipment equipment;
+    [SerializeField] private EnemyStaggerReceiver staggerReceiver;
     private IEnemyAttackDelivery attackDelivery;
     private Transform lockedTarget;
     private EnemyEquipmentDefinition equipmentDefinitionSnapshot;
@@ -73,6 +74,12 @@ public class EnemyAttack : MonoBehaviour
 
     private void Update()
     {
+        if (staggerReceiver != null && staggerReceiver.IsActionLocked)
+        {
+            CancelForStagger();
+            return;
+        }
+
         if (attackClock.IsRunning)
         {
             AdvanceAttack(Time.deltaTime);
@@ -162,6 +169,9 @@ public class EnemyAttack : MonoBehaviour
                     CancelCurrentAttack(requestChase: true);
                     return;
                 }
+
+                if (!attackClock.IsRunning)
+                    return;
 
                 impactDelivered = true;
             }

@@ -2,18 +2,18 @@
 
 ### Summary
 - Added activation-snapshotted parry window and capacity with deterministic successful-parry consumption.
-- Added an enemy-owned stagger authority for eligibility, duration, repeated-request rejection, recovery locking, and lifecycle cleanup.
-- Added the explicit idempotent enemy attack cancellation boundary required for later melee integration.
+- Added exact-attacker melee stagger with immediate swing cancellation, movement/turn/action locking, target-refresh recovery, and melee-goblin prefab ownership.
+- Added continuous yellow stagger feedback that briefly yields to red damage flashes before resuming.
 
 ### New or Updated Tests
 **EditMode**
-- PlayerDefenseStateMachineTests, PlayerDefenseControllerTests, and EnemyStaggerReceiverTests — activation snapshots, first-received capacity consumption, stagger timing, ignored repeats, recovery locking, normalization, and cleanup.
+- PlayerDefenseStateMachineTests, PlayerDefenseControllerTests, EnemyStaggerReceiverTests, EnemyAttackTests, and EnemyStaggerPrefabContractTests — activation snapshots, capacity ordering, stagger timing, ignored repeats, re-entrant cancellation, recovery locking, normalization, cleanup, and explicit prefab wiring.
 
 **PlayMode**
-- N/A — N/A
+- PlayerDefenseEnemyAttackPlayTests and FeedbackRoutingPlayTests — parry-to-stagger integration, frozen movement/facing, target-refresh recovery, and red-over-yellow tint priority.
 
 ### Notes
-- PlayerDefenseStateMachineTests and PlayerDefenseControllerTests pass manually; EnemyStaggerReceiverTests awaits rerun after correcting its EditMode lifecycle invocation.
+- Full EditMode and PlayMode suites pass manually; only the melee goblin opts into stagger in this issue.
 
 ## 2026-08-05 - feat-player-defense-soft-anchor
 

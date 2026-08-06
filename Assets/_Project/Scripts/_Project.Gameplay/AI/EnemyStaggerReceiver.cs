@@ -10,6 +10,7 @@ namespace Castlebound.Gameplay.AI
 
         public EnemyStaggerState State { get; private set; }
         public float RemainingSeconds { get; private set; }
+        public Vector2 LockPosition { get; private set; }
         public bool IsActionLocked => State != EnemyStaggerState.Inactive;
         public bool StaggerEligible => staggerEligible;
         public float StaggerDurationSeconds => NormalizeDuration(staggerDurationSeconds);
@@ -36,6 +37,7 @@ namespace Castlebound.Gameplay.AI
                 return false;
 
             RemainingSeconds = duration;
+            LockPosition = transform.position;
             State = EnemyStaggerState.Staggered;
             enemyAttack.CancelForStagger();
             return true;
@@ -71,6 +73,7 @@ namespace Castlebound.Gameplay.AI
         {
             State = EnemyStaggerState.Inactive;
             RemainingSeconds = 0f;
+            LockPosition = transform.position;
         }
 
         private static float NormalizeDuration(float duration)

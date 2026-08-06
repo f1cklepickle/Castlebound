@@ -24,6 +24,7 @@ public class EnemyController2D : MonoBehaviour
     [SerializeField] private EnemyFacing facing;
     [SerializeField] private EnemyEngagement engagement;
     [SerializeField] private EnemyAnimationPresenter animationPresenter;
+    [SerializeField] private EnemyStaggerReceiver staggerReceiver;
 
     [SerializeField] private float speed = 3.5f;
     [SerializeField] private float orbitBase = 0.8f;
@@ -195,6 +196,20 @@ public class EnemyController2D : MonoBehaviour
             if (_rb == null) return;
         }
 
+        if (staggerReceiver != null &&
+            staggerReceiver.State == EnemyStaggerState.Staggered)
+        {
+            _rb.velocity = Vector2.zero;
+            _rb.angularVelocity = 0f;
+            _rb.position = staggerReceiver.LockPosition;
+            transform.position = new Vector3(
+                staggerReceiver.LockPosition.x,
+                staggerReceiver.LockPosition.y,
+                transform.position.z);
+            animationPresenter?.SetMovementRequested(false);
+            return;
+        }
+
         if (regionState == null)
         {
             regionState = GetComponent<EnemyRegionState>();
@@ -203,7 +218,16 @@ public class EnemyController2D : MonoBehaviour
         bool enemyInsideCastle = regionState != null && regionState.EnemyInside;
         bool playerInsideCastle = regionState != null && regionState.PlayerInside;
 
+        bool awaitingStaggerRefresh = staggerReceiver != null &&
+            staggerReceiver.State == EnemyStaggerState.AwaitingTargetRefresh;
+        if (awaitingStaggerRefresh)
+            Targeting.RequestRetarget();
+
         Targeting.Refresh(_rb.position, playerInsideCastle, enemyInsideCastle);
+        if (awaitingStaggerRefresh)
+        {
+            staggerReceiver.AcknowledgeTargetRefresh();
+        }
         Transform steerTarget = Targeting.SteerTarget;
         Transform target = Targeting.AttackTarget;
         Transform player = Targeting.Player;
