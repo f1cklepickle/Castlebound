@@ -1,3 +1,20 @@
+## 2026-08-06 - feat-enemy-parry-stagger
+
+### Summary
+- Added activation-snapshotted parry window and capacity with deterministic successful-parry consumption.
+- Added an enemy-owned stagger authority for eligibility, duration, repeated-request rejection, recovery locking, and lifecycle cleanup.
+- Added the explicit idempotent enemy attack cancellation boundary required for later melee integration.
+
+### New or Updated Tests
+**EditMode**
+- PlayerDefenseStateMachineTests, PlayerDefenseControllerTests, and EnemyStaggerReceiverTests — activation snapshots, first-received capacity consumption, stagger timing, ignored repeats, recovery locking, normalization, and cleanup.
+
+**PlayMode**
+- N/A — N/A
+
+### Notes
+- PlayerDefenseStateMachineTests and PlayerDefenseControllerTests pass manually; EnemyStaggerReceiverTests awaits rerun after correcting its EditMode lifecycle invocation.
+
 ## 2026-08-05 - feat-player-defense-soft-anchor
 
 ### Summary

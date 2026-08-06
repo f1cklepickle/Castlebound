@@ -205,6 +205,11 @@ public class EnemyAttack : MonoBehaviour
             controller?.RequestChase();
     }
 
+    public void CancelForStagger()
+    {
+        CancelCurrentAttack(requestChase: false);
+    }
+
     private void ClearAttackSnapshot()
     {
         lockedTarget = null;

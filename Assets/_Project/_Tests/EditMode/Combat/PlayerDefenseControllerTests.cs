@@ -52,6 +52,44 @@ namespace Castlebound.Tests.Combat
             Assert.That(result.Attacker, Is.SameAs(attacker));
             Assert.That(observed.Outcome, Is.EqualTo(PlayerHitOutcome.Parried));
             Assert.That(health.Current, Is.EqualTo(10));
+            Assert.That(defense.State, Is.EqualTo(PlayerDefenseState.Blocking));
+        }
+
+        [Test]
+        public void ReceiveHit_FirstReceivedParryConsumesDefaultCapacity_SecondHitBlocks()
+        {
+            defense.SetDefensePressed(true);
+
+            PlayerHitResult first = defense.ReceiveHit(CreateMeleeHit(attacker));
+            PlayerHitResult second = defense.ReceiveHit(CreateMeleeHit(attacker));
+
+            Assert.That(first.Outcome, Is.EqualTo(PlayerHitOutcome.Parried));
+            Assert.That(second.Outcome, Is.EqualTo(PlayerHitOutcome.Blocked));
+            Assert.That(defense.RemainingParryCapacity, Is.Zero);
+            Assert.That(health.Current, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void Configure_DuringDefense_AffectsNextActivationOnly()
+        {
+            defense.Configure(0.3f, 0f, 120f, 0.6f, 2);
+            defense.SetDefensePressed(true);
+
+            defense.Configure(0.01f, 0f, 120f, 0.6f, 1);
+            defense.Tick(0.02f);
+            PlayerHitResult first = defense.ReceiveHit(CreateMeleeHit(attacker));
+            PlayerHitResult second = defense.ReceiveHit(CreateMeleeHit(attacker));
+
+            Assert.That(first.Outcome, Is.EqualTo(PlayerHitOutcome.Parried));
+            Assert.That(second.Outcome, Is.EqualTo(PlayerHitOutcome.Parried));
+            Assert.That(defense.State, Is.EqualTo(PlayerDefenseState.Blocking));
+
+            defense.SetDefensePressed(false);
+            defense.Tick(0f);
+            defense.SetDefensePressed(true);
+            Assert.That(defense.RemainingParryCapacity, Is.EqualTo(1));
+            defense.Tick(0.02f);
+            Assert.That(defense.State, Is.EqualTo(PlayerDefenseState.Blocking));
         }
 
         [Test]
@@ -183,6 +221,15 @@ namespace Castlebound.Tests.Combat
                 0f,
                 0f,
                 0f);
+        }
+
+        private static PlayerHitRequest CreateMeleeHit(GameObject source)
+        {
+            return new PlayerHitRequest(
+                4,
+                source,
+                source.transform.position,
+                CombatDamageType.Melee);
         }
     }
 }

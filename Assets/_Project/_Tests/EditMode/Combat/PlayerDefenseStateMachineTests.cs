@@ -9,23 +9,75 @@ namespace Castlebound.Tests.Combat
         private const float RecoveryDuration = 0.15f;
 
         [Test]
-        public void BeginDefense_FromIdle_EntersParryWindow()
+        public void BeginDefense_FromIdle_EntersParryWindowWithCapturedCapacity()
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
+            var stateMachine = new PlayerDefenseStateMachine();
 
-            bool started = stateMachine.BeginDefense();
+            bool started = stateMachine.BeginDefense(ParryWindow, 2);
 
             Assert.IsTrue(started);
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.ParryWindow));
+            Assert.That(stateMachine.RemainingParryCapacity, Is.EqualTo(2));
             Assert.IsTrue(stateMachine.IsGuarding);
             Assert.IsFalse(stateMachine.CanAttack);
         }
 
         [Test]
+        public void BeginDefense_WithZeroCapacity_EntersBlocking()
+        {
+            var stateMachine = new PlayerDefenseStateMachine();
+
+            bool started = stateMachine.BeginDefense(ParryWindow, 0);
+
+            Assert.IsTrue(started);
+            Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Blocking));
+            Assert.That(stateMachine.RemainingParryCapacity, Is.Zero);
+        }
+
+        [Test]
+        public void ConsumeParry_WhenCapacityReachesZero_ImmediatelyEntersBlocking()
+        {
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
+
+            bool consumed = stateMachine.TryConsumeParry();
+
+            Assert.IsTrue(consumed);
+            Assert.That(stateMachine.RemainingParryCapacity, Is.Zero);
+            Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Blocking));
+        }
+
+        [Test]
+        public void ConsumeParry_WithRemainingCapacity_KeepsParryWindowActive()
+        {
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 2);
+
+            bool consumed = stateMachine.TryConsumeParry();
+
+            Assert.IsTrue(consumed);
+            Assert.That(stateMachine.RemainingParryCapacity, Is.EqualTo(1));
+            Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.ParryWindow));
+        }
+
+        [Test]
+        public void ConsumeParry_OutsideParryWindow_IsRejected()
+        {
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
+            stateMachine.Advance(ParryWindow + 0.001f);
+
+            bool consumed = stateMachine.TryConsumeParry();
+
+            Assert.IsFalse(consumed);
+            Assert.That(stateMachine.RemainingParryCapacity, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Advance_AtInclusiveParryBoundary_RemainsParryWindow()
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
-            stateMachine.BeginDefense();
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
 
             stateMachine.Advance(ParryWindow);
 
@@ -33,10 +85,10 @@ namespace Castlebound.Tests.Combat
         }
 
         [Test]
-        public void Advance_BeyondParryBoundaryWhileHeld_EntersBlocking()
+        public void Advance_BeyondCapturedParryBoundaryWhileHeld_EntersBlocking()
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
-            stateMachine.BeginDefense();
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
 
             stateMachine.Advance(ParryWindow + 0.001f);
 
@@ -48,12 +100,12 @@ namespace Castlebound.Tests.Combat
         [TestCase(PlayerDefenseState.Blocking)]
         public void ReleaseDefense_FromGuarding_EntersRecovery(PlayerDefenseState releaseState)
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
-            stateMachine.BeginDefense();
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
             if (releaseState == PlayerDefenseState.Blocking)
                 stateMachine.Advance(ParryWindow + 0.001f);
 
-            bool released = stateMachine.ReleaseDefense();
+            bool released = stateMachine.ReleaseDefense(RecoveryDuration);
 
             Assert.IsTrue(released);
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Recovery));
@@ -62,13 +114,13 @@ namespace Castlebound.Tests.Combat
         }
 
         [Test]
-        public void Recovery_BlocksRestartUntilDurationCompletes()
+        public void Recovery_BlocksRestartUntilCapturedDurationCompletes()
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
-            stateMachine.BeginDefense();
-            stateMachine.ReleaseDefense();
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
+            stateMachine.ReleaseDefense(RecoveryDuration);
 
-            Assert.IsFalse(stateMachine.BeginDefense());
+            Assert.IsFalse(stateMachine.BeginDefense(ParryWindow, 1));
             stateMachine.Advance(RecoveryDuration - 0.001f);
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Recovery));
 
@@ -76,14 +128,14 @@ namespace Castlebound.Tests.Combat
 
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Idle));
             Assert.IsTrue(stateMachine.CanAttack);
-            Assert.IsTrue(stateMachine.BeginDefense());
+            Assert.IsTrue(stateMachine.BeginDefense(ParryWindow, 1));
         }
 
         [Test]
         public void Advance_LargeDelta_CarriesFromParryThroughHeldBlockingOnly()
         {
-            var stateMachine = new PlayerDefenseStateMachine(ParryWindow, RecoveryDuration);
-            stateMachine.BeginDefense();
+            var stateMachine = new PlayerDefenseStateMachine();
+            stateMachine.BeginDefense(ParryWindow, 1);
 
             stateMachine.Advance(10f);
 
@@ -91,17 +143,16 @@ namespace Castlebound.Tests.Combat
         }
 
         [Test]
-        public void InvalidDurationsAndDelta_AreNormalized()
+        public void InvalidActivationValuesAndDelta_AreNormalized()
         {
-            var stateMachine = new PlayerDefenseStateMachine(float.NaN, -1f);
+            var stateMachine = new PlayerDefenseStateMachine();
 
-            stateMachine.BeginDefense();
+            stateMachine.BeginDefense(float.NaN, -1);
             stateMachine.Advance(float.NaN);
-            Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.ParryWindow));
-
-            stateMachine.Advance(0.001f);
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Blocking));
-            stateMachine.ReleaseDefense();
+            Assert.That(stateMachine.RemainingParryCapacity, Is.Zero);
+
+            stateMachine.ReleaseDefense(-1f);
             stateMachine.Advance(0f);
             Assert.That(stateMachine.State, Is.EqualTo(PlayerDefenseState.Idle));
         }
