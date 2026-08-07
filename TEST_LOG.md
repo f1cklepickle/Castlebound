@@ -1,3 +1,20 @@
+## 2026-08-06 - feat-enemy-parry-stagger
+
+### Summary
+- Added activation-snapshotted parry window and capacity with deterministic successful-parry consumption.
+- Added exact-attacker melee stagger with immediate swing cancellation, movement/turn/action locking, target-refresh recovery, and melee-goblin prefab ownership.
+- Added continuous yellow stagger feedback that briefly yields to red damage flashes before resuming.
+
+### New or Updated Tests
+**EditMode**
+- PlayerDefenseStateMachineTests, PlayerDefenseControllerTests, EnemyStaggerReceiverTests, EnemyAttackTests, and EnemyStaggerPrefabContractTests — activation snapshots, capacity ordering, stagger timing, ignored repeats, re-entrant cancellation, recovery locking, normalization, cleanup, and explicit prefab wiring.
+
+**PlayMode**
+- PlayerDefenseEnemyAttackPlayTests and FeedbackRoutingPlayTests — parry-to-stagger integration, frozen movement/facing, target-refresh recovery, and red-over-yellow tint priority.
+
+### Notes
+- Full EditMode and PlayMode suites pass manually; only the melee goblin opts into stagger in this issue.
+
 ## 2026-08-05 - feat-player-defense-soft-anchor
 
 ### Summary

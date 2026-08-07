@@ -6,6 +6,7 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
 {
     [SerializeField, Min(0)] private int damage = 1;
     [SerializeField] private FeedbackEventChannel enemyHitBarrierFeedbackChannel;
+    [SerializeField] private EnemyStaggerReceiver staggerReceiver;
 
     private EnemyRegionState regionState;
     private EnemyRootReceiver rootReceiver;
@@ -19,6 +20,7 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
         CombatEquipmentSnapshot combatEquipmentSnapshot)
     {
         return lockedTarget != null &&
+               !IsActionLocked() &&
                (equipmentDefinitionSnapshot == null || equipmentDefinitionSnapshot.IsCompatibleWith(AttackRole)) &&
                ResolveDamageable(lockedTarget) != null;
     }
@@ -55,7 +57,7 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
 
     private bool TryDealDamage(IDamageable target, int resolvedDamage)
     {
-        if (target == null || resolvedDamage <= 0 || IsRooted())
+        if (target == null || resolvedDamage <= 0 || IsRooted() || IsActionLocked())
         {
             return false;
         }
@@ -78,11 +80,13 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
 
         if (TryResolvePlayerHitReceiver(target, out var playerHitReceiver))
         {
-            playerHitReceiver.ReceiveHit(new PlayerHitRequest(
+            PlayerHitResult result = playerHitReceiver.ReceiveHit(new PlayerHitRequest(
                 resolvedDamage,
                 gameObject,
                 transform.position,
                 CombatDamageType.Melee));
+            if (result.Outcome == PlayerHitOutcome.Parried)
+                ((IEnemyStaggerReceiver)staggerReceiver)?.TryStagger();
             return true;
         }
 
@@ -146,5 +150,10 @@ public class EnemyMeleeAttackDelivery : MonoBehaviour, IEnemyAttackDelivery
         }
 
         return rootReceiver != null && rootReceiver.IsRooted;
+    }
+
+    private bool IsActionLocked()
+    {
+        return staggerReceiver != null && staggerReceiver.IsActionLocked;
     }
 }

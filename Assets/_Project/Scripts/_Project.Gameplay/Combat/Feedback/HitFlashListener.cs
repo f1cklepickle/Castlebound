@@ -1,4 +1,5 @@
 using System.Collections;
+using Castlebound.Gameplay.AI;
 using UnityEngine;
 
 public class HitFlashListener : MonoBehaviour
@@ -7,9 +8,12 @@ public class HitFlashListener : MonoBehaviour
     [SerializeField] SpriteRenderer targetRenderer;
     [SerializeField] Color flashColor = new Color(1f, 0.2f, 0.2f, 1f);
     [SerializeField] float flashDurationSeconds = 0.1f;
+    [SerializeField] EnemyStaggerReceiver staggerReceiver;
+    [SerializeField] Color staggerColor = new Color(1f, 0.85f, 0f, 1f);
 
     Color originalColor;
     Coroutine flashRoutine;
+    bool isDamageFlashActive;
 
     void Awake()
     {
@@ -34,6 +38,11 @@ public class HitFlashListener : MonoBehaviour
         ResetFlash();
     }
 
+    void LateUpdate()
+    {
+        ApplyCurrentColor();
+    }
+
     void OnFeedbackRaised(FeedbackCue cue)
     {
         if (cue.Type != FeedbackCueType.PlayerHitEnemy)
@@ -45,20 +54,18 @@ public class HitFlashListener : MonoBehaviour
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
 
+        isDamageFlashActive = true;
+        ApplyCurrentColor();
         flashRoutine = StartCoroutine(FlashRoutine());
     }
 
     IEnumerator FlashRoutine()
     {
-        if (targetRenderer != null)
-            targetRenderer.color = flashColor;
-
         yield return new WaitForSeconds(flashDurationSeconds);
 
-        if (targetRenderer != null)
-            targetRenderer.color = originalColor;
-
+        isDamageFlashActive = false;
         flashRoutine = null;
+        ApplyCurrentColor();
     }
 
     void ResetFlash()
@@ -69,7 +76,24 @@ public class HitFlashListener : MonoBehaviour
             flashRoutine = null;
         }
 
+        isDamageFlashActive = false;
         if (targetRenderer != null)
             targetRenderer.color = originalColor;
+    }
+
+    private void ApplyCurrentColor()
+    {
+        if (targetRenderer == null)
+            return;
+
+        if (isDamageFlashActive)
+        {
+            targetRenderer.color = flashColor;
+            return;
+        }
+
+        targetRenderer.color = staggerReceiver != null && staggerReceiver.IsActionLocked
+            ? staggerColor
+            : originalColor;
     }
 }

@@ -6,38 +6,50 @@ namespace Castlebound.Gameplay.Combat
     {
         private const float BoundaryTolerance = 0.000001f;
 
-        private readonly float parryWindowDuration;
-        private readonly float recoveryDuration;
+        private float activeParryWindowDuration;
+        private float activeRecoveryDuration;
         private float elapsed;
 
-        public PlayerDefenseStateMachine(float parryWindowDuration, float recoveryDuration)
-        {
-            this.parryWindowDuration = NormalizeDuration(parryWindowDuration);
-            this.recoveryDuration = NormalizeDuration(recoveryDuration);
-        }
-
         public PlayerDefenseState State { get; private set; } = PlayerDefenseState.Idle;
+        public int RemainingParryCapacity { get; private set; }
         public bool IsGuarding => State == PlayerDefenseState.ParryWindow
             || State == PlayerDefenseState.Blocking;
         public bool CanAttack => State == PlayerDefenseState.Idle;
 
-        public bool BeginDefense()
+        public bool BeginDefense(float parryWindowDuration, int parryCapacity)
         {
             if (State != PlayerDefenseState.Idle)
                 return false;
 
             elapsed = 0f;
-            State = PlayerDefenseState.ParryWindow;
+            activeParryWindowDuration = NormalizeDuration(parryWindowDuration);
+            RemainingParryCapacity = Mathf.Max(0, parryCapacity);
+            State = RemainingParryCapacity > 0
+                ? PlayerDefenseState.ParryWindow
+                : PlayerDefenseState.Blocking;
             return true;
         }
 
-        public bool ReleaseDefense()
+        public bool ReleaseDefense(float recoveryDuration)
         {
             if (!IsGuarding)
                 return false;
 
             elapsed = 0f;
+            activeRecoveryDuration = NormalizeDuration(recoveryDuration);
+            RemainingParryCapacity = 0;
             State = PlayerDefenseState.Recovery;
+            return true;
+        }
+
+        public bool TryConsumeParry()
+        {
+            if (State != PlayerDefenseState.ParryWindow || RemainingParryCapacity <= 0)
+                return false;
+
+            RemainingParryCapacity--;
+            if (RemainingParryCapacity == 0)
+                State = PlayerDefenseState.Blocking;
             return true;
         }
 
@@ -48,7 +60,7 @@ namespace Castlebound.Gameplay.Combat
             if (State == PlayerDefenseState.ParryWindow)
             {
                 elapsed += safeDelta;
-                if (elapsed > parryWindowDuration + BoundaryTolerance)
+                if (elapsed > activeParryWindowDuration + BoundaryTolerance)
                     State = PlayerDefenseState.Blocking;
                 return;
             }
@@ -57,7 +69,7 @@ namespace Castlebound.Gameplay.Combat
                 return;
 
             elapsed += safeDelta;
-            if (elapsed + BoundaryTolerance < recoveryDuration)
+            if (elapsed + BoundaryTolerance < activeRecoveryDuration)
                 return;
 
             elapsed = 0f;

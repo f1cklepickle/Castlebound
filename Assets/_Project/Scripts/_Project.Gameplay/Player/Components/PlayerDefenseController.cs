@@ -8,6 +8,7 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
 {
     [Header("Timing")]
     [SerializeField, Min(0f)] private float parryWindowDuration = 0.15f;
+    [SerializeField, Min(0)] private int parryCapacity = 1;
     [SerializeField, Min(0f)] private float recoveryDuration = 0.15f;
 
     [Header("Guard")]
@@ -26,6 +27,7 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
     public PlayerDefenseState State => EnsureStateMachine().State;
     public bool IsGuarding => EnsureStateMachine().IsGuarding;
     public bool CanAttack => EnsureStateMachine().CanAttack;
+    public int RemainingParryCapacity => EnsureStateMachine().RemainingParryCapacity;
     public float MovementSpeedMultiplier => IsGuarding ? guardingMovementMultiplier : 1f;
     public float BlockArcDegrees => blockArcDegrees;
 
@@ -46,6 +48,7 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
     private void OnValidate()
     {
         parryWindowDuration = Mathf.Max(0f, parryWindowDuration);
+        parryCapacity = Mathf.Max(0, parryCapacity);
         recoveryDuration = Mathf.Max(0f, recoveryDuration);
         blockArcDegrees = Mathf.Clamp(blockArcDegrees, 0f, 360f);
         guardingMovementMultiplier = Mathf.Clamp01(guardingMovementMultiplier);
@@ -66,8 +69,8 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
     {
         PlayerDefenseState previous = State;
         bool changed = isPressed
-            ? stateMachine.BeginDefense()
-            : stateMachine.ReleaseDefense();
+            ? stateMachine.BeginDefense(parryWindowDuration, parryCapacity)
+            : stateMachine.ReleaseDefense(recoveryDuration);
 
         if (!changed)
             return;
@@ -104,6 +107,11 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
             ResolveFacingDirection(),
             blockArcDegrees);
 
+        PlayerDefenseState previous = State;
+        if (result.Outcome == PlayerHitOutcome.Parried)
+            stateMachine.TryConsumeParry();
+        PublishStateChange(previous);
+
         if (result.AppliedDamage > 0)
         {
             int appliedDamage = health != null ? health.ApplyDamage(result.AppliedDamage) : 0;
@@ -129,6 +137,22 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
         RebuildStateMachine();
     }
 
+    public void Configure(
+        float parryWindowSeconds,
+        float recoverySeconds,
+        float arcDegrees,
+        float movementMultiplier,
+        int capacity,
+        Func<bool> pressedEvaluator = null)
+    {
+        parryWindowDuration = Mathf.Max(0f, parryWindowSeconds);
+        parryCapacity = Mathf.Max(0, capacity);
+        recoveryDuration = Mathf.Max(0f, recoverySeconds);
+        blockArcDegrees = Mathf.Clamp(arcDegrees, 0f, 360f);
+        guardingMovementMultiplier = Mathf.Clamp01(movementMultiplier);
+        isDefenseStillPressedEvaluator = pressedEvaluator;
+    }
+
     private PlayerDefenseStateMachine EnsureStateMachine()
     {
         if (stateMachine == null)
@@ -138,7 +162,8 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
 
     private void RebuildStateMachine()
     {
-        stateMachine = new PlayerDefenseStateMachine(parryWindowDuration, recoveryDuration);
+        if (stateMachine == null)
+            stateMachine = new PlayerDefenseStateMachine();
     }
 
     private void EnsureReferences()

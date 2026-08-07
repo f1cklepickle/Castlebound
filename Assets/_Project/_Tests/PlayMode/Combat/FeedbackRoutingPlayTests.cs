@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Reflection;
+using Castlebound.Gameplay.AI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -54,6 +55,50 @@ namespace Castlebound.Tests.Combat
             Assert.That(image.color.a, Is.Zero);
 
             Object.Destroy(overlay);
+            Object.Destroy(channel);
+        }
+
+        [UnityTest]
+        public IEnumerator StaggerOverlay_RemainsYellowUntilTargetRefreshIsAcknowledged()
+        {
+            var channel = ScriptableObject.CreateInstance<FeedbackEventChannel>();
+            var enemy = new GameObject("StaggeredEnemy");
+            var renderer = enemy.AddComponent<SpriteRenderer>();
+            var attack = enemy.AddComponent<EnemyAttack>();
+            var receiver = enemy.AddComponent<EnemyStaggerReceiver>();
+            receiver.Configure(true, 1f, attack);
+            var listener = enemy.AddComponent<HitFlashListener>();
+            SetField(listener, "feedbackChannel", channel);
+            SetField(listener, "targetRenderer", renderer);
+            SetField(listener, "staggerReceiver", receiver);
+            listener.enabled = false;
+            listener.enabled = true;
+
+            receiver.TryStagger();
+            yield return null;
+            Assert.That(renderer.color, Is.EqualTo(new Color(1f, 0.85f, 0f, 1f)));
+
+            channel.Raise(new FeedbackCue(
+                FeedbackCueType.PlayerHitEnemy,
+                enemy.transform.position,
+                enemy.GetInstanceID()));
+            yield return null;
+            Assert.That(renderer.color, Is.EqualTo(new Color(1f, 0.2f, 0.2f, 1f)),
+                "Damage feedback should remain readable while the enemy is staggered.");
+
+            yield return new WaitForSeconds(0.11f);
+            Assert.That(renderer.color, Is.EqualTo(new Color(1f, 0.85f, 0f, 1f)),
+                "The stagger overlay should resume after the damage flash completes.");
+
+            receiver.Tick(1f);
+            yield return null;
+            Assert.That(renderer.color, Is.EqualTo(new Color(1f, 0.85f, 0f, 1f)));
+
+            receiver.AcknowledgeTargetRefresh();
+            yield return null;
+            Assert.That(renderer.color, Is.EqualTo(Color.white));
+
+            Object.Destroy(enemy);
             Object.Destroy(channel);
         }
 

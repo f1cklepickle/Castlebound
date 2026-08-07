@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Reflection;
+using Castlebound.Gameplay.AI;
 using Castlebound.Gameplay.Combat;
 using NUnit.Framework;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace Castlebound.Tests.PlayMode.Combat
     public class PlayerDefenseEnemyAttackPlayTests
     {
         [UnityTest]
-        public IEnumerator EnemyClockImpact_DuringFrontalParry_NegatesPlayerDamage()
+        public IEnumerator EnemyClockImpact_DuringFrontalParry_StaggersThenRecoversFresh()
         {
             var player = CreatePlayer();
             var enemy = CreateEnemy(player.transform);
@@ -26,6 +27,23 @@ namespace Castlebound.Tests.PlayMode.Combat
                 Assert.That(player.GetComponent<Health>().Current, Is.EqualTo(10));
                 Assert.That(observed.Outcome, Is.EqualTo(PlayerHitOutcome.Parried));
                 Assert.That(observed.Attacker, Is.SameAs(enemy));
+                var stagger = enemy.GetComponent<EnemyStaggerReceiver>();
+                Assert.That(stagger.State, Is.EqualTo(EnemyStaggerState.Staggered));
+                Assert.IsFalse(enemy.GetComponent<EnemyAttack>().IsAttackActive);
+
+                Vector2 lockedPosition = enemy.transform.position;
+                Vector2 lockedFacing = enemy.GetComponent<EnemyFacing>().AimDirection;
+                int targetRevision = enemy.GetComponent<EnemyTargeting>().TargetRevision;
+                yield return new WaitForSeconds(0.2f);
+                Assert.That(Vector2.Distance(enemy.transform.position, lockedPosition),
+                    Is.LessThan(0.001f));
+                Assert.That(enemy.GetComponent<EnemyFacing>().AimDirection, Is.EqualTo(lockedFacing));
+
+                yield return new WaitForSeconds(0.85f);
+                yield return new WaitForFixedUpdate();
+                Assert.That(stagger.State, Is.EqualTo(EnemyStaggerState.Inactive));
+                Assert.That(enemy.GetComponent<EnemyTargeting>().TargetRevision,
+                    Is.GreaterThan(targetRevision));
             }
             finally
             {
@@ -61,6 +79,12 @@ namespace Castlebound.Tests.PlayMode.Combat
             SetField(facing, "attackAlignmentThreshold", 180f);
 
             var attack = enemy.AddComponent<EnemyAttack>();
+            var delivery = attack.AttackDeliverySource as EnemyMeleeAttackDelivery;
+            var stagger = enemy.AddComponent<EnemyStaggerReceiver>();
+            stagger.Configure(true, 1f, attack);
+            SetField(attack, "staggerReceiver", stagger);
+            SetField(delivery, "staggerReceiver", stagger);
+            SetField(controller, "staggerReceiver", stagger);
             SetField(attack, "windupSeconds", 0.02f);
             attack.CooldownSeconds = 1f;
             attack.Damage = 4;

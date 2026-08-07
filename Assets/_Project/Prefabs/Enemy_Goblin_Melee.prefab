@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 1937058686654329911}
   - component: {fileID: 3821050183671550168}
   - component: {fileID: 9000000000000000001}
+  - component: {fileID: 9200000000000000001}
   - component: {fileID: 4031526577869015660}
   - component: {fileID: 4347245256977356794}
   - component: {fileID: 2387932495633829988}
@@ -249,6 +250,7 @@ MonoBehaviour:
   facing: {fileID: 8041287619235472015}
   engagement: {fileID: 8041287619235472016}
   animationPresenter: {fileID: 0}
+  staggerReceiver: {fileID: 9200000000000000001}
   speed: 8
   orbitBase: 2.8
   maxTangent: 2
@@ -295,6 +297,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackDeliverySource: {fileID: 9000000000000000001}
+  staggerReceiver: {fileID: 9200000000000000001}
   windupSeconds: 0.3
   cooldownSeconds: 0.8
   targetMask:
@@ -315,6 +318,22 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   damage: 1
   enemyHitBarrierFeedbackChannel: {fileID: 11400000, guid: 70c41c2488baae148bc4ec73d60b720f, type: 2}
+  staggerReceiver: {fileID: 9200000000000000001}
+--- !u!114 &9200000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 067c998b09e54aa5bb8cd66a3e2f743d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  staggerEligible: 1
+  staggerDurationSeconds: 1
+  enemyAttack: {fileID: 3821050183671550168}
 --- !u!114 &4031526577869015660
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -345,6 +364,8 @@ MonoBehaviour:
   targetRenderer: {fileID: 7926314504726225482}
   flashColor: {r: 1, g: 0.2, b: 0.2, a: 0.4392157}
   flashDurationSeconds: 0.1
+  staggerReceiver: {fileID: 9200000000000000001}
+  staggerColor: {r: 1, g: 0.85, b: 0, a: 1}
 --- !u!114 &2387932495633829988
 MonoBehaviour:
   m_ObjectHideFlags: 0
