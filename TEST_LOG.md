@@ -1,3 +1,20 @@
+## 2026-08-08 - feat-player-post-aim-facing-grace
+
+### Summary
+- Added a prefab-tunable 0.6-second post-aim facing grace shared by desktop and mobile aim paths.
+- Made active defense aim the highest-priority facing source, with retained/current fallback when defense aim is temporarily unavailable.
+- Separated facing execution from movement so walking remains the sole velocity source and the facing resolver remains the sole selection authority.
+
+### New or Updated Tests
+**EditMode**
+- PlayerFacingPolicyResolverTests, PlayerFacingPolicyContractsTests, and PlayerFacingOrchestratorTests — facing priority, 0.6-second grace timing, live defense aim, retained fallback, expiry, idle retention, prefab ownership, velocity separation, and facing execution regression coverage.
+
+**PlayMode**
+- PlayerFacingPolicyPlayTests — desktop and mobile grace behavior plus retreat-to-aim-to-defense fallback and live defense aiming.
+
+### Notes
+- Full EditMode and PlayMode suites pass manually; retreat, post-aim grace, block/parry aim priority, and movement independence feel correct in play.
+
 ## 2026-08-06 - feat-enemy-parry-stagger
 
 ### Summary

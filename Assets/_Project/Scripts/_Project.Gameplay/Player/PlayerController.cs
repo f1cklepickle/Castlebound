@@ -33,6 +33,9 @@ public class PlayerController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private PlayerMovementOrchestrator movementOrchestrator = new PlayerMovementOrchestrator();
 
+    [Header("Facing")]
+    [SerializeField] private PlayerFacingOrchestrator facingOrchestrator = new PlayerFacingOrchestrator();
+
     private Rigidbody2D rb;
     private Vector2 movementInput;
     private Vector2 aimInput;
@@ -74,8 +77,8 @@ public class PlayerController : MonoBehaviour
 
     public float RepairCooldownRemaining => repairCooldownRemaining;
     public bool IsRepairOnCooldown => repairCooldownRemaining > 0f;
-    public Vector2 CurrentFacingDirection => movementOrchestrator != null
-        ? movementOrchestrator.LastFacingDirection
+    public Vector2 CurrentFacingDirection => facingOrchestrator != null
+        ? facingOrchestrator.LastFacingDirection
         : -(Vector2)transform.up;
     public int BaseAttackDamage
     {
@@ -101,6 +104,7 @@ public class PlayerController : MonoBehaviour
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
+        if (facingOrchestrator == null) facingOrchestrator = new PlayerFacingOrchestrator();
         if (fireInputController != null)
             fireInputController.Configure(null);
     }
@@ -163,13 +167,9 @@ public class PlayerController : MonoBehaviour
         float movementSpeedMultiplier = defenseController != null
             ? defenseController.MovementSpeedMultiplier
             : 1f;
-        movementOrchestrator.Tick(
-            mover,
-            transform,
-            movementInput,
-            ResolveFacingInput(),
-            Time.fixedDeltaTime,
-            movementSpeedMultiplier);
+        Vector2 facingDirection = ResolveFacingInput();
+        movementOrchestrator.Tick(mover, movementInput, movementSpeedMultiplier);
+        facingOrchestrator.Tick(transform, facingDirection, Time.fixedDeltaTime);
     }
 
     /// <summary>
@@ -332,15 +332,18 @@ public class PlayerController : MonoBehaviour
         if (facingPolicyResolver == null)
             return resolvedAimInput;
 
-        var aimIntentActive = (fireInputController != null && fireInputController.IsFireHeld)
-            || (defenseController != null && defenseController.IsGuarding);
-        var currentFacing = movementOrchestrator != null ? movementOrchestrator.LastMoveDirection : (Vector2)transform.up;
+        bool attackAimIntentActive = fireInputController != null && fireInputController.IsFireHeld;
+        bool defenseActive = defenseController != null && defenseController.IsGuarding;
+        var currentFacing = facingOrchestrator != null
+            ? facingOrchestrator.LastFacingDirection
+            : -(Vector2)transform.up;
         return facingPolicyResolver.ResolveFacing(
             currentFacing,
             movementInput,
             resolvedAimInput,
             aimInput,
-            aimIntentActive,
+            attackAimIntentActive,
+            defenseActive,
             Time.fixedDeltaTime);
     }
 }

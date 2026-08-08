@@ -20,7 +20,8 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.right,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: Vector2.zero,
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
             yield return null;
 
@@ -29,7 +30,8 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.right,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: Vector2.zero,
-                aimIntentActive: true,
+                attackAimIntentActive: true,
+                defenseActive: false,
                 deltaTime: 0.02f);
             yield return null;
 
@@ -38,18 +40,19 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.right,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: Vector2.zero,
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
 
             Assert.Less(Vector2.Distance(movementFacing, Vector2.right), 0.001f);
             Assert.Less(Vector2.Distance(aimFacing, Vector2.left), 0.001f);
-            Assert.Less(Vector2.Distance(releasedFacing, Vector2.right), 0.001f);
+            Assert.Less(Vector2.Distance(releasedFacing, Vector2.left), 0.001f);
 
             Object.Destroy(root);
         }
 
         [UnityTest]
-        public IEnumerator Runtime_AndroidRightStickHysteresis_ActivatesAndReleasesAimOverride()
+        public IEnumerator Runtime_AndroidRightStickHysteresis_ReleasesIntoGracePeriod()
         {
             var root = new GameObject("PlayerFacingPolicyResolver");
             var resolver = root.AddComponent<PlayerFacingPolicyResolver>();
@@ -60,7 +63,8 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.down,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: new Vector2(0.30f, 0f),
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
             yield return null;
 
@@ -69,7 +73,8 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.down,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: new Vector2(0.22f, 0f),
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
             yield return null;
 
@@ -78,12 +83,13 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.down,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: new Vector2(0.19f, 0f),
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
 
             Assert.Less(Vector2.Distance(entered, Vector2.left), 0.001f);
             Assert.Less(Vector2.Distance(between, Vector2.left), 0.001f);
-            Assert.Less(Vector2.Distance(exited, Vector2.down), 0.001f);
+            Assert.Less(Vector2.Distance(exited, Vector2.left), 0.001f);
 
             Object.Destroy(root);
         }
@@ -100,7 +106,8 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: Vector2.zero,
                 resolvedAimInput: Vector2.left,
                 rawLookInput: Vector2.zero,
-                aimIntentActive: true,
+                attackAimIntentActive: true,
+                defenseActive: false,
                 deltaTime: 0.02f);
             yield return null;
 
@@ -109,11 +116,42 @@ namespace Castlebound.Tests.PlayMode.Input
                 movementInput: new Vector2(0.05f, 0f),
                 resolvedAimInput: Vector2.left,
                 rawLookInput: Vector2.zero,
-                aimIntentActive: false,
+                attackAimIntentActive: false,
+                defenseActive: false,
                 deltaTime: 0.02f);
 
             Assert.Less(Vector2.Distance(aimedFacing, Vector2.left), 0.001f);
             Assert.Less(Vector2.Distance(releasedFacing, aimedFacing), 0.001f);
+
+            Object.Destroy(root);
+        }
+
+        [UnityTest]
+        public IEnumerator Runtime_RetreatAimReleaseAndBlock_UsesFallbackThenLiveDefenseAim()
+        {
+            var root = new GameObject("PlayerFacingPolicyResolver");
+            var resolver = root.AddComponent<PlayerFacingPolicyResolver>();
+            ConfigureResolver(resolver);
+
+            var aimedFacing = resolver.ResolveFacing(
+                Vector2.right, Vector2.right, Vector2.left, Vector2.zero, true, false, 0.02f);
+            yield return null;
+
+            var graceFacing = resolver.ResolveFacing(
+                aimedFacing, Vector2.right, Vector2.left, Vector2.zero, false, false, 0.02f);
+            yield return null;
+
+            var defenseFacing = resolver.ResolveFacing(
+                graceFacing, Vector2.right, Vector2.zero, Vector2.zero, false, true, 0.02f);
+            yield return null;
+
+            var heldDefenseFacing = resolver.ResolveFacing(
+                defenseFacing, Vector2.down, Vector2.down, Vector2.zero, false, true, 1.5f);
+
+            Assert.Less(Vector2.Distance(aimedFacing, Vector2.left), 0.001f);
+            Assert.Less(Vector2.Distance(graceFacing, Vector2.left), 0.001f);
+            Assert.Less(Vector2.Distance(defenseFacing, Vector2.left), 0.001f);
+            Assert.Less(Vector2.Distance(heldDefenseFacing, Vector2.down), 0.001f);
 
             Object.Destroy(root);
         }
@@ -123,6 +161,7 @@ namespace Castlebound.Tests.PlayMode.Input
             SetPrivateFloat(resolver, "aimEnterThreshold", 0.25f);
             SetPrivateFloat(resolver, "aimExitThreshold", 0.20f);
             SetPrivateFloat(resolver, "movementMeaningfulThreshold", 0.10f);
+            SetPrivateFloat(resolver, "postAimFacingGraceDuration", 0.6f);
             SetPrivateFloat(resolver, "stickMagnitudeMax", 1.1f);
         }
 
