@@ -267,6 +267,7 @@ MonoBehaviour:
   baseAttackRate: 1.5
   movementOrchestrator:
     deadZone: 0.1
+  facingOrchestrator:
     rotationSpeed: 720
     facingDirectionOffset: 90
     flipDirection: 0
@@ -617,7 +618,7 @@ MonoBehaviour:
   aimEnterThreshold: 0.25
   aimExitThreshold: 0.2
   movementMeaningfulThreshold: 0.1
-  returnToMovementFacingSpeed: 720
+  postAimFacingGraceDuration: 0.6
   stickMagnitudeMax: 1.1
 --- !u!114 &9150000000000000204
 MonoBehaviour:
