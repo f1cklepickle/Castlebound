@@ -2,6 +2,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
+[DefaultExecutionOrder(100)]
 public class PlayerCollisionMove2D : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
@@ -11,6 +12,8 @@ public class PlayerCollisionMove2D : MonoBehaviour
     private Rigidbody2D _rb;
     private Collider2D _col;
     private Vector2 _input;
+    private Vector2 _velocityOverride;
+    private bool _useVelocityOverride;
 
     public float MoveSpeed
     {
@@ -26,6 +29,13 @@ public class PlayerCollisionMove2D : MonoBehaviour
         // Clamp per-axis to [-1, 1] without allocating
         _input.x = Mathf.Clamp(input.x, -1f, 1f);
         _input.y = Mathf.Clamp(input.y, -1f, 1f);
+        _useVelocityOverride = false;
+    }
+
+    public void SetMoveVelocity(Vector2 velocity)
+    {
+        _velocityOverride = velocity;
+        _useVelocityOverride = true;
     }
 
     private void Awake()
@@ -48,7 +58,9 @@ public class PlayerCollisionMove2D : MonoBehaviour
         if (_rb == null || _col == null) return;
 
         float dt = Time.fixedDeltaTime;
-        Vector2 delta = _input * moveSpeed * dt;
+        Vector2 delta = _useVelocityOverride
+            ? _velocityOverride * dt
+            : _input * moveSpeed * dt;
 
         // Prepare filter (stack struct, no allocation)
         ContactFilter2D filter = new ContactFilter2D();

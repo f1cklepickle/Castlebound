@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-08-10 - feat-player-directional-combat-dash
+
+### Summary
+- Added a focused directional dash owner with normalized snapshot direction, broad rear-hemisphere duration reduction, cooldown, and independently timed invulnerability.
+- Routed desktop, gamepad, and mobile release input through the shared Dash action while preserving movement, facing, defense, attack-reset, and collision ownership.
+- Integrated collision-clamped dash velocity and action restrictions without adding enemy displacement, progression, floating-control presentation, or general collider redesign.
+
+### New or Updated Tests
+**EditMode**
+- PlayerDashControllerTests, PlayerDashCombatIntegrationTests, DashInputContractsTests, TouchMovementZoneTests, and PotionUseControllerTests — direction, speed/duration/distance, lifecycle, i-frames, combat restrictions, generated input, mobile release semantics, prefab tuning, repair, potion, and damage regression coverage.
+
+**PlayMode**
+- PlayerDashPlayTests — desktop/gamepad bindings, full/rear movement, facing independence, no steering, Wall/Barrier/Vault clamping and recovery, independent i-frames, combat cancellation, mobile virtual-gamepad release, and zero enemy damage/displacement.
+
+### Notes
+- Full isolated-project suites pass: EditMode 950/950 and PlayMode 88/88; MainPrototype manual validation was not run because Windows app control could not access the existing Unity editor session.
+
 ## 2026-07-29 - feat-60-pixel-perfect-camera
 
 ### Summary

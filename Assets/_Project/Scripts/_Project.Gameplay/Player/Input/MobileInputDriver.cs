@@ -23,6 +23,7 @@ namespace Castlebound.Gameplay.Input
         [SerializeField] private TouchAimAttackZone aimAttackZone;
         [SerializeField] private TouchDefenseAimButton defenseAimButton;
         [SerializeField] private TouchRepairButton repairButton;
+        [SerializeField] private PlayerDashController dashController;
 
         [Tooltip("The PlayerInput component that drives PlayerController. " +
                  "Must be assigned so the virtual gamepad is paired to its InputUser.")]
@@ -37,6 +38,8 @@ namespace Castlebound.Gameplay.Input
 
         private Gamepad _virtualGamepad;
         private bool _pendingRepairPress;
+        private bool _pendingDashPress;
+        private Vector2 _pendingDashDirection;
 
         private void OnEnable()
         {
@@ -65,6 +68,13 @@ namespace Castlebound.Gameplay.Input
 
             if (repairButton != null)
                 repairButton.OnRepairRequested += HandleRepairRequested;
+            if (movementZone != null)
+                movementZone.MovementReleased += HandleMovementReleased;
+
+            if (dashController == null && playerInput != null)
+                dashController = playerInput.GetComponent<PlayerDashController>();
+            if (dashController == null)
+                dashController = FindObjectOfType<PlayerDashController>();
 
             ApplyRightStickAttackDeadzone();
         }
@@ -87,6 +97,11 @@ namespace Castlebound.Gameplay.Input
         {
             if (repairButton != null)
                 repairButton.OnRepairRequested -= HandleRepairRequested;
+            if (movementZone != null)
+                movementZone.MovementReleased -= HandleMovementReleased;
+
+            _pendingDashPress = false;
+            _pendingDashDirection = Vector2.zero;
 
             if (_virtualGamepad != null)
             {
@@ -105,8 +120,15 @@ namespace Castlebound.Gameplay.Input
             var state = new GamepadState();
 
             // Left stick drives movement (and facing when aim zone is inactive).
-            if (movementZone != null)
+            if (_pendingDashPress)
+            {
+                state.leftStick = _pendingDashDirection;
+                state.buttons |= (ushort)(1 << (int)GamepadButton.LeftStick);
+            }
+            else if (movementZone != null)
+            {
                 state.leftStick = movementZone.MoveVector;
+            }
 
             // Right stick drives facing direction.
             // Right trigger remains held while the right zone is firing.
@@ -131,11 +153,25 @@ namespace Castlebound.Gameplay.Input
             }
 
             InputSystem.QueueStateEvent(_virtualGamepad, state);
+            _pendingDashPress = false;
+            _pendingDashDirection = Vector2.zero;
         }
 
         private void HandleRepairRequested()
         {
             _pendingRepairPress = true;
+        }
+
+        private void HandleMovementReleased(Vector2 releaseSample)
+        {
+            if (dashController == null ||
+                !dashController.TryResolveMobileRelease(releaseSample, out Vector2 releaseDirection))
+            {
+                return;
+            }
+
+            _pendingDashDirection = releaseDirection;
+            _pendingDashPress = true;
         }
 
         public void SetRightStickAttackDeadzone(float deadzone)

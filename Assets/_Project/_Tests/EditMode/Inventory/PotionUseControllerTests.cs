@@ -120,5 +120,40 @@ namespace Castlebound.Tests.Inventory
             Object.DestroyImmediate(playerGo);
             Object.DestroyImmediate(potion);
         }
+
+        [Test]
+        public void TryConsume_IsRejectedWhilePlayerIsDashing()
+        {
+            var playerGo = new GameObject("Player");
+            var inventory = playerGo.AddComponent<InventoryStateComponent>();
+            inventory.State.TryAddPotion("potion_basic", 2);
+            var healable = playerGo.AddComponent<DummyHealable>();
+            var dash = playerGo.AddComponent<PlayerDashController>();
+            dash.Configure(20f, 0.5f, 0.6f, 1f, 0.4f, 0.9f);
+
+            var potion = ScriptableObject.CreateInstance<PotionDefinition>();
+            potion.ItemId = "potion_basic";
+            potion.HealAmount = 10;
+            potion.CooldownSeconds = 0f;
+            var resolverGo = new GameObject("Resolver");
+            var resolver = resolverGo.AddComponent<PotionDefinitionResolverComponent>();
+            resolver.GetType()
+                .GetField("definitions", System.Reflection.BindingFlags.NonPublic |
+                                         System.Reflection.BindingFlags.Instance)
+                ?.SetValue(resolver, new[] { potion });
+            var controller = playerGo.AddComponent<PotionUseController>();
+            controller.SetResolverSource(resolver);
+            controller.SetInventorySource(inventory);
+            controller.SetHealTargetSource(healable);
+
+            Assert.IsTrue(dash.TryStart(Vector2.up, Vector2.up, true));
+            Assert.IsFalse(controller.TryConsume());
+            Assert.That(inventory.State.PotionCount, Is.EqualTo(2));
+            Assert.That(healable.Healed, Is.Zero);
+
+            Object.DestroyImmediate(resolverGo);
+            Object.DestroyImmediate(playerGo);
+            Object.DestroyImmediate(potion);
+        }
     }
 }

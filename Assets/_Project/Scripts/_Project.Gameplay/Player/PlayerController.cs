@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
     [SerializeField] private PlayerAttackLoop attackLoop;
     [SerializeField] private PlayerDefenseController defenseController;
+    [SerializeField] private PlayerDashController dashController;
     [SerializeField, Min(0)] private int baseAttackDamage = 1;
     [SerializeField] private float baseAttackRate = 1.5f;
     
@@ -101,6 +102,7 @@ public class PlayerController : MonoBehaviour
         if (attackAnimationDriver == null) attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
         if (attackLoop == null) attackLoop = GetComponent<PlayerAttackLoop>();
         if (defenseController == null) defenseController = GetComponent<PlayerDefenseController>();
+        if (dashController == null) dashController = GetComponent<PlayerDashController>();
         inventoryState = inventorySource != null ? inventorySource.State : null;
         if (weaponSlotSwapHandler == null) weaponSlotSwapHandler = new WeaponSlotSwapHandler();
         if (movementOrchestrator == null) movementOrchestrator = new PlayerMovementOrchestrator();
@@ -130,7 +132,7 @@ public class PlayerController : MonoBehaviour
 
     public void OnFire(InputValue value)
     {
-        if (inputLocked || (defenseController != null && !defenseController.CanAttack))
+        if (inputLocked || IsDashing || (defenseController != null && !defenseController.CanAttack))
         {
             fireInputController?.ClearHeldFire();
             return;
@@ -146,12 +148,16 @@ public class PlayerController : MonoBehaviour
         if (inputLocked)
             return;
 
-        fireInputController?.Tick();
+        bool wasDashing = IsDashing;
+        Vector2 dashVelocity = wasDashing ? dashController.CurrentVelocity : Vector2.zero;
+
+        if (!wasDashing)
+            fireInputController?.Tick();
 
         if (attackLoop == null)
             attackLoop = GetComponent<PlayerAttackLoop>();
 
-        bool canAttack = defenseController == null || defenseController.CanAttack;
+        bool canAttack = !wasDashing && (defenseController == null || defenseController.CanAttack);
         var isFireHeld = canAttack && fireInputController != null && fireInputController.IsFireHeld;
         attackRuntime.Tick(
             Time.fixedDeltaTime,
@@ -164,12 +170,21 @@ public class PlayerController : MonoBehaviour
             animator,
             hitboxObject);
 
-        float movementSpeedMultiplier = defenseController != null
-            ? defenseController.MovementSpeedMultiplier
-            : 1f;
-        Vector2 facingDirection = ResolveFacingInput();
-        movementOrchestrator.Tick(mover, movementInput, movementSpeedMultiplier);
-        facingOrchestrator.Tick(transform, facingDirection, Time.fixedDeltaTime);
+        if (wasDashing)
+        {
+            mover?.SetMoveVelocity(dashVelocity);
+        }
+        else
+        {
+            float movementSpeedMultiplier = defenseController != null
+                ? defenseController.MovementSpeedMultiplier
+                : 1f;
+            Vector2 facingDirection = ResolveFacingInput();
+            movementOrchestrator.Tick(mover, movementInput, movementSpeedMultiplier);
+            facingOrchestrator.Tick(transform, facingDirection, Time.fixedDeltaTime);
+        }
+
+        dashController?.Tick(Time.fixedDeltaTime);
     }
 
     /// <summary>
@@ -193,7 +208,7 @@ public class PlayerController : MonoBehaviour
 
     public bool TryRepair()
     {
-        if (inputLocked || IsRepairOnCooldown || _repairSensor == null)
+        if (inputLocked || IsDashing || IsRepairOnCooldown || _repairSensor == null)
         {
             return false;
         }
@@ -225,7 +240,45 @@ public class PlayerController : MonoBehaviour
         if (!value.isPressed)
             return;
 
-        potionUseController?.TryConsume();
+        TryUsePotion();
+    }
+
+    public bool TryUsePotion()
+    {
+        if (inputLocked || IsDashing)
+            return false;
+
+        return potionUseController != null && potionUseController.TryConsume();
+    }
+
+    public void OnDash(InputValue value)
+    {
+        if (!value.isPressed)
+            return;
+
+        TryStartDash();
+    }
+
+    public bool TryStartDash()
+    {
+        if (inputLocked)
+            return false;
+
+        if (dashController == null)
+            dashController = GetComponent<PlayerDashController>();
+        if (defenseController == null)
+            defenseController = GetComponent<PlayerDefenseController>();
+
+        bool defenseAllowsDash = defenseController == null ||
+            defenseController.State == PlayerDefenseState.Idle;
+        if (dashController == null ||
+            !dashController.TryStart(movementInput, CurrentFacingDirection, defenseAllowsDash))
+        {
+            return false;
+        }
+
+        ClearAttackInputState();
+        return true;
     }
 
     public void OnSwapWeaponSlot(InputValue value)
@@ -274,6 +327,7 @@ public class PlayerController : MonoBehaviour
     public void StopMovement()
     {
         movementInput = Vector2.zero;
+        dashController?.CancelActiveState();
         if (mover != null)
         {
             mover.SetMoveInput(Vector2.zero);
@@ -312,6 +366,8 @@ public class PlayerController : MonoBehaviour
             animator,
             hitboxObject);
     }
+
+    public bool IsDashing => dashController != null && dashController.IsDashing;
 
     private Vector2 ResolveAimInput()
     {

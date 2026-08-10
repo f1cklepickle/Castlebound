@@ -106,7 +106,13 @@ namespace Castlebound.Gameplay.Input
         public void Initialize()
         {
             if (_potionButton != null && _potionUseController != null)
-                _potionButton.onClick.AddListener(() => _potionUseController.TryConsume());
+                _potionButton.onClick.AddListener(() =>
+                {
+                    if (_playerController != null)
+                        _playerController.TryUsePotion();
+                    else
+                        _potionUseController.TryConsume();
+                });
 
             if (_weaponButton != null && _playerController != null)
                 _weaponButton.onClick.AddListener(() => _playerController.TrySwapWeaponSlotWithoutCooldown());
