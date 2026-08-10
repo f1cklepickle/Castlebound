@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -11,6 +12,7 @@ namespace Castlebound.Gameplay.Input
 
         public Vector2 MoveVector { get; private set; }
         public Vector2 AnchorPosition { get; private set; }
+        public event Action<Vector2> MovementReleased;
 
         /// <summary>Exposes <see cref="maxRadius"/> so tests can override it without the inspector.</summary>
         public float MaxRadius
@@ -65,8 +67,10 @@ namespace Castlebound.Gameplay.Input
 
         public void SimulatePointerUp()
         {
+            Vector2 releaseSample = MoveVector;
             MoveVector = Vector2.zero;
             AnchorPosition = Vector2.zero;
+            MovementReleased?.Invoke(releaseSample);
         }
 
         private static bool IsTouchPointer(PointerEventData eventData)

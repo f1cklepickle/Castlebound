@@ -11,6 +11,7 @@ namespace Castlebound.Gameplay.Inventory
 
         private PotionConsumeController consumeController;
         private IHealable healTarget;
+        private PlayerDashController dashController;
 
         private void Awake()
         {
@@ -30,6 +31,11 @@ namespace Castlebound.Gameplay.Inventory
         public bool TryConsume()
         {
             EnsureController();
+            if (dashController != null && dashController.IsDashing)
+            {
+                return false;
+            }
+
             if (inventorySource == null || consumeController == null)
             {
                 return false;
@@ -92,6 +98,11 @@ namespace Castlebound.Gameplay.Inventory
             if (consumeController == null)
             {
                 consumeController = new PotionConsumeController(resolverSource, new UnityTimeProvider(), healTarget);
+            }
+
+            if (dashController == null)
+            {
+                dashController = GetComponentInParent<PlayerDashController>();
             }
         }
     }

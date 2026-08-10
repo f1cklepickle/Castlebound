@@ -128,6 +128,7 @@ GameObject:
   - component: {fileID: 9150000000000000401}
   - component: {fileID: 9150000000000000701}
   - component: {fileID: 9150000000000000702}
+  - component: {fileID: 9150000000000000801}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -263,6 +264,7 @@ MonoBehaviour:
   attackAnimationDriver: {fileID: 9150000000000000204}
   attackLoop: {fileID: 9150000000000000205}
   defenseController: {fileID: 9150000000000000701}
+  dashController: {fileID: 9150000000000000801}
   baseAttackDamage: 1
   baseAttackRate: 1.5
   movementOrchestrator:
@@ -404,6 +406,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 200
   playerHitFeedbackChannel: {fileID: 11400000, guid: d20a388de840a2442a233efbf88b515b, type: 2}
+  damageImmunitySource: {fileID: 9150000000000000801}
 --- !u!114 &-5784453068084145222
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -815,6 +818,7 @@ MonoBehaviour:
   guardingMovementMultiplier: 0.6
   health: {fileID: 2634735562689669640}
   playerController: {fileID: 4369444282720785943}
+  dashController: {fileID: 9150000000000000801}
 --- !u!114 &9150000000000000702
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -836,3 +840,21 @@ MonoBehaviour:
   parryWindowColor: {r: 0.25, g: 0.95, b: 1, a: 0.7}
   blockingColor: {r: 0.25, g: 0.6, b: 1, a: 0.55}
   parrySuccessColor: {r: 1, g: 0.9, b: 0.2, a: 0.95}
+--- !u!114 &9150000000000000801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 793a36ca57e94dc8a0052a78ac94c96e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  dashSpeed: 24
+  fullDashDuration: 0.2
+  rearDurationMultiplier: 0.6
+  cooldown: 0.75
+  invulnerabilityDuration: 0.25
+  mobileOuterReleaseThreshold: 0.9

@@ -85,6 +85,36 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
+        public void SimulatePointerUp_PublishesCurrentReleaseSampleBeforeReset()
+        {
+            Vector2 observed = Vector2.zero;
+            _zone.MovementReleased += sample => observed = sample;
+            _zone.MaxRadius = 100f;
+            _zone.SimulatePointerDown(Vector2.zero);
+            _zone.SimulateDrag(new Vector2(95f, 0f));
+
+            _zone.SimulatePointerUp();
+
+            Assert.That(observed, Is.EqualTo(new Vector2(0.95f, 0f)));
+            Assert.That(_zone.MoveVector, Is.EqualTo(Vector2.zero));
+        }
+
+        [Test]
+        public void SimulatePointerUp_AfterReturningInward_PublishesInwardSampleNotHistoricalPeak()
+        {
+            Vector2 observed = Vector2.zero;
+            _zone.MovementReleased += sample => observed = sample;
+            _zone.MaxRadius = 100f;
+            _zone.SimulatePointerDown(Vector2.zero);
+            _zone.SimulateDrag(new Vector2(100f, 0f));
+            _zone.SimulateDrag(new Vector2(40f, 0f));
+
+            _zone.SimulatePointerUp();
+
+            Assert.That(observed, Is.EqualTo(new Vector2(0.4f, 0f)));
+        }
+
+        [Test]
         public void MoveVector_IsClamped_ToMagnitudeOfOne()
         {
             _zone.SimulatePointerDown(new Vector2(100f, 100f));

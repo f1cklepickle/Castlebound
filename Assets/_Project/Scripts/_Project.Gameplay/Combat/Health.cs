@@ -1,6 +1,7 @@
 // Assets/Scripts/Combat/Health.cs
 using System;
 using UnityEngine;
+using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Inventory;
 using Castlebound.Gameplay.Stats;
 
@@ -8,7 +9,10 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 {
     [SerializeField] int maxHealth = 10;
     [SerializeField] FeedbackEventChannel playerHitFeedbackChannel;
+    [SerializeField] MonoBehaviour damageImmunitySource;
     int current;
+    IDamageImmunitySource damageImmunity;
+    bool damageImmunityResolved;
 
     public int Current => current;
     public int Max => maxHealth;
@@ -24,6 +28,7 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
     void Awake()
     {
+        ResolveDamageImmunity();
         current = maxHealth;
         OnHealthChanged?.Invoke(current, maxHealth);
     }
@@ -35,7 +40,9 @@ public class Health : MonoBehaviour, IDamageable, IHealable
 
     public int ApplyDamage(int amount)
     {
-        if (current <= 0 || amount <= 0) return 0;
+        ResolveDamageImmunity();
+        if (current <= 0 || amount <= 0 || (damageImmunity != null && damageImmunity.IsDamageImmune))
+            return 0;
         int previous = current;
         current = Mathf.Max(0, current - amount);
         int appliedDamage = previous - current;
@@ -78,5 +85,27 @@ public class Health : MonoBehaviour, IDamageable, IHealable
             Destroy(gameObject);
         else
             DestroyImmediate(gameObject);
+    }
+
+    private void ResolveDamageImmunity()
+    {
+        if (damageImmunityResolved)
+            return;
+
+        damageImmunityResolved = true;
+        damageImmunity = damageImmunitySource as IDamageImmunitySource;
+        if (damageImmunity != null)
+            return;
+
+        var sources = GetComponents<MonoBehaviour>();
+        for (int i = 0; i < sources.Length; i++)
+        {
+            if (sources[i] is IDamageImmunitySource immunitySource)
+            {
+                damageImmunitySource = sources[i];
+                damageImmunity = immunitySource;
+                return;
+            }
+        }
     }
 }

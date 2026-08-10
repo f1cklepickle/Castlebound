@@ -18,6 +18,7 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
     [Header("References")]
     [SerializeField] private Health health;
     [SerializeField] private PlayerController playerController;
+    [SerializeField] private PlayerDashController dashController;
     [SerializeField] private bool useReleaseFallbackPolling = true;
 
     private PlayerDefenseStateMachine stateMachine;
@@ -67,6 +68,10 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
 
     public void SetDefensePressed(bool isPressed)
     {
+        EnsureReferences();
+        if (isPressed && dashController != null && dashController.IsDashing)
+            return;
+
         PlayerDefenseState previous = State;
         bool changed = isPressed
             ? stateMachine.BeginDefense(parryWindowDuration, parryCapacity)
@@ -172,6 +177,8 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
             health = GetComponent<Health>();
         if (playerController == null)
             playerController = GetComponent<PlayerController>();
+        if (dashController == null)
+            dashController = GetComponent<PlayerDashController>();
     }
 
     private Vector2 ResolveFacingDirection()

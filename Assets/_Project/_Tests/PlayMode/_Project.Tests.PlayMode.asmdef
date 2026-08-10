@@ -5,6 +5,7 @@
     "_Project.Core",
     "_Project.Gameplay",
     "Unity.TextMeshPro",
+    "Unity.InputSystem",
     "GUID:476f7c6c6dfeed041b063446a926e656"
   ],
   "includePlatforms": [],
