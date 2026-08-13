@@ -20,6 +20,7 @@ namespace Castlebound.Gameplay.World.Placement
         [SerializeField] private TouchAimAttackZone touchAimAttackZone;
         [SerializeField] private PlayerFireInputController playerFireInputController;
         [SerializeField] private PlayerController playerController;
+        [SerializeField] private PcControlModeController pcControlModeController;
         [SerializeField] private SpriteRenderer previewRenderer;
         [SerializeField] private Sprite placeholderPreviewSprite;
         [SerializeField] private Button confirmButton;
@@ -65,6 +66,7 @@ namespace Castlebound.Gameplay.World.Placement
 
         private void OnDisable()
         {
+            pcControlModeController?.ReleasePointerMode(this);
             UnhookPlacementControls();
         }
 
@@ -129,6 +131,7 @@ namespace Castlebound.Gameplay.World.Placement
             placementCanceled = onCanceled;
             ClearTarget();
             SetPlacementControlsActive(true);
+            pcControlModeController?.RequestPointerMode(this);
             return true;
         }
 
@@ -164,6 +167,7 @@ namespace Castlebound.Gameplay.World.Placement
             ClearTarget();
             SetPreviewActive(false);
             SetPlacementControlsActive(false);
+            pcControlModeController?.ReleasePointerMode(this);
             ReleaseTouchAimAttackState();
             ReleasePlayerFireInputState();
             ReleasePlayerAttackInputState();
@@ -273,6 +277,11 @@ namespace Castlebound.Gameplay.World.Placement
             if (playerController == null)
             {
                 playerController = FindObjectOfType<PlayerController>();
+            }
+
+            if (pcControlModeController == null)
+            {
+                pcControlModeController = FindObjectOfType<PcControlModeController>();
             }
 
             if (worldGrid != null)

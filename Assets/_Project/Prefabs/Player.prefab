@@ -129,6 +129,8 @@ GameObject:
   - component: {fileID: 9150000000000000701}
   - component: {fileID: 9150000000000000702}
   - component: {fileID: 9150000000000000801}
+  - component: {fileID: 9150000000000000901}
+  - component: {fileID: 9150000000000000902}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -858,3 +860,30 @@ MonoBehaviour:
   cooldown: 0.75
   invulnerabilityDuration: 0.25
   mobileOuterReleaseThreshold: 0.9
+--- !u!114 &9150000000000000901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dd2b47425644f43a31bcf8076456d11, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  mouseTurnSensitivity: 0.35
+--- !u!114 &9150000000000000902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8325390509751579795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32996fe5861b4ee586ad21e190176bf9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  relativeMouseFacing: {fileID: 9150000000000000901}
+  playerController: {fileID: 4369444282720785943}

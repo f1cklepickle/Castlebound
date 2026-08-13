@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-08-13 - feat-pc-relative-mouse-ui-pointer-modes
+
+### Summary
+- Promoted horizontal relative-mouse facing and locked gameplay cursor behavior into the production PC control path.
+- Added one control-mode owner for gameplay, pointer UI, cursor state, input suppression, and safe transitions.
+- Integrated backpack, vault, upgrade/start-wave, and Bear Trap placement while preserving world-relative movement, combat, dash, mobile, and gamepad contracts.
+
+### New or Updated Tests
+**EditMode**
+- PcControlModeTests and PlayerFacingOrchestratorTests — relative accumulation, persistent facing, vertical rejection, pointer priority, UI suppression policy, movement fallback, device isolation, cursor policy, transition contracts, prefab wiring, world-relative movement, and immediate presentation alignment.
+
+**PlayMode**
+- PcControlModePlayTests — independent world-relative movement and facing, dash regression, defense alignment, cursor lifecycle, and stale-delta transition prevention.
+
+### Notes
+- EditMode and PlayMode suites were not run at the user's request; the user will execute both suites and the MainPrototype behavior matrix manually.
+
 ## 2026-08-10 - feat-player-directional-combat-dash
 
 ### Summary

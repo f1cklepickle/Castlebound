@@ -11,6 +11,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private EnemySpawnerRunner waveRunner;
         [SerializeField] private bool pausePlayerWhileOpen = true;
         [SerializeField] private PlayerController playerController;
+        [SerializeField] private PcControlModeController pcControlModeController;
 
         private WavePhaseTracker phaseTracker;
 
@@ -28,6 +29,7 @@ namespace Castlebound.Gameplay.UI
 
         private void OnDisable()
         {
+            pcControlModeController?.ReleasePointerMode(this);
             UnhookPhaseTracker();
         }
 
@@ -146,6 +148,13 @@ namespace Castlebound.Gameplay.UI
             {
                 menuRoot.gameObject.SetActive(open);
             }
+
+            if (pcControlModeController == null)
+                pcControlModeController = FindObjectOfType<PcControlModeController>();
+            if (open)
+                pcControlModeController?.RequestPointerMode(this);
+            else
+                pcControlModeController?.ReleasePointerMode(this);
 
             SetPlayerPaused(open);
             MenuStateChanged?.Invoke(open);

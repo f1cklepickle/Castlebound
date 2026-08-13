@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private PlayerFireInputController fireInputController;
     [SerializeField] private PlayerAimInputResolver aimInputResolver;
     [SerializeField] private PlayerFacingPolicyResolver facingPolicyResolver;
+    [SerializeField] private PcControlModeController pcControlModeController;
     [SerializeField] private PlayerAttackAnimationDriver attackAnimationDriver;
     [SerializeField] private PlayerAttackLoop attackLoop;
     [SerializeField] private PlayerDefenseController defenseController;
@@ -99,6 +100,7 @@ public class PlayerController : MonoBehaviour
         if (fireInputController == null) fireInputController = GetComponent<PlayerFireInputController>();
         if (aimInputResolver == null) aimInputResolver = GetComponent<PlayerAimInputResolver>();
         if (facingPolicyResolver == null) facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
+        if (pcControlModeController == null) pcControlModeController = GetComponent<PcControlModeController>();
         if (attackAnimationDriver == null) attackAnimationDriver = GetComponent<PlayerAttackAnimationDriver>();
         if (attackLoop == null) attackLoop = GetComponent<PlayerAttackLoop>();
         if (defenseController == null) defenseController = GetComponent<PlayerDefenseController>();
@@ -128,11 +130,17 @@ public class PlayerController : MonoBehaviour
             return;
 
         aimInput = value.Get<Vector2>();
+        pcControlModeController?.NotifyLookInput(aimInput);
     }
 
     public void OnFire(InputValue value)
     {
-        if (inputLocked || IsDashing || (defenseController != null && !defenseController.CanAttack))
+        if (value.isPressed && Mouse.current != null && Mouse.current.leftButton.isPressed)
+            pcControlModeController?.NotifyMouseCombatInput();
+
+        if (inputLocked || IsDashing ||
+            (pcControlModeController != null && pcControlModeController.ShouldSuppressCombatInput()) ||
+            (defenseController != null && !defenseController.CanAttack))
         {
             fireInputController?.ClearHeldFire();
             return;
@@ -181,7 +189,13 @@ public class PlayerController : MonoBehaviour
                 : 1f;
             Vector2 facingDirection = ResolveFacingInput();
             movementOrchestrator.Tick(mover, movementInput, movementSpeedMultiplier);
-            facingOrchestrator.Tick(transform, facingDirection, Time.fixedDeltaTime);
+            bool snapPcFacing = pcControlModeController != null &&
+                pcControlModeController.IsPcMouseControlActive;
+            facingOrchestrator.Tick(
+                transform,
+                facingDirection,
+                Time.fixedDeltaTime,
+                snapPcFacing);
         }
 
         dashController?.Tick(Time.fixedDeltaTime);
@@ -342,6 +356,7 @@ public class PlayerController : MonoBehaviour
     public void SetInputLocked(bool locked)
     {
         inputLocked = locked;
+        pcControlModeController?.SetInputLocked(locked);
         if (locked)
         {
             ClearAttackInputState();
@@ -367,6 +382,14 @@ public class PlayerController : MonoBehaviour
             hitboxObject);
     }
 
+    public void ClearCombatInputState()
+    {
+        ClearAttackInputState();
+        if (defenseController == null)
+            defenseController = GetComponent<PlayerDefenseController>();
+        defenseController?.SetDefensePressed(false);
+    }
+
     public bool IsDashing => dashController != null && dashController.IsDashing;
 
     private Vector2 ResolveAimInput()
@@ -381,18 +404,34 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 ResolveFacingInput()
     {
-        var resolvedAimInput = ResolveAimInput();
+        var currentFacing = facingOrchestrator != null
+            ? facingOrchestrator.LastFacingDirection
+            : -(Vector2)transform.up;
+        bool attackAimIntentActive = fireInputController != null && fireInputController.IsFireHeld;
+        bool defenseActive = defenseController != null && defenseController.IsGuarding;
+        var resolvedAimInput = pcControlModeController != null && pcControlModeController.IsPointerModeActive
+            ? ResolveAimInput()
+            : Vector2.zero;
+        if (pcControlModeController == null)
+            pcControlModeController = GetComponent<PcControlModeController>();
+        if (pcControlModeController != null && pcControlModeController.TryResolveFacing(
+            currentFacing,
+            movementInput,
+            resolvedAimInput,
+            attackAimIntentActive,
+            defenseActive,
+            out Vector2 pcFacing))
+        {
+            return pcFacing;
+        }
+
+        resolvedAimInput = ResolveAimInput();
         if (facingPolicyResolver == null)
             facingPolicyResolver = GetComponent<PlayerFacingPolicyResolver>();
 
         if (facingPolicyResolver == null)
             return resolvedAimInput;
 
-        bool attackAimIntentActive = fireInputController != null && fireInputController.IsFireHeld;
-        bool defenseActive = defenseController != null && defenseController.IsGuarding;
-        var currentFacing = facingOrchestrator != null
-            ? facingOrchestrator.LastFacingDirection
-            : -(Vector2)transform.up;
         return facingPolicyResolver.ResolveFacing(
             currentFacing,
             movementInput,
@@ -402,4 +441,5 @@ public class PlayerController : MonoBehaviour
             defenseActive,
             Time.fixedDeltaTime);
     }
+
 }
