@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-08-13 - fix-pr-293-mouse-combat-and-pointer-facing
+
+### Summary
+- Repaired PC mouse attack and defense delivery after gameplay/pointer-mode transitions without adding parallel combat polling.
+- Centralized transition-gate release once mouse buttons are physically released and kept UI pointer suppression authoritative.
+- Restricted immediate facing presentation to locked relative-mouse gameplay so pointer-mode WASD fallback uses existing smooth rotation.
+- Removed the upgrade menu's legacy global player pause and excluded mobile-only touch surfaces from desktop UI pointer ownership.
+- Made visible inventory and vault panel surfaces consume pointer clicks while leaving off-panel combat input available.
+
+### New or Updated Tests
+**EditMode**
+- PcControlModeTests and UI panel controller tests — direct gameplay presentation, pointer-mode smooth presentation, desktop hit-test filtering, and visible panel click ownership.
+
+**PlayMode**
+- PcControlModePlayTests — action-driven mouse combat, real upgrade-menu off-UI combat, desktop-versus-mobile UI raycasts, transition click-through prevention, and smooth pointer-mode WASD fallback.
+
+### Notes
+- Full suite and MainPrototype validation results pending.
+
 ## 2026-08-13 - feat-pc-relative-mouse-ui-pointer-modes
 
 ### Summary

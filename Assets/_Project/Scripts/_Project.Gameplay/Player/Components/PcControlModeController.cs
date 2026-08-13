@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Castlebound.Gameplay.Input;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -9,15 +10,19 @@ public class PcControlModeController : MonoBehaviour
     [SerializeField] private PlayerController playerController;
 
     private readonly HashSet<Object> pointerModeOwners = new HashSet<Object>();
+    private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
     private bool inputLocked;
     private bool suppressCombatUntilMouseReleased;
     private bool pcMouseControlActive = true;
+    private EventSystem cachedEventSystem;
+    private PointerEventData pointerEventData;
 
     public CursorLockMode RequestedLockMode { get; private set; } = CursorLockMode.None;
     public bool RequestedCursorVisible { get; private set; } = true;
     public bool IsPointerModeActive => inputLocked || pointerModeOwners.Count > 0;
     public bool IsPcMouseControlActive => !Application.isMobilePlatform && Mouse.current != null && pcMouseControlActive;
-    public bool IsPointerOverUi => IsPointerModeActive && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+    public bool IsPointerOverUi => IsPointerModeActive && IsPointerOverDesktopUi();
+    public bool ShouldSnapFacingPresentation => IsPcMouseControlActive && !IsPointerModeActive;
 
     private void Awake()
     {
@@ -54,6 +59,8 @@ public class PcControlModeController : MonoBehaviour
         {
             SetActiveInputDevice(false);
         }
+
+        RefreshTransitionSuppression();
     }
 
     private void OnDisable()
@@ -73,8 +80,11 @@ public class PcControlModeController : MonoBehaviour
 
     public void SetInputLocked(bool locked)
     {
+        if (inputLocked == locked)
+            return;
+
         inputLocked = locked;
-        BeginTransition();
+        BeginControlModeTransition();
     }
 
     public void RefreshCursorState()
@@ -84,24 +94,21 @@ public class PcControlModeController : MonoBehaviour
 
     public void RequestPointerMode(Object owner)
     {
-        if (owner != null && pointerModeOwners.Add(owner)) BeginTransition();
+        if (owner != null && pointerModeOwners.Add(owner)) BeginControlModeTransition();
     }
 
     public void ReleasePointerMode(Object owner)
     {
-        if (owner != null && pointerModeOwners.Remove(owner)) BeginTransition();
+        if (owner != null && pointerModeOwners.Remove(owner)) BeginControlModeTransition();
     }
 
     public bool ShouldSuppressCombatInput()
     {
-        if (!IsPcMouseControlActive) return false;
-        if (suppressCombatUntilMouseReleased)
-        {
-            bool released = Mouse.current == null || (!Mouse.current.leftButton.isPressed && !Mouse.current.rightButton.isPressed);
-            if (!released) return true;
-            suppressCombatUntilMouseReleased = false;
-        }
-        return IsPointerOverUi;
+        if (!IsPcMouseControlActive)
+            return false;
+
+        RefreshTransitionSuppression();
+        return suppressCombatUntilMouseReleased || IsPointerOverUi;
     }
 
     public void NotifyMouseCombatInput()
@@ -174,7 +181,7 @@ public class PcControlModeController : MonoBehaviour
             return;
 
         pcMouseControlActive = mouseAndKeyboard;
-        BeginTransition();
+        SynchronizeFacingAndCursor();
     }
 
     private static bool IsAnyGamepadActive()
@@ -195,17 +202,76 @@ public class PcControlModeController : MonoBehaviour
         return false;
     }
 
-    private void BeginTransition()
+    private void BeginControlModeTransition()
+    {
+        suppressCombatUntilMouseReleased = true;
+        ResolveReferences();
+        SynchronizeFacingAndCursor();
+        playerController?.ClearCombatInputState();
+    }
+
+    private void SynchronizeFacingAndCursor()
+    {
+        ResolveReferences();
+        relativeMouseFacing?.SynchronizeFacing(playerController != null ? playerController.CurrentFacingDirection : Vector2.up);
+        RefreshCursorState();
+    }
+
+    private void RefreshTransitionSuppression()
+    {
+        if (!suppressCombatUntilMouseReleased)
+            return;
+
+        bool mouseReleased = Mouse.current == null ||
+            (!Mouse.current.leftButton.isPressed && !Mouse.current.rightButton.isPressed);
+        if (mouseReleased)
+            suppressCombatUntilMouseReleased = false;
+    }
+
+    private void ResolveReferences()
     {
         if (relativeMouseFacing == null)
             relativeMouseFacing = GetComponent<PlayerRelativeMouseFacingController>();
         if (playerController == null)
             playerController = GetComponent<PlayerController>();
+    }
 
-        suppressCombatUntilMouseReleased = true;
-        relativeMouseFacing?.SynchronizeFacing(playerController != null ? playerController.CurrentFacingDirection : Vector2.up);
-        playerController?.ClearCombatInputState();
-        RefreshCursorState();
+    private bool IsPointerOverDesktopUi()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null)
+            return false;
+
+        if (cachedEventSystem != eventSystem || pointerEventData == null)
+        {
+            cachedEventSystem = eventSystem;
+            pointerEventData = new PointerEventData(eventSystem);
+        }
+
+        pointerEventData.position = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+        uiRaycastResults.Clear();
+        eventSystem.RaycastAll(pointerEventData, uiRaycastResults);
+        if (uiRaycastResults.Count == 0)
+            return eventSystem.IsPointerOverGameObject();
+
+        foreach (RaycastResult result in uiRaycastResults)
+        {
+            if (!IsDesktopTouchSurface(result.gameObject))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsDesktopTouchSurface(GameObject target)
+    {
+        if (target == null)
+            return false;
+
+        return target.GetComponentInParent<TouchMovementZone>() != null ||
+            target.GetComponentInParent<TouchAimAttackZone>() != null ||
+            target.GetComponentInParent<TouchDefenseAimButton>() != null ||
+            target.GetComponentInParent<TouchRepairButton>() != null;
     }
 
     private void ApplyCursorState(bool pointerModeActive)

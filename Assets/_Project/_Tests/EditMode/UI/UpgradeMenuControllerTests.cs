@@ -111,24 +111,20 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void MenuBlocksPlayerInput_WhenOpen()
+        public void MenuOpensAsNonPausingPointerMode()
         {
             var phase = new WavePhaseTracker();
             var menu = new GameObject("Menu");
-            var player = new GameObject("Player");
             var controller = menu.AddComponent<UpgradeMenuController>();
 
             controller.SetPhaseTracker(phase);
             controller.SetAutoOpenOnFirstPreWave(true);
-            controller.SetPlayerController(player.AddComponent<PlayerController>());
-
             phase.SetPhase(WavePhase.PreWave);
             controller.ToggleMenu();
 
             Assert.IsTrue(controller.IsMenuOpen, "Menu should be open in pre-wave.");
 
             Object.DestroyImmediate(menu);
-            Object.DestroyImmediate(player);
         }
 
         [Test]

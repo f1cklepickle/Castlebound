@@ -235,7 +235,7 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
-        public void RuntimePanel_BackgroundAndLabels_DoNotBlockGameplayPointerInput()
+        public void RuntimePanel_BackgroundConsumesPointerWhileLabelsDeferToControls()
         {
             panel.TogglePanel();
 
@@ -246,7 +246,7 @@ namespace Castlebound.Tests.UI
             Assert.NotNull(panelBackground);
             Assert.NotNull(rowLabel);
             Assert.NotNull(tabLabel);
-            Assert.IsFalse(panelBackground.raycastTarget);
+            Assert.IsTrue(panelBackground.raycastTarget, "The visible panel surface must own pointer input so combat cannot click through it.");
             Assert.IsFalse(rowLabel.raycastTarget);
             Assert.IsFalse(tabLabel.raycastTarget);
             Assert.IsTrue(panel.OpenButton.GetComponent<Image>().raycastTarget);

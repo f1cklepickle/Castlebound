@@ -531,7 +531,7 @@ namespace Castlebound.Gameplay.UI
 
             var image = panel.GetComponent<Image>();
             image.color = new Color(0.08f, 0.09f, 0.1f, 0.92f);
-            image.raycastTarget = false;
+            image.raycastTarget = true;
 
             return rect;
         }

@@ -1547,8 +1547,6 @@ MonoBehaviour:
   menuRoot: {fileID: 774867745}
   autoOpenEveryPreWave: 1
   waveRunner: {fileID: 1166075763}
-  pausePlayerWhileOpen: 1
-  playerController: {fileID: 0}
 --- !u!114 &676673188
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Castlebound.Gameplay.Input;
 
 namespace Castlebound.Tests.Input
 {
@@ -104,6 +105,39 @@ namespace Castlebound.Tests.Input
         }
 
         [Test]
+        public void FacingPresentation_SnapsOnlyDuringLockedRelativeMouseGameplay()
+        {
+            var mode = root.AddComponent<PcControlModeController>();
+
+            Assert.IsTrue(mode.ShouldSnapFacingPresentation);
+
+            mode.RequestPointerMode(root);
+
+            Assert.IsFalse(mode.ShouldSnapFacingPresentation);
+        }
+
+        [Test]
+        public void PointerModeMovementFallback_AdvancesThroughFacingOrchestratorWithoutSnapping()
+        {
+            var player = new GameObject("PlayerFacing");
+            try
+            {
+                var orchestrator = new PlayerFacingOrchestrator();
+                orchestrator.Tick(player.transform, Vector2.right, 0.02f, false);
+
+                float targetAngle = Quaternion.Angle(
+                    player.transform.rotation,
+                    Quaternion.Euler(0f, 0f, -90f));
+                Assert.That(targetAngle, Is.GreaterThan(0.1f));
+                Assert.That(Quaternion.Angle(player.transform.rotation, Quaternion.identity), Is.GreaterThan(0.1f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
         public void PointerMode_UsesAbsoluteCombatAimThenMovementFallbackThenRetention()
         {
             var mode = root.AddComponent<PcControlModeController>();
@@ -177,6 +211,25 @@ namespace Castlebound.Tests.Input
             StringAssert.Contains("ReleasePointerMode(this)", combinedSource);
             StringAssert.DoesNotContain("Cursor.lockState", combinedSource);
             StringAssert.DoesNotContain("Cursor.visible", combinedSource);
+        }
+
+        [Test]
+        public void DesktopUiHitTesting_IgnoresMobileTouchSurfacesButNotNormalUi()
+        {
+            var touchSurface = new GameObject("TouchSurface");
+            var normalUi = new GameObject("NormalUi");
+            try
+            {
+                touchSurface.AddComponent<TouchMovementZone>();
+
+                Assert.IsTrue(PcControlModeController.IsDesktopTouchSurface(touchSurface));
+                Assert.IsFalse(PcControlModeController.IsDesktopTouchSurface(normalUi));
+            }
+            finally
+            {
+                Object.DestroyImmediate(touchSurface);
+                Object.DestroyImmediate(normalUi);
+            }
         }
 
         [Test]

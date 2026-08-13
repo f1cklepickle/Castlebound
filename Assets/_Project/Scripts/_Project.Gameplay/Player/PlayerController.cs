@@ -190,7 +190,7 @@ public class PlayerController : MonoBehaviour
             Vector2 facingDirection = ResolveFacingInput();
             movementOrchestrator.Tick(mover, movementInput, movementSpeedMultiplier);
             bool snapPcFacing = pcControlModeController != null &&
-                pcControlModeController.IsPcMouseControlActive;
+                pcControlModeController.ShouldSnapFacingPresentation;
             facingOrchestrator.Tick(
                 transform,
                 facingDirection,
