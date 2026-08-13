@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-08-13 - fix-pr-293-headless-input-fixture
+
+### Summary
+- Made synthetic PC input independent of application focus during headless PlayMode execution.
+- Explicitly paired keyboard and mouse devices with the fixture PlayerInput and verified its Player action map.
+- Processed queued mouse events deterministically through the Input System action/callback path.
+
+### New or Updated Tests
+**EditMode**
+- N/A — N/A
+
+**PlayMode**
+- PcControlModePlayTests — deterministic PlayerInput mouse attack/defense callbacks in interactive and headless execution.
+
+### Notes
+- Full PlayMode suite passed and MainPrototype behavior remained correct — user-confirmed.
+
 ## 2026-08-13 - fix-pr-293-mouse-combat-and-pointer-facing
 
 ### Summary

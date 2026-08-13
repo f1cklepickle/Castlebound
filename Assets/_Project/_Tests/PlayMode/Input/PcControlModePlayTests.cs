@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.TestTools;
 using Castlebound.Gameplay.Combat;
 using Castlebound.Gameplay.Input;
@@ -20,14 +21,20 @@ namespace Castlebound.Tests.Input
         private GameObject attacker;
         private GameObject cameraObject;
         private GameObject eventSystemObject;
+        private Keyboard keyboard;
         private Mouse mouse;
         private PlayerControls inputActions;
         private PlayerInput playerInput;
         private PcControlModeTestInputModule pointerInputModule;
+        private InputSettings.BackgroundBehavior originalBackgroundBehavior;
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            originalBackgroundBehavior = InputSystem.settings.backgroundBehavior;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+
+            keyboard = InputSystem.AddDevice<Keyboard>();
             mouse = InputSystem.AddDevice<Mouse>();
             player = new GameObject("Player");
             player.SetActive(false);
@@ -53,6 +60,16 @@ namespace Castlebound.Tests.Input
             playerInput.defaultActionMap = "Player";
             player.SetActive(true);
             playerInput.ActivateInput();
+            InputUser.PerformPairingWithDevice(keyboard, playerInput.user);
+            InputUser.PerformPairingWithDevice(mouse, playerInput.user);
+
+            Assert.That(playerInput.currentActionMap, Is.Not.Null);
+            Assert.That(playerInput.currentActionMap.name, Is.EqualTo("Player"));
+            Assert.That(playerInput.currentActionMap.enabled, Is.True);
+            Assert.That(playerInput.currentActionMap.FindAction("Fire", true).enabled, Is.True);
+            Assert.That(playerInput.currentActionMap.FindAction("Defend", true).enabled, Is.True);
+            Assert.That(IsPairedWithPlayer(mouse), Is.True);
+            Assert.That(IsPairedWithPlayer(keyboard), Is.True);
 
             attacker = new GameObject("Attacker");
             cameraObject = new GameObject("Main Camera", typeof(Camera));
@@ -73,6 +90,8 @@ namespace Castlebound.Tests.Input
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            if (keyboard != null && keyboard.added)
+                InputSystem.RemoveDevice(keyboard);
             if (mouse != null && mouse.added)
                 InputSystem.RemoveDevice(mouse);
             Object.Destroy(player);
@@ -80,6 +99,7 @@ namespace Castlebound.Tests.Input
             Object.Destroy(cameraObject);
             Object.Destroy(eventSystemObject);
             inputActions?.Dispose();
+            InputSystem.settings.backgroundBehavior = originalBackgroundBehavior;
             yield return null;
         }
 
@@ -388,7 +408,19 @@ namespace Castlebound.Tests.Input
                 state = state.WithButton(button);
 
             InputSystem.QueueStateEvent(mouse, state);
+            InputSystem.Update();
             yield return null;
+        }
+
+        private bool IsPairedWithPlayer(InputDevice device)
+        {
+            foreach (InputDevice pairedDevice in playerInput.devices)
+            {
+                if (pairedDevice == device)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void SetField(object instance, string fieldName, object value)
