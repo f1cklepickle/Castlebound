@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-08-14 - fix-pr-293-dynamic-input-state
+
+### Summary
+- Applied synthetic mouse state directly to the Dynamic input state so Editor updates cannot consume fixture events first.
+- Preserved the real InputAction, PlayerInput SendMessages, and production Fire/Defend callback integration path.
+- Removed temporary timing diagnostics and discarded InputTestFixture, pairing, and lifecycle experiments.
+
+### New or Updated Tests
+**EditMode**
+- N/A — N/A
+
+**PlayMode**
+- PcControlModePlayTests — deterministic synthetic mouse attack/defense input through Dynamic action processing.
+
+### Notes
+- Full local PlayMode suite passed — user-confirmed.
+
 ## 2026-08-13 - fix-pr-293-headless-input-fixture
 
 ### Summary

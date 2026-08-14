@@ -407,8 +407,14 @@ namespace Castlebound.Tests.Input
             if (pressed)
                 state = state.WithButton(button);
 
-            InputSystem.QueueStateEvent(mouse, state);
-            InputSystem.Update();
+            InputState.Change(mouse, state, InputUpdateType.Dynamic);
+
+            bool buttonIsPressed = button == MouseButton.Left
+                ? mouse.leftButton.isPressed
+                : mouse.rightButton.isPressed;
+            Assert.That(buttonIsPressed, Is.EqualTo(pressed),
+                "InputState.Change did not apply the expected synthetic mouse button state.");
+
             yield return null;
         }
 
