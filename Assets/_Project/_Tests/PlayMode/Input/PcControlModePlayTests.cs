@@ -41,7 +41,7 @@ namespace Castlebound.Tests.Input
             player.tag = "Player";
             var body = player.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
-            player.AddComponent<BoxCollider2D>();
+            player.AddComponent<CircleCollider2D>();
             player.AddComponent<PlayerCollisionMove2D>();
             var relativeFacing = player.AddComponent<PlayerRelativeMouseFacingController>();
             relativeFacing.Configure(1f);
