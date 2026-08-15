@@ -93,6 +93,18 @@ namespace Castlebound.Tests.UI
         }
 
         [Test]
+        public void RuntimePanel_BackgroundConsumesPointerInput()
+        {
+            phase.SetPhase(WavePhase.PreWave);
+            Assert.IsTrue(panel.OpenFromWorld());
+
+            var panelBackground = root.transform.Find("VaultPanel").GetComponent<Image>();
+
+            Assert.IsTrue(panelBackground.raycastTarget,
+                "The visible vault surface must own pointer input so combat cannot click through it.");
+        }
+
+        [Test]
         public void VaultRow_ButtonClickOpensContextMenu_WithMoveAndEquipActions()
         {
             phase.SetPhase(WavePhase.PreWave);

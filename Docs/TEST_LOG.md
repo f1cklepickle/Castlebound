@@ -4,6 +4,76 @@
 
 ---
 
+## 2026-08-14 - fix-pr-293-dynamic-input-state
+
+### Summary
+- Applied synthetic mouse state directly to the Dynamic input state so Editor updates cannot consume fixture events first.
+- Preserved the real InputAction, PlayerInput SendMessages, and production Fire/Defend callback integration path.
+- Removed temporary timing diagnostics and discarded InputTestFixture, pairing, and lifecycle experiments.
+
+### New or Updated Tests
+**EditMode**
+- N/A — N/A
+
+**PlayMode**
+- PcControlModePlayTests — deterministic synthetic mouse attack/defense input through Dynamic action processing.
+
+### Notes
+- Full local PlayMode suite passed — user-confirmed.
+
+## 2026-08-13 - fix-pr-293-headless-input-fixture
+
+### Summary
+- Made synthetic PC input independent of application focus during headless PlayMode execution.
+- Explicitly paired keyboard and mouse devices with the fixture PlayerInput and verified its Player action map.
+- Processed queued mouse events deterministically through the Input System action/callback path.
+
+### New or Updated Tests
+**EditMode**
+- N/A — N/A
+
+**PlayMode**
+- PcControlModePlayTests — deterministic PlayerInput mouse attack/defense callbacks in interactive and headless execution.
+
+### Notes
+- Full PlayMode suite passed and MainPrototype behavior remained correct — user-confirmed.
+
+## 2026-08-13 - fix-pr-293-mouse-combat-and-pointer-facing
+
+### Summary
+- Repaired PC mouse attack and defense delivery after gameplay/pointer-mode transitions without adding parallel combat polling.
+- Centralized transition-gate release once mouse buttons are physically released and kept UI pointer suppression authoritative.
+- Restricted immediate facing presentation to locked relative-mouse gameplay so pointer-mode WASD fallback uses existing smooth rotation.
+- Removed the upgrade menu's legacy global player pause and excluded mobile-only touch surfaces from desktop UI pointer ownership.
+- Made visible inventory and vault panel surfaces consume pointer clicks while leaving off-panel combat input available.
+
+### New or Updated Tests
+**EditMode**
+- PcControlModeTests and UI panel controller tests — direct gameplay presentation, pointer-mode smooth presentation, desktop hit-test filtering, and visible panel click ownership.
+
+**PlayMode**
+- PcControlModePlayTests — action-driven mouse combat, real upgrade-menu off-UI combat, desktop-versus-mobile UI raycasts, transition click-through prevention, and smooth pointer-mode WASD fallback.
+
+### Notes
+- Full suite and MainPrototype validation results pending.
+
+## 2026-08-13 - feat-pc-relative-mouse-ui-pointer-modes
+
+### Summary
+- Promoted horizontal relative-mouse facing and locked gameplay cursor behavior into the production PC control path.
+- Added one control-mode owner for gameplay, pointer UI, cursor state, input suppression, and safe transitions.
+- Integrated backpack, vault, upgrade/start-wave, and Bear Trap placement while preserving world-relative movement, combat, dash, mobile, and gamepad contracts.
+
+### New or Updated Tests
+**EditMode**
+- PcControlModeTests and PlayerFacingOrchestratorTests — relative accumulation, persistent facing, vertical rejection, pointer priority, UI suppression policy, movement fallback, device isolation, cursor policy, transition contracts, prefab wiring, world-relative movement, and immediate presentation alignment.
+
+**PlayMode**
+- PcControlModePlayTests — independent world-relative movement and facing, dash regression, defense alignment, cursor lifecycle, and stale-delta transition prevention.
+
+### Notes
+- EditMode and PlayMode suites were not run at the user's request; the user will execute both suites and the MainPrototype behavior matrix manually.
+
 ## 2026-08-10 - feat-player-directional-combat-dash
 
 ### Summary

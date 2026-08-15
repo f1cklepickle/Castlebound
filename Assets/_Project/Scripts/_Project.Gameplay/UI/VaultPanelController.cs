@@ -17,6 +17,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private InventoryStateComponent activeInventorySource;
         [SerializeField] private InventoryContextMenuController contextMenu;
         [SerializeField] private MonoBehaviour weaponDefinitionResolverSource;
+        [SerializeField] private PcControlModeController pcControlModeController;
 
         private CastleInventoryState vault;
         private WavePhaseTracker phaseTracker;
@@ -37,6 +38,7 @@ namespace Castlebound.Gameplay.UI
 
         private void OnDisable()
         {
+            pcControlModeController?.ReleasePointerMode(this);
             UnhookVault();
             UnhookPhaseTracker();
             UnhookContextMenu();
@@ -288,7 +290,7 @@ namespace Castlebound.Gameplay.UI
 
             var image = panel.GetComponent<Image>();
             image.color = new Color(0.08f, 0.09f, 0.1f, 0.92f);
-            image.raycastTarget = false;
+            image.raycastTarget = true;
 
             CreateHeader(rect);
             return rect;
@@ -479,6 +481,13 @@ namespace Castlebound.Gameplay.UI
             {
                 panelRoot.gameObject.SetActive(open);
             }
+
+            if (pcControlModeController == null)
+                pcControlModeController = FindObjectOfType<PcControlModeController>();
+            if (open)
+                pcControlModeController?.RequestPointerMode(this);
+            else
+                pcControlModeController?.ReleasePointerMode(this);
         }
 
         private static void DestroyChild(GameObject child)

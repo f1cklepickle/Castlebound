@@ -10,7 +10,11 @@ public class PlayerFacingOrchestrator
 
     public Vector2 LastFacingDirection { get; private set; } = Vector2.up;
 
-    public void Tick(Transform playerTransform, Vector2 facingDirection, float deltaTime)
+    public void Tick(
+        Transform playerTransform,
+        Vector2 facingDirection,
+        float deltaTime,
+        bool snapRotation = false)
     {
         if (playerTransform == null || facingDirection.sqrMagnitude <= 0.0001f)
             return;
@@ -20,9 +24,11 @@ public class PlayerFacingOrchestrator
         float targetAngle = Mathf.Atan2(angleDirection.y, angleDirection.x) * Mathf.Rad2Deg
             + facingDirectionOffset;
         var targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
-        playerTransform.rotation = Quaternion.RotateTowards(
-            playerTransform.rotation,
-            targetRotation,
-            rotationSpeed * Mathf.Max(0f, deltaTime));
+        playerTransform.rotation = snapRotation
+            ? targetRotation
+            : Quaternion.RotateTowards(
+                playerTransform.rotation,
+                targetRotation,
+                rotationSpeed * Mathf.Max(0f, deltaTime));
     }
 }

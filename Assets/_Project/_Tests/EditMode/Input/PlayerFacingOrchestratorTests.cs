@@ -26,5 +26,27 @@ namespace Castlebound.Tests.Input
                 Object.DestroyImmediate(player);
             }
         }
+
+        [Test]
+        public void Tick_SnapRotation_AppliesFacingWithoutPresentationLag()
+        {
+            var player = new GameObject("Player");
+
+            try
+            {
+                var orchestrator = new PlayerFacingOrchestrator();
+
+                orchestrator.Tick(player.transform, Vector2.left, 0f, true);
+
+                Assert.Less(Vector2.Distance(orchestrator.LastFacingDirection, Vector2.left), 0.001f);
+                Assert.That(
+                    Quaternion.Angle(player.transform.rotation, Quaternion.Euler(0f, 0f, 90f)),
+                    Is.LessThan(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
     }
 }

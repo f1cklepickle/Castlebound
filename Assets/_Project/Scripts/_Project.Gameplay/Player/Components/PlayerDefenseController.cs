@@ -19,6 +19,7 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
     [SerializeField] private Health health;
     [SerializeField] private PlayerController playerController;
     [SerializeField] private PlayerDashController dashController;
+    [SerializeField] private PcControlModeController pcControlModeController;
     [SerializeField] private bool useReleaseFallbackPolling = true;
 
     private PlayerDefenseStateMachine stateMachine;
@@ -57,6 +58,16 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
 
     public void OnDefend(InputValue value)
     {
+        if (value.isPressed && Mouse.current != null && Mouse.current.rightButton.isPressed)
+            pcControlModeController?.NotifyMouseCombatInput();
+
+        if (value.isPressed && pcControlModeController != null &&
+            pcControlModeController.ShouldSuppressCombatInput())
+        {
+            OnDefensePressedStateChanged(false);
+            return;
+        }
+
         OnDefensePressedStateChanged(value.isPressed);
     }
 
@@ -179,6 +190,8 @@ public class PlayerDefenseController : MonoBehaviour, IPlayerHitReceiver
             playerController = GetComponent<PlayerController>();
         if (dashController == null)
             dashController = GetComponent<PlayerDashController>();
+        if (pcControlModeController == null)
+            pcControlModeController = GetComponent<PcControlModeController>();
     }
 
     private Vector2 ResolveFacingDirection()

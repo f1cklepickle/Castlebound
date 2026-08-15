@@ -5,6 +5,7 @@ using Castlebound.Gameplay.Spawning;
 using Castlebound.Gameplay.Combat;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Castlebound.Gameplay.UI
@@ -25,6 +26,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private BackpackWeaponEquipController equipController;
         [SerializeField] private BackpackItemDropController dropController;
         [SerializeField] private MonoBehaviour weaponDefinitionResolverSource;
+        [SerializeField] private PcControlModeController pcControlModeController;
 
         private BackpackInventoryState backpack;
         private CastleInventoryState vault;
@@ -54,8 +56,18 @@ namespace Castlebound.Gameplay.UI
 
         private void OnDisable()
         {
+            pcControlModeController?.ReleasePointerMode(this);
             UnhookSources();
             UnhookContextMenu();
+        }
+
+        private void Update()
+        {
+            if (!Application.isMobilePlatform && Keyboard.current != null &&
+                Keyboard.current.tabKey.wasPressedThisFrame)
+            {
+                TogglePanel();
+            }
         }
 
         public void SetBackpackSource(BackpackInventoryStateComponent source)
@@ -356,6 +368,18 @@ namespace Castlebound.Gameplay.UI
             {
                 panelRoot.gameObject.SetActive(open);
             }
+
+            ResolvePcControlMode();
+            if (open)
+                pcControlModeController?.RequestPointerMode(this);
+            else
+                pcControlModeController?.ReleasePointerMode(this);
+        }
+
+        private void ResolvePcControlMode()
+        {
+            if (pcControlModeController == null)
+                pcControlModeController = FindObjectOfType<PcControlModeController>();
         }
 
         private void EnsureRuntimeUi()
@@ -507,7 +531,7 @@ namespace Castlebound.Gameplay.UI
 
             var image = panel.GetComponent<Image>();
             image.color = new Color(0.08f, 0.09f, 0.1f, 0.92f);
-            image.raycastTarget = false;
+            image.raycastTarget = true;
 
             return rect;
         }

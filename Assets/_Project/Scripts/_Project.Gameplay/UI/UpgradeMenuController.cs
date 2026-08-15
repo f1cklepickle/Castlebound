@@ -9,8 +9,7 @@ namespace Castlebound.Gameplay.UI
         [SerializeField] private RectTransform menuRoot;
         [SerializeField] private bool autoOpenEveryPreWave = true;
         [SerializeField] private EnemySpawnerRunner waveRunner;
-        [SerializeField] private bool pausePlayerWhileOpen = true;
-        [SerializeField] private PlayerController playerController;
+        [SerializeField] private PcControlModeController pcControlModeController;
 
         private WavePhaseTracker phaseTracker;
 
@@ -28,6 +27,7 @@ namespace Castlebound.Gameplay.UI
 
         private void OnDisable()
         {
+            pcControlModeController?.ReleasePointerMode(this);
             UnhookPhaseTracker();
         }
 
@@ -46,11 +46,6 @@ namespace Castlebound.Gameplay.UI
         public void SetAutoOpenOnFirstPreWave(bool enabled)
         {
             autoOpenEveryPreWave = enabled;
-        }
-
-        public void SetPlayerController(PlayerController controller)
-        {
-            playerController = controller;
         }
 
         public void ToggleMenu()
@@ -147,30 +142,14 @@ namespace Castlebound.Gameplay.UI
                 menuRoot.gameObject.SetActive(open);
             }
 
-            SetPlayerPaused(open);
+            if (pcControlModeController == null)
+                pcControlModeController = FindObjectOfType<PcControlModeController>();
+            if (open)
+                pcControlModeController?.RequestPointerMode(this);
+            else
+                pcControlModeController?.ReleasePointerMode(this);
+
             MenuStateChanged?.Invoke(open);
-        }
-
-        private void SetPlayerPaused(bool paused)
-        {
-            if (!pausePlayerWhileOpen)
-            {
-                return;
-            }
-
-            if (playerController == null)
-            {
-                playerController = FindObjectOfType<PlayerController>();
-            }
-
-            if (playerController != null)
-            {
-                playerController.SetInputLocked(paused);
-                if (paused)
-                {
-                    playerController.StopMovement();
-                }
-            }
         }
     }
 }
