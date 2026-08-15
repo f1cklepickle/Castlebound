@@ -1,5 +1,5 @@
 # Castlebound — Living Issue Tree
-**Last synced:** 2026-07-14 | **Repo:** https://github.com/f1cklepickle/Castlebound
+**Last synced:** 2026-08-15 | **Repo:** https://github.com/f1cklepickle/Castlebound
 
 > This doc mirrors GitHub milestone/issue state as a readable progress snapshot.
 > It is not the source of truth — GitHub is. Update this after planning sessions or milestone closes.
@@ -15,8 +15,9 @@
 | P2 — Castle Responds to Care | Prove the castle subtly assists defense | ✅ Complete (4/4) |
 | P3 — Authored Defense Under Pressure | Prove the player is authoring defense, not reacting randomly | ✅ Complete (47/47) |
 | P4 — Castle Memory & Trust | Prove the castle remembers what the player brings back | ✅ Complete (14/14) |
-| P5 — Meaningful Failure | Teach Castlebound's philosophy through loss | ⬜ Not Started (0/5) |
-| P6 — Prototype Lock & Polish | Stop adding systems and make the experience readable and stable | ⬜ Not Started (0/24) |
+| P5 — Meaningful Failure | Teach Castlebound's philosophy through loss | ✅ Complete (5/5) |
+| P6 — Prototype Content Lock | Lock the remaining combat and defensive-choice feature set | 🟨 In Progress (13/19, 68%) |
+| P7 — Prototype Lock & Polish | Make the locked prototype readable, stable, and demonstrable | 🟨 In Progress (16/28, 57%) |
 
 ---
 
@@ -52,60 +53,77 @@
 
 ---
 
-## P5 — Meaningful Failure ⬜
+## P5 — Meaningful Failure ✅
 **Purpose:** Teach the philosophy of Castlebound through loss.
 **Must establish:** Failure screen, waves survived displayed, one non-blaming philosophical line, fast restart flow.
 
-- ⬜ #100 feat(stats): run stats tracking service
-- ⬜ #99 feat(ui): run summary stats (kills, damage, repairs, gold)
-- ⬜ #98 feat(flow): fast restart flow
-- ⬜ #97 feat(ui): philosophical failure line
-- ⬜ #96 feat(ui): failure screen with waves survived
+- ✅ All 5 issues closed
 
 ---
 
-## P6 — Prototype Lock & Polish ⬜
-**Purpose:** Stop adding systems and make the experience readable and stable.
-**Must establish:** Feedback noise reduction, camera clarity, core tuning pass, bug fixes only, no new mechanics.
-**Completion definition:** *"This is a complete Castlebound prototype."*
+## P6 — Prototype Content Lock 🟨
+**Purpose:** Prove the remaining combat and defensive-choice pillars before prototype polish.
+**Must establish:** Readable melee goblin attacks, active defense through dash/block/parry, authored melee and ranged waves, two tower choices, two trap choices, and reliable broken-gate traversal.
+**Completion definition:** *The prototype demonstrates skilled combat and meaningful defensive variety; its feature set is locked.*
 
-- ⬜ #157 feat(gameplay): add additional prototype weapons with distinct swing-speed tiers
+- ⬜ #279 refactor(spawning): consolidate wave scheduling architecture
+- ⬜ #267 feat(tower): add second prototype tower archetype
+- ⬜ #264 feat(defense): add second prototype trap archetype
+- ⬜ #112 refactor(player): split PlayerController responsibilities
+- ⬜ #43 Implement enemy pass-through movement via broken gates
+- ⬜ #31 Docs: Add short design doc for Spawning + Waves behavior
+
+---
+
+## P7 — Prototype Lock & Polish 🟨
+**Purpose:** Lock the prototype content and make the experience readable, stable, and demonstrable.
+**Must establish:** Presentation and feedback clarity, final input-contract regeneration, core tuning, bug fixes only, and no new mechanics.
+**Completion definition:** *This is a complete Castlebound prototype.*
+
+- ⬜ #287 feat(input): refine responsive floating mobile joysticks
+- ⬜ #277 fix(ai): prevent enemies from stacking directly
+- ⬜ #276 fix(player): prevent sticking against barrier and vault colliders
+- ⬜ #275 fix(visual): split castle wall floor from foreground wall
 - ⬜ #156 feat(visual): improve attack presentation readability at high swing speeds
-- ⬜ #144 refactor(ui): extract close button construction out of TouchUIBindings
 - ⬜ #132 feat(visual): basic ground tileset
 - ⬜ #120 Locked Palette + Palette-based Tints
-- ⬜ #119 Auto-wiring (Editor Tool)
-- ⬜ #118 Prefab Creator (Editor Tool)
-- ⬜ #117 Scene Validator (Editor Tool)
-- ⬜ #113 refactor(ui): centralize upgrade button feedback handling
-- ⬜ #112 refactor(player): split PlayerController responsibilities
-- ⬜ #111 perf(ui): pool upgrade menu rows
 - ⬜ #110 chore(input): regenerate PlayerControls.cs from inputactions
-- ⬜ #106 feat(player): movement/defense polish pass
-- ⬜ #105 feat(art): castle wall/tower/enemy sprite set + basic animations
+- ⬜ #105 feat(art): polish castle wall and tower sprite presentation
 - ⬜ #104 fix(gameplay): bug fix sweep only (no new mechanics)
 - ⬜ #103 chore(balance): core tuning pass
-- ⬜ #102 fix(ui): feedback noise reduction sweep
-- ⬜ #60 feat(camera): pixel-perfect setup + 2D best-practice defaults
-- ⬜ #45 Add feedback cooldown/aggregation to reduce hit flash spam
-- ⬜ #44 Remove unused releaseMargin from barrier hold behavior
-- ⬜ #43 Implement enemy pass-through movement via broken gates
-- ⬜ #42 Fix barrier damage gating when player and enemy are inside
-- ⬜ #31 Docs: Add short design doc for Spawning + Waves behavior
 - ⬜ #30 UX: Add basic visual/audio feedback for melee hits and gate repairs
 
 ---
 
-## Unassigned
-- ⬜ #122 Docs — Living Checklists + Decisions Log *(no milestone assigned)*
-- ⬜ #71 feat(loot): coin tier values (small/medium/large) *(no milestone assigned)*
-- ⬜ #70 feat(loot): pickup object pooling *(no milestone assigned)*
-- ⬜ #69 feat(loot): hybrid coin bursts (shower + stack remainder) *(no milestone assigned)*
-- ⬜ #59 feat(inventory): add item pull (magnet) near player *(no milestone assigned)*
-- ⬜ #36 Define Android versioning strategy for CI and test builds *(no milestone assigned)*
-- ⬜ #35 Android milestone release workflow (GitHub Releases) *(no milestone assigned)*
-- ⬜ #34 PR-gated Android APK artifact build (label-based) *(no milestone assigned)*
-- ⬜ #24 UI: Add "Feedback / Bug Report" menu option sending email *(no milestone assigned)*
+## Unassigned — Gameplay and Content Backlog
+
+- ⬜ #284 feat(combat): add reusable enemy attack presentation profiles
+- ⬜ #238 feat(loot): tune goblin drops by equipment and wave tier
+- ⬜ #237 feat(projectiles): add knife and spear throwable variants
+- ⬜ #230 feat(ui): show enemy knowledge gained after failure
+- ⬜ #229 feat(ui): add progressive enemy bestiary
+- ⬜ #228 feat(ui): unlock knowledge-driven enemy health bars
+- ⬜ #227 feat(enemies): report sightings and confirmed kills
+- ⬜ #226 feat(knowledge): persist enemy sightings and mastery
+- ⬜ #157 feat(gameplay): add additional prototype weapons with distinct swing-speed tiers
+- ⬜ #71 feat(loot): coin tier values (small/medium/large)
+- ⬜ #70 feat(loot): pickup object pooling
+- ⬜ #69 feat(loot): hybrid coin bursts (shower + stack remainder)
+- ⬜ #59 feat(inventory): add item pull (magnet) near player
+
+## Unassigned — Maintenance, Tooling, and Workflow Backlog
+
+- ⬜ #144 refactor(ui): extract close button construction out of TouchUIBindings
+- ⬜ #122 Docs — Living Checklists + Decisions Log
+- ⬜ #119 Auto-wiring (Editor Tool)
+- ⬜ #118 Prefab Creator (Editor Tool)
+- ⬜ #117 Scene Validator (Editor Tool)
+- ⬜ #113 refactor(ui): centralize upgrade button feedback handling
+- ⬜ #111 perf(ui): pool upgrade menu rows
+- ⬜ #36 Define Android versioning strategy for CI and test builds
+- ⬜ #35 Android milestone release workflow (GitHub Releases)
+- ⬜ #34 PR-gated Android APK artifact build (label-based)
+- ⬜ #24 UI: Add “Feedback / Bug Report” menu option sending email
 
 ---
 
