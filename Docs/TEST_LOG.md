@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-08-14 - fix-player-solid-collider-sticking
+
+### Summary
+- Replaced independent-axis Player collision with bounded full-vector CircleCast sweep-and-slide.
+- Added deterministic contact-normal clipping and preventive collider-offset rotation sweeping.
+- Added focused Player collision, dash regression, collider geometry, and allocation coverage.
+
+### New or Updated Tests
+**EditMode**
+- PlayerSweepSlideMathTests — collider offset/radius derivation, tangential clipping, deterministic corner constraints, and repeated allocation-free math.
+
+**PlayMode**
+- PlayerCollisionMove2DPlayTests and PlayerDashPlayTests — Barrier/Vault edges and corners, seams, sustained sliding, rotated blockers, rapid facing rotation, dash blocking, and post-contact recovery.
+
+### Notes
+- Focused EditMode and PlayMode tests passed — user-confirmed.
+- MainPrototype Barrier, wall, and Vault validation passed during rapid facing rotation and dash contact — user-confirmed.
+
 ## 2026-08-14 - fix-pr-293-dynamic-input-state
 
 ### Summary

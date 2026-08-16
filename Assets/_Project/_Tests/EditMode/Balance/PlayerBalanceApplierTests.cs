@@ -17,7 +17,7 @@ namespace Castlebound.Tests.Balance
             try
             {
                 player.AddComponent<Rigidbody2D>();
-                player.AddComponent<BoxCollider2D>();
+                player.AddComponent<CircleCollider2D>();
                 var health = player.AddComponent<Health>();
                 var mover = player.AddComponent<PlayerCollisionMove2D>();
                 var controller = player.AddComponent<PlayerController>();
@@ -56,7 +56,7 @@ namespace Castlebound.Tests.Balance
             try
             {
                 player.AddComponent<Rigidbody2D>();
-                player.AddComponent<BoxCollider2D>();
+                player.AddComponent<CircleCollider2D>();
                 var health = player.AddComponent<Health>();
                 var mover = player.AddComponent<PlayerCollisionMove2D>();
                 var controller = player.AddComponent<PlayerController>();

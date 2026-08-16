@@ -148,6 +148,10 @@ namespace Castlebound.Tests.PlayMode.Player
                 Assert.That(player.transform.position.x, Is.LessThanOrEqualTo(0.27f));
                 Assert.That(player.transform.position.y, Is.GreaterThan(0.1f),
                     "The unblocked axis should retain the mover's existing sliding behavior.");
+                Assert.IsFalse(Physics2D.Distance(
+                    player.GetComponent<CircleCollider2D>(),
+                    wall.GetComponent<BoxCollider2D>()).isOverlapped,
+                    "Blocked dash must not leave the Player overlapping the wall.");
 
                 while (dash.IsDashing)
                     yield return new WaitForFixedUpdate();
@@ -203,6 +207,10 @@ namespace Castlebound.Tests.PlayMode.Player
                     Assert.IsTrue(dashes[i].IsDashing, $"{names[i]} collision cancelled dash state.");
                     Assert.That(players[i].transform.position.x, Is.LessThanOrEqualTo(0.27f),
                         $"Dash passed through representative {names[i]} geometry.");
+                    Assert.IsFalse(Physics2D.Distance(
+                        players[i].GetComponent<CircleCollider2D>(),
+                        blockers[i].GetComponent<BoxCollider2D>()).isOverlapped,
+                        $"Dash left the Player overlapping representative {names[i]} geometry.");
                 }
 
                 while (dashes[0].IsDashing)
@@ -381,7 +389,7 @@ namespace Castlebound.Tests.PlayMode.Player
             player.transform.position = position;
             var body = player.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
-            player.AddComponent<BoxCollider2D>().size = Vector2.one * 0.5f;
+            player.AddComponent<CircleCollider2D>().radius = 0.25f;
             var mover = player.AddComponent<PlayerCollisionMove2D>();
             SetField(mover, "solidMask", (LayerMask)solidMask);
             dash = player.AddComponent<PlayerDashController>();
