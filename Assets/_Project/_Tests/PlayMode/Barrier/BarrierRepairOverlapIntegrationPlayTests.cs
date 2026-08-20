@@ -1,8 +1,8 @@
 using System.Collections;
+using Castlebound.Gameplay.AI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using Castlebound.Gameplay.AI;
 
 namespace Castlebound.Tests.Gate
 {
@@ -11,47 +11,51 @@ namespace Castlebound.Tests.Gate
         [UnityTest]
         public IEnumerator Repair_ResolvesPlayerOverlap_AndPushesInward()
         {
-            var barrierGo = new GameObject("Barrier");
-            var barrierCollider = barrierGo.AddComponent<BoxCollider2D>();
-            barrierCollider.size = new Vector2(2f, 2f);
-            barrierGo.AddComponent<SpriteRenderer>();
+            GameObject barrierObject = null;
+            GameObject anchorObject = null;
+            GameObject playerObject = null;
 
-            var hold = barrierGo.AddComponent<EnemyBarrierHoldBehavior>();
-            var anchorGo = new GameObject("Anchor");
-            anchorGo.transform.position = new Vector2(2f, 0f);
-            hold.Debug_SetAnchor(anchorGo.transform);
+            try
+            {
+                barrierObject = new GameObject("Barrier");
+                var barrier = barrierObject.AddComponent<BoxCollider2D>();
+                barrier.size = new Vector2(2f, 2f);
+                barrierObject.AddComponent<SpriteRenderer>();
 
-            var barrierHealth = barrierGo.AddComponent<BarrierHealth>();
+                var hold = barrierObject.AddComponent<EnemyBarrierHoldBehavior>();
+                anchorObject = new GameObject("Anchor");
+                anchorObject.transform.position = new Vector2(2f, 0f);
+                hold.Debug_SetAnchor(anchorObject.transform);
+                var health = barrierObject.AddComponent<BarrierHealth>();
 
-            var playerGo = new GameObject("Player");
-            playerGo.tag = "Player";
-            playerGo.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
-            playerGo.AddComponent<PlayerController>();
-            var playerCollider = playerGo.AddComponent<CircleCollider2D>();
-            playerCollider.radius = 0.4f;
+                playerObject = new GameObject("Player");
+                playerObject.tag = "Player";
+                playerObject.AddComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+                var player = playerObject.AddComponent<CircleCollider2D>();
+                player.radius = 0.4f;
+                playerObject.AddComponent<PlayerController>();
+                playerObject.transform.position = new Vector2(1.1f, 0f);
+                Physics2D.SyncTransforms();
 
-            playerGo.transform.position = new Vector2(1.1f, 0f);
+                Vector2 before = player.bounds.center;
+                health.TakeDamage(1);
+                Assert.IsTrue(health.Repair());
 
-            Physics2D.SyncTransforms();
+                Assert.Less(player.bounds.center.x, before.x);
+                Assert.Less(player.bounds.center.x, barrier.bounds.center.x);
+                Assert.IsFalse(Physics2D.Distance(barrier, player).isOverlapped);
 
-            Vector2 before = playerGo.transform.position;
-            barrierHealth.MaxHealth = 10;
-            barrierHealth.CurrentHealth = 10;
-            barrierHealth.TakeDamage(1);
-            barrierHealth.Repair();
-
-            yield return new WaitForFixedUpdate();
-            Physics2D.SyncTransforms();
-
-            Vector2 after = playerGo.transform.position;
-            var dist = Physics2D.Distance(barrierCollider, playerCollider);
-
-            Assert.Less(after.x, before.x, "Player should be pushed inward opposite the anchor direction.");
-            Assert.IsFalse(dist.isOverlapped, "Player should no longer overlap the barrier after Repair.");
-
-            Object.Destroy(barrierGo);
-            Object.Destroy(anchorGo);
-            Object.Destroy(playerGo);
+                yield return new WaitForFixedUpdate();
+                Physics2D.SyncTransforms();
+                Assert.IsFalse(Physics2D.Distance(barrier, player).isOverlapped,
+                    "Player must remain clear on the next physics step.");
+            }
+            finally
+            {
+                if (playerObject != null) Object.DestroyImmediate(playerObject);
+                if (anchorObject != null) Object.DestroyImmediate(anchorObject);
+                if (barrierObject != null) Object.DestroyImmediate(barrierObject);
+            }
         }
     }
 }

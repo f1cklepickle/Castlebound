@@ -167,10 +167,15 @@ public class BarrierHealth : MonoBehaviour, IDamageable
             var playerCollider = player.GetComponent<Collider2D>();
             if (playerCollider != null)
             {
+                var mover = player.GetComponent<PlayerCollisionMove2D>();
+                mover?.ReconcileExternalPosition(barrierCollider);
+
+                Physics2D.SyncTransforms();
                 ColliderDistance2D dist = Physics2D.Distance(barrierCollider, playerCollider);
                 if (dist.isOverlapped)
                 {
                     BarrierOverlapResolver.ResolveOverlap(barrierCollider, playerCollider, true);
+                    mover?.ReconcileExternalPosition();
                 }
             }
         }
