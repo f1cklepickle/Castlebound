@@ -78,6 +78,8 @@ public static class BarrierOverlapResolver
                 return false;
             }
 
+            Vector2 dir = desiredDir.normalized;
+
             for (int i = 0; i < maxIterations; i++)
             {
                 Physics2D.SyncTransforms();
@@ -87,11 +89,31 @@ public static class BarrierOverlapResolver
                     break;
                 }
 
-                Vector2 dir = desiredDir.normalized;
-                float barrierExtent = Mathf.Abs(Vector2.Dot(barrier.bounds.extents, dir));
-                float actorExtent = Mathf.Abs(Vector2.Dot(actor.bounds.extents, dir));
-                Vector2 target = (Vector2)barrier.bounds.center + dir * (barrierExtent + actorExtent + skin);
-                SetPositionImmediate(actor, target);
+                if (i == 0)
+                {
+                    float barrierExtent = Mathf.Abs(Vector2.Dot(barrier.bounds.extents, dir));
+                    float actorExtent = Mathf.Abs(Vector2.Dot(actor.bounds.extents, dir));
+                    Vector2 target = (Vector2)barrier.bounds.center +
+                        dir * (barrierExtent + actorExtent + skin);
+                    SetPositionImmediate(actor, target);
+                    continue;
+                }
+
+                float correctionDistance = -dist.distance + skin;
+                Rigidbody2D body = actor.attachedRigidbody;
+                Vector2 currentPosition = body != null
+                    ? body.position
+                    : (Vector2)actor.transform.position;
+                SetPositionImmediate(actor, currentPosition + dir * correctionDistance);
+            }
+
+            Physics2D.SyncTransforms();
+            ColliderDistance2D remaining = Physics2D.Distance(barrier, actor);
+            if (remaining.isOverlapped)
+            {
+                Debug.LogError(
+                    $"Player repair overlap resolution failed for {actor.name} against " +
+                    $"{barrier.name}; remaining signed distance: {remaining.distance}.");
             }
 
             return false;

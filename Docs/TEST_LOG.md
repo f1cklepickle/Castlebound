@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-08-20 - fix-player-barrier-repair-overlap
+
+### Summary
+- Restored the long-standing pre-#294 Barrier resolver as the authoritative repair-time Player relocation path.
+- Preserved #294 full-vector sweep-and-slide for ordinary movement without a second recovery or navigation system.
+- Added a minimal mover handoff for queued MovePosition cancellation and collider-center cache synchronization after external relocation.
+- Added a bounded inward-only signed-distance correction for residual penetration after the historical repair target.
+
+### New or Updated Tests
+**EditMode**
+- BarrierRepairOverlapAnchorTests and BarrierRepairOverlapPushTests — historical inward Player relocation, rotated offset-circle residual correction, already-clear target behavior, and unchanged enemy separation behavior.
+
+**PlayMode**
+- BarrierRepairOverlapIntegrationPlayTests and BarrierRepairPlayerRecoveryPlayTests — inward repair relocation with representative rotated offset-circle geometry, full clearance, active-movement synchronization, pending MovePosition cancellation, next-step stability, and immediate movement recovery.
+
+### Notes
+- The #294 mover can retain a queued MovePosition and cached collider-center offset after another system directly sets Rigidbody2D.position; without reconciliation, the next physics step can restore stale movement or interpret the old center state.
+- Existing #294 movement/dash and enemy repair expulsion/retarget suites remain the regression authority for those unchanged behaviors.
+- MainPrototype diagnostics verified that the historical resolver selected the correct inward direction, but the actual post-reposition ColliderDistance2D remained overlapped at approximately -0.0255 signed distance for a rotated offset Player circle.
+- The residual came from assigning the bounds-based historical target to the Rigidbody root while the rotated collider offset displaced the actual world-space circle center; follow-up correction now uses the measured signed penetration plus the existing skin along the same inward direction.
+- The active-movement regression drives PlayerController's production movement-input contract while retaining direct mover invocation only to stage the pre-repair MovePosition under test.
+- All EditMode and PlayMode tests passed — user-confirmed; Codex did not run Unity or tests.
+- MainPrototype validation passed — user confirmed no sticking against walls, corners, the Vault, or repaired Barriers; inward repair relocation and ordinary #294 movement remained correct.
+- Enemy repair behavior remained acceptable during user validation.
+
 ## 2026-08-14 - fix-player-solid-collider-sticking
 
 ### Summary

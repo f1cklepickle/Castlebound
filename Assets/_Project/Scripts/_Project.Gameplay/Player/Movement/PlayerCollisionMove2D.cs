@@ -22,6 +22,7 @@ public class PlayerCollisionMove2D : MonoBehaviour
     private bool _useVelocityOverride;
     private Vector2 _previousCenterOffset;
     private bool _hasPreviousCenterOffset;
+    private Vector2 _scheduledBodyPosition;
 
     public float MoveSpeed
     {
@@ -46,6 +47,38 @@ public class PlayerCollisionMove2D : MonoBehaviour
         _useVelocityOverride = true;
     }
 
+    /// <summary>
+    /// Reconciles cached mover state after an external position or solid-state change.
+    /// When a collider is supplied, a queued move is cancelled only if it would hit it.
+    /// </summary>
+    public void ReconcileExternalPosition(Collider2D activatedCollider = null)
+    {
+        if (_rb == null)
+        {
+            _rb = GetComponent<Rigidbody2D>();
+        }
+
+        if (_col == null)
+        {
+            _col = GetComponent<CircleCollider2D>();
+        }
+
+        if (_rb == null || _col == null)
+        {
+            return;
+        }
+
+        if (activatedCollider != null &&
+            (!activatedCollider.enabled || !DoesScheduledMoveHit(activatedCollider)))
+        {
+            return;
+        }
+
+        _scheduledBodyPosition = _rb.position;
+        _rb.MovePosition(_scheduledBodyPosition);
+        RefreshCenterOffset();
+    }
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -53,6 +86,11 @@ public class PlayerCollisionMove2D : MonoBehaviour
 
         if (_rb != null && _rb.bodyType != RigidbodyType2D.Kinematic)
             _rb.bodyType = RigidbodyType2D.Kinematic;
+
+        if (_rb != null)
+        {
+            _scheduledBodyPosition = _rb.position;
+        }
 
         RefreshCenterOffset();
     }
@@ -94,6 +132,7 @@ public class PlayerCollisionMove2D : MonoBehaviour
             filter);
 
         Vector2 resolvedBodyPosition = startCenter + resolvedCenterDisplacement - currentCenterOffset;
+        _scheduledBodyPosition = resolvedBodyPosition;
         _rb.MovePosition(resolvedBodyPosition);
         _previousCenterOffset = currentCenterOffset;
     }
@@ -196,6 +235,41 @@ public class PlayerCollisionMove2D : MonoBehaviour
     private bool IsBlockingHit(RaycastHit2D hit)
     {
         return hit.collider != null && hit.rigidbody != _rb;
+    }
+
+    private bool DoesScheduledMoveHit(Collider2D activatedCollider)
+    {
+        Vector2 displacement = _scheduledBodyPosition - _rb.position;
+        float distance = displacement.magnitude;
+        if (distance <= MinDisplacement)
+        {
+            return false;
+        }
+
+        Vector2 currentCenter = _rb.position + GetCurrentCenterOffset();
+        float radius = PlayerSweepSlideMath.GetWorldRadius(
+            _col.radius,
+            transform.lossyScale);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useLayerMask = true;
+        filter.layerMask = solidMask;
+        filter.useTriggers = false;
+        int hitCount = Physics2D.CircleCast(
+            currentCenter,
+            radius,
+            displacement / distance,
+            filter,
+            _hits,
+            distance + Mathf.Max(0f, skin));
+        for (int i = 0; i < hitCount; i++)
+        {
+            if (_hits[i].collider == activatedCollider)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Vector2 GetCurrentCenterOffset()
