@@ -4,6 +4,169 @@
 
 ---
 
+## 2026-08-24 - fix-enemy-direct-stacking-final-validation
+
+### Summary
+- User validation confirmed the full EditMode and PlayMode suites pass with the final non-impulse separation, preventive locomotion clamp, and chase-lane behavior.
+- MainPrototype validation confirmed direct stacking is substantially prevented, dense sprite overlap remains, chase movement is substantially smoother, and no unacceptable knockback chain reaction was observed.
+- Wall, Barrier, Vault, combat, root/stagger, and related interaction contracts were acceptable in user validation.
+
+### New or Updated Tests
+**EditMode**
+- Full EditMode suite — user-confirmed passing, including separation prefab/math and approach-spread contracts.
+
+**PlayMode**
+- Full PlayMode suite — user-confirmed passing, including separation, world stability, interaction routing, knockback isolation, and chase-lane coverage.
+
+### Notes
+- MainPrototype direct-stacking, dense-overlap, crowd-chase, knockback, and world/combat validation passed according to the user.
+- CHASE → surround transition can still briefly clump/jitter before the final circle forms; intentionally deferred from #277 to follow-up #296 as separate movement polish.
+
+## 2026-08-24 - fix-enemy-direct-stacking-chase-lanes
+
+### Summary
+- Verified that distance-weighted neighbor separation became laterally blind when crowd pressure aligned ahead/behind the Player pursuit direction, leaving dense CHASE groups on common paths until hard separation intervened.
+- Extended existing approach spread with deterministic compression-scaled lane bias for longitudinal crowd pressure while retaining the authored forward floor and lateral cap.
+- Faded the added lane influence as near-Player angular surround arrival takes over; hard separation, HOLD, Barrier targeting, and movement-lock contracts remain unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemyApproachSpreadTests — longitudinal lane creation, compression-to-arrival fade, preserved lateral authority, forward progress, and speed cap.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests — a longitudinally compressed group develops multiple lanes before near-Player surround behavior while continuing forward.
+
+### Notes
+- Focused EditMode, focused PlayMode, full EditMode, full PlayMode, and MainPrototype crowd validation remain pending user execution; no passing result is claimed.
+- Codex did not run Unity, EditMode, or PlayMode tests.
+
+## 2026-08-23 - fix-enemy-direct-stacking-clamp-tolerance
+
+### Summary
+- Traced repeated fallback counts during stable preventive convergence to float-sized residual penetrations at the exact sensor-radius boundary rather than meaningful overlap.
+- Aligned preventive and fallback geometry with one tolerance equal to one percent of Physics2D.defaultContactOffset.
+- Kept the non-impulse sensor, footprint size, scheduled-target prediction, deterministic fallback ownership, and movement behavior unchanged.
+
+### New or Updated Tests
+**EditMode**
+- N/A — existing separation math and prefab contracts remain unchanged.
+
+**PlayMode**
+- EnemySeparationPlayTests — existing sustained-inward regression remains the acceptance test for stable preventive convergence without repeated fallback correction.
+
+### Notes
+- Focused EnemySeparationPlayTests and the full PlayMode suite remain pending user execution; no passing result is claimed.
+- Codex did not run Unity, EditMode, or PlayMode tests.
+
+## 2026-08-23 - fix-enemy-direct-stacking-preventive-clamp
+
+### Summary
+- Verified that ordinary inward MovePosition requests repeatedly re-entered the hard footprint after post-physics correction, producing visible interpolation jitter.
+- Added a pair-aware preventive locomotion clamp that removes only footprint-violating inward displacement while preserving tangential, outward, soft-spacing, and knockback movement.
+- Retained bounded post-physics depenetration as an exceptional fallback for coincident spawn and external overlap states.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationMathTests — inward minimum-footprint clipping with tangential and outward movement preservation.
+
+**PlayMode**
+- EnemySeparationPlayTests — sustained opposing production locomotion settles at the minimum without repeated fallback corrections while retaining tangential movement and dense visual overlap.
+
+### Notes
+- Focused EditMode, focused PlayMode, full EditMode, full PlayMode, and MainPrototype validation remain pending user execution; no passing result is claimed.
+- Codex did not run Unity, EditMode, or PlayMode tests.
+
+## 2026-08-20 - fix-enemy-direct-stacking-opposing-movement-follow-up
+
+### Summary
+- User validation confirmed the prior #277 failures pass individually; full PlayMode isolated one remaining opposing-MovePosition timing regression.
+- Verified that pre-physics depenetration reached the 0.40 sensor footprint before the final two 0.04 inward MovePosition requests reduced the observed separation to 0.32.
+- Reconciled the same bounded, deterministic pair correction from Enemy trigger callbacks after scheduled movement is applied, without changing sensor size or architecture.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationMathTests — opposing 0.08 penetration is fully split into two 0.04 bounded corrections.
+
+**PlayMode**
+- EnemySeparationPlayTests — existing opposing-MovePosition minimum-footprint regression remains the behavioral acceptance test.
+
+### Notes
+- The focused opposing test, full EnemySeparationPlayTests, and full PlayMode suite require user rerun; no passing result is claimed for this correction.
+- Codex did not run Unity, EditMode, or PlayMode tests.
+
+## 2026-08-20 - fix-enemy-direct-stacking-non-impulse-replacement
+
+### Summary
+- Removed the rejected solid Dynamic-Rigidbody Enemy separation response and its obsolete physics material after validation proved knockback transferred through neighboring bodies.
+- Reused the small child footprint as an Enemy-only trigger sensor with one deterministic pair owner and capped, allocation-conscious depenetration.
+- Preserved root/stagger locks, isolated knockback momentum, and clamped corrections with the primary collider against Player and authored world-solid geometry.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationPrefabContractTests and EnemySeparationMathTests — non-impulse sensor contracts, deterministic coincidence axis, blocked-side redistribution, and both-locked behavior.
+
+**PlayMode**
+- EnemySeparationPlayTests — coincident and ordinary separation, mixed crowd progress, world-contact tolerance/isolation, root/stagger locks, knockback isolation, both-locked deferral, and unchanged hit routing.
+
+### Notes
+- Full EditMode and the three focused PlayMode failures require user rerun against the replacement implementation; no passing result is claimed.
+- Codex did not run Unity, EditMode, PlayMode, or MainPrototype validation.
+
+## 2026-08-20 - fix-enemy-direct-stacking-architecture-reassessment
+
+### Summary
+- Full EditMode remained green, while exact coincident recovery, Barrier tolerance, and knockback isolation remained failing diagnostics in PlayMode.
+- Verified that coincidence callbacks never execute because the separation colliders capture no contact layers, even though Enemy callback layers are enabled.
+- Rejected solid Dynamic-Rigidbody Enemy separation because its mutual Enemy force masks transmit knockback impulses into neighboring enemies; replacement design remains pending approval.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- N/A
+
+### Notes
+- The Barrier diagnostic measures the primary body at -0.005053639 signed distance, within the authored Physics2D default contact offset of 0.01; the separation child excludes Barrier/world contact.
+- Recommended replacement: an allocation-conscious, bounded Enemy-only overlap/depenetration owner that does not use physical Enemy-to-Enemy impulse response and clamps corrections against primary world geometry.
+- Codex did not run Unity or tests; the three PlayMode diagnostics remain failing pending replacement-design approval and implementation.
+
+## 2026-08-20 - fix-enemy-direct-stacking-validation-follow-up
+
+### Summary
+- User validation passed full EditMode and found three focused PlayMode failures: exact coincident recovery, primary-body Barrier settling, and root contact displacement.
+- Added an Enemy-only callback and deterministic sub-radius tie-break for the exact identical-circle degeneracy while leaving ordinary separation to Physics2D.
+- Kept Barrier/world isolation unchanged, allowed the forced-movement fixture to settle before asserting primary-body clearance, and bounded root/stagger displacement by initial contact penetration instead of an arbitrary distance.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationPrefabContractTests — separation callbacks remain restricted to the Enemies layer.
+
+**PlayMode**
+- EnemySeparationPlayTests — exact coincident recovery, settled primary-body world clearance, separation-child world isolation, and penetration-relative root/stagger locks.
+
+### Notes
+- Full EditMode passed before this follow-up; the three corrected PlayMode tests and both full suites require user rerun.
+- Codex did not run Unity, EditMode, PlayMode, or MainPrototype validation.
+
+## 2026-08-20 - fix-enemy-direct-stacking
+
+### Summary
+- Verified that active enemies use one large primary combat/body collider while the Enemies layer globally ignores itself, leaving soft steering unable to guarantee minimum center separation.
+- Added a small child-only Enemy separation footprint with isolated per-collider layer overrides and a neutral zero-friction, zero-bounce material.
+- Preserved the primary collider as the authoritative engagement, combat, Player, Barrier, projectile, trap, and world-contact footprint.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationPrefabContractTests — melee, ranged, and Lurker Rigidbody2D, primary-body, child-footprint, layer-override, material, tag, and unchanged global-matrix contracts.
+
+**PlayMode**
+- EnemySeparationPlayTests — opposing and coincident convergence, mixed-crowd progress, wall/Barrier/Vault stability, root/stagger/knockback behavior, combat/projectile/trap routing, and Player primary-body contact.
+
+### Notes
+- Unity, EditMode, PlayMode, and MainPrototype validation were not run; validation remains pending from the user.
+- Barrier repair overlap handling and Tower targeting explicitly ignore the separation-only child so existing primary-collider routing remains authoritative.
+
 ## 2026-08-20 - fix-player-barrier-repair-overlap
 
 ### Summary

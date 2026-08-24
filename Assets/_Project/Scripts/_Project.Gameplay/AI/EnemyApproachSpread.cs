@@ -50,12 +50,34 @@ public class EnemyApproachSpread : MonoBehaviour
         Vector2 forward = directionToTarget.normalized;
         Vector2 lateralAxis = new Vector2(-forward.y, forward.x);
         float localPreference = 0f;
+        float longitudinalLanePreference = 0f;
         if (hasNeighbors)
         {
-            Vector2 separation = localSeparation.sqrMagnitude > 0.0001f
-                ? localSeparation.normalized
-                : stableBias.normalized;
-            localPreference = Vector2.Dot(separation, lateralAxis);
+            if (localSeparation.sqrMagnitude > 0.0001f)
+            {
+                float separationMagnitude = localSeparation.magnitude;
+                Vector2 separation = localSeparation / separationMagnitude;
+                localPreference = Vector2.Dot(separation, lateralAxis);
+
+                // Fore/aft pressure has no lateral projection, so reuse the
+                // stable bias to form a lane before hard separation is reached.
+                float longitudinalAlignment = Mathf.Abs(
+                    Vector2.Dot(separation, forward));
+                float longitudinalDominance = Mathf.Clamp01(
+                    longitudinalAlignment - Mathf.Abs(localPreference));
+                float compression = Mathf.Clamp01(separationMagnitude);
+                float stableLanePreference = Vector2.Dot(
+                    stableBias.normalized,
+                    lateralAxis);
+                longitudinalLanePreference = stableLanePreference *
+                    longitudinalDominance * compression;
+            }
+            else
+            {
+                localPreference = Vector2.Dot(
+                    stableBias.normalized,
+                    lateralAxis);
+            }
         }
 
         float angularPreference = 0f;
@@ -72,6 +94,11 @@ public class EnemyApproachSpread : MonoBehaviour
             else if (hasNeighbors && gapCW <= 0f && gapCCW <= 0f)
                 angularPreference = Vector2.Dot(stableBias.normalized, lateralAxis) * 0.5f;
         }
+
+        localPreference = Mathf.Clamp(
+            localPreference + longitudinalLanePreference * (1f - arrival01),
+            -1f,
+            1f);
 
         float localLateral = Mathf.Clamp01(separationStrength) *
                              Mathf.Clamp01(maxLateralRatio) * localPreference;

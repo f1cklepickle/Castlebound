@@ -7,6 +7,7 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private EnemyRootReceiver rootReceiver;
     [SerializeField] private MonoBehaviour holdMovementPolicySource;
 
+    private EnemySeparationCollider separationCollider;
     private float previousDistance;
     private int distanceTrend;
     private Vector2 lastNonZeroDirection = Vector2.right;
@@ -143,7 +144,22 @@ public class EnemyLocomotion : MonoBehaviour
         Vector2 knockback = knockbackReceiver != null
             ? knockbackReceiver.ConsumeDisplacement(deltaTime)
             : Vector2.zero;
-        Vector2 displacement = (radial + tangent) * deltaTime + knockback;
+        Vector2 locomotionDisplacement = (radial + tangent) * deltaTime;
+        if (separationCollider == null)
+            separationCollider = GetComponentInChildren<EnemySeparationCollider>();
+        if (separationCollider != null)
+        {
+            locomotionDisplacement = separationCollider
+                .ConstrainLocomotionDisplacement(locomotionDisplacement);
+        }
+
+        Vector2 displacement = locomotionDisplacement + knockback;
+        if (separationCollider != null)
+        {
+            separationCollider.RecordScheduledBodyPosition(
+                body.position + displacement);
+        }
+
         body.MovePosition(body.position + displacement);
         return displacement.sqrMagnitude > Mathf.Epsilon;
     }
