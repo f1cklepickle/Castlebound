@@ -129,6 +129,11 @@ namespace Castlebound.Gameplay.Tower
                 return false;
             }
 
+            if (candidateCollider.GetComponent<EnemySeparationCollider>() != null)
+            {
+                return false;
+            }
+
             if (candidateCollider.transform == transform || candidateCollider.transform.IsChildOf(transform))
             {
                 return false;

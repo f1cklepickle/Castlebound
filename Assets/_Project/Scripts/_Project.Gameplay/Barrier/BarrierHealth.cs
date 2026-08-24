@@ -188,7 +188,7 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         for (int i = 0; i < count; i++)
         {
             var other = _overlapBuffer[i];
-            if (other == null)
+            if (other == null || other.GetComponent<EnemySeparationCollider>() != null)
             {
                 continue;
             }

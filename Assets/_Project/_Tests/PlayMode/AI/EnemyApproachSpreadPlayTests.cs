@@ -41,6 +41,49 @@ namespace Castlebound.Tests.PlayMode.AI
         }
 
         [UnityTest]
+        public IEnumerator LongitudinallyCompressedGroup_DevelopsApproachLanesBeforeHardContact()
+        {
+            var player = CreatePlayer();
+            var managerObject = new GameObject("EnemyRingManager");
+            var enemies = new[]
+            {
+                CreateEnemy(player.transform, new Vector2(16f, 0f)),
+                CreateEnemy(player.transform, new Vector2(15.4f, 0f)),
+                CreateEnemy(player.transform, new Vector2(14.5f, 0f)),
+                CreateEnemy(player.transform, new Vector2(13.8f, 0f)),
+                CreateEnemy(player.transform, new Vector2(12.6f, 0f))
+            };
+            try
+            {
+                managerObject.AddComponent<EnemyRingManager>();
+                float startingAverageX = AverageX(enemies);
+
+                for (int i = 0; i < 10; i++)
+                    yield return new WaitForFixedUpdate();
+
+                float[] lateralPositions = GetSortedY(enemies);
+                Assert.That(lateralPositions[4] - lateralPositions[0],
+                    Is.GreaterThan(0.12f),
+                    "Longitudinal crowd pressure should produce early approach lanes.");
+                Assert.That(CountDistinct(lateralPositions, 0.025f),
+                    Is.GreaterThanOrEqualTo(3));
+                Assert.That(AverageX(enemies), Is.LessThan(startingAverageX - 1f),
+                    "Lane formation must preserve clear forward chase progress.");
+                Assert.That(Vector2.Distance(
+                        enemies[4].transform.position,
+                        player.transform.position),
+                    Is.GreaterThan(10f),
+                    "Lane formation should occur before near-Player surround steering dominates.");
+            }
+            finally
+            {
+                DestroyEnemies(enemies);
+                Object.Destroy(managerObject);
+                Object.Destroy(player);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator AlreadySpacedGroup_ContinuesMostlyForward()
         {
             var player = CreatePlayer();
@@ -151,6 +194,14 @@ namespace Castlebound.Tests.PlayMode.AI
             for (int i = 1; i < sortedValues.Length; i++)
                 if (sortedValues[i] - sortedValues[i - 1] > tolerance) count++;
             return count;
+        }
+
+        private static float AverageX(GameObject[] enemies)
+        {
+            float sum = 0f;
+            for (int i = 0; i < enemies.Length; i++)
+                sum += enemies[i].transform.position.x;
+            return sum / enemies.Length;
         }
 
         private static void SetField(object instance, string fieldName, object value)
