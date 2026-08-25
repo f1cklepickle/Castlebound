@@ -1,5 +1,5 @@
 # Castlebound — Living Issue Tree
-**Last synced:** 2026-08-15 | **Repo:** https://github.com/f1cklepickle/Castlebound
+**Last synced:** 2026-08-24 | **Repo:** https://github.com/f1cklepickle/Castlebound
 
 > This doc mirrors GitHub milestone/issue state as a readable progress snapshot.
 > It is not the source of truth — GitHub is. Update this after planning sessions or milestone closes.
@@ -16,8 +16,10 @@
 | P3 — Authored Defense Under Pressure | Prove the player is authoring defense, not reacting randomly | ✅ Complete (47/47) |
 | P4 — Castle Memory & Trust | Prove the castle remembers what the player brings back | ✅ Complete (14/14) |
 | P5 — Meaningful Failure | Teach Castlebound's philosophy through loss | ✅ Complete (5/5) |
-| P6 — Prototype Content Lock | Lock the remaining combat and defensive-choice feature set | 🟨 In Progress (13/19, 68%) |
-| P7 — Prototype Lock & Polish | Make the locked prototype readable, stable, and demonstrable | 🟨 In Progress (16/28, 57%) |
+| P6 — Prototype Completion | Finish the gameplay, content, controls, behavior, and presentation required for a complete prototype | 🟨 In Progress (13/26, 50%) |
+| P7 — Prototype Polish & Release Candidate | Polish, tune, synchronize, stabilize, and validate the completed prototype | ⏸ Queued until P6 closes (18/21, 86%) |
+
+> Closed issues retain their historical milestone assignments; the reorganized P6/P7 boundary applies to remaining open work.
 
 ---
 
@@ -61,37 +63,52 @@
 
 ---
 
-## P6 — Prototype Content Lock 🟨
-**Purpose:** Prove the remaining combat and defensive-choice pillars before prototype polish.
-**Must establish:** Readable melee goblin attacks, active defense through dash/block/parry, authored melee and ranged waves, two tower choices, two trap choices, and reliable broken-gate traversal.
-**Completion definition:** *The prototype demonstrates skilled combat and meaningful defensive variety; its feature set is locked.*
+## P6 — Prototype Completion 🟨
+**Purpose:** Finish all required gameplay, content, controls, behavior, and presentation needed to call the prototype complete.
+**Completion definition:** *The intended prototype experience is functionally and presentationally complete, and its feature/content scope can be frozen.*
 
+**Foundation, behavior, and controls**
 - ⬜ #279 refactor(spawning): consolidate wave scheduling architecture
+- ⬜ #43 Implement enemy pass-through movement via broken gates
+- ⬜ #296 fix(ai): smooth enemy chase-to-surround transition
+- ⬜ #287 feat(input): refine responsive floating mobile joysticks
+
+**Defense choices and visual dependencies**
+- ⬜ #120 Locked Palette + Palette-based Tints
+- ⬜ #275 fix(visual): split castle wall floor from foreground wall
 - ⬜ #267 feat(tower): add second prototype tower archetype
 - ⬜ #264 feat(defense): add second prototype trap archetype
-- ⬜ #112 refactor(player): split PlayerController responsibilities
-- ⬜ #43 Implement enemy pass-through movement via broken gates
+
+**Presentation and close-out**
+- ⬜ #105 feat(art): polish castle wall and tower sprite presentation
+- ⬜ #132 feat(visual): basic ground tileset
+- ⬜ #156 feat(visual): improve attack presentation readability at high swing speeds
+- ⬜ #30 feat(audio): add melee-hit and gate-repair feedback cues
 - ⬜ #31 Docs: Add short design doc for Spawning + Waves behavior
+
+**P6 completion gate**
+- [ ] All required implementation and content work is resolved
+- [ ] Integrated prototype-completion validation is performed
+- [ ] Feature and content scope is frozen
+- [ ] P6 is closed before P7 becomes the primary active milestone
 
 ---
 
-## P7 — Prototype Lock & Polish 🟨
-**Purpose:** Lock the prototype content and make the experience readable, stable, and demonstrable.
-**Must establish:** Presentation and feedback clarity, final input-contract regeneration, core tuning, bug fixes only, and no new mechanics.
-**Completion definition:** *This is a complete Castlebound prototype.*
+## P7 — Prototype Polish & Release Candidate ⏸
+**Status:** Queued until P6 closes.
+**Purpose:** Polish, tune, synchronize, stabilize, and validate the completed prototype as a release candidate.
+**Completion definition:** *Castlebound has a stable, balanced, validated prototype release candidate.*
 
-- ⬜ #287 feat(input): refine responsive floating mobile joysticks
-- ⬜ #277 fix(ai): prevent enemies from stacking directly
-- ⬜ #276 fix(player): prevent sticking against barrier and vault colliders
-- ⬜ #275 fix(visual): split castle wall floor from foreground wall
-- ⬜ #156 feat(visual): improve attack presentation readability at high swing speeds
-- ⬜ #132 feat(visual): basic ground tileset
-- ⬜ #120 Locked Palette + Palette-based Tints
-- ⬜ #110 chore(input): regenerate PlayerControls.cs from inputactions
-- ⬜ #105 feat(art): polish castle wall and tower sprite presentation
-- ⬜ #104 fix(gameplay): bug fix sweep only (no new mechanics)
-- ⬜ #103 chore(balance): core tuning pass
-- ⬜ #30 UX: Add basic visual/audio feedback for melee hits and gate repairs
+1. ⬜ #103 chore(balance): final core balance and pacing gate
+2. ⬜ #110 chore(input): final generated-input synchronization
+3. ⬜ #104 fix(gameplay): final regression and stabilization gate
+4. ⬜ Release-candidate validation gate
+
+**P7 completion gate**
+- [ ] Final balance and pacing are complete
+- [ ] Generated input is synchronized from the frozen authoritative asset
+- [ ] Final regression and bug stabilization are complete
+- [ ] The prototype release candidate is validated
 
 ---
 
@@ -113,6 +130,7 @@
 
 ## Unassigned — Maintenance, Tooling, and Workflow Backlog
 
+- ⬜ #112 refactor(player): split PlayerController responsibilities
 - ⬜ #144 refactor(ui): extract close button construction out of TouchUIBindings
 - ⬜ #122 Docs — Living Checklists + Decisions Log
 - ⬜ #119 Auto-wiring (Editor Tool)
