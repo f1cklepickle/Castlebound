@@ -84,6 +84,55 @@ namespace Castlebound.Tests.PlayMode.AI
         }
 
         [UnityTest]
+        public IEnumerator NearCancelledSpacingDuringFarChase_PreservesStableForwardProgress()
+        {
+            var player = CreatePlayer();
+            var enemy = CreateEnemy(player.transform, new Vector2(20f, 0f));
+            var controller = enemy.GetComponent<EnemyController2D>();
+            var body = enemy.GetComponent<Rigidbody2D>();
+            float startingX = body.position.x;
+            float maximumDirectionChange = 0f;
+            Vector2 previousDisplacement = Vector2.zero;
+
+            try
+            {
+                for (int step = 0; step < 20; step++)
+                {
+                    float lateralSign = (step & 1) == 0 ? 1f : -1f;
+                    controller.SetApproachSeparation(
+                        new Vector2(0.03f, 0.04f * lateralSign),
+                        true);
+                    Vector2 before = body.position;
+
+                    yield return new WaitForFixedUpdate();
+
+                    Vector2 displacement = body.position - before;
+                    if (previousDisplacement.sqrMagnitude > 0f && displacement.sqrMagnitude > 0f)
+                    {
+                        maximumDirectionChange = Mathf.Max(
+                            maximumDirectionChange,
+                            Vector2.Angle(previousDisplacement, displacement));
+                    }
+
+                    previousDisplacement = displacement;
+                }
+
+                Assert.That(maximumDirectionChange, Is.LessThan(2f),
+                    "Near-cancelled soft spacing must not destabilize far-CHASE direction.");
+                Assert.That(body.position.x, Is.LessThan(startingX - 2f),
+                    "Stabilizing soft spacing must preserve clear forward chase progress.");
+                Assert.That(Vector2.Distance(body.position, player.transform.position),
+                    Is.GreaterThan(13f),
+                    "The regression must remain outside near-Player surround arrival.");
+            }
+            finally
+            {
+                DestroyEnemies(new[] { enemy });
+                Object.Destroy(player);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator AlreadySpacedGroup_ContinuesMostlyForward()
         {
             var player = CreatePlayer();

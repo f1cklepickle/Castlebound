@@ -147,5 +147,38 @@ namespace Castlebound.Tests.AI
             StringAssert.DoesNotContain("SetTrigger", attackSource,
                 "EnemyAttack must delegate presentation without owning Animator triggers.");
         }
+
+        [TestCase(PrefabPath)]
+        [TestCase(RangedPrefabPath)]
+        public void RepeatedAppliedMovementRequest_DoesNotRestartGoblinWalk(string prefabPath)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            GameObject instance = Object.Instantiate(prefab);
+            try
+            {
+                var presenter = instance.GetComponent<EnemyAnimationPresenter>();
+                var animator = instance.GetComponent<Animator>();
+                presenter.InitializePresentation();
+                presenter.SetMovementRequested(true);
+                animator.Play("Walk", 0, 0.25f);
+                animator.Update(0f);
+                AnimatorStateInfo establishedState = animator.GetCurrentAnimatorStateInfo(0);
+
+                presenter.SetMovementRequested(true);
+                animator.Update(0f);
+                AnimatorStateInfo repeatedRequestState = animator.GetCurrentAnimatorStateInfo(0);
+
+                Assert.That(establishedState.IsName("Walk"), Is.True);
+                Assert.That(establishedState.normalizedTime, Is.EqualTo(0.25f).Within(0.001f));
+                Assert.That(repeatedRequestState.IsName("Walk"), Is.True);
+                Assert.That(repeatedRequestState.normalizedTime,
+                    Is.EqualTo(establishedState.normalizedTime).Within(0.001f),
+                    "A repeated moving request must preserve the established Walk time.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
+        }
     }
 }

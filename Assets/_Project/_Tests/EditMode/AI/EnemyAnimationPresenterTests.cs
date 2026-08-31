@@ -62,6 +62,15 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
+        public void MovementRequest_EntersWalk()
+        {
+            presenter.SetMovementRequested(true);
+
+            Assert.That(presenter.CurrentState,
+                Is.EqualTo(EnemyAnimationPresenter.PresentationState.Walk));
+        }
+
+        [Test]
         public void MovementStop_ReturnsToNeutralBeforeDelayedIdle()
         {
             presenter.SetMovementRequested(true);
