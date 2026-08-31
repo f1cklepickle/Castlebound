@@ -27,6 +27,45 @@ namespace Castlebound.Tests.AI
         }
 
         [Test]
+        public void NearCancelledNeighborSums_DoNotAmplifyDirectionChanges()
+        {
+            EnemyApproachSpread.ComputeApproach(
+                pursuit: Vector2.right * 8f,
+                directionToTarget: Vector2.right,
+                localSeparation: new Vector2(0.03f, 0.04f),
+                hasNeighbors: true,
+                stableBias: Vector2.down,
+                speed: 8f,
+                separationStrength: 0.8f,
+                maxLateralRatio: 0.35f,
+                minimumForwardRatio: 0.8f,
+                out Vector2 firstRadial,
+                out Vector2 firstTangent);
+
+            EnemyApproachSpread.ComputeApproach(
+                pursuit: Vector2.right * 8f,
+                directionToTarget: Vector2.right,
+                localSeparation: new Vector2(0.03f, -0.04f),
+                hasNeighbors: true,
+                stableBias: Vector2.down,
+                speed: 8f,
+                separationStrength: 0.8f,
+                maxLateralRatio: 0.35f,
+                minimumForwardRatio: 0.8f,
+                out Vector2 secondRadial,
+                out Vector2 secondTangent);
+
+            Vector2 firstMovement = firstRadial + firstTangent;
+            Vector2 secondMovement = secondRadial + secondTangent;
+            Assert.That(Vector2.Angle(firstMovement, secondMovement), Is.LessThan(2f),
+                "Near-cancelled neighbor sums must not become full-strength direction changes.");
+            Assert.That(firstTangent.y, Is.GreaterThan(0f));
+            Assert.That(secondTangent.y, Is.LessThan(0f));
+            Assert.That(firstMovement.magnitude, Is.LessThanOrEqualTo(8.001f));
+            Assert.That(secondMovement.magnitude, Is.LessThanOrEqualTo(8.001f));
+        }
+
+        [Test]
         public void CoincidentNeighbors_UseStableBiasToBreakSymmetry()
         {
             EnemyApproachSpread.ComputeApproach(

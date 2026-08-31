@@ -53,11 +53,16 @@ public class EnemyApproachSpread : MonoBehaviour
         float longitudinalLanePreference = 0f;
         if (hasNeighbors)
         {
-            if (localSeparation.sqrMagnitude > 0.0001f)
+            if (localSeparation.sqrMagnitude > Mathf.Epsilon)
             {
                 float separationMagnitude = localSeparation.magnitude;
                 Vector2 separation = localSeparation / separationMagnitude;
-                localPreference = Vector2.Dot(separation, lateralAxis);
+                // The residual magnitude is confidence in the summed direction;
+                // normalizing it would amplify near-cancelled neighbor pressure.
+                localPreference = Mathf.Clamp(
+                    Vector2.Dot(localSeparation, lateralAxis),
+                    -1f,
+                    1f);
 
                 // Fore/aft pressure has no lateral projection, so reuse the
                 // stable bias to form a lane before hard separation is reached.

@@ -47,7 +47,7 @@ namespace Castlebound.Gameplay.AI
                 return;
             }
             inactiveSeconds = 0f;
-            if (state != PresentationState.Attack)
+            if (state != PresentationState.Attack && state != PresentationState.Walk)
                 PlayState(PresentationState.Walk, walkStateName, 1f);
         }
 

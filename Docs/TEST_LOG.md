@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-08-31 - fix-ai-soft-spacing-and-walk-validation
+
+### Summary
+- Preserved raw summed soft-spacing magnitude so near-cancelled neighbor pressure cannot become full-strength CHASE lateral steering.
+- Made repeated moving presentation requests idempotent while already walking so melee and ranged goblin Walk clips advance normally.
+- Preserved forward progress, #277 separation, surround behavior, attack presentation, animation assets, and prefab structure.
+
+### New or Updated Tests
+**EditMode**
+- EnemyApproachSpreadTests, EnemyAnimationPresenterTests, and EnemyGoblinVisualContractTests — cancellation-sensitive steering, Walk state contracts, and non-restarting goblin presentation.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests and EnemyGoblinAnimationPlayTests — stable far-CHASE progress and sustained runtime Walk animation advancement.
+
+### Notes
+- User confirmed the full EditMode suite and full PlayMode suite passed.
+- MainPrototype CHASE was visibly smoother and less jittery; melee and ranged goblin Walk animation visibly advanced correctly.
+- Residual CHASE-to-surround transition jitter remains intentionally tracked by #296.
+
+## 2026-08-30 - fix-ai-soft-spacing-cancellation
+
+### Summary
+- Verified that normalizing near-cancelled distance-weighted neighbor sums amplified small geometry changes into full-strength CHASE lateral direction changes.
+- Preserved raw summed separation magnitude when computing CHASE lateral preference while retaining exact-coincidence bias, forward progress, lateral limits, and surround-arrival behavior.
+- Kept the neighbor feed, #277 non-impulse hard separation, HOLD behavior, prefabs, and movement-lock contracts unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemyApproachSpreadTests — near-cancelled neighbor sums produce bounded direction changes without losing direction sign or movement-speed limits.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests — alternating cancellation-sensitive spacing inputs remain stable and preserve forward progress during far CHASE outside surround arrival.
+
+### Notes
+- Full EditMode suite: 989 passed; full PlayMode suite: 120 passed in the already-open Unity Editor.
+- MainPrototype dense-crowd manual validation remains pending.
+
 ## 2026-08-24 - fix-enemy-direct-stacking-final-validation
 
 ### Summary
