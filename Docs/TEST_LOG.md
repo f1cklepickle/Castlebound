@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-09-14 - codex/fix-296-clean-restart-lookahead-4.5
+
+### Summary
+- Increased only BypassLookaheadDistance from 3f to 4.5f.
+- Kept waypoint length, Player gate, engagement cutoff, filtering and all movement policies unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemyChaseApproachTargetTests — updated extended-range corridor expectations; added 4.5-unit center-boundary coverage using a large footprint and distant off-route/rear/endpoint exclusions.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity and tests were not run, as requested.
+- The unchanged Player gate still caps direct travel at 3 units; farther centers qualify only when their expanded footprints intersect that segment.
+- No commit, push, publication or wider-gap tuning.
+
+## 2026-09-14 - codex/fix-296-clean-restart-earlier-bypass
+
+### Summary
+- Extended bypass-only candidate collection and direct-corridor detection to 3 units while retaining the authored 1.5-unit waypoint and 3.5-unit Player surface-distance gate.
+- Restricted extra distant allies to expanded-footprint corridor obstructions before activation, waypoint revalidation or tangent construction; retained local constraints and release hysteresis.
+- Preserved side commitment, 100-degree guard, 225-degree/second smoothing, authored-speed cap, stationary melee HOLD, #277, #299/soft spacing and ranged/barrier policies.
+
+### New or Updated Tests
+**EditMode**
+- EnemyChaseApproachTargetTests — added 16 cases across five methods covering early detection/range boundary, corridor and engagement exclusions, waypoint length, side/tangent isolation, release hysteresis and runtime blocker eligibility.
+
+**PlayMode**
+- EnemyChaseApproachTargetPlayTests.SameDirectionArrivals_SplitBeforeOldNeighborRange — added observed divergence of two arrivals while the front blocker remains beyond 1.5 units, with speed and footprint guards.
+
+### Notes
+- Unity, EditMode and PlayMode were not run, as requested. Tests were authored before the implementation; red/green execution and MainPrototype validation remain with the user.
+- Existing smoothing, outward-guard, HOLD, #277/#299 and ranged/barrier regression tests are unchanged and must be rerun for this slice.
+- Moving blockers can still cause unnecessary early detours; smoothing initially retains inward travel. No prediction, formation tuning or movement-system changes were added.
+- Checkpoint ac1c7fd remains HEAD; no commit, push or PR. Both excluded ProjectSettings files were left untouched.
+
 ## 2026-09-08 - codex/fix-296-clean-restart-movement-checkpoint
 
 ### Summary

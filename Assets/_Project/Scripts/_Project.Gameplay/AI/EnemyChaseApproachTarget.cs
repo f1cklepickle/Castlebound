@@ -13,10 +13,13 @@ public sealed class EnemyChaseApproachTarget
     }
 
     public const float MaximumBypassAngleDegrees = 100f;
+    // Detection only: never use this to lengthen waypoints or widen the Player-distance gate.
+    public const float BypassLookaheadDistance = 4.5f;
     private const float ApproachClearanceRatio = 1.1f;
     private const float ReleaseClearanceRatio = 1.35f;
     private const float TangentClearanceRadians = 0.01f;
     private readonly List<Footprint> nearby = new List<Footprint>(16);
+    private readonly List<Footprint> routeNeighbors = new List<Footprint>(16);
     private int previousPlayerId;
 
     public bool IsActive => Side != 0;
@@ -51,7 +54,7 @@ public sealed class EnemyChaseApproachTarget
         {
             if (other == null || other == subject || !other.isActiveAndEnabled ||
                 other.CurrentTargetType != EnemyTargetType.Player || other.Target != player ||
-                ((Vector2)other.transform.position - position).sqrMagnitude > range * range)
+                ((Vector2)other.transform.position - position).sqrMagnitude > BypassLookaheadDistance * BypassLookaheadDistance)
                 continue;
             var health = other.GetComponent<Health>();
             if (health != null && health.Current <= 0) continue;
@@ -83,15 +86,23 @@ public sealed class EnemyChaseApproachTarget
 
         Vector2 inward = (player - position).normalized;
         Vector2 ccw = new Vector2(inward.y, -inward.x);
-        Vector2 directTravel = inward * Mathf.Min(neighborRange, surfaceDistance - engagementDistance);
+        // neighborRange remains the authored local range/waypoint length (1.5); only detection extends.
+        Vector2 directTravel = inward * Mathf.Min(BypassLookaheadDistance, surfaceDistance - engagementDistance);
         float clearance = IsActive ? ReleaseClearanceRatio : ApproachClearanceRatio;
         bool occupied = false;
+        routeNeighbors.Clear();
         for (int i = 0; i < neighbors.Count; i++)
         {
             var other = neighbors[i];
-            if (!IsCloserNeighbor(other, position, player, neighborRange)) continue;
-            occupied |= Intersects(position, directTravel, other.Center,
+            if (!IsCloserNeighbor(other, position, player, BypassLookaheadDistance)) continue;
+            bool blocksCorridor = Intersects(position, directTravel, other.Center,
                 (ownRadius + other.Radius) * clearance);
+            // Keep existing local tangent constraints. Extra distant allies may influence
+            // activation, replacement or turning only while they obstruct the direct corridor.
+            if ((other.Center - position).sqrMagnitude > neighborRange * neighborRange && !blocksCorridor)
+                continue;
+            routeNeighbors.Add(other);
+            occupied |= blocksCorridor;
         }
         if (!occupied)
         {
@@ -106,18 +117,17 @@ public sealed class EnemyChaseApproachTarget
         if (!needsPoint)
         {
             // Also replace a stored point if a moving/new ally obstructs that path.
-            for (int i = 0; i < neighbors.Count; i++)
+            for (int i = 0; i < routeNeighbors.Count; i++)
             {
-                var other = neighbors[i];
-                if (!IsCloserNeighbor(other, position, player, neighborRange)) continue;
+                var other = routeNeighbors[i];
                 needsPoint |= Intersects(position, target - position, other.Center,
                     (ownRadius + other.Radius) * ApproachClearanceRatio);
             }
         }
         if (needsPoint)
         {
-            float ccwAngle = RequiredTurn(1, position, player, inward, ccw, ownRadius, neighborRange, neighbors);
-            float cwAngle = RequiredTurn(-1, position, player, inward, ccw, ownRadius, neighborRange, neighbors);
+            float ccwAngle = RequiredTurn(1, position, player, inward, ccw, ownRadius, BypassLookaheadDistance, routeNeighbors);
+            float cwAngle = RequiredTurn(-1, position, player, inward, ccw, ownRadius, BypassLookaheadDistance, routeNeighbors);
             if (!IsActive)
             {
                 Side = Mathf.Abs(ccwAngle - cwAngle) <= TangentClearanceRadians

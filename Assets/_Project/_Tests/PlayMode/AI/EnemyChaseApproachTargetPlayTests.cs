@@ -77,6 +77,61 @@ public class EnemyChaseApproachTargetPlayTests
         }
     }
 
+    [UnityTest]
+    public IEnumerator SameDirectionArrivals_SplitBeforeOldNeighborRange()
+    {
+        var paused = new List<EnemyRingManager>();
+        var player = new GameObject("EarlyBypassPlayer");
+        player.tag = "Player";
+        player.transform.position = new Vector2(1000f, 1000f);
+        GameObject upper = null, lower = null, blocker = null;
+        try
+        {
+            foreach (var manager in Object.FindObjectsOfType<EnemyRingManager>())
+            {
+                if (!manager.isActiveAndEnabled) continue;
+                paused.Add(manager);
+                manager.enabled = false;
+            }
+            blocker = CreateEnemy(player.transform, new Vector2(0.9f, 0f), 0f);
+            upper = CreateEnemy(player.transform, new Vector2(3.2f, 0.3f), 2f);
+            lower = CreateEnemy(player.transform, new Vector2(3.2f, -0.3f), 2f);
+            var upperBody = upper.GetComponent<Rigidbody2D>();
+            var lowerBody = lower.GetComponent<Rigidbody2D>();
+            Vector2 upperStart = upperBody.position, lowerStart = lowerBody.position;
+            Vector2 upperPrevious = upperStart, lowerPrevious = lowerStart;
+            for (int i = 0; i < 6; i++)
+            {
+                yield return new WaitForFixedUpdate();
+                Assert.IsTrue(upper.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                Assert.IsTrue(lower.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                Assert.That(Vector2.Distance(upperBody.position, blocker.transform.position), Is.GreaterThan(1.5f));
+                Assert.That(Vector2.Distance(lowerBody.position, blocker.transform.position), Is.GreaterThan(1.5f));
+                Assert.That(Vector2.Distance(upperBody.position, lowerBody.position), Is.GreaterThanOrEqualTo(0.395f));
+                Assert.That(Vector2.Distance(upperBody.position, upperPrevious),
+                    Is.LessThanOrEqualTo(2f * Time.fixedDeltaTime + 0.001f));
+                Assert.That(Vector2.Distance(lowerBody.position, lowerPrevious),
+                    Is.LessThanOrEqualTo(2f * Time.fixedDeltaTime + 0.001f));
+                upperPrevious = upperBody.position;
+                lowerPrevious = lowerBody.position;
+            }
+            Assert.That(upperBody.position.y - upperStart.y, Is.GreaterThan(0.005f));
+            Assert.That(lowerStart.y - lowerBody.position.y, Is.GreaterThan(0.005f));
+            Assert.That(upperBody.position.y - lowerBody.position.y,
+                Is.GreaterThan(upperStart.y - lowerStart.y + 0.01f),
+                "Arrivals must diverge while the front blocker remains outside the old 1.5-unit range.");
+        }
+        finally
+        {
+            if (upper != null) Object.DestroyImmediate(upper);
+            if (lower != null) Object.DestroyImmediate(lower);
+            if (blocker != null) Object.DestroyImmediate(blocker);
+            Object.DestroyImmediate(player);
+            foreach (var manager in paused)
+                if (manager != null) manager.enabled = true;
+        }
+    }
+
     private static GameObject CreateEnemy(Transform player, Vector2 offset, float speed)
     {
         var enemy = new GameObject("ApproachTestEnemy");

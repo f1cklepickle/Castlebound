@@ -22,6 +22,149 @@ public class EnemyChaseApproachTargetTests
             neighbors, out target);
     }
 
+    [TestCase(1.51f, true)]
+    [TestCase(2.25f, true)]
+    [TestCase(3f, true)]
+    [TestCase(3.01f, true)]
+    [TestCase(3.45f, false)]
+    public void Lookahead_ExtendedCollectionStillRequiresCorridorIntersection(float blockerDistance, bool expected)
+    {
+        Vector2 position = new Vector2(3.5f, 0f);
+        var neighbors = new[] {
+            new EnemyChaseApproachTarget.Footprint(position + Vector2.left * blockerDistance, 0.2f)
+        };
+        Assert.That(Resolve(new EnemyChaseApproachTarget(), neighbors, out Vector2 point,
+            position: position, surfaceDistance: 3.5f), Is.EqualTo(expected));
+        if (expected)
+            Assert.That(Vector2.Distance(position, point), Is.EqualTo(1.5f).Within(0.0001f));
+    }
+
+    [TestCase(4.49f, true)]
+    [TestCase(4.5f, true)]
+    [TestCase(4.51f, false)]
+    public void Lookahead_LargeFootprintRespectsFourPointFiveUnitBoundary(float blockerDistance, bool expected)
+    {
+        // The unchanged gate caps direct travel at 3 units. A larger footprint is
+        // needed to intersect that endpoint while its center tests the 4.5-unit boundary.
+        Vector2 position = new Vector2(5f, 0f);
+        var neighbors = new[] {
+            new EnemyChaseApproachTarget.Footprint(position + Vector2.left * blockerDistance, 1.2f)
+        };
+        Assert.That(Resolve(new EnemyChaseApproachTarget(), neighbors, out Vector2 point,
+            position: position, surfaceDistance: 3.5f), Is.EqualTo(expected));
+        if (expected)
+            Assert.That(Vector2.Distance(position, point), Is.EqualTo(1.5f).Within(0.0001f));
+    }
+
+    [TestCase(0.5f, 1f, 3.5f)] // Newly collected distant ally, off the corridor.
+    [TestCase(7f, 0f, 3.5f)] // Newly collected rear ally.
+    [TestCase(-0.5f, 0f, 3.5f)] // Within lookahead, beyond the corridor endpoint.
+    [TestCase(1f, 1f, 3.5f)] // Distant and closer to Player, but off the corridor.
+    [TestCase(4f, 0f, 3.5f)] // Rear ally.
+    [TestCase(1f, 0f, 0.6f)] // Beyond the engagement-truncated segment.
+    [TestCase(1f, 0f, 3.501f)] // Player surface-distance gate remains 3.5.
+    [TestCase(1f, 0f, 0.5f)] // Engagement cutoff.
+    public void Lookahead_NonObstructionOrExcludedDistanceDoesNotActivate(float x, float y, float surface)
+    {
+        var neighbors = new[] {
+            new EnemyChaseApproachTarget.Footprint(new Vector2(x, y), 0.2f)
+        };
+        Assert.IsFalse(Resolve(new EnemyChaseApproachTarget(), neighbors, out _,
+            position: new Vector2(3.5f, 0f), surfaceDistance: surface));
+    }
+
+    [Test]
+    public void Lookahead_OffCorridorExtrasDoNotChangeTangentOrCommittedSide()
+    {
+        Vector2 position = new Vector2(3.5f, 0f);
+        var obstruction = new EnemyChaseApproachTarget.Footprint(new Vector2(1f, 0f), 0.2f);
+        var helper = new EnemyChaseApproachTarget();
+        Assert.IsTrue(Resolve(helper, new[] { obstruction }, out Vector2 first,
+            position: position, surfaceDistance: 3.5f));
+        int side = helper.Side;
+        var extras = new[] {
+            new EnemyChaseApproachTarget.Footprint(new Vector2(2f, 1.5f), 0.2f),
+            obstruction
+        };
+        Assert.IsTrue(Resolve(new EnemyChaseApproachTarget(), extras, out Vector2 fresh,
+            position: position, surfaceDistance: 3.5f));
+        Assert.That(Vector2.Distance(first, fresh), Is.LessThan(0.0001f),
+            "An off-corridor distant ally must not skew tangent or side selection.");
+        Array.Reverse(extras);
+        Assert.IsTrue(Resolve(helper, extras, out Vector2 retained, position: position,
+            surfaceDistance: 3.5f, bias: Vector2.down));
+        Assert.That(helper.Side, Is.EqualTo(side));
+        Assert.That(retained, Is.EqualTo(first));
+        Assert.IsFalse(helper.WaypointChanged);
+    }
+
+    [Test]
+    public void Lookahead_ReleaseMarginRetainsDistantRouteUntilCorridorClears()
+    {
+        Vector2 position = new Vector2(3.5f, 0f);
+        var helper = new EnemyChaseApproachTarget();
+        var obstruction = new[] {
+            new EnemyChaseApproachTarget.Footprint(new Vector2(1f, 0f), 0.2f)
+        };
+        Assert.IsTrue(Resolve(helper, obstruction, out _, position: position, surfaceDistance: 3.5f));
+        var edge = new[] {
+            new EnemyChaseApproachTarget.Footprint(new Vector2(1f, 0.48f), 0.2f)
+        };
+        Assert.IsFalse(Resolve(new EnemyChaseApproachTarget(), edge, out _,
+            position: position, surfaceDistance: 3.5f));
+        Assert.IsTrue(Resolve(helper, edge, out _, position: position, surfaceDistance: 3.5f));
+        var clear = new[] {
+            new EnemyChaseApproachTarget.Footprint(new Vector2(1f, 0.6f), 0.2f)
+        };
+        Assert.IsFalse(Resolve(helper, clear, out _, position: position, surfaceDistance: 3.5f));
+    }
+
+    [TestCase("alive", true)]
+    [TestCase("dead", false)]
+    [TestCase("otherPlayer", false)]
+    [TestCase("barrier", false)]
+    [TestCase("disabled", false)]
+    public void Lookahead_RuntimeCollectionPreservesBlockerEligibility(string condition, bool expected)
+    {
+        var enemy = new GameObject("EarlyApproachEnemy");
+        var blocker = new GameObject("EarlyApproachBlocker");
+        var player = new GameObject("Player");
+        var otherPlayer = new GameObject("OtherPlayer");
+        player.tag = "Player";
+        var registry = (List<EnemyController2D>)typeof(EnemyController2D)
+            .GetField("All", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+        EnemyController2D controller = null, other = null;
+        try
+        {
+            controller = ConfigureEnemy(enemy, player.transform, new Vector2(3.5f, 0f));
+            other = ConfigureEnemy(blocker, player.transform, new Vector2(1f, 0f));
+            var health = blocker.AddComponent<Health>();
+            health.ConfigureMaxHealth(10, refill: true);
+            if (condition == "dead") health.ConfigureMaxHealth(0, refill: true);
+            if (condition == "otherPlayer")
+                other.Debug_SetTargetDecision(otherPlayer.transform, otherPlayer.transform, EnemyTargetType.Player);
+            if (condition == "barrier")
+                other.Debug_SetTargetDecision(player.transform, player.transform, EnemyTargetType.Barrier);
+            if (condition == "disabled") other.enabled = false;
+            if (!registry.Contains(other)) registry.Add(other);
+            Physics2D.SyncTransforms();
+            Assert.That(new EnemyChaseApproachTarget().TryGetTarget(controller, player.transform,
+                new Vector2(3.5f, 0f), Vector2.up, 3.5f, 0.5f, out Vector2 point), Is.EqualTo(expected));
+            if (expected)
+                Assert.That(Vector2.Distance(new Vector2(3.5f, 0f), point),
+                    Is.EqualTo(1.5f).Within(0.0001f));
+        }
+        finally
+        {
+            registry.Remove(controller);
+            registry.Remove(other);
+            UnityEngine.Object.DestroyImmediate(enemy);
+            UnityEngine.Object.DestroyImmediate(blocker);
+            UnityEngine.Object.DestroyImmediate(player);
+            UnityEngine.Object.DestroyImmediate(otherPlayer);
+        }
+    }
+
     [Test]
     public void ClearRoute_DoesNotSupplyAnOverride()
     {
