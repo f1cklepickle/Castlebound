@@ -27,7 +27,12 @@ public class EnemyFacing : MonoBehaviour
         if (target == null)
             return;
 
-        Vector2 targetDirection = (Vector2)target.position - origin;
+        FacePoint(origin, target.position, deltaTime);
+    }
+
+    public void FacePoint(Vector2 origin, Vector2 targetPosition, float deltaTime)
+    {
+        Vector2 targetDirection = targetPosition - origin;
         if (targetDirection.sqrMagnitude <= Mathf.Epsilon)
             return;
 

@@ -3,7 +3,9 @@ using UnityEngine;
 public class EnemyApproachSpread : MonoBehaviour
 {
     [SerializeField] private float neighborSeparationRadius = 1.5f;
+    [SerializeField, Min(0f)] private float chaseSoftInfluenceRadius = 2f;
     [SerializeField] private float separationStrength = 0.8f;
+    [SerializeField, Min(0f)] private float meleeChaseSpacingMultiplier = 1.5f;
     [SerializeField] private float maxLateralRatio = 0.35f;
     [SerializeField] private float minimumForwardRatio = 0.8f;
     [SerializeField] private float surroundArrivalDistance = 10f;
@@ -11,17 +13,20 @@ public class EnemyApproachSpread : MonoBehaviour
     [SerializeField] private float openGapDeadbandDegrees = 8f;
 
     public float NeighborSeparationRadius => Mathf.Max(0f, neighborSeparationRadius);
+    // Weighted melee CHASE influence only; never a bypass range or physical minimum.
+    public float ChaseSoftInfluenceRadius => Mathf.Max(0f, chaseSoftInfluenceRadius);
 
     public void Compute(Vector2 pursuit, Vector2 directionToTarget, Vector2 localSeparation,
         bool hasNeighbors, Vector2 stableBias, float distance, float engagementDistance,
         float gapCW, float gapCCW, bool hasGroup, float speed,
-        out Vector2 radial, out Vector2 tangent)
+        out Vector2 radial, out Vector2 tangent, bool meleePlayerChase = false)
     {
         ComputeApproach(pursuit, directionToTarget, localSeparation, hasNeighbors, stableBias,
             distance, engagementDistance, gapCW, gapCCW, hasGroup, speed,
             separationStrength, maxLateralRatio, minimumForwardRatio,
             surroundArrivalDistance, maxAngularArrivalRatio,
-            openGapDeadbandDegrees * Mathf.Deg2Rad, out radial, out tangent);
+            openGapDeadbandDegrees * Mathf.Deg2Rad, out radial, out tangent,
+            meleePlayerChase ? meleeChaseSpacingMultiplier : 1f);
     }
 
     public static void ComputeApproach(Vector2 pursuit, Vector2 directionToTarget,
@@ -40,7 +45,7 @@ public class EnemyApproachSpread : MonoBehaviour
         float distance, float engagementDistance, float gapCW, float gapCCW, bool hasGroup, float speed,
         float separationStrength, float maxLateralRatio, float minimumForwardRatio,
         float surroundArrivalDistance, float maxAngularArrivalRatio, float gapDeadbandRadians,
-        out Vector2 radial, out Vector2 tangent)
+        out Vector2 radial, out Vector2 tangent, float localSpacingMultiplier = 1f)
     {
         radial = pursuit;
         tangent = Vector2.zero;
@@ -51,7 +56,8 @@ public class EnemyApproachSpread : MonoBehaviour
         Vector2 lateralAxis = new Vector2(-forward.y, forward.x);
         float localPreference = 0f;
         float longitudinalLanePreference = 0f;
-        if (hasNeighbors)
+        // The outer soft vector can contribute without changing the legacy close-neighbor signal.
+        if (hasNeighbors || localSeparation.sqrMagnitude > Mathf.Epsilon)
         {
             if (localSeparation.sqrMagnitude > Mathf.Epsilon)
             {
@@ -105,7 +111,8 @@ public class EnemyApproachSpread : MonoBehaviour
             -1f,
             1f);
 
-        float localLateral = Mathf.Clamp01(separationStrength) *
+        // Boost only local melee CHASE spacing; angular steering and the final cap are unchanged.
+        float localLateral = Mathf.Clamp01(separationStrength) * Mathf.Max(0f, localSpacingMultiplier) *
                              Mathf.Clamp01(maxLateralRatio) * localPreference;
         float angularLateral = Mathf.Clamp01(maxAngularArrivalRatio) * arrival01 * angularPreference;
         float lateralRatio = Mathf.Clamp(localLateral + angularLateral,

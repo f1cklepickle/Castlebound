@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-09-08 - codex/fix-296-clean-restart-movement-checkpoint
+
+### Summary
+- Kept stationary melee HOLD, local CHASE bypass with stable side/target selection, 225-degree/second entry/replacement/exit smoothing, the 100-degree outward waypoint guard and authored-speed cap.
+- Kept the 2-unit soft influence radius and melee-only 1.5 strength multiplier; preserved #277 hard separation, #299 steering limits, ranged policies, attack/engagement rules and authored speed.
+- Removed preferred-position steering with explicit user approval, all arrival recording/export infrastructure and hooks, and superseded experiment documentation/tests. Cramped surround formation remains future work.
+
+### New or Updated Tests
+**EditMode**
+- EnemyLocomotionTests and Castlebound.Tests.AI.EnemyControllerOrbitVsBarrierTests — stationary melee HOLD, entry/reseat/release, and ranged/barrier policy preservation.
+- EnemyChaseApproachTargetTests — activation/clearing, stable side/target, outward guard, replacement transition, authored-speed/waypoint-step caps, ordinary spacing restoration and excluded states.
+- EnemyBypassDirectionTransitionTests — entry/replacement/exit angular limits, magnitude preservation, convergence and lifecycle reset.
+- EnemySoftApproachSpacingTests — soft feed boundaries/cancellation, authored speed, dense cap, melee strength, and ranged/HOLD exclusions; removed redundant distance sweeps.
+
+**PlayMode**
+- EnemyChaseApproachTargetPlayTests.OccupiedApproach_BypassesThenClearsAndHolds — observed body movement, smooth entry, attack reacquisition, route clearing, #277 footprints and stationary HOLD.
+- EnemyMeleeHoldPlayTests — sustained stationary HOLD under alternating gaps plus the retained real-prefab #277 execution guard.
+- EnemySoftApproachSpacingPlayTests — actual far melee/ranged movement consumes the appropriate spacing request; dense pairs compress below the soft radius and settle.
+
+### Notes
+- Unity, EditMode and PlayMode were not run. Post-prune user validation is required; no commit, push or PR was made.
+- Removing preferred-position steering intentionally changes ordinary approach/facing and some bypass entry/exit trajectories. The user explicitly approved that change.
+- No recorder or new diagnostic hook remains. Retained tests use movement outputs, existing state accessors, Rigidbody positions and fixture-local assertions.
+- ProjectSettings/Physics2DSettings.asset and ProjectSettings/ShaderGraphSettings.asset remain excluded from this checkpoint because their differences are line-ending-only.
+- Run EditMode: EnemyLocomotionTests, Castlebound.Tests.AI.EnemyControllerOrbitVsBarrierTests, EnemyChaseApproachTargetTests, EnemyBypassDirectionTransitionTests, EnemySoftApproachSpacingTests, EnemyApproachSpreadTests, EnemySeparationMathTests, EnemySeparationPrefabContractTests, EnemyEngagementTests.
+- Run PlayMode: EnemyMeleeHoldPlayTests, EnemyChaseApproachTargetPlayTests, EnemySoftApproachSpacingPlayTests, EnemyApproachSpreadPlayTests, EnemySeparationPlayTests, EnemyAttackTargetLockPlayTests, EnemyEngagementPlayTests, EnemyRangedAttackPlayTests.
+
 ## 2026-08-31 - fix-ai-soft-spacing-and-walk-validation
 
 ### Summary

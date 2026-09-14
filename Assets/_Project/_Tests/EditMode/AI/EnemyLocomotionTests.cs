@@ -76,11 +76,13 @@ public class EnemyLocomotionTests
     {
         GameObject enemy = new GameObject("RangedEnemy");
         GameObject player = new GameObject("Player");
+        player.tag = "Player";
         player.transform.position = new Vector2(0.5f, 0f);
 
         try
         {
             EnemyLocomotion locomotion = enemy.AddComponent<EnemyLocomotion>();
+            enemy.AddComponent<EnemyApproachSpread>();
             EnemyRangedEngagement rangedEngagement = enemy.AddComponent<EnemyRangedEngagement>();
             locomotion.Debug_SetHoldMovementPolicy(rangedEngagement);
 
@@ -92,6 +94,13 @@ public class EnemyLocomotionTests
             Assert.AreEqual(EnemyController2D.State.HOLD, locomotion.CurrentState);
             Assert.AreEqual(Vector2.zero, radial);
             Assert.AreEqual(Vector2.zero, tangent);
+
+            locomotion.ApplyHoldMovementPolicy(
+                new EnemyHoldMovementContext(Vector2.right, Vector2.up, true, Vector2.down, 8f),
+                ref radial, ref tangent);
+            Assert.AreEqual(Vector2.zero, radial);
+            Assert.That(tangent.y, Is.GreaterThan(0f));
+            Assert.That(tangent.magnitude, Is.LessThanOrEqualTo(1.001f));
         }
         finally
         {
@@ -206,11 +215,17 @@ public class EnemyLocomotionTests
         }
     }
 
-    [Test]
-    public void ComputeBaseMovement_DefaultMeleePolicyPreservesHoldOrbit()
+    [TestCase(0.1f, 0.5f)]
+    [TestCase(0.5f, 0.1f)]
+    [TestCase(0f, 0.5f)]
+    [TestCase(0.5f, 0f)]
+    [TestCase(0f, 0f)]
+    [TestCase(0.5f, 0.5f)]
+    public void ComputeBaseMovement_MeleePlayerHoldIgnoresLiveGaps(float gapCW, float gapCCW)
     {
         GameObject enemy = new GameObject("MeleeEnemy");
         GameObject player = new GameObject("Player");
+        player.tag = "Player";
         player.transform.position = new Vector2(0.5f, 0f);
 
         try
@@ -220,11 +235,52 @@ public class EnemyLocomotionTests
             locomotion.ComputeBaseMovement(
                 Vector2.zero, player.transform, null,
                 0.5f, 1f, 0.25f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
-                0.2f, 1f, out Vector2 radial, out Vector2 tangent);
+                gapCW, gapCCW, out Vector2 radial, out Vector2 tangent);
 
             Assert.AreEqual(EnemyController2D.State.HOLD, locomotion.CurrentState);
             Assert.AreEqual(Vector2.zero, radial);
-            Assert.That(tangent.sqrMagnitude, Is.GreaterThan(0f));
+            Assert.AreEqual(Vector2.zero, tangent);
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemy);
+            Object.DestroyImmediate(player);
+        }
+    }
+
+    [Test]
+    public void MeleePlayerHold_PreservesEntryReseatAndRelease()
+    {
+        var enemy = new GameObject("MeleeEnemy");
+        var player = new GameObject("Player");
+        player.tag = "Player";
+        player.transform.position = Vector2.right;
+        try
+        {
+            var locomotion = enemy.AddComponent<EnemyLocomotion>();
+            locomotion.ComputeBaseMovement(Vector2.zero, player.transform, null,
+                0.5f, 0.5f, 0.25f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
+                0.1f, 0.5f, out Vector2 radial, out Vector2 tangent);
+            Assert.That(locomotion.CurrentState, Is.EqualTo(EnemyController2D.State.HOLD));
+            Assert.IsTrue(locomotion.IsInHoldRange);
+            Assert.That(radial, Is.EqualTo(Vector2.zero));
+            Assert.That(tangent, Is.EqualTo(Vector2.zero));
+
+            locomotion.ComputeBaseMovement(Vector2.zero, player.transform, null,
+                0.6f, 0.5f, 0.25f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
+                0.5f, 0.1f, out radial, out tangent);
+            Assert.That(locomotion.CurrentState, Is.EqualTo(EnemyController2D.State.HOLD));
+            Assert.That(radial.x, Is.EqualTo(0.9f).Within(0.0001f));
+            Assert.That(radial.y, Is.Zero);
+            Assert.That(tangent, Is.EqualTo(Vector2.zero));
+
+            locomotion.ComputeBaseMovement(Vector2.zero, player.transform, null,
+                0.75f, 0.5f, 0.25f, 0.3f, 3f, 0.8f, 2.5f, 8, 0.01f,
+                0.1f, 0.5f, out radial, out tangent);
+            Assert.That(locomotion.CurrentState, Is.EqualTo(EnemyController2D.State.CHASE));
+            Assert.IsFalse(locomotion.IsInHoldRange);
+            Assert.That(radial, Is.EqualTo(Vector2.right * 3f));
+            Assert.That(tangent, Is.EqualTo(Vector2.zero));
         }
         finally
         {

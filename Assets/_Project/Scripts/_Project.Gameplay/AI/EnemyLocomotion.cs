@@ -12,6 +12,10 @@ public class EnemyLocomotion : MonoBehaviour
     private int distanceTrend;
     private Vector2 lastNonZeroDirection = Vector2.right;
     private IEnemyHoldMovementPolicy holdMovementPolicy;
+    private readonly EnemyChaseApproachTarget chaseApproachTarget = new EnemyChaseApproachTarget();
+    private readonly EnemyBypassDirectionTransition bypassDirectionTransition = new EnemyBypassDirectionTransition();
+    public bool HasChaseApproachTarget => chaseApproachTarget.IsActive;
+    public bool IsChaseApproachTurning => bypassDirectionTransition.IsTurning;
 
     public EnemyController2D.State CurrentState { get; private set; } = EnemyController2D.State.CHASE;
     public bool IsChaseRequested { get; private set; }
@@ -75,6 +79,15 @@ public class EnemyLocomotion : MonoBehaviour
             out radial,
             out tangent);
         CurrentState = movementState;
+        // Settled melee Player HOLD does not rebalance from live gaps.
+        // Explicit HOLD policies (ranged) and barrier movement keep their existing behavior.
+        if (CurrentState == EnemyController2D.State.HOLD &&
+            steerTarget != null && steerTarget.CompareTag("Player") &&
+            (barrier == null || steerTarget != barrier) &&
+            ResolveHoldMovementPolicy() == null)
+        {
+            tangent = Vector2.zero;
+        }
 
         if (CurrentState == EnemyController2D.State.HOLD)
         {
@@ -118,6 +131,62 @@ public class EnemyLocomotion : MonoBehaviour
                 speed),
             ref radial,
             ref tangent);
+    }
+
+    public void ResetChaseApproachTarget()
+    {
+        chaseApproachTarget.Reset();
+        bypassDirectionTransition.Reset();
+    }
+
+    public bool TryApplyChaseApproachTarget(EnemyController2D owner, Transform player,
+        bool surroundEligible, Vector2 stableBias, float surfaceDistance, float engagementDistance,
+        float speed, float deltaTime, ref Vector2 radial, ref Vector2 tangent, out Vector2 point)
+    {
+        point = player != null ? (Vector2)player.position : Vector2.zero;
+        var body = GetComponent<Rigidbody2D>();
+        Vector2 position = body != null ? body.position : (Vector2)transform.position;
+        if (!isActiveAndEnabled || CurrentState != EnemyController2D.State.CHASE ||
+            !surroundEligible || ResolveHoldMovementPolicy() != null || owner == null ||
+            player == null || owner.CurrentTargetType != EnemyTargetType.Player || owner.Target != player)
+        {
+            ResetChaseApproachTarget();
+            return false;
+        }
+
+        bool hadBypassDirection = chaseApproachTarget.IsActive || bypassDirectionTransition.IsTurning;
+        Vector2 ordinaryChase = radial + tangent;
+        bool bypassing = chaseApproachTarget.TryGetTarget(owner, player, position, stableBias,
+            surfaceDistance, engagementDistance, out point);
+        if (bypassing)
+        {
+            Vector2 toPoint = point - position;
+            // Preserve the existing waypoint speed cap and target direction as the desired request.
+            float stepSpeed = deltaTime > 0f ? Mathf.Min(Mathf.Max(0f, speed), toPoint.magnitude / deltaTime) : 0f;
+            radial = toPoint.normalized * stepSpeed;
+            tangent = Vector2.zero;
+        }
+
+        Vector2 desired = radial + tangent;
+        Vector2 turned = bypassDirectionTransition.Apply(desired, bypassing, deltaTime,
+            ordinaryChase, player.GetInstanceID(), chaseApproachTarget.WaypointChanged);
+        // Bypass and its transitions replace direction; they never add speed or restore
+        // speed after #277. Ordinary CHASE keeps its existing #299 composition.
+        if (bypassing || hadBypassDirection)
+            turned = Vector2.ClampMagnitude(turned, Mathf.Max(0f, speed));
+        if (!turned.Equals(desired))
+        {
+            radial = turned;
+            tangent = Vector2.zero;
+        }
+        // On route release, retain direction history until the exit turn finishes.
+        // ExecuteMovement still applies #277 to the final request without modification.
+        return bypassing;
+    }
+
+    private void OnDisable()
+    {
+        ResetChaseApproachTarget();
     }
 
     private IEnemyHoldMovementPolicy ResolveHoldMovementPolicy()

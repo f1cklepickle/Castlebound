@@ -130,7 +130,10 @@ public class EnemyRingManager : MonoBehaviour
             Vector2 position = enemy.transform.position;
             float radius = enemy.ApproachSeparationRadius;
             float radiusSquared = radius * radius;
+            float softRadius = enemy.ChaseSoftSeparationRadius;
+            float softRadiusSquared = softRadius * softRadius;
             Vector2 separation = Vector2.zero;
+            Vector2 chaseSoftSeparation = Vector2.zero;
             bool hasNeighbors = false;
 
             for (int j = 0; j < count; j++)
@@ -138,15 +141,18 @@ public class EnemyRingManager : MonoBehaviour
                 if (i == j) continue;
                 Vector2 away = position - (Vector2)sEnemies[j].transform.position;
                 float distanceSquared = away.sqrMagnitude;
-                if (distanceSquared > radiusSquared) continue;
-
-                hasNeighbors = true;
-                if (distanceSquared <= 0.0001f) continue;
+                // Preserve the original neighbor signal and HOLD/ranged vector independently.
+                if (distanceSquared <= radiusSquared) hasNeighbors = true;
+                if (distanceSquared > Mathf.Max(radiusSquared, softRadiusSquared) || distanceSquared <= 0.0001f)
+                    continue;
                 float distance = Mathf.Sqrt(distanceSquared);
-                separation += away / distance * (1f - distance / radius);
+                if (distanceSquared <= radiusSquared)
+                    separation += away / distance * (1f - distance / radius);
+                if (softRadius > 0f && distanceSquared <= softRadiusSquared)
+                    chaseSoftSeparation += away / distance * Mathf.Max(0f, 1f - distance / softRadius);
             }
 
-            enemy.SetApproachSeparation(separation, hasNeighbors);
+            enemy.SetApproachSeparation(separation, chaseSoftSeparation, hasNeighbors);
         }
     }
 
