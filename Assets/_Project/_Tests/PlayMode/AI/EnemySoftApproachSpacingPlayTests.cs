@@ -43,7 +43,7 @@ public class EnemySoftApproachSpacingPlayTests
     }
 
     [UnityTest]
-    public IEnumerator OuterNeighbor_InfluencesChaseWithoutExtendingNeighborEligibility()
+    public IEnumerator OffPathNeighbor_MeleeChaseBypassesLegacySpacing()
     {
         yield return CheckFarChase(false);
     }
@@ -75,10 +75,10 @@ public class EnemySoftApproachSpacingPlayTests
             subject.GetComponent<EnemyApproachSpread>().Compute(inward * 8f, inward, separation, close, bias,
                 18f, 0.5f, 0f, 0f, false, 8f, out Vector2 radial, out Vector2 tangent, meleePlayerChase: !ranged);
             Assert.That(tangent.sqrMagnitude, Is.GreaterThan(0f));
-            Vector2 expectedTravel = (radial + tangent) * Time.fixedDeltaTime;
+            Vector2 expectedTravel = (ranged ? radial + tangent : inward * 8f) * Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
             Assert.That(Vector2.Distance(body.position - before, expectedTravel), Is.LessThan(0.0002f),
-                "Actual far CHASE must consume the appropriate melee/ranged spacing request.");
+                "Melee must ignore off-path soft spacing; ranged must retain its existing spacing request.");
             Assert.IsFalse(movement.HasChaseApproachTarget);
         }
     }

@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 public class EnemyChaseApproachTargetPlayTests
 {
     [UnityTest]
-    public IEnumerator OccupiedApproach_BypassesThenClearsAndHolds()
+    public IEnumerator OccupiedApproach_PredictsWithoutBypassThenHolds()
     {
         var paused = new List<EnemyRingManager>();
         var player = new GameObject("BypassPlayer");
@@ -31,19 +31,19 @@ public class EnemyChaseApproachTargetPlayTests
             var body = subject.GetComponent<Rigidbody2D>();
             Vector2 start = body.position;
             yield return new WaitForFixedUpdate();
-            Assert.IsTrue(movement.HasChaseApproachTarget);
-            Assert.IsTrue(movement.IsChaseApproachTurning);
-            // The first step is clear of contact, so body travel also checks smooth entry.
+            Assert.IsFalse(movement.HasChaseApproachTarget);
+            Assert.IsFalse(movement.IsChaseApproachTurning);
+            // Predictive CHASE must curve before contact without activating legacy bypass.
             Vector2 travel = body.position - start;
             Assert.That(travel.magnitude / Time.fixedDeltaTime, Is.EqualTo(2f).Within(0.01f));
-            Assert.That(Vector2.Angle(Vector2.left, travel),
-                Is.EqualTo(225f * Time.fixedDeltaTime).Within(0.2f));
+            Assert.That(Mathf.Abs(travel.y), Is.GreaterThan(0.001f));
+            Assert.That(travel.x, Is.LessThan(0f));
 
             controller.RequestChase();
             yield return new WaitForFixedUpdate();
-            Assert.IsTrue(movement.HasChaseApproachTarget, "Attack reacquisition must still allow bypass.");
+            Assert.IsTrue(movement.CanUsePredictiveChase(controller, player.transform));
+            Assert.IsFalse(movement.HasChaseApproachTarget, "Reacquisition must not stack legacy routing.");
             controller.ClearChaseRequest();
-            bool cleared = false;
             int holdTicks = 0;
             Vector2 settled = Vector2.zero;
             for (int i = 0; i < 220 && holdTicks < 12; i++)
@@ -53,8 +53,6 @@ public class EnemyChaseApproachTargetPlayTests
                     Is.GreaterThanOrEqualTo(0.395f), "#277 minimum footprints remain authoritative.");
                 Assert.That(controller.Target, Is.EqualTo(player.transform));
                 Assert.That(subject.GetComponent<EnemyTargeting>().SteerTarget, Is.EqualTo(player.transform));
-                if (movement.CurrentState == EnemyController2D.State.CHASE)
-                    cleared |= !movement.HasChaseApproachTarget && !movement.IsChaseApproachTurning;
                 if (!controller.IsInHoldRange()) continue;
                 if (holdTicks == 0) settled = body.position;
                 holdTicks++;
@@ -64,7 +62,6 @@ public class EnemyChaseApproachTargetPlayTests
                 controller.SetAngularGaps((holdTicks & 1) == 0 ? 0.1f : 0.5f,
                     (holdTicks & 1) == 0 ? 0.5f : 0.1f, 2);
             }
-            Assert.IsTrue(cleared, "Clear approaches must restore ordinary CHASE.");
             Assert.That(holdTicks, Is.EqualTo(12), "Arrival must produce sustained stationary HOLD.");
         }
         finally
@@ -78,7 +75,7 @@ public class EnemyChaseApproachTargetPlayTests
     }
 
     [UnityTest]
-    public IEnumerator SameDirectionArrivals_SplitBeforeOldNeighborRange()
+    public IEnumerator SameDirectionArrivals_PredictBeforeContact()
     {
         var paused = new List<EnemyRingManager>();
         var player = new GameObject("EarlyBypassPlayer");
@@ -103,8 +100,8 @@ public class EnemyChaseApproachTargetPlayTests
             for (int i = 0; i < 6; i++)
             {
                 yield return new WaitForFixedUpdate();
-                Assert.IsTrue(upper.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
-                Assert.IsTrue(lower.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                Assert.IsFalse(upper.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                Assert.IsFalse(lower.GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
                 Assert.That(Vector2.Distance(upperBody.position, blocker.transform.position), Is.GreaterThan(1.5f));
                 Assert.That(Vector2.Distance(lowerBody.position, blocker.transform.position), Is.GreaterThan(1.5f));
                 Assert.That(Vector2.Distance(upperBody.position, lowerBody.position), Is.GreaterThanOrEqualTo(0.395f));

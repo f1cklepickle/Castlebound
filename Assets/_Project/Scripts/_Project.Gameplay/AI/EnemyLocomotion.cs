@@ -8,6 +8,7 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private MonoBehaviour holdMovementPolicySource;
 
     private EnemySeparationCollider separationCollider;
+    private readonly EnemyPredictiveChase predictiveChase = new EnemyPredictiveChase();
     private float previousDistance;
     private int distanceTrend;
     private Vector2 lastNonZeroDirection = Vector2.right;
@@ -21,6 +22,29 @@ public class EnemyLocomotion : MonoBehaviour
     public bool IsChaseRequested { get; private set; }
     public bool IsInHoldRange => CurrentState == EnemyController2D.State.HOLD;
     public MonoBehaviour HoldMovementPolicySource => holdMovementPolicySource;
+
+    public bool CanUsePredictiveChase(EnemyController2D owner, Transform player)
+    {
+        return EnemyPredictiveChase.IsEligible(owner, player, this);
+    }
+
+    public void ApplyPredictiveChase(EnemyController2D owner, Transform player, float speed,
+        ref Vector2 radial, ref Vector2 tangent)
+    {
+        if (!CanUsePredictiveChase(owner, player))
+        {
+            ResetPredictiveChase();
+            return;
+        }
+        ResetChaseApproachTarget();
+        radial = predictiveChase.Compute(owner, player, speed);
+        tangent = Vector2.zero;
+    }
+
+    public void ResetPredictiveChase()
+    {
+        predictiveChase.Reset();
+    }
 
     public void RequestChase()
     {
@@ -171,7 +195,8 @@ public class EnemyLocomotion : MonoBehaviour
         Vector2 turned = bypassDirectionTransition.Apply(desired, bypassing, deltaTime,
             ordinaryChase, player.GetInstanceID(), chaseApproachTarget.WaypointChanged);
         // Bypass and its transitions replace direction; they never add speed or restore
-        // speed after #277. Ordinary CHASE keeps its existing #299 composition.
+        // speed after #277. Only the retained legacy/non-predictive CHASE path uses
+        // the existing #299 composition; eligible predictive melee CHASE bypasses it.
         if (bypassing || hadBypassDirection)
             turned = Vector2.ClampMagnitude(turned, Mathf.Max(0f, speed));
         if (!turned.Equals(desired))
@@ -186,6 +211,7 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void OnDisable()
     {
+        ResetPredictiveChase();
         ResetChaseApproachTarget();
     }
 

@@ -278,7 +278,8 @@ public class EnemyController2D : MonoBehaviour
             out Vector2 radial,
             out Vector2 tangent);
 
-        if (Locomotion.CurrentState == State.CHASE &&
+        if (!Locomotion.CanUsePredictiveChase(this, player) &&
+            Locomotion.CurrentState == State.CHASE &&
             !Locomotion.IsChaseRequested &&
             CurrentTargetType == EnemyTargetType.Player &&
             approachSpread != null &&
@@ -323,10 +324,20 @@ public class EnemyController2D : MonoBehaviour
             ref radial,
             ref tangent);
 
-        bool bypassing = Locomotion.TryApplyChaseApproachTarget(this, player,
-            surroundEligibility != null && surroundEligibility.IsEligibleFor(player),
-            _approachSpreadBias, surfaceDistance, Engagement.EngagementDistance, speed, dt,
-            ref radial, ref tangent, out Vector2 approachPoint);
+        bool bypassing = false;
+        Vector2 approachPoint = pos;
+        if (Locomotion.CanUsePredictiveChase(this, player))
+        {
+            Locomotion.ApplyPredictiveChase(this, player, speed, ref radial, ref tangent);
+        }
+        else
+        {
+            Locomotion.ResetPredictiveChase();
+            bypassing = Locomotion.TryApplyChaseApproachTarget(this, player,
+                surroundEligibility != null && surroundEligibility.IsEligibleFor(player),
+                _approachSpreadBias, surfaceDistance, Engagement.EngagementDistance, speed, dt,
+                ref radial, ref tangent, out approachPoint);
+        }
         if (bypassing) Facing.FacePoint(pos, approachPoint, dt);
         else Facing.FaceTarget(pos, target, dt);
 
