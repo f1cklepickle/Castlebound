@@ -101,6 +101,7 @@ public class EnemyController2D : MonoBehaviour
     private float _gapCCW;
     private int _surroundParticipantCount;
     private Vector2 _approachSeparation;
+    private Vector2 _chaseSoftSeparation;
     private bool _hasApproachNeighbors;
     private Vector2 _approachSpreadBias;
     public bool IsChaseRequested => Locomotion.IsChaseRequested;
@@ -120,8 +121,19 @@ public class EnemyController2D : MonoBehaviour
     public void SetApproachSeparation(Vector2 separation, bool hasNeighbors)
     {
         _approachSeparation = separation;
+        _chaseSoftSeparation = separation;
         _hasApproachNeighbors = hasNeighbors;
     }
+
+    public void SetApproachSeparation(Vector2 separation, Vector2 chaseSoftSeparation, bool hasNeighbors)
+    {
+        SetApproachSeparation(separation, hasNeighbors);
+        _chaseSoftSeparation = chaseSoftSeparation;
+    }
+
+    public float ChaseSoftSeparationRadius => approachSpread != null && Locomotion.HoldMovementPolicySource == null
+        ? approachSpread.ChaseSoftInfluenceRadius
+        : ApproachSeparationRadius;
 
     public float ApproachSeparationRadius => approachSpread != null
         ? approachSpread.NeighborSeparationRadius
@@ -175,11 +187,13 @@ public class EnemyController2D : MonoBehaviour
 
     private void OnDisable()
     {
+        locomotion?.ResetChaseApproachTarget();
         All.Remove(this);
         _gapCW = 0f;
         _gapCCW = 0f;
         _surroundParticipantCount = 0;
         _approachSeparation = Vector2.zero;
+        _chaseSoftSeparation = Vector2.zero;
         _hasApproachNeighbors = false;
     }
 
@@ -199,6 +213,7 @@ public class EnemyController2D : MonoBehaviour
         if (staggerReceiver != null &&
             staggerReceiver.State == EnemyStaggerState.Staggered)
         {
+            Locomotion.ResetChaseApproachTarget();
             _rb.velocity = Vector2.zero;
             _rb.angularVelocity = 0f;
             _rb.position = staggerReceiver.LockPosition;
@@ -236,10 +251,9 @@ public class EnemyController2D : MonoBehaviour
 
         Vector2 pos = _rb.position;
         float dt = Time.fixedDeltaTime;
-        Facing.FaceTarget(pos, target, dt);
-
         if (target == null)
         {
+            Locomotion.ResetChaseApproachTarget();
             bool moved = Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
             animationPresenter?.SetMovementRequested(moved);
             return;
@@ -264,7 +278,8 @@ public class EnemyController2D : MonoBehaviour
             out Vector2 radial,
             out Vector2 tangent);
 
-        if (Locomotion.CurrentState == State.CHASE &&
+        if (!Locomotion.CanUsePredictiveChase(this, player) &&
+            Locomotion.CurrentState == State.CHASE &&
             !Locomotion.IsChaseRequested &&
             CurrentTargetType == EnemyTargetType.Player &&
             approachSpread != null &&
@@ -277,7 +292,7 @@ public class EnemyController2D : MonoBehaviour
             approachSpread.Compute(
                 radial,
                 directionToPlayer,
-                _approachSeparation,
+                Locomotion.HoldMovementPolicySource == null ? _chaseSoftSeparation : _approachSeparation,
                 _hasApproachNeighbors,
                 _approachSpreadBias,
                 surfaceDistance,
@@ -287,7 +302,8 @@ public class EnemyController2D : MonoBehaviour
                 _surroundParticipantCount > 1,
                 speed,
                 out radial,
-                out tangent);
+                out tangent,
+                meleePlayerChase: Locomotion.HoldMovementPolicySource == null);
         }
 
         if (Locomotion.IsChaseRequested && steerTarget != null)
@@ -307,6 +323,23 @@ public class EnemyController2D : MonoBehaviour
             speed,
             ref radial,
             ref tangent);
+
+        bool bypassing = false;
+        Vector2 approachPoint = pos;
+        if (Locomotion.CanUsePredictiveChase(this, player))
+        {
+            Locomotion.ApplyPredictiveChase(this, player, speed, ref radial, ref tangent);
+        }
+        else
+        {
+            Locomotion.ResetPredictiveChase();
+            bypassing = Locomotion.TryApplyChaseApproachTarget(this, player,
+                surroundEligibility != null && surroundEligibility.IsEligibleFor(player),
+                _approachSpreadBias, surfaceDistance, Engagement.EngagementDistance, speed, dt,
+                ref radial, ref tangent, out approachPoint);
+        }
+        if (bypassing) Facing.FacePoint(pos, approachPoint, dt);
+        else Facing.FaceTarget(pos, target, dt);
 
         bool movementApplied = Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
         animationPresenter?.SetMovementRequested(movementApplied);

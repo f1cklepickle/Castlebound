@@ -4,6 +4,212 @@
 
 ---
 
+## 2026-09-15 - validated-predictive-surround-groups
+
+### Summary
+- User confirmed all requested EditMode and PlayMode tests pass for the eligibility/group fix.
+- MainPrototype confirmed SmallMelee-to-SmallMelee and Lurker-to-Lurker avoidance, no mixed-group predictive influence, and unchanged mixed-group #277 physical separation.
+- Predictive surround remains manually approved; ranged behavior is unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests, EnemySurroundPrefabContractTests and requested predictive/separation regressions — passed, user-confirmed.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests, EnemySeparationPlayTests and requested predictive crowd/HOLD regressions — passed, user-confirmed.
+
+### Notes
+- Supersedes pending validation notes for the eligibility/group changes below. No local Unity/test execution by Codex.
+- Publication scope excludes the separate PC mouse-isolation fixture change and ProjectSettings noise.
+
+## 2026-09-15 - predictive-avoidance-shared-groups
+
+### Summary
+- Added explicit None, SmallMelee and Lurker predictive avoidance groups on EnemySurroundEligibility; its existing IsEligibleFor contract remains unchanged.
+- Goblin melee uses SmallMelee and Lurker uses Lurker. Predictive neighbors must share the owner's non-None group; ranged prefab and global physics remain unchanged.
+- Preserved solver tuning, speed, HOLD, attacks, targeting, crowd thresholds and downstream #277. Existing predictive fixtures now explicitly opt into SmallMelee.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests — None rejects predictive CHASE without changing surround eligibility; enabled/disabled/missing contract coverage retained.
+- EnemySurroundPrefabContractTests.EnemyPrefab_DefinesPredictiveAvoidanceGroup — verifies Goblin melee, Lurker and unchanged ranged assignments.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests.PredictiveNeighbors_UseSharedGroupInsteadOfEnemyIdentity — same-group and future-variant inclusion, mixed-group exclusion in both directions, and None exclusion before hard contact.
+- EnemyPredictiveChasePlayTests.NonExperimentalPaths_AreExcluded — None preserves existing non-predictive movement input.
+- EnemySeparationPlayTests.MixedAvoidanceGroups_RetainHardSeparation — Goblin melee and Lurker retain #277 separation under inward locomotion.
+- EnemyApproachSpreadPlayTests, EnemyChaseApproachTargetPlayTests, EnemyMeleeHoldPlayTests, EnemyPredictiveChasePlayTests and EnemySoftApproachSpacingPlayTests — explicitly assign SmallMelee to preserve existing predictive regression coverage.
+
+### Notes
+- No Unity or tests run by Codex. Both this group change and the preceding eligibility review fix await manual validation.
+- No staging, commit, push, PR update or CI trigger; waiting for user-confirmed passing tests.
+
+## 2026-09-15 - predictive-chase-surround-eligibility-review-fix
+
+### Summary
+- Predictive CHASE now consumes EnemySurroundEligibility.IsEligibleFor(player), matching the existing surround contract.
+- Disabled or missing eligibility rejects predictive CHASE and retains the existing non-predictive path; all prior eligibility guards remain intact.
+- No avoidance tuning, neighbor selection, HOLD, hard separation, attack, targeting, speed or crowd-threshold changes.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests.PredictiveChase_RequiresAuthoritativeSurroundEligibility — enabled, disabled and missing component regression cases.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests.NonExperimentalPaths_AreExcluded — added disabled/missing surround cases, preserving legacy movement vectors and existing ranged/barrier guards.
+- EnemyPredictiveChasePlayTests.DisabledSurroundEligibility_ContinuesLegacyChase_AndCanReenablePrediction — verifies forward fallback movement while opted out and predictive re-entry when enabled.
+
+### Notes
+- Unity, EditMode and PlayMode were not run by Codex. This review fix awaits user validation; prior checkpoint results remain recorded below.
+- PR update, review-thread resolution and normal EditMode/PlayMode CI await the user's passing results.
+
+## 2026-09-15 - predictive-local-avoidance-final-validation
+
+### Summary
+- User confirmed all requested EditMode and PlayMode validation is green for the final checkpoint, including the production-geometry fixture and its 1e-4 physics tolerance.
+- MainPrototype validation confirmed pre-contact curving, multi-sided surround, stable stationary melee HOLD, and no severe jitter, repeated side thrashing, abnormal outward launches or apparent speed boosts.
+- Dense crowds can compress; occasional squeeze-in instead of a perfect wrap is accepted fallback behavior. The complete movement change preserves downstream #277 safety and existing ranged/barrier paths.
+
+### New or Updated Tests
+**EditMode**
+- EnemyPredictiveAvoidanceTests and requested movement regression suites — passed, user-confirmed.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests, EnemyPredictiveChasePlayTests and requested movement regression suites — passed, user-confirmed; expected hard footprint remains 0.4 with tolerance 0.0001.
+
+### Notes
+- Final automated and MainPrototype validation supersedes the earlier pending cleanup-fixture status.
+- No local Unity/test rerun during publication; normal PR EditMode and PlayMode CI will run separately.
+
+## 2026-09-15 - predictive-local-avoidance-validated-checkpoint-cleanup
+
+### Summary
+- Recorded successful user validation: all requested tests passed before this cleanup, and MainPrototype produced the first movement closely matching the intended surround behavior.
+- Melee enemies curve around one another before contact and occupy multiple sides of the Player; stationary melee HOLD remains stable, with no severe jitter, repeated left/right thrashing, abnormal outward launches or obvious speed boosts observed.
+- Dense crowds still compress; occasional squeeze-in instead of a clean wrap is accepted fallback behavior for this checkpoint. This cleanup changes only tests, comments and documentation, not gameplay.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests.ProductionGeometry_TrailingEnemyAvoidsHoldingFrontBeforeHardContact — normal-speed trailing melee predicts a front enemy naturally in HOLD, using a 0.87684506 body radius, separate 0.2 separation sensor and 0.5 Player collider; checks lateral response before hard contact without physical recovery, stable front HOLD, speed cap and forward progress.
+- EnemyApproachSpreadPlayTests.PredictiveMeleeChase_IgnoresAlternatingLegacySpacingInput — renamed and clarified messages; retained the existing direction-change and forward-progress assertions.
+
+### Notes
+- All requested tests and MainPrototype behavior passed before this cleanup, as reported by the user. The user subsequently confirmed final validation is green, including the upgraded fixture and 1e-4 tolerance; no local rerun was performed during publication.
+- Removed the unused SetField helper and reflection import. Clarified that #299 composition belongs to retained legacy/non-predictive CHASE.
+- No changes to predictive logic, thresholds, speed, HOLD, #277, attacks or targeting; no commit, push or PR.
+
+## 2026-09-14 - predictive-approach-fixture-correction
+
+### Summary
+- Corrected two legacy approach fixtures that had no separation colliders and therefore could not exercise predictive avoidance.
+- Replaced coincident spawns and proximity-only lane assertions with distinct sensor-backed enemies closing on a slower front enemy.
+- Kept runtime tuning unchanged; retained checks for pre-contact curvature, forward progress, hard separation and absence of legacy bypass.
+
+### New or Updated Tests
+**EditMode**
+- EnemyPredictiveAvoidanceTests.EqualVelocityNeighbors_DoNotRequireArtificialLaneFormation — equal velocities without predicted closing preserve preferred pursuit.
+
+**PlayMode**
+- EnemyApproachSpreadPlayTests.ClusteredMeleeGroup_AvoidsSlowerFrontEnemyBeforeContact — five sensor-backed enemies, pre-contact turning, speed cap and forward progress.
+- EnemyApproachSpreadPlayTests.LongitudinalGroup_PredictsClosingMotionWithoutLegacySpacing — faster followers predict a slower front enemy while preserving progress and hard separation.
+
+### Notes
+- User reported both original lane assertions failing with zero lateral spread. The fixtures omitted EnemySeparationCollider, causing the predictor to return straight pursuit.
+- The user subsequently confirmed all requested tests passed and MainPrototype validation succeeded before the 2026-09-15 cleanup.
+
+## 2026-09-14 - codex/exp-predictive-local-avoidance
+
+### Summary
+- Replaced eligible melee Player CHASE soft-spacing and waypoint bypass with a local predictive velocity sampler; preserved the existing implementations for other paths.
+- Added a 0.6-second horizon, 4.5-unit neighborhood, 15-degree samples bounded to 75 degrees, and full-speed preference with slower safe fallbacks.
+- Kept stationary HOLD, #277, targeting, attacks, engagement, root/stagger/knockback, prefabs and project settings at checkpoint cc1965444cbc634edfe6b93dd6cb5cb19b43c940.
+
+### New or Updated Tests
+**EditMode**
+- EnemyPredictiveAvoidanceTests — head-on prediction, off-path exclusions, deterministic ties, radius compression, speed/direction bounds, crossing prediction and low/dense-crowd forward progress.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests — five/eight same-side arrivals including rear-enemy arrival, stationary HOLD, hard footprints, speed caps and HOLD/ranged/barrier/root/steer-target exclusions.
+- EnemyChaseApproachTargetPlayTests — updated controller expectations to predictive movement without legacy bypass; retained approach, separation, reacquisition and stationary-HOLD checks.
+- EnemySoftApproachSpacingPlayTests — updated melee off-path expectation to bypass soft spacing; retained ranged spacing and dense arrival coverage.
+
+### Notes
+- The user confirmed all requested tests passed before the 2026-09-15 cleanup. MainPrototype validation was successful; the runtime checkpoint is manually accepted, including occasional squeeze-in fallback.
+- Prediction uses observed Rigidbody2D velocities, with HOLD/root/stagger neighbors treated as stationary; relevant active living melee allies target the same Player, within 4.5 units of the mover. Count includes self.
+- Preferred per-enemy radius is 2.5 times the #277 sensor radius below eight participants (0.5 units on current prefabs); eight or more uses 1 times (0.2 units).
+- If no safe sample exists below eight, the radius multiplier relaxes through 2.5, 1.75, 1. At each radius, sample full speed first, then 75% and 50%. If every moving sample is unsafe, request zero and retain #277 recovery.
+- Near-equal velocity costs retain the previous turn side; reset defaults deterministically to positive rotation. No outward candidates, waypoint assignments, collider enlargement or HOLD orbit.
+- Active experiment bypasses EnemyApproachSpread.Compute (including #299/soft and angular contributions), EnemyChaseApproachTarget and EnemyBypassDirectionTransition. EnemyRingManager feeds remain available for unchanged ranged/HOLD paths.
+- Prior uncommitted personal-space experiment and settings are preserved in the stash named "preserve failed personal-space experiment and local settings before predictive experiment"; no commit, push, PR or new worktree.
+
+## 2026-09-14 - codex/fix-296-clean-restart-lookahead-4.5
+
+### Summary
+- Increased only BypassLookaheadDistance from 3f to 4.5f.
+- Kept waypoint length, Player gate, engagement cutoff, filtering and all movement policies unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemyChaseApproachTargetTests � updated extended-range corridor expectations; added 4.5-unit center-boundary coverage using a large footprint and distant off-route/rear/endpoint exclusions.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity and tests were not run, as requested.
+- The unchanged Player gate still caps direct travel at 3 units; farther centers qualify only when their expanded footprints intersect that segment.
+- No commit, push, publication or wider-gap tuning.
+
+## 2026-09-14 - codex/fix-296-clean-restart-earlier-bypass
+
+### Summary
+- Extended bypass-only candidate collection and direct-corridor detection to 3 units while retaining the authored 1.5-unit waypoint and 3.5-unit Player surface-distance gate.
+- Restricted extra distant allies to expanded-footprint corridor obstructions before activation, waypoint revalidation or tangent construction; retained local constraints and release hysteresis.
+- Preserved side commitment, 100-degree guard, 225-degree/second smoothing, authored-speed cap, stationary melee HOLD, #277, #299/soft spacing and ranged/barrier policies.
+
+### New or Updated Tests
+**EditMode**
+- EnemyChaseApproachTargetTests � added 16 cases across five methods covering early detection/range boundary, corridor and engagement exclusions, waypoint length, side/tangent isolation, release hysteresis and runtime blocker eligibility.
+
+**PlayMode**
+- EnemyChaseApproachTargetPlayTests.SameDirectionArrivals_SplitBeforeOldNeighborRange � added observed divergence of two arrivals while the front blocker remains beyond 1.5 units, with speed and footprint guards.
+
+### Notes
+- Unity, EditMode and PlayMode were not run, as requested. Tests were authored before the implementation; red/green execution and MainPrototype validation remain with the user.
+- Existing smoothing, outward-guard, HOLD, #277/#299 and ranged/barrier regression tests are unchanged and must be rerun for this slice.
+- Moving blockers can still cause unnecessary early detours; smoothing initially retains inward travel. No prediction, formation tuning or movement-system changes were added.
+- Checkpoint ac1c7fd remains HEAD; no commit, push or PR. Both excluded ProjectSettings files were left untouched.
+
+## 2026-09-08 - codex/fix-296-clean-restart-movement-checkpoint
+
+### Summary
+- Kept stationary melee HOLD, local CHASE bypass with stable side/target selection, 225-degree/second entry/replacement/exit smoothing, the 100-degree outward waypoint guard and authored-speed cap.
+- Kept the 2-unit soft influence radius and melee-only 1.5 strength multiplier; preserved #277 hard separation, #299 steering limits, ranged policies, attack/engagement rules and authored speed.
+- Removed preferred-position steering with explicit user approval, all arrival recording/export infrastructure and hooks, and superseded experiment documentation/tests. Cramped surround formation remains future work.
+
+### New or Updated Tests
+**EditMode**
+- EnemyLocomotionTests and Castlebound.Tests.AI.EnemyControllerOrbitVsBarrierTests — stationary melee HOLD, entry/reseat/release, and ranged/barrier policy preservation.
+- EnemyChaseApproachTargetTests — activation/clearing, stable side/target, outward guard, replacement transition, authored-speed/waypoint-step caps, ordinary spacing restoration and excluded states.
+- EnemyBypassDirectionTransitionTests — entry/replacement/exit angular limits, magnitude preservation, convergence and lifecycle reset.
+- EnemySoftApproachSpacingTests — soft feed boundaries/cancellation, authored speed, dense cap, melee strength, and ranged/HOLD exclusions; removed redundant distance sweeps.
+
+**PlayMode**
+- EnemyChaseApproachTargetPlayTests.OccupiedApproach_BypassesThenClearsAndHolds — observed body movement, smooth entry, attack reacquisition, route clearing, #277 footprints and stationary HOLD.
+- EnemyMeleeHoldPlayTests — sustained stationary HOLD under alternating gaps plus the retained real-prefab #277 execution guard.
+- EnemySoftApproachSpacingPlayTests — actual far melee/ranged movement consumes the appropriate spacing request; dense pairs compress below the soft radius and settle.
+
+### Notes
+- Unity, EditMode and PlayMode were not run. Post-prune user validation is required; no commit, push or PR was made.
+- Removing preferred-position steering intentionally changes ordinary approach/facing and some bypass entry/exit trajectories. The user explicitly approved that change.
+- No recorder or new diagnostic hook remains. Retained tests use movement outputs, existing state accessors, Rigidbody positions and fixture-local assertions.
+- ProjectSettings/Physics2DSettings.asset and ProjectSettings/ShaderGraphSettings.asset remain excluded from this checkpoint because their differences are line-ending-only.
+- Run EditMode: EnemyLocomotionTests, Castlebound.Tests.AI.EnemyControllerOrbitVsBarrierTests, EnemyChaseApproachTargetTests, EnemyBypassDirectionTransitionTests, EnemySoftApproachSpacingTests, EnemyApproachSpreadTests, EnemySeparationMathTests, EnemySeparationPrefabContractTests, EnemyEngagementTests.
+- Run PlayMode: EnemyMeleeHoldPlayTests, EnemyChaseApproachTargetPlayTests, EnemySoftApproachSpacingPlayTests, EnemyApproachSpreadPlayTests, EnemySeparationPlayTests, EnemyAttackTargetLockPlayTests, EnemyEngagementPlayTests, EnemyRangedAttackPlayTests.
+
 ## 2026-08-31 - fix-ai-soft-spacing-and-walk-validation
 
 ### Summary

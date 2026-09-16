@@ -20,6 +20,37 @@ namespace Castlebound.Tests.PlayMode.AI
             "Assets/_Project/Prefabs/Enemy_Lurker.prefab";
 
         [UnityTest]
+        public IEnumerator MixedAvoidanceGroups_RetainHardSeparation()
+        {
+            GameObject melee = CreateEnemy(MeleePath, new Vector2(-0.5f, 0f));
+            GameObject lurker = CreateEnemy(LurkerPath, new Vector2(0.5f, 0f));
+            try
+            {
+                Assert.That(melee.GetComponent<EnemySurroundEligibility>().AvoidanceGroup,
+                    Is.EqualTo(PredictiveAvoidanceGroup.SmallMelee));
+                Assert.That(lurker.GetComponent<EnemySurroundEligibility>().AvoidanceGroup,
+                    Is.EqualTo(PredictiveAvoidanceGroup.Lurker));
+                var leftBody = melee.GetComponent<Rigidbody2D>();
+                var rightBody = lurker.GetComponent<Rigidbody2D>();
+                for (int i = 0; i < 30; i++)
+                {
+                    melee.GetComponent<EnemyLocomotion>().ExecuteMovement(
+                        leftBody, Vector2.right * 2f, Vector2.zero, Time.fixedDeltaTime);
+                    lurker.GetComponent<EnemyLocomotion>().ExecuteMovement(
+                        rightBody, Vector2.left * 2f, Vector2.zero, Time.fixedDeltaTime);
+                    yield return new WaitForFixedUpdate();
+                    AssertMinimumSeparation(melee, lurker);
+                }
+                Assert.That(Vector2.Distance(leftBody.position, rightBody.position), Is.LessThan(0.5f),
+                    "Mixed groups must approach and compress to the unchanged hard footprint.");
+            }
+            finally
+            {
+                DestroyNow(melee, lurker);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator OpposingMovePositionEnemies_StopAtTheMinimumFootprint()
         {
             GameObject left = CreateEnemy(MeleePath, new Vector2(-1f, 0f));

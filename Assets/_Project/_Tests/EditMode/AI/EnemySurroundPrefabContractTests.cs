@@ -7,6 +7,16 @@ namespace Castlebound.Tests.AI
 {
     public class EnemySurroundPrefabContractTests
     {
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab", PredictiveAvoidanceGroup.SmallMelee)]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab", PredictiveAvoidanceGroup.Lurker)]
+        [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Ranged.prefab", PredictiveAvoidanceGroup.None)]
+        public void EnemyPrefab_DefinesPredictiveAvoidanceGroup(string prefabPath, PredictiveAvoidanceGroup expected)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            Assert.NotNull(prefab);
+            Assert.That(prefab.GetComponent<EnemySurroundEligibility>().AvoidanceGroup, Is.EqualTo(expected));
+        }
+
         [TestCase("Assets/_Project/Prefabs/Enemy_Goblin_Melee.prefab")]
         [TestCase("Assets/_Project/Prefabs/Enemy_Lurker.prefab")]
         public void CurrentMeleePrefab_DefinesSurroundEligibility(string prefabPath)

@@ -4,6 +4,14 @@ namespace Castlebound.Gameplay.AI
 {
     public class EnemySurroundEligibility : MonoBehaviour
     {
+        [SerializeField] private PredictiveAvoidanceGroup avoidanceGroup = PredictiveAvoidanceGroup.None;
+
+        public PredictiveAvoidanceGroup AvoidanceGroup
+        {
+            get => avoidanceGroup;
+            set => avoidanceGroup = value;
+        }
+
         private EnemyController2D controller;
         private EnemyRootReceiver rootReceiver;
         private Health health;

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Reflection;
 using Castlebound.Gameplay.AI;
 using NUnit.Framework;
 using UnityEngine;
@@ -10,81 +9,117 @@ namespace Castlebound.Tests.PlayMode.AI
     public class EnemyApproachSpreadPlayTests
     {
         [UnityTest]
-        public IEnumerator ClusteredMeleeGroup_FormsMultiplePathsEarlyInApproach()
+        public IEnumerator ProductionGeometry_TrailingEnemyAvoidsHoldingFrontBeforeHardContact()
         {
-            var player = CreatePlayer();
-            var managerObject = new GameObject("EnemyRingManager");
+            var player = CreatePlayer(true);
+            player.transform.position = new Vector2(1000f, 1000f);
             var enemies = new[]
             {
-                CreateEnemy(player.transform, new Vector2(12f, 0f)),
-                CreateEnemy(player.transform, new Vector2(12f, 0f)),
-                CreateEnemy(player.transform, new Vector2(12f, 0f)),
-                CreateEnemy(player.transform, new Vector2(12f, 0f)),
-                CreateEnemy(player.transform, new Vector2(12f, 0f))
+                CreateEnemy(player.transform, (Vector2)player.transform.position + new Vector2(1.8f, 0f), true, true),
+                CreateEnemy(player.transform, (Vector2)player.transform.position + new Vector2(3.2f, 0f), true, true)
             };
+            // The front enemy is naturally inside the authored melee engagement range.
+            // Both retain a normal chase speed; HOLD, rather than a speed override, stops the front.
+            foreach (var enemy in enemies) enemy.GetComponent<EnemyController2D>().Speed = 3.5f;
             try
             {
-                managerObject.AddComponent<EnemyRingManager>();
-                for (int i = 0; i < 15; i++) yield return new WaitForFixedUpdate();
-                float[] lateralPositions = GetSortedY(enemies);
-                Assert.That(lateralPositions[4] - lateralPositions[0], Is.GreaterThan(0.35f));
-                Assert.That(CountDistinct(lateralPositions, 0.04f), Is.GreaterThanOrEqualTo(3));
-                Assert.That(Vector2.Distance(enemies[2].transform.position, player.transform.position),
-                    Is.GreaterThan(8f), "Spreading should be visible early in the approach.");
-            }
-            finally
-            {
-                DestroyEnemies(enemies);
-                Object.Destroy(managerObject);
-                Object.Destroy(player);
-            }
-        }
-
-        [UnityTest]
-        public IEnumerator LongitudinallyCompressedGroup_DevelopsApproachLanesBeforeHardContact()
-        {
-            var player = CreatePlayer();
-            var managerObject = new GameObject("EnemyRingManager");
-            var enemies = new[]
-            {
-                CreateEnemy(player.transform, new Vector2(16f, 0f)),
-                CreateEnemy(player.transform, new Vector2(15.4f, 0f)),
-                CreateEnemy(player.transform, new Vector2(14.5f, 0f)),
-                CreateEnemy(player.transform, new Vector2(13.8f, 0f)),
-                CreateEnemy(player.transform, new Vector2(12.6f, 0f))
-            };
-            try
-            {
-                managerObject.AddComponent<EnemyRingManager>();
-                float startingAverageX = AverageX(enemies);
-
-                for (int i = 0; i < 10; i++)
+                Physics2D.SyncTransforms();
+                var front = enemies[0].GetComponent<EnemyController2D>();
+                var trailing = enemies[1].GetComponent<EnemyController2D>();
+                var frontBody = enemies[0].GetComponent<Rigidbody2D>();
+                var trailingBody = enemies[1].GetComponent<Rigidbody2D>();
+                var frontSensor = enemies[0].GetComponentInChildren<EnemySeparationCollider>();
+                var trailingSensor = enemies[1].GetComponentInChildren<EnemySeparationCollider>();
+                float hardMinimum = frontSensor.Collider.bounds.extents.x + trailingSensor.Collider.bounds.extents.x;
+                Vector2 frontStart = frontBody.position;
+                Vector2 previous = trailingBody.position;
+                float startingX = previous.x;
+                bool avoidedBeforeContact = false;
+                bool hardContactObserved = false;
+                Assert.That(hardMinimum, Is.EqualTo(0.4f).Within(0.0001f));
+                for (int i = 0; i < 20; i++)
+                {
+                    float beforeDistance = Vector2.Distance(trailingBody.position, frontBody.position);
                     yield return new WaitForFixedUpdate();
-
-                float[] lateralPositions = GetSortedY(enemies);
-                Assert.That(lateralPositions[4] - lateralPositions[0],
-                    Is.GreaterThan(0.12f),
-                    "Longitudinal crowd pressure should produce early approach lanes.");
-                Assert.That(CountDistinct(lateralPositions, 0.025f),
-                    Is.GreaterThanOrEqualTo(3));
-                Assert.That(AverageX(enemies), Is.LessThan(startingAverageX - 1f),
-                    "Lane formation must preserve clear forward chase progress.");
-                Assert.That(Vector2.Distance(
-                        enemies[4].transform.position,
-                        player.transform.position),
-                    Is.GreaterThan(10f),
-                    "Lane formation should occur before near-Player surround steering dominates.");
+                    Vector2 position = trailingBody.position;
+                    float distance = Vector2.Distance(position, frontBody.position);
+                    Assert.IsTrue(front.IsInHoldRange(), "The front enemy must be an actual settled obstruction.");
+                    Assert.That(Vector2.Distance(frontBody.position, frontStart), Is.LessThan(0.001f));
+                    if (!avoidedBeforeContact)
+                    {
+                        hardContactObserved |= distance <= hardMinimum + 0.02f;
+                        if (Mathf.Abs(position.y - previous.y) > 0.005f)
+                        {
+                            Assert.IsFalse(hardContactObserved, "The turn must begin before reaching the hard footprint.");
+                            Assert.That(beforeDistance, Is.GreaterThan(hardMinimum + 0.02f));
+                            Assert.That(distance, Is.GreaterThan(hardMinimum + 0.02f));
+                            Assert.That(frontSensor.DebugFallbackCorrectionCount +
+                                trailingSensor.DebugFallbackCorrectionCount, Is.Zero,
+                                "Physical overlap recovery must not be the source of lateral travel.");
+                            avoidedBeforeContact = true;
+                        }
+                    }
+                    Assert.That(distance, Is.GreaterThanOrEqualTo(hardMinimum - 0.01f));
+                    Assert.That(Vector2.Distance(position, previous),
+                        Is.LessThanOrEqualTo(trailing.Speed * Time.fixedDeltaTime + 0.003f));
+                    Assert.IsFalse(enemies[1].GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                    previous = position;
+                }
+                Assert.IsTrue(avoidedBeforeContact, "The trailing enemy must predict and turn around the HOLD enemy.");
+                Assert.That(previous.x, Is.LessThan(startingX - 0.2f), "Avoidance must preserve forward progress.");
             }
             finally
             {
                 DestroyEnemies(enemies);
-                Object.Destroy(managerObject);
                 Object.Destroy(player);
             }
         }
-
         [UnityTest]
-        public IEnumerator NearCancelledSpacingDuringFarChase_PreservesStableForwardProgress()
+        public IEnumerator LongitudinalGroup_PredictsClosingMotionWithoutLegacySpacing()
+        {
+            var player = CreatePlayer();
+            var enemies = new[]
+            {
+                CreateEnemy(player.transform, new Vector2(16f, 0f), true),
+                CreateEnemy(player.transform, new Vector2(15.4f, 0f), true),
+                CreateEnemy(player.transform, new Vector2(14.5f, 0f), true),
+                CreateEnemy(player.transform, new Vector2(13.8f, 0f), true),
+                CreateEnemy(player.transform, new Vector2(12.6f, 0f), true)
+            };
+            enemies[4].GetComponent<EnemyController2D>().Speed = 2f;
+            var startingX = new float[4];
+            for (int i = 0; i < 4; i++) startingX[i] = enemies[i].transform.position.x;
+            try
+            {
+                bool curvedBeforeContact = false;
+                for (int step = 0; step < 10; step++)
+                {
+                    Vector2 before = enemies[3].GetComponent<Rigidbody2D>().position;
+                    yield return new WaitForFixedUpdate();
+                    Vector2 after = enemies[3].GetComponent<Rigidbody2D>().position;
+                    float gap = Vector2.Distance(after, enemies[4].GetComponent<Rigidbody2D>().position);
+                    curvedBeforeContact |= Mathf.Abs(after.y - before.y) > 0.005f && gap > 0.42f;
+                    for (int i = 0; i < enemies.Length; i++)
+                    {
+                        Assert.IsFalse(enemies[i].GetComponent<EnemyLocomotion>().HasChaseApproachTarget);
+                        for (int j = 0; j < i; j++)
+                            Assert.That(Vector2.Distance(enemies[i].transform.position, enemies[j].transform.position),
+                                Is.GreaterThanOrEqualTo(0.39f));
+                    }
+                }
+                Assert.IsTrue(curvedBeforeContact, "Faster followers must predict the slower front enemy.");
+                for (int i = 0; i < 4; i++)
+                    Assert.That(enemies[i].transform.position.x, Is.LessThan(startingX[i] - 0.2f),
+                        "Every faster follower must continue approaching.");
+            }
+            finally
+            {
+                DestroyEnemies(enemies);
+                Object.Destroy(player);
+            }
+        }
+        [UnityTest]
+        public IEnumerator PredictiveMeleeChase_IgnoresAlternatingLegacySpacingInput()
         {
             var player = CreatePlayer();
             var enemy = CreateEnemy(player.transform, new Vector2(20f, 0f));
@@ -118,9 +153,9 @@ namespace Castlebound.Tests.PlayMode.AI
                 }
 
                 Assert.That(maximumDirectionChange, Is.LessThan(2f),
-                    "Near-cancelled soft spacing must not destabilize far-CHASE direction.");
+                    "Ignored legacy soft-spacing input must not destabilize predictive melee pursuit.");
                 Assert.That(body.position.x, Is.LessThan(startingX - 2f),
-                    "Stabilizing soft spacing must preserve clear forward chase progress.");
+                    "Predictive melee pursuit must preserve forward progress despite alternating legacy input.");
                 Assert.That(Vector2.Distance(body.position, player.transform.position),
                     Is.GreaterThan(13f),
                     "The regression must remain outside near-Player surround arrival.");
@@ -204,22 +239,50 @@ namespace Castlebound.Tests.PlayMode.AI
             }
         }
 
-        private static GameObject CreatePlayer()
+        private static GameObject CreatePlayer(bool withCollider = false)
         {
             var player = new GameObject("Player");
             player.tag = "Player";
+            if (withCollider)
+            {
+                player.layer = LayerMask.NameToLayer("Player");
+                player.AddComponent<CircleCollider2D>().radius = 0.5f;
+            }
             return player;
         }
 
-        private static GameObject CreateEnemy(Transform player, Vector2 position)
+        private static GameObject CreateEnemy(Transform player, Vector2 position,
+            bool withSeparation = false, bool productionGeometry = false)
         {
             var enemy = new GameObject("Enemy");
             enemy.transform.position = position;
             var body = enemy.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
+            if (withSeparation)
+            {
+                enemy.layer = LayerMask.NameToLayer("Enemies");
+                GameObject sensorObject = enemy;
+                if (productionGeometry)
+                {
+                    body.constraints = RigidbodyConstraints2D.FreezeRotation;
+                    var primary = enemy.AddComponent<CircleCollider2D>();
+                    primary.radius = 0.87684506f;
+                    primary.excludeLayers = 1 << enemy.layer;
+                    primary.layerOverridePriority = 2;
+                    sensorObject = new GameObject("EnemySeparation");
+                    sensorObject.layer = enemy.layer;
+                    sensorObject.transform.SetParent(enemy.transform, false);
+                }
+                var sensor = sensorObject.AddComponent<CircleCollider2D>();
+                sensor.radius = 0.2f;
+                sensor.isTrigger = true;
+                sensor.includeLayers = 1 << enemy.layer;
+                sensor.excludeLayers = ~(1 << enemy.layer);
+                sensorObject.AddComponent<EnemySeparationCollider>();
+            }
             enemy.AddComponent<Health>().ConfigureMaxHealth(10, refill: true);
             enemy.AddComponent<EnemyRootReceiver>();
-            enemy.AddComponent<EnemySurroundEligibility>();
+            enemy.AddComponent<EnemySurroundEligibility>().AvoidanceGroup = PredictiveAvoidanceGroup.SmallMelee;
             enemy.AddComponent<EnemyApproachSpread>();
             var controller = enemy.AddComponent<EnemyController2D>();
             controller.Speed = 8f;
@@ -235,28 +298,6 @@ namespace Castlebound.Tests.PlayMode.AI
             for (int i = 0; i < enemies.Length; i++) values[i] = enemies[i].transform.position.y;
             System.Array.Sort(values);
             return values;
-        }
-
-        private static int CountDistinct(float[] sortedValues, float tolerance)
-        {
-            int count = sortedValues.Length > 0 ? 1 : 0;
-            for (int i = 1; i < sortedValues.Length; i++)
-                if (sortedValues[i] - sortedValues[i - 1] > tolerance) count++;
-            return count;
-        }
-
-        private static float AverageX(GameObject[] enemies)
-        {
-            float sum = 0f;
-            for (int i = 0; i < enemies.Length; i++)
-                sum += enemies[i].transform.position.x;
-            return sum / enemies.Length;
-        }
-
-        private static void SetField(object instance, string fieldName, object value)
-        {
-            instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
-                ?.SetValue(instance, value);
         }
 
         private static void DestroyEnemies(GameObject[] enemies)
