@@ -40,6 +40,9 @@ public class EnemyPredictiveChasePlayTests
         paused.Clear();
     }
 
+    [TestCase("groupNone")]
+    [TestCase("surroundDisabled")]
+    [TestCase("surroundMissing")]
     [TestCase("hold")]
     [TestCase("ranged")]
     [TestCase("barrier")]
@@ -52,6 +55,9 @@ public class EnemyPredictiveChasePlayTests
         Assert.IsTrue(movement.CanUsePredictiveChase(enemy, player));
         switch (kind)
         {
+            case "groupNone": enemy.GetComponent<EnemySurroundEligibility>().AvoidanceGroup = PredictiveAvoidanceGroup.None; break;
+            case "surroundDisabled": enemy.GetComponent<EnemySurroundEligibility>().enabled = false; break;
+            case "surroundMissing": Object.DestroyImmediate(enemy.GetComponent<EnemySurroundEligibility>()); break;
             case "hold": movement.SetMovementState(EnemyController2D.State.HOLD); break;
             case "ranged":
                 movement.Debug_SetHoldMovementPolicy(enemy.gameObject.AddComponent<EnemyRangedEngagement>());
@@ -69,6 +75,81 @@ public class EnemyPredictiveChasePlayTests
         movement.ApplyPredictiveChase(enemy, player, 2f, ref radial, ref tangent);
         Assert.That(radial, Is.EqualTo(Vector2.left));
         Assert.That(tangent, Is.EqualTo(Vector2.up));
+    }
+
+    [TestCase(PredictiveAvoidanceGroup.SmallMelee, PredictiveAvoidanceGroup.SmallMelee, "GoblinMelee", true)]
+    [TestCase(PredictiveAvoidanceGroup.SmallMelee, PredictiveAvoidanceGroup.SmallMelee, "FutureSmallEnemyVariant", true)]
+    [TestCase(PredictiveAvoidanceGroup.SmallMelee, PredictiveAvoidanceGroup.Lurker, "Lurker", false)]
+    [TestCase(PredictiveAvoidanceGroup.Lurker, PredictiveAvoidanceGroup.Lurker, "LurkerVariant", true)]
+    [TestCase(PredictiveAvoidanceGroup.Lurker, PredictiveAvoidanceGroup.SmallMelee, "GoblinMelee", false)]
+    [TestCase(PredictiveAvoidanceGroup.SmallMelee, PredictiveAvoidanceGroup.None, "OptedOut", false)]
+    [TestCase(PredictiveAvoidanceGroup.None, PredictiveAvoidanceGroup.SmallMelee, "GoblinMelee", false)]
+    [TestCase(PredictiveAvoidanceGroup.None, PredictiveAvoidanceGroup.None, "OptedOut", false)]
+    public void PredictiveNeighbors_UseSharedGroupInsteadOfEnemyIdentity(
+        PredictiveAvoidanceGroup ownerGroup, PredictiveAvoidanceGroup neighborGroup,
+        string neighborName, bool shouldAvoid)
+    {
+        // Match the validated slower-front production geometry, before any physics contact.
+        var front = CreateEnemy(new Vector2(1.8f, 0f));
+        var trailing = CreateEnemy(new Vector2(3.2f, 0f));
+        front.gameObject.name = neighborName;
+        front.GetComponent<EnemySurroundEligibility>().AvoidanceGroup = neighborGroup;
+        trailing.GetComponent<EnemySurroundEligibility>().AvoidanceGroup = ownerGroup;
+        front.GetComponent<EnemyLocomotion>().SetMovementState(EnemyController2D.State.HOLD);
+        Physics2D.SyncTransforms();
+        var frontSensor = front.GetComponentInChildren<EnemySeparationCollider>();
+        var trailingSensor = trailing.GetComponentInChildren<EnemySeparationCollider>();
+        float hardMinimum = frontSensor.Collider.bounds.extents.x + trailingSensor.Collider.bounds.extents.x;
+        Assert.That(Vector2.Distance(frontSensor.Collider.bounds.center, trailingSensor.Collider.bounds.center),
+            Is.GreaterThan(hardMinimum + 0.5f));
+        var chase = new EnemyPredictiveChase();
+        Vector2 velocity = chase.Compute(trailing, player, 3.5f);
+        if (shouldAvoid)
+        {
+            Assert.That(Mathf.Abs(velocity.y), Is.GreaterThan(0.05f),
+                "A same-group front obstruction must influence predictive routing before hard contact.");
+            Assert.That(velocity.x, Is.LessThan(0f));
+            Assert.That(velocity.magnitude, Is.LessThanOrEqualTo(3.5001f));
+        }
+        else
+        {
+            Assert.That(velocity.x, Is.EqualTo(-3.5f).Within(0.0001f));
+            Assert.That(velocity.y, Is.EqualTo(0f).Within(0.0001f),
+                "Other groups and None must not influence the predictive solver.");
+        }
+        Assert.That(trailing.GetComponent<EnemyLocomotion>().CanUsePredictiveChase(trailing, player),
+            Is.EqualTo(ownerGroup != PredictiveAvoidanceGroup.None));
+    }
+
+    [UnityTest]
+    public IEnumerator DisabledSurroundEligibility_ContinuesLegacyChase_AndCanReenablePrediction()
+    {
+        var enemy = CreateEnemy(new Vector2(4f, 0f));
+        var movement = enemy.GetComponent<EnemyLocomotion>();
+        var eligibility = enemy.GetComponent<EnemySurroundEligibility>();
+        var body = enemy.GetComponent<Rigidbody2D>();
+        Assert.IsTrue(movement.CanUsePredictiveChase(enemy, player));
+        eligibility.enabled = false;
+        Vector2 start = body.position;
+        for (int tick = 0; tick < 5; tick++)
+        {
+            yield return new WaitForFixedUpdate();
+            Assert.IsFalse(eligibility.IsEligibleFor(player));
+            Assert.IsFalse(movement.CanUsePredictiveChase(enemy, player));
+            Assert.That(movement.CurrentState, Is.EqualTo(EnemyController2D.State.CHASE));
+            Assert.IsFalse(movement.HasChaseApproachTarget);
+            Assert.That(enemy.Target, Is.SameAs(player));
+        }
+        Assert.That(start.x - body.position.x, Is.GreaterThan(0.05f),
+            "Opting out of surround must retain forward movement on the non-predictive path.");
+        Assert.That(body.position.y, Is.EqualTo(start.y).Within(0.001f));
+        eligibility.enabled = true;
+        Assert.IsTrue(eligibility.IsEligibleFor(player));
+        Assert.IsTrue(movement.CanUsePredictiveChase(enemy, player));
+        Vector2 radial = Vector2.zero, tangent = Vector2.up;
+        movement.ApplyPredictiveChase(enemy, player, 2f, ref radial, ref tangent);
+        Assert.That(radial.x, Is.EqualTo(-2f).Within(0.0001f));
+        Assert.That(tangent, Is.EqualTo(Vector2.zero));
     }
 
     [UnityTest]
@@ -180,7 +261,7 @@ public class EnemyPredictiveChasePlayTests
         sensorObject.AddComponent<EnemySeparationCollider>();
         go.AddComponent<Health>().ConfigureMaxHealth(10, true);
         go.AddComponent<EnemyRootReceiver>();
-        go.AddComponent<EnemySurroundEligibility>();
+        go.AddComponent<EnemySurroundEligibility>().AvoidanceGroup = PredictiveAvoidanceGroup.SmallMelee;
         go.AddComponent<EnemyApproachSpread>();
         var enemy = go.AddComponent<EnemyController2D>();
         enemy.Speed = 2f;

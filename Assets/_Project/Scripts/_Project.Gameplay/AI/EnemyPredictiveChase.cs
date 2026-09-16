@@ -24,6 +24,10 @@ namespace Castlebound.Gameplay.AI
                 movement.CurrentState != EnemyController2D.State.CHASE ||
                 owner.GetComponent<EnemyTargeting>().SteerTarget != player)
                 return false;
+            var eligibility = owner.GetComponent<EnemySurroundEligibility>();
+            if (eligibility == null || !eligibility.IsEligibleFor(player) ||
+                eligibility.AvoidanceGroup == PredictiveAvoidanceGroup.None)
+                return false;
             var root = owner.GetComponent<EnemyRootReceiver>();
             var stagger = owner.GetComponent<EnemyStaggerReceiver>();
             return (root == null || !root.IsRooted) && (stagger == null || !stagger.IsActionLocked);
@@ -39,7 +43,10 @@ namespace Castlebound.Gameplay.AI
             var body = owner.GetComponent<Rigidbody2D>();
             var ownSensor = owner.GetComponentInChildren<EnemySeparationCollider>();
             Vector2 desired = ((Vector2)player.position - body.position).normalized * Mathf.Max(0f, speed);
-            if (ownSensor == null || !ownSensor.isActiveAndEnabled || !ownSensor.Collider.enabled)
+            var eligibility = owner.GetComponent<EnemySurroundEligibility>();
+            var group = eligibility != null ? eligibility.AvoidanceGroup : PredictiveAvoidanceGroup.None;
+            if (group == PredictiveAvoidanceGroup.None ||
+                ownSensor == null || !ownSensor.isActiveAndEnabled || !ownSensor.Collider.enabled)
                 return desired;
 
             Vector2 position = ownSensor.Collider.bounds.center;
@@ -47,6 +54,8 @@ namespace Castlebound.Gameplay.AI
             foreach (var other in EnemyController2D.All)
             {
                 if (other == owner || !IsRelevant(other, player)) continue;
+                var otherEligibility = other.GetComponent<EnemySurroundEligibility>();
+                if (otherEligibility == null || otherEligibility.AvoidanceGroup != group) continue;
                 var sensor = other.GetComponentInChildren<EnemySeparationCollider>();
                 if (sensor == null || !sensor.isActiveAndEnabled || !sensor.Collider.enabled) continue;
                 var otherBody = sensor.Collider.attachedRigidbody;

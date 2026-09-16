@@ -4,6 +4,65 @@
 
 ---
 
+## 2026-09-15 - validated-predictive-surround-groups
+
+### Summary
+- User confirmed all requested EditMode and PlayMode tests pass for the eligibility/group fix.
+- MainPrototype confirmed SmallMelee-to-SmallMelee and Lurker-to-Lurker avoidance, no mixed-group predictive influence, and unchanged mixed-group #277 physical separation.
+- Predictive surround remains manually approved; ranged behavior is unchanged.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests, EnemySurroundPrefabContractTests and requested predictive/separation regressions — passed, user-confirmed.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests, EnemySeparationPlayTests and requested predictive crowd/HOLD regressions — passed, user-confirmed.
+
+### Notes
+- Supersedes pending validation notes for the eligibility/group changes below. No local Unity/test execution by Codex.
+- Publication scope excludes the separate PC mouse-isolation fixture change and ProjectSettings noise.
+
+## 2026-09-15 - predictive-avoidance-shared-groups
+
+### Summary
+- Added explicit None, SmallMelee and Lurker predictive avoidance groups on EnemySurroundEligibility; its existing IsEligibleFor contract remains unchanged.
+- Goblin melee uses SmallMelee and Lurker uses Lurker. Predictive neighbors must share the owner's non-None group; ranged prefab and global physics remain unchanged.
+- Preserved solver tuning, speed, HOLD, attacks, targeting, crowd thresholds and downstream #277. Existing predictive fixtures now explicitly opt into SmallMelee.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests — None rejects predictive CHASE without changing surround eligibility; enabled/disabled/missing contract coverage retained.
+- EnemySurroundPrefabContractTests.EnemyPrefab_DefinesPredictiveAvoidanceGroup — verifies Goblin melee, Lurker and unchanged ranged assignments.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests.PredictiveNeighbors_UseSharedGroupInsteadOfEnemyIdentity — same-group and future-variant inclusion, mixed-group exclusion in both directions, and None exclusion before hard contact.
+- EnemyPredictiveChasePlayTests.NonExperimentalPaths_AreExcluded — None preserves existing non-predictive movement input.
+- EnemySeparationPlayTests.MixedAvoidanceGroups_RetainHardSeparation — Goblin melee and Lurker retain #277 separation under inward locomotion.
+- EnemyApproachSpreadPlayTests, EnemyChaseApproachTargetPlayTests, EnemyMeleeHoldPlayTests, EnemyPredictiveChasePlayTests and EnemySoftApproachSpacingPlayTests — explicitly assign SmallMelee to preserve existing predictive regression coverage.
+
+### Notes
+- No Unity or tests run by Codex. Both this group change and the preceding eligibility review fix await manual validation.
+- No staging, commit, push, PR update or CI trigger; waiting for user-confirmed passing tests.
+
+## 2026-09-15 - predictive-chase-surround-eligibility-review-fix
+
+### Summary
+- Predictive CHASE now consumes EnemySurroundEligibility.IsEligibleFor(player), matching the existing surround contract.
+- Disabled or missing eligibility rejects predictive CHASE and retains the existing non-predictive path; all prior eligibility guards remain intact.
+- No avoidance tuning, neighbor selection, HOLD, hard separation, attack, targeting, speed or crowd-threshold changes.
+
+### New or Updated Tests
+**EditMode**
+- EnemySurroundEligibilityTests.PredictiveChase_RequiresAuthoritativeSurroundEligibility — enabled, disabled and missing component regression cases.
+
+**PlayMode**
+- EnemyPredictiveChasePlayTests.NonExperimentalPaths_AreExcluded — added disabled/missing surround cases, preserving legacy movement vectors and existing ranged/barrier guards.
+- EnemyPredictiveChasePlayTests.DisabledSurroundEligibility_ContinuesLegacyChase_AndCanReenablePrediction — verifies forward fallback movement while opted out and predictive re-entry when enabled.
+
+### Notes
+- Unity, EditMode and PlayMode were not run by Codex. This review fix awaits user validation; prior checkpoint results remain recorded below.
+- PR update, review-thread resolution and normal EditMode/PlayMode CI await the user's passing results.
+
 ## 2026-09-15 - predictive-local-avoidance-final-validation
 
 ### Summary

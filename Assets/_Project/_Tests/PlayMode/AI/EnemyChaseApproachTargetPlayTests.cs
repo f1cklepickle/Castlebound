@@ -142,7 +142,7 @@ public class EnemyChaseApproachTargetPlayTests
         enemy.AddComponent<EnemySeparationCollider>();
         enemy.AddComponent<Health>().ConfigureMaxHealth(10, refill: true);
         enemy.AddComponent<EnemyRootReceiver>();
-        enemy.AddComponent<EnemySurroundEligibility>();
+        enemy.AddComponent<EnemySurroundEligibility>().AvoidanceGroup = PredictiveAvoidanceGroup.SmallMelee;
         enemy.AddComponent<EnemyApproachSpread>();
         var controller = enemy.AddComponent<EnemyController2D>();
         controller.Speed = speed;
