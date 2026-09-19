@@ -4,6 +4,165 @@
 
 ---
 
+## 2026-09-19 - static-navigation-foundation-checkpoint
+
+### Summary
+- User confirmed all current static-navigation foundation EditMode tests pass, including the final contact-connector corrections.
+- Checkpoint preserves WorldGrid-aligned 0.25-unit navigation, collider clearance, deterministic incremental A*, shared lazy cache, budgeted scheduler, local invalidation, and wall-contact start connector.
+- No enemy runtime navigation integration has started; the foundation is ready for runtime integration in a later PR/slice.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationGridTests — WorldGrid alignment, resolution, occupancy independence, bounds, and diagonal corner protection; user-confirmed passing.
+- StaticNavigationPathfinderTests — deterministic routes, clearance, endpoint/result semantics, and expansion budgets; user-confirmed passing.
+- StaticNavigationWorld2DTests — body-radius-plus-margin clearance, collider filtering, reusable query buffers, and saturation; user-confirmed passing.
+- StaticNavigationWorldCacheTests — shared lazy cell/edge reuse, Unknown handling, and sampling limits; user-confirmed passing.
+- StaticNavigationSearchTests — resumable search equivalence and per-step/total expansion caps; user-confirmed passing.
+- StaticNavigationSchedulerTests — FIFO service, frame/query/expansion limits, bounded requests, and cache reuse; user-confirmed passing.
+- StaticNavigationInvalidationTests — local invalidation, pending work, stale results, and retained request budgets; user-confirmed passing.
+- StaticNavigationStartConnectorTests — deterministic wall-contact escape, polygon contact skin, penetration/corner rejection, and unchanged walkability; user-confirmed passing.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Passing validation is the user's reported result for the current foundation; Unity and EditMode/PlayMode tests were not run during checkpoint preparation.
+- Earlier pending/failing entries below describe historical iterations and are superseded by this validation record.
+- MainPrototype navigation validation has not been performed; no movement, predictive avoidance, prefab, scene, or ProjectSettings changes are included.
+
+## 2026-09-19 - navigation-test-attribute-compatibility
+
+### Summary
+- Removed the NonParallelizable attribute unavailable in the project's NUnit version.
+- Retained the contact-offset regression cases and their try/finally restoration of the physics setting.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationStartConnectorTests — removed the unsupported attribute causing CS0246.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity, compilation, and tests not run as requested. No runtime code or package changes.
+
+## 2026-09-19 - normalize-polygon-contact-skin
+
+### Summary
+- Confirmed from user-supplied diagnostics that exact box contact was rejected at the initial clearance check with startGap -0.0100008845 and contactOffset 0.01.
+- Normalize both ClosestPoint start clearance and collider sweep distance by the implicit skin of standard unrounded polygon obstacles.
+- Preserve body radius, numerical penetration tolerance, embedded-center rejection, authored edge radii, and circle/capsule geometry.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationStartConnectorTests — configured contact offsets, shallow true penetration, circular-obstacle penetration, authored box edge radius, and polygon-wall contact; original escape and corner regressions retained.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity/tests not run as requested. Awaiting the user's fixture rerun; no passing result claimed.
+- Replaced the ineffective witness-point correction. Diagnostics remain opt-in and editor-only.
+- Contact settings must remain stable while the sampled world is in use; rounded/unsupported geometry remains conservative.
+
+## 2026-09-19 - navigation-contact-failure-diagnostics
+
+### Summary
+- Recorded that the same four contact escape/determinism cases still fail after the distance correction.
+- Added opt-in editor diagnostics for each connector rejection, including destination clearance, starting separation, inward motion, and swept distances.
+- Included diagnostic details in the failing test assertions without runtime logging or altered safety thresholds.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationStartConnectorTests — failure messages now identify the rejection stage and measured clearance values for the reported cases.
+
+**PlayMode**
+- N/A
+
+### Notes
+- The previous correction is not validated. Awaiting the diagnostic output from the user's exact-contact test run before changing collision handling again.
+- Unity/tests not run. Diagnostics are disabled by default and excluded from player builds; no gameplay integration.
+
+## 2026-09-19 - navigation-contact-distance-correction
+
+### Summary
+- Addressed the contact sweep comparison between geometric body clearance and polygon-skin-inclusive collider distance.
+- Normalize the swept distance using the obstacle witness point, capped by the contact offset; retain physical body radius and penetration tolerance.
+- Added shallow-penetration, shallow-corner-clip, and circular-obstacle regression coverage.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationStartConnectorTests — preserves the four reported escape/determinism cases and adds penetration below contact-offset depth, shallow corner clipping, and circle contact.
+
+**PlayMode**
+- N/A
+
+### Notes
+- User reported four failing contact-connector cases before this change. The correction remains unverified in Unity; no Unity/tests run as requested.
+- No scheduler, cache, movement, prefab, scene, or project physics-setting changes.
+
+## 2026-09-18 - local-navigation-invalidation-and-contact
+
+### Summary
+- Added local old/new world-bounds invalidation of cached cells, edges, and pending samples with body-clearance-plus-cell padding.
+- Prevented stale searches/results after geometry changes while retaining request expansion budgets and FIFO ordering.
+- Added a short contact-only start connector with physical-radius swept-volume checks and deterministic normally-clear destinations.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationInvalidationTests — collider toggles, old/new and overlapping bounds, unaffected reuse, boundary/diagonal edges, pending work, in-flight budget retention, and stale completed results.
+- StaticNavigationStartConnectorTests — numerical contact, tangential escape, inward rejection, penetration, normal-margin destinations, concave/corner sweep safety, distance cap, deterministic candidates, saturation, actor filtering, and unchanged global walkability.
+
+**PlayMode**
+- N/A
+
+### Notes
+- User reports prior navigation foundation EditMode fixtures passing. New tests were not run; Unity was not started as requested.
+- Scheduler limits remain 128 sampling queries and 256 expansions per tick, one completion per tick, and 4096 total request expansions.
+- No runtime wiring or obstacle events. Callers must synchronize collider edits, supply old/new bounds, and dispose the shared connector. Contact probes remain disabled outside synchronous queries.
+
+## 2026-09-18 - shared-static-navigation-foundation
+
+### Summary
+- Extracted shared WorldGrid mapping and added a lazy cell/undirected-edge cache for one clearance profile.
+- Replaced allocating physics queries with reusable buffers; saturated results remain Unknown and retry under budget.
+- Added resumable deterministic A* and a FIFO scheduler capped at 128 sampling queries, 256 expansions, and one completion per frame.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationWorld2DTests — reusable overlap/sweep buffers, saturation safety, retries, and no duplicate endpoint queries.
+- StaticNavigationWorldCacheTests — cold/warm cells, undirected edges, overlapping data reuse, unknown states, diagonals, and sampling caps.
+- StaticNavigationSearchTests — eager/lazy equivalence, deterministic paths, pause/resume, 256-node steps, and the 4096 total budget.
+- StaticNavigationSchedulerTests — FIFO ordering, frame deduplication, query/expansion caps, overlapping requests, cold/warm physics-query counts, and oversized request rejection.
+- StaticNavigationGridTests and StaticNavigationPathfinderTests — existing alignment, clearance, path, and result contracts retained for manual regression execution.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity and tests not run as requested. Fixtures include editor-only counters and test output for cold/warm comparisons; no passing or measured performance result is claimed.
+- No invalidation, eviction, wall-contact escape, per-enemy lifecycle, or gameplay wiring. Geometry must remain unchanged during cache lifetime; persistent saturation can keep a FIFO request waiting.
+
+## 2026-09-17 - codex/feat-static-navigation-grid
+
+### Summary
+- Added collider-clearance sampling and navigation walkability over aligned WorldGrid subdivisions.
+- Selected four subdivisions per axis (0.25 units on MainPrototype WorldGrid); half-unit centers miss the specified 2.2-unit passage.
+- Added deterministic bounded A* without enemy movement, scene, or prefab integration.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationWorld2DTests — solid filtering, triggers, disabled barriers, primary body clearance, transformed colliders, and actor exclusion.
+- StaticNavigationGridTests — WorldGrid alignment, negative coordinates, rotation/scale, occupancy independence, bounds, neighbors, and corner safety.
+- StaticNavigationPathfinderTests — direct/detour/concave routes, resolution comparison, narrow passages, deterministic selection, endpoint validation, budgets, and reconstructed edges.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Unity and tests not run, as requested; all new coverage awaits user execution. No passing or Red/Green execution result is claimed.
+- Sampling is synchronous and allocates physics-query results; the expansion budget bounds A* only. Grid/geometry changes require a new snapshot.
+
 ## 2026-09-15 - validated-predictive-surround-groups
 
 ### Summary
