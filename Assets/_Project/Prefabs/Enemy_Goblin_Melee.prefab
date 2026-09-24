@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 8041287619235472017}
   - component: {fileID: 4079797737097160548}
   - component: {fileID: 7088990367442351453}
+  - component: {fileID: 9300000000000000001}
   m_Layer: 7
   m_Name: Enemy_Goblin_Melee
   m_TagString: Enemy
@@ -760,3 +761,16 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   separationCollider: {fileID: 8500000000000000002}
+
+--- !u!114 &9300000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394411849047796180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33cba6fb589d4cb696e209dd34073676, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

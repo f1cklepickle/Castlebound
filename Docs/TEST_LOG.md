@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-09-24 - melee-static-navigation-validated-local-checkpoint
+
+### Summary
+- User confirmed all current EditMode and PlayMode tests pass; melee static navigation around walls and the Vault and predictive avoidance integration work in MainPrototype.
+- User confirmed penetration recovery works and enemies no longer remain trapped in the validated scenarios; preserve authored-speed movement, existing attacks/HOLD, and downstream #277.
+- Prepared melee runtime navigation/recovery as a local-only commit dependent on foundation PR A; PR B publication waits until PR A merges.
+
+### New or Updated Tests
+**EditMode**
+- EnemyNavigationGoalTests, EnemyStaticNavigationTests, StaticNavigationRecoveryTests, StaticNavigationRuntimeTests — passed, user-confirmed, with StaticNavigationTestWorld fixture support and the current foundation/regression suite.
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests and the current regression suite — passed, user-confirmed, including Vault detours, direct recovery, barrier approach/invalidation, penetration recovery, speed limits, and movement safety.
+
+### Notes
+- Supersedes earlier pending-validation notes for the current combined implementation. No Unity or test execution was performed during this Git split.
+- Ranged static navigation remains deferred. Route polish, preferred wall clearance, higher turn responsiveness, and smoother cornering remain deferred; current routes can look clumsy or brush walls.
+- Tower placement/removal invalidation and mobile/crowd profiling remain deferred; no performance approval is claimed.
+- Recovery remains local and bounded: supported initial box/circle/capsule penetrations can escape; unsupported shapes or no safe local candidate wait conservatively.
+- Refs #302. Runtime branch remains unpushed; no PR B has been created.
+
 ## 2026-09-24 - static-navigation-foundation-publication
 
 ### Summary
@@ -23,6 +44,125 @@
 - User confirmed all current tests pass in the combined navigation workspace, including foundation tests. This records supplied validation; Unity and tests were not rerun during the split.
 - Standard EditMode and PlayMode CI will validate the isolated foundation PR. No APK or PC build is requested.
 - Refs #302; enemy runtime behavior is reserved for the subsequent melee integration PR.
+
+## 2026-09-21 - static-navigation-local-penetration-recovery
+
+### Summary
+- Added bounded local recovery for a primary circular body penetrating static boxes, circles, or capsules, without moving actors directly or changing navigation walkability.
+- Recovery checks the whole escape sweep, rejects inward/deeper overlap and other actors/obstacles, moves at authored speed through the existing #277 pipeline, and validates the resulting displacement again.
+- Discards route/request state on recovery entry and exit; normal navigation resumes only after normal clearance. No escape, unsupported initial shapes, or exhausted budgets wait safely.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationRecoveryTests — shallow contact, penetration, embedded center, offset bodies, deterministic nearest sampled candidates, tangential alternatives, corners, separate walls, opposite-face rejection, actors, bounded retries, saturation/budgets, unsupported shapes, knockback pause, speed, and final-step revalidation.
+- EnemyStaticNavigationTests.RecoveryReset_DiscardsRouteAndRequestsFreshNavigation — recovery invalidates the prior route and permits a fresh request.
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests.PenetrationRecovery_VaultExitResetsRouteAndResumesAuthoredSpeed — production-radius body at a Vault-like box, route reset, non-deepening escape, movement limits, and resumed pursuit to engagement.
+
+### Notes
+- User confirmed the preceding navigation slice passes EditMode/PlayMode tests and MainPrototype is functionally correct overall, apart from occasional trapping. Those results predate this recovery change.
+- Unity, EditMode tests, and PlayMode tests were not run by the agent. Standalone C# compilation passed for gameplay and both test assemblies; recovery validation is pending user execution.
+- Contact tolerance is 0.001 units; full-sweep comparison allows 0.0001 numerical slack. Candidates use sixteen 0.0625-unit rings, sixteen directions, a 1-unit radius, four candidates per physics step, and a 0.5-second retry delay under the existing shared 256 live-query budget.
+- Initial penetrations in polygon/composite/tilemap/edge colliders fail closed; those shapes still block escape paths. Escapes exceeding 1 unit wait. Recovery respects existing CHASE/root/stagger/HOLD gates and pauses its own motion during knockback.
+- Verified predictive avoidance/chase, #277 separation, EnemyLocomotion, and EnemyController2D are byte-for-byte unchanged by this recovery slice. No prefab/scene edits, commit, push, or publication were performed in this slice.
+
+## 2026-09-20 - static-navigation-corner-sweep-consistency
+
+### Summary
+- User diagnostics isolate both remaining PlayMode stalls to the final displacement guard: preferred and avoidance velocities agree, but a short step is Blocked despite a Clear longer steering segment; there are no physical contacts or exhausted budgets.
+- Replaced ordinary segment circle casts with swept-capsule overlap queries so full-segment clearance uses overlap semantics consistent with point clearance near wall corners.
+- Preserved body radius, margin, actor/trigger filtering, reusable buffers, one query per nonzero edge, and Unknown on saturation; final movement rejection remains in place.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationWorld2DTests — two captured corner paths with clear endpoints and blocked interior steps must reject the whole segment in both directions; verifies one-query cost and a clear offset alternative.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Standalone C# compilation passed for gameplay, EditMode, and PlayMode assemblies. Unity and tests were not run by the agent.
+- Rerun all StaticNavigation foundation EditMode fixtures and the two remaining VaultDetour/BarrierApproach PlayMode tests. This shared-sampler correction is not yet validated in Unity; no passing gameplay result is claimed.
+
+## 2026-09-20 - static-navigation-movement-stall-diagnostics
+
+### Summary
+- User rerun leaves two PlayMode failures: barrier approach and Vault detour do not reach engagement range; the recovery and reacquisition failures no longer reproduce in that run.
+- Both failures report clear current positions and steering segments with query budgets available; barrier approach is Direct and Vault detour is Following.
+- Added editor-only movement-stage records and failure-only physics-contact details to identify where progress stops. The root cause remains unresolved; movement decisions are unchanged.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests — failure output now includes preferred/avoidance velocity, requested/allowed displacement, guard result/time, fresh step clearance, body velocity, and contacts.
+
+### Notes
+- Standalone C# compilation passed for gameplay and both test assemblies. Unity and tests were not run by the agent.
+- Rerun the two remaining failures and inspect the movement-stage output before changing safety or steering behavior. No passing PlayMode suite or MainPrototype validation is claimed.
+
+## 2026-09-20 - static-navigation-runtime-playmode-follow-up
+
+### Summary
+- User confirmed all EditMode tests pass and reported four PlayMode failures in detour, barrier approach, reopened-line recovery, and attack reacquisition.
+- Replaced rendered-frame waits in recovery/reacquisition with bounded game-time waits that yield physics steps; recovery allows the wider-region retry after its backoff.
+- Added failure-only navigation diagnostics without relaxing arrival, clearance, speed, or scheduler assertions; the two arrival failures remain unresolved pending diagnostic results.
+
+### New or Updated Tests
+**EditMode**
+- N/A
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests — physics-step waits and failure details for position, route/request state, clearance, engagement gap, query counts, revision, and expansions.
+
+### Notes
+- Standalone C# compilation passed for gameplay, EditMode, and PlayMode assemblies after this update. Unity and tests were not run by the agent.
+- Rerun the four reported PlayMode failures; no passing PlayMode or MainPrototype validation is claimed. Runtime code is unchanged by this follow-up.
+
+## 2026-09-20 - static-navigation-runtime-stall-fixture
+
+### Summary
+- Corrected the route-following fixture to preserve clear zero-length goal connections while blocking direct pursuit.
+- Strengthened stationary-following coverage for the grace period before and after knockback and eventual replanning.
+- Runtime behavior is unchanged by this correction.
+
+### New or Updated Tests
+**EditMode**
+- EnemyStaticNavigationTests — corrected shared segment setup for waypoint skipping and stationary replanning; added grace-period and goal-connection assertions.
+
+**PlayMode**
+- N/A
+
+### Notes
+- User reported StationaryFollowing_ReplansAfterGraceButNotWhileKnockbackActive failed with one submission instead of two; the fixture blocked the goal connector on resubmission.
+- Unity and EditMode/PlayMode tests were not run for this correction; rerun of the corrected fixture is pending.
+
+## 2026-09-19 - codex/feat-static-navigation-runtime
+
+### Summary
+- Added per-enemy Player/Barrier CHASE routing with a shared scene service, progressive planning bounds, safe waiting, route reuse, direct recovery, and lifecycle resets.
+- Composed navigation preferred velocity with existing predictive groups and a static-feasibility callback; final locomotion is checked after #277, with knockback still separately owned.
+- Wired Goblin melee, Lurker, MainPrototype WorldGrid, and local barrier invalidation; no route hints, ranged rollout, or targeting/attack-threshold changes.
+
+### New or Updated Tests
+**EditMode**
+- EnemyStaticNavigationTests — direct/blocked/Unknown paths, approach fallback, pending deduplication, stale results, waypoint skipping, cooldown/progressive retries, target changes, suspension, knockback accounting, stalls, and deviation.
+- EnemyNavigationGoalTests — deterministic Player/Barrier approach bands, authored side preference, broken-barrier passage, and separating-wall rejection.
+- StaticNavigationRuntimeTests — bounded planning growth, static avoidance guard, shared live-query cap, separation projection safety, and melee prefab/group contracts.
+- StaticNavigationTestWorld — deterministic injected fixture support for route lifecycle tests.
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests — Vault detour, direct recovery, exterior barrier approach/shared service, break/repair invalidation, predictive groups across targets, root/stagger/HOLD/knockback, attack CHASE, and final movement guard.
+
+### Notes
+- Unity and EditMode/PlayMode tests were not run. Standalone C# compiler checks passed for gameplay and both test assemblies; this is not Unity import or runtime validation.
+- MainPrototype manual validation is pending. Run the new fixtures plus all StaticNavigation foundation fixtures, EnemyPredictiveAvoidanceTests, EnemyPredictiveChasePlayTests, EnemyMeleeHoldPlayTests, EnemySeparationPlayTests, and existing engagement/stagger/knockback/barrier regressions before approval.
+- Planning uses 1-unit then 3-unit padded endpoint envelopes, then the largest grown envelope within 96 cells per axis and 4096 cells; oversized endpoints remain a bounded-region failure.
+- Lattice sampling stays at 128 queries total per rendered frame (including pre-request sampling); A* remains 256 expansions per tick and 4096 per request. Live safety queries have a separate shared 256-call frame cap and fail closed when exhausted.
+- Tower placement/removal has no clean existing notification hook and remains a follow-up; static tower edits are not yet supported by cache invalidation. Barrier collider changes are observed locally.
+- Dense crowds may wait on the live-query cap; profile fairness/latency, goal geometry enumeration, and the existing neighbor scan before route-hint optimization. No performance or passing gameplay result is claimed.
 
 ## 2026-09-19 - static-navigation-foundation-checkpoint
 

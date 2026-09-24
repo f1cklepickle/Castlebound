@@ -12,6 +12,7 @@ namespace Castlebound.Gameplay.AI
         private const float PreferredRadiusMultiplier = 2.5f;
         private const float NearTieSpeedSquaredRatio = 0.02f;
         private int preferredSide = 1;
+        private readonly HashSet<Vector2> rejected = new HashSet<Vector2>();
 
         public void Reset()
         {
@@ -24,8 +25,10 @@ namespace Castlebound.Gameplay.AI
         }
 
         public Vector2 SelectVelocity(Vector2 position, Vector2 preferredVelocity,
-            float hardRadius, IReadOnlyList<EnemyAvoidanceNeighbor> neighbors)
+            float hardRadius, IReadOnlyList<EnemyAvoidanceNeighbor> neighbors, System.Func<Vector2, bool> staticFeasible = null)
         {
+            rejected.Clear();
+            int originalSide = preferredSide;
             float speed = preferredVelocity.magnitude;
             if (speed <= 0.000001f)
                 return Vector2.zero;
@@ -35,8 +38,13 @@ namespace Castlebound.Gameplay.AI
             for (int relaxation = 0; relaxation < 3; relaxation++)
             {
                 float scale = Mathf.Lerp(preferredScale, 1f, relaxation * 0.5f);
-                if (TrySample(position, preferredVelocity, hardRadius, neighbors, scale, out Vector2 result))
-                    return result;
+                while (TrySample(position, preferredVelocity, hardRadius, neighbors, scale, out Vector2 result))
+                {
+                    // Keep the existing ranking/ties. Only query the winning candidate, then rerank if blocked.
+                    if (staticFeasible == null || staticFeasible(result)) return result;
+                    rejected.Add(result);
+                    preferredSide = originalSide;
+                }
                 if (preferredScale == 1f) break;
             }
             // Completely enclosed: no safe forward sample exists. #277 still owns recovery.
@@ -63,7 +71,7 @@ namespace Castlebound.Gameplay.AI
                     Vector2 sample = new Vector2(
                         preferredVelocity.x * Mathf.Cos(angle) - preferredVelocity.y * Mathf.Sin(angle),
                         preferredVelocity.x * Mathf.Sin(angle) + preferredVelocity.y * Mathf.Cos(angle)) * speedScale;
-                    if (!IsSafe(position, sample, hardRadius, neighbors, radiusScale))
+                    if (rejected.Contains(Vector2.ClampMagnitude(sample, speed)) || !IsSafe(position, sample, hardRadius, neighbors, radiusScale))
                         continue;
                     float cost = (sample - preferredVelocity).sqrMagnitude;
                     int sampleSide = step == 0 ? 0 : step > 0 ? 1 : -1;

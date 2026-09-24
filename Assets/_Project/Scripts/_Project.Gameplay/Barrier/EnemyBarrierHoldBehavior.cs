@@ -7,6 +7,8 @@ namespace Castlebound.Gameplay.AI
     public class EnemyBarrierHoldBehavior : MonoBehaviour
     {
         [SerializeField] private Transform approachAnchor;
+        public bool HasApproachAnchor => approachAnchor != null;
+        public Vector2 ApproachPosition => approachAnchor != null ? (Vector2)approachAnchor.position : (Vector2)transform.position;
 
         public float DistanceToAnchor(Vector2 enemyPosition)
         {
