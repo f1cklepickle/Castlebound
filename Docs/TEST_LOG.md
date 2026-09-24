@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-09-24 - static-navigation-foundation-publication
+
+### Summary
+- Prepared the reusable WorldGrid-aligned 0.25-unit lattice, collider/body-clearance sampling, deterministic incremental A*, shared lazy cache, scheduler budgets, local invalidation, and start/contact connector for foundation PR A.
+- Included the swept-capsule corner-clearance correction, reusable sight query, optional connector query accounting, and scheduler sampling allowance without enemy runtime integration.
+- Foundation checkpoint contains no prefab, scene, enemy movement, barrier integration, or recovery-policy changes.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationWorld2DTests — captured corner paths reject blocked interior clearance despite clear endpoints; retain clear alternatives and one-query edge accounting.
+- StaticNavigationGridTests, StaticNavigationInvalidationTests, StaticNavigationPathfinderTests, StaticNavigationSchedulerTests, StaticNavigationSearchTests, StaticNavigationStartConnectorTests, StaticNavigationWorldCacheTests — retained focused foundation validation.
+
+**PlayMode**
+- N/A
+
+### Notes
+- User confirmed all current tests pass in the combined navigation workspace, including foundation tests. This records supplied validation; Unity and tests were not rerun during the split.
+- Standard EditMode and PlayMode CI will validate the isolated foundation PR. No APK or PC build is requested.
+- Refs #302; enemy runtime behavior is reserved for the subsequent melee integration PR.
+
 ## 2026-09-19 - static-navigation-foundation-checkpoint
 
 ### Summary

@@ -47,9 +47,10 @@ namespace Castlebound.Gameplay.AI
             return true;
         }
 
-        public bool Tick(int frameIndex)
+        public bool Tick(int frameIndex, int samplingBudget = QueriesPerTick)
         {
             if (frameIndex < 0) throw new ArgumentOutOfRangeException(nameof(frameIndex));
+            if (samplingBudget < 0 || samplingBudget > QueriesPerTick) throw new ArgumentOutOfRangeException(nameof(samplingBudget));
             if (frameIndex <= lastFrame) return false;
             lastFrame = frameIndex;
 #if UNITY_EDITOR
@@ -82,8 +83,8 @@ namespace Castlebound.Gameplay.AI
                     active = null;
                     break; // Never start/publish a second request on this tick.
                 }
-                if (expansions >= ExpansionsPerTick || !active.WaitingForSampling || queries >= QueriesPerTick) break;
-                int sampled = cache.SamplePending(QueriesPerTick - queries);
+                if (expansions >= ExpansionsPerTick || !active.WaitingForSampling || queries >= samplingBudget) break;
+                int sampled = cache.SamplePending(samplingBudget - queries);
                 queries += sampled;
                 if (sampled == 0) break;
             }

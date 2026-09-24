@@ -33,7 +33,7 @@ namespace Castlebound.Gameplay.AI
 
         // Clear = connected; Blocked = invalid start/no connector; Unknown = sample/retry first.
         // Only Clear makes destination meaningful. No start cell is ever overwritten as Clear.
-        public StaticNavigationSampleState TryConnect(Vector2 actualBodyCenter, out Vector2Int destination)
+        public StaticNavigationSampleState TryConnect(Vector2 actualBodyCenter, out Vector2Int destination, Func<bool> spendQuery = null)
         {
             Validate(actualBodyCenter);
             destination = default;
@@ -60,7 +60,7 @@ namespace Castlebound.Gameplay.AI
             });
             foreach (var cell in candidates)
             {
-                var state = CheckConnection(actualBodyCenter, cell);
+                var state = CheckConnection(actualBodyCenter, cell, spendQuery);
 #if UNITY_EDITOR
                 if (DebugCaptureEnabled) DebugCandidateTrace += DebugLastDecision + "\n";
 #endif
@@ -73,7 +73,7 @@ namespace Castlebound.Gameplay.AI
             return StaticNavigationSampleState.Blocked;
         }
 
-        public StaticNavigationSampleState CheckConnection(Vector2 actualBodyCenter, Vector2Int destination)
+        public StaticNavigationSampleState CheckConnection(Vector2 actualBodyCenter, Vector2Int destination, Func<bool> spendQuery = null)
         {
             Validate(actualBodyCenter);
 #if UNITY_EDITOR
@@ -85,7 +85,7 @@ namespace Castlebound.Gameplay.AI
             if ((end - actualBodyCenter).sqrMagnitude > MaxDistance * MaxDistance)
                 return StaticNavigationSampleState.Blocked;
             var state = cache.GetCellState(destination);
-            var result = state == StaticNavigationSampleState.Clear ? sweep.Sample(actualBodyCenter, end) : state;
+            var result = state == StaticNavigationSampleState.Clear ? sweep.Sample(actualBodyCenter, end, spendQuery) : state;
 #if UNITY_EDITOR
             if (DebugCaptureEnabled)
                 DebugLastDecision = $"destination={destination}; start={actualBodyCenter.ToString("F6")}; " +

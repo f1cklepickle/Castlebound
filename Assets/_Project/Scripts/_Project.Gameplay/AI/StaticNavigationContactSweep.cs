@@ -30,9 +30,10 @@ namespace Castlebound.Gameplay.AI
             probe.direction = CapsuleDirection2D.Vertical;
         }
 
-        internal StaticNavigationSampleState Sample(Vector2 start, Vector2 end)
+        internal StaticNavigationSampleState Sample(Vector2 start, Vector2 end, Func<bool> spendQuery = null)
         {
             Record("begin");
+            if (spendQuery != null && !spendQuery()) return StaticNavigationSampleState.Unknown;
             Vector2 delta = end - start;
             float length = delta.magnitude;
             if (length < 0.000001f)
@@ -90,6 +91,7 @@ namespace Castlebound.Gameplay.AI
                 {
                     var obstacle = overlaps[i];
                     if (!world.IsObstacle(obstacle)) continue;
+                    if (spendQuery != null && !spendQuery()) return StaticNavigationSampleState.Unknown;
                     ColliderDistance2D swept = Physics2D.Distance(probe, obstacle);
                     if (!swept.isValid)
                     {
@@ -125,7 +127,7 @@ namespace Castlebound.Gameplay.AI
             finally { probe.enabled = false; }
         }
 
-        private static float PolygonContactSkin(Collider2D obstacle)
+        internal static float PolygonContactSkin(Collider2D obstacle)
         {
             // Only standard, unrounded polygon geometry gets the implicit contact-offset
             // correction. Circles/capsules and authored edge radii are physical geometry.

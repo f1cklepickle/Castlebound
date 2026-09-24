@@ -166,6 +166,34 @@ namespace Castlebound.Tests.AI
             Assert.That(smallBuffer.DebugPhysicsQueryCount - before, Is.EqualTo(1));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CornerGrazingSegment_RejectsBlockedInteriorEvenWhenEndpointsAreClear(bool barrierApproach)
+        {
+            // Captured from the PlayMode stalls: a long cast passed, but its first movement endpoint overlapped.
+            Vector2 offset = new Vector2(2000f, 2000f);
+            var box = Box("Walls");
+            box.transform.position = offset + (barrierApproach ? Vector2.left * 3f : Vector2.zero);
+            box.size = new Vector2(barrierApproach ? 1f : 1.1f, 2f);
+            Vector2 start = offset + (barrierApproach
+                ? new Vector2(-1.959595f, -1.733398f) : new Vector2(-0.755615f, -1.885986f));
+            Vector2 end = offset + (barrierApproach
+                ? new Vector2(-1.625f, -1.375f) : new Vector2(1.875f, -2.125f));
+            Vector2 step = barrierApproach
+                ? new Vector2(0.027297f, 0.029239f) : new Vector2(0.039836f, -0.003619f);
+            Physics2D.SyncTransforms();
+            Assert.IsTrue(world.IsPointClear(start));
+            Assert.IsTrue(world.IsPointClear(end));
+            Assert.IsFalse(world.IsPointClear(start + step), "The reported movement endpoint overlaps the corner clearance.");
+            int before = world.DebugPhysicsQueryCount;
+            Assert.That(world.SampleEdgeWithClearEndpoints(start, end), Is.EqualTo(StaticNavigationSampleState.Blocked),
+                "Do not certify a route that contains a blocked movement endpoint.");
+            Assert.That(world.DebugPhysicsQueryCount - before, Is.EqualTo(1));
+            Assert.That(world.SampleEdgeWithClearEndpoints(end, start), Is.EqualTo(StaticNavigationSampleState.Blocked));
+            Assert.IsTrue(world.IsSegmentClear(start + Vector2.down * 0.25f, end + Vector2.down * 0.25f),
+                "A route with sufficient corner clearance must remain available.");
+        }
+
         private BoxCollider2D Box(string layer)
         {
             var item = new GameObject("Navigation test solid");

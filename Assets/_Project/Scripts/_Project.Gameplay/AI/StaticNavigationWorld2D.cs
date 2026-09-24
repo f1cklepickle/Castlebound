@@ -70,10 +70,31 @@ namespace Castlebound.Gameplay.AI
 #if UNITY_EDITOR
             DebugPhysicsQueryCount++;
 #endif
-            int count = Physics2D.CircleCast(start, ClearanceRadius, delta.normalized, filter, hits, delta.magnitude);
-            if (count == hits.Length) return StaticNavigationSampleState.Unknown;
+            // A capsule is the entire swept circle volume. Use the same overlap-query clearance
+            // semantics as SamplePoint: a cast can miss corner skin that an interior point overlaps.
+            // Otherwise a long route is certified Clear while its short movement steps are Blocked.
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f;
+            int count = Physics2D.OverlapCapsule(start + delta * 0.5f,
+                new Vector2(2f * ClearanceRadius, 2f * ClearanceRadius + delta.magnitude),
+                CapsuleDirection2D.Vertical, angle, filter, overlaps);
+            if (count == overlaps.Length) return StaticNavigationSampleState.Unknown;
             for (int i = 0; i < count; i++)
-                if (IsObstacle(hits[i].collider)) return StaticNavigationSampleState.Blocked;
+                if (IsObstacle(overlaps[i])) return StaticNavigationSampleState.Blocked;
+            return StaticNavigationSampleState.Clear;
+        }
+
+        // Goal visibility only: does not certify body clearance or movement.
+        public StaticNavigationSampleState SampleSight(Vector2 start, Vector2 end)
+        {
+            Validate(start); Validate(end);
+            Vector2 delta = end - start;
+            if (delta.sqrMagnitude == 0f) return StaticNavigationSampleState.Clear;
+#if UNITY_EDITOR
+            DebugPhysicsQueryCount++;
+#endif
+            int count = Physics2D.Raycast(start, delta.normalized, filter, hits, delta.magnitude);
+            if (count == hits.Length) return StaticNavigationSampleState.Unknown;
+            for (int i = 0; i < count; i++) if (IsObstacle(hits[i].collider)) return StaticNavigationSampleState.Blocked;
             return StaticNavigationSampleState.Clear;
         }
 
