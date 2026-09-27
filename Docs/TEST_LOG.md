@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-09-27 - navigation-fallback-editmode-fixture
+
+### Summary
+- User reported both unavailable-runtime EditMode cases failed with Unity's ShouldRunBehaviour assertion from SendMessage.
+- Replace SendMessage setup with direct reflection invocation of the intended component's Awake method, following existing EditMode fixture conventions.
+- Gameplay fallback behavior and regression assertions are unchanged; no assertion suppression was added.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationRuntimeTests.UnavailableRuntime_DeclinesChaseWithoutChangingFallbackMovement — correct setup for both missing and uninitialized runtime cases.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Local Unity/tests not run. Fresh EditMode and PlayMode CI are required before merge; prior fixture failures are not claimed resolved by execution.
+
 ## 2026-09-27 - static-navigation-unavailable-fallback
 
 ### Summary

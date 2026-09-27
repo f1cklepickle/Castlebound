@@ -1,4 +1,5 @@
 using Castlebound.Gameplay.AI;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -23,7 +24,9 @@ namespace Castlebound.Tests.AI
                 {
                     unavailable = new GameObject("UninitializedNavigation");
                     var service = unavailable.AddComponent<StaticNavigationRuntime>();
-                    service.SendMessage("Awake");
+                    // Invoke only this component's setup; Unity message dispatch is not valid in EditMode.
+                    typeof(StaticNavigationRuntime).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Invoke(service, null);
                     Assert.That(StaticNavigationRuntime.Instance, Is.SameAs(service));
                     Assert.IsNull(service.Cache);
                 }
@@ -38,7 +41,8 @@ namespace Castlebound.Tests.AI
                 controller.Debug_SetTargetDecision(player.transform, player.transform, EnemyTargetType.Player);
                 enemy.GetComponent<EnemyLocomotion>().SetMovementState(EnemyController2D.State.CHASE);
                 var adapter = enemy.AddComponent<EnemyNavigationChase>();
-                adapter.SendMessage("Awake");
+                typeof(EnemyNavigationChase).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(adapter, null);
                 Vector2 radial = Vector2.right * 2f, tangent = Vector2.up;
 
                 Assert.IsFalse(adapter.Apply(2f, 0.02f, ref radial, ref tangent));
