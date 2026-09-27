@@ -8,6 +8,7 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private MonoBehaviour holdMovementPolicySource;
 
     private EnemySeparationCollider separationCollider;
+    private EnemyNavigationChase navigationChase;
     private readonly EnemyPredictiveChase predictiveChase = new EnemyPredictiveChase();
     private float previousDistance;
     private int distanceTrend;
@@ -247,6 +248,10 @@ public class EnemyLocomotion : MonoBehaviour
             locomotionDisplacement = separationCollider
                 .ConstrainLocomotionDisplacement(locomotionDisplacement);
         }
+
+        if (navigationChase == null) navigationChase = GetComponent<EnemyNavigationChase>();
+        if (navigationChase != null && navigationChase.isActiveAndEnabled)
+            locomotionDisplacement = navigationChase.ConstrainFinalDisplacement(locomotionDisplacement);
 
         Vector2 displacement = locomotionDisplacement + knockback;
         if (separationCollider != null)

@@ -6,6 +6,7 @@ namespace Castlebound.Gameplay.AI
     {
         Vector2 knockbackVelocity;
         float decayPerSecond;
+        public bool IsActive => knockbackVelocity.sqrMagnitude > 0.000001f;
 
         public void AddKnockback(Vector2 velocity, float decay)
         {

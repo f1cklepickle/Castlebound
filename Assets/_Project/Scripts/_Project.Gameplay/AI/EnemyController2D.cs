@@ -97,6 +97,7 @@ public class EnemyController2D : MonoBehaviour
     }
 
     private Rigidbody2D _rb;
+    private EnemyNavigationChase navigationChase;
     private float _gapCW;
     private float _gapCCW;
     private int _surroundParticipantCount;
@@ -152,6 +153,7 @@ public class EnemyController2D : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        navigationChase = GetComponent<EnemyNavigationChase>();
         targeting = GetComponent<EnemyTargeting>();
         locomotion = GetComponent<EnemyLocomotion>();
         facing = GetComponent<EnemyFacing>();
@@ -187,6 +189,7 @@ public class EnemyController2D : MonoBehaviour
 
     private void OnDisable()
     {
+        navigationChase?.Suspend();
         locomotion?.ResetChaseApproachTarget();
         All.Remove(this);
         _gapCW = 0f;
@@ -213,6 +216,7 @@ public class EnemyController2D : MonoBehaviour
         if (staggerReceiver != null &&
             staggerReceiver.State == EnemyStaggerState.Staggered)
         {
+            navigationChase?.Suspend();
             Locomotion.ResetChaseApproachTarget();
             _rb.velocity = Vector2.zero;
             _rb.angularVelocity = 0f;
@@ -253,6 +257,7 @@ public class EnemyController2D : MonoBehaviour
         float dt = Time.fixedDeltaTime;
         if (target == null)
         {
+            navigationChase?.Suspend();
             Locomotion.ResetChaseApproachTarget();
             bool moved = Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
             animationPresenter?.SetMovementRequested(moved);
@@ -326,7 +331,11 @@ public class EnemyController2D : MonoBehaviour
 
         bool bypassing = false;
         Vector2 approachPoint = pos;
-        if (Locomotion.CanUsePredictiveChase(this, player))
+        if (navigationChase != null && navigationChase.Apply(speed, dt, ref radial, ref tangent))
+        {
+            // The adapter composes navigation and existing avoidance; combat state is already resolved above.
+        }
+        else if (Locomotion.CanUsePredictiveChase(this, player))
         {
             Locomotion.ApplyPredictiveChase(this, player, speed, ref radial, ref tangent);
         }

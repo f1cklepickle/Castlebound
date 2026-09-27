@@ -77,6 +77,12 @@ namespace Castlebound.Gameplay.AI
             return _enemiesInside.Contains(enemy);
         }
 
+        public bool ContainsPosition(Vector2 position)
+        {
+            var regionCollider = GetComponent<Collider2D>();
+            return regionCollider != null && regionCollider.enabled && regionCollider.OverlapPoint(position);
+        }
+
         public void ReconcileEnemyOutsideAfterBarrierRepair(EnemyController2D enemy)
         {
             if (enemy == null)

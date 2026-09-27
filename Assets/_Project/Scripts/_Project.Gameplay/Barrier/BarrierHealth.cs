@@ -19,6 +19,8 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     [SerializeField] private SpriteRenderer barrierGateRenderer;
     private Collider2D barrierCollider;
     private SpriteRenderer barrierSprite;
+    private Rect navigationBounds;
+    private bool navigationSolid;
 
     public int MaxHealth
     {
@@ -53,6 +55,8 @@ public class BarrierHealth : MonoBehaviour, IDamageable
     private void OnDisable()
     {
         _all.Remove(this);
+        if (navigationSolid) StaticNavigationRuntime.Instance?.Invalidate(navigationBounds, navigationBounds);
+        navigationSolid = false;
     }
 
     public void TakeDamage(int amount)
@@ -133,6 +137,23 @@ public class BarrierHealth : MonoBehaviour, IDamageable
         {
             barrierGateRenderer.enabled = !broken;
         }
+        RefreshNavigationBounds();
+    }
+
+    private void LateUpdate() => RefreshNavigationBounds();
+
+    private void RefreshNavigationBounds()
+    {
+        bool solid = barrierCollider != null && barrierCollider.enabled && barrierCollider.gameObject.activeInHierarchy;
+        Rect current = navigationBounds;
+        if (solid)
+        {
+            Bounds bounds = barrierCollider.bounds;
+            current = Rect.MinMaxRect(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+        }
+        if (solid != navigationSolid || solid && current != navigationBounds)
+            StaticNavigationRuntime.Instance?.Invalidate(navigationSolid ? navigationBounds : current, current);
+        navigationBounds = current; navigationSolid = solid;
     }
 
     private void CacheRenderers()

@@ -4897,6 +4897,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2200000011}
   - component: {fileID: 2200000012}
+  - component: {fileID: 2200000013}
   m_Layer: 0
   m_Name: WorldGrid
   m_TagString: Untagged
@@ -5809,6 +5810,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a6f36f748baad44e9b12d4e5f37639f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2200000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2200000010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 437219d419434831b31a2c9cafb61ccf, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  worldGrid: {fileID: 2200000012}
+  minimumCell: {x: -512, y: -512}
+  sizeInCells: {x: 1024, y: 1024}
+  bodyRadius: 0.87684506
+  clearanceMargin: 0.02
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
