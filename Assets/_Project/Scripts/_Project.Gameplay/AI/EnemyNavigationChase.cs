@@ -60,17 +60,22 @@ namespace Castlebound.Gameplay.AI
             { Suspend(); radial = tangent = Vector2.zero; return true; }
             if (movement.CurrentState != EnemyController2D.State.CHASE)
             { Suspend(); return true; }
-            GuardMovement = true;
             if (runtime != StaticNavigationRuntime.Instance || navigation == null)
             {
                 recovery.Reset();
                 navigation?.Dispose(); runtime = StaticNavigationRuntime.Instance;
                 navigation = runtime != null && runtime.Cache != null ? new EnemyStaticNavigation(runtime) : null;
             }
-            if (runtime == null || navigation == null || bodyCollider == null || !bodyCollider.enabled ||
+            if (runtime == null || !runtime.isActiveAndEnabled || runtime.Cache == null || runtime.Scheduler == null ||
+                navigation == null || bodyCollider == null || !bodyCollider.enabled || bodyCollider.isTrigger ||
                 !Mathf.Approximately(bodyCollider.radius * Mathf.Abs(bodyCollider.transform.lossyScale.x), runtime.BodyRadius) ||
                 !Mathf.Approximately(bodyCollider.radius * Mathf.Abs(bodyCollider.transform.lossyScale.y), runtime.BodyRadius))
-            { radial = tangent = Vector2.zero; return true; }
+            {
+                // Optional navigation must leave the controller's existing chase path available.
+                Suspend(); navigation?.Dispose(); navigation = null;
+                return false;
+            }
+            GuardMovement = true;
             Transform target = controller.Target;
             var targetHealth = target.GetComponent<Health>();
             if (targetHealth != null && targetHealth.Current <= 0) { Suspend(); radial = tangent = Vector2.zero; return true; }

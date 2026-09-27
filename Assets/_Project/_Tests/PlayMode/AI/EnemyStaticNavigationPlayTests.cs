@@ -250,6 +250,38 @@ public class EnemyStaticNavigationPlayTests
         Assert.IsTrue(curved);
     }
 
+    [UnityTest] public IEnumerator MissingRuntime_UsesExistingChaseMovement()
+    {
+        yield return VerifyUnavailableRuntimeFallback(false);
+    }
+
+    [UnityTest] public IEnumerator UninitializedRuntime_UsesExistingChaseMovement()
+    {
+        yield return VerifyUnavailableRuntimeFallback(true);
+    }
+
+    private IEnumerator VerifyUnavailableRuntimeFallback(bool uninitialized)
+    {
+        runtime.enabled = false;
+        if (uninitialized)
+        {
+            var unavailable = Create("UninitializedNavigation").AddComponent<StaticNavigationRuntime>();
+            Assert.That(StaticNavigationRuntime.Instance, Is.SameAs(unavailable));
+            Assert.IsNull(unavailable.Cache);
+        }
+        else Assert.IsNull(StaticNavigationRuntime.Instance);
+        var enemy = Enemy(Vector2.left * 4f);
+        var adapter = enemy.GetComponent<EnemyNavigationChase>();
+        Vector2 before = enemy.GetComponent<Rigidbody2D>().position;
+        for (int i = 0; i < 10; i++) yield return new WaitForFixedUpdate();
+        Vector2 after = enemy.GetComponent<Rigidbody2D>().position;
+        Assert.That(after.x - before.x, Is.GreaterThan(0.05f),
+            "The controller must use its existing chase path when navigation is unavailable.");
+        Assert.That(Vector2.Distance(before, after), Is.LessThanOrEqualTo(enemy.Speed * Time.fixedDeltaTime * 11f + 0.01f));
+        Assert.IsFalse(adapter.GuardMovement);
+        Assert.IsFalse(adapter.IsRecovering);
+    }
+
     [UnityTest] public IEnumerator StaggerAndHold_SuspendNavigationAndAttackChaseUsesRoutes()
     {
         var enemy = Enemy(Vector2.left * 4f);

@@ -6,6 +6,57 @@ namespace Castlebound.Tests.AI
 {
     public class StaticNavigationRuntimeTests
     {
+        [TestCase(false)]
+        [TestCase(true)]
+        public void UnavailableRuntime_DeclinesChaseWithoutChangingFallbackMovement(bool uninitialized)
+        {
+            var services = Object.FindObjectsOfType<StaticNavigationRuntime>();
+            var paused = new System.Collections.Generic.List<StaticNavigationRuntime>();
+            foreach (var service in services)
+                if (service.enabled) { paused.Add(service); service.enabled = false; }
+            var player = new GameObject("FallbackPlayer");
+            var enemy = new GameObject("FallbackEnemy");
+            GameObject unavailable = null;
+            try
+            {
+                if (uninitialized)
+                {
+                    unavailable = new GameObject("UninitializedNavigation");
+                    var service = unavailable.AddComponent<StaticNavigationRuntime>();
+                    service.SendMessage("Awake");
+                    Assert.That(StaticNavigationRuntime.Instance, Is.SameAs(service));
+                    Assert.IsNull(service.Cache);
+                }
+                else Assert.IsNull(StaticNavigationRuntime.Instance);
+                player.tag = "Player";
+                enemy.AddComponent<Rigidbody2D>().gravityScale = 0f;
+                enemy.AddComponent<CircleCollider2D>().radius = 0.87684506f;
+                enemy.AddComponent<Health>().ConfigureMaxHealth(10, true);
+                enemy.AddComponent<EnemySurroundEligibility>().AvoidanceGroup = PredictiveAvoidanceGroup.SmallMelee;
+                var controller = enemy.AddComponent<EnemyController2D>();
+                controller.Debug_SetupRefs(player.transform);
+                controller.Debug_SetTargetDecision(player.transform, player.transform, EnemyTargetType.Player);
+                enemy.GetComponent<EnemyLocomotion>().SetMovementState(EnemyController2D.State.CHASE);
+                var adapter = enemy.AddComponent<EnemyNavigationChase>();
+                adapter.SendMessage("Awake");
+                Vector2 radial = Vector2.right * 2f, tangent = Vector2.up;
+
+                Assert.IsFalse(adapter.Apply(2f, 0.02f, ref radial, ref tangent));
+                Assert.That(radial, Is.EqualTo(Vector2.right * 2f));
+                Assert.That(tangent, Is.EqualTo(Vector2.up));
+                Assert.IsFalse(adapter.GuardMovement);
+                Assert.IsFalse(adapter.IsRecovering);
+                Assert.That(adapter.ConstrainFinalDisplacement(Vector2.right), Is.EqualTo(Vector2.right));
+            }
+            finally
+            {
+                Object.DestroyImmediate(enemy);
+                Object.DestroyImmediate(player);
+                if (unavailable != null) Object.DestroyImmediate(unavailable);
+                foreach (var service in paused) if (service != null) service.enabled = true;
+            }
+        }
+
         [Test]
         public void ProgressiveBounds_WidenWithoutExceedingFoundationCaps()
         {

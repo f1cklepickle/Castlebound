@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-27 - static-navigation-unavailable-fallback
+
+### Summary
+- Addressed the valid PR #304 review finding: a melee navigation adapter consumed CHASE with zero movement when its optional runtime was unavailable.
+- Unavailable runtime/service or unusable body prerequisites now suspend/dispose adapter navigation, release the movement guard, and preserve movement vectors for existing chase fallback.
+- Existing combat-lock ownership, active navigation safety, attacks/HOLD, and downstream #277 remain unchanged.
+
+### New or Updated Tests
+**EditMode**
+- StaticNavigationRuntimeTests.UnavailableRuntime_DeclinesChaseWithoutChangingFallbackMovement — missing and uninitialized runtime preserve movement vectors and decline ownership without a movement guard.
+
+**PlayMode**
+- EnemyStaticNavigationPlayTests.MissingRuntime_UsesExistingChaseMovement and UninitializedRuntime_UsesExistingChaseMovement — controller chase progresses with the adapter present and unavailable navigation, within authored speed.
+
+### Notes
+- Static inspection only; local Unity, EditMode, and PlayMode tests were not run. EditMode and PlayMode CI must pass before merge.
+- No scene/prefab changes, ranged navigation, crowd polish, or APK/PC builds requested. Refs #302.
+
 ## 2026-09-24 - melee-static-navigation-validated-local-checkpoint
 
 ### Summary
