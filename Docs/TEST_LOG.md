@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, bounded solver)
+
+### Summary
+- Add pure swept relative-motion resolution with stable local components and a conservative common time fraction; no body position writes or speed allocation beyond each body's allowance.
+- Revalidate pairs after world-guard cancellation, keeping shared translation while stopping before first contact.
+- Bound exceptional recovery to authored allowance; exact coincidence uses a stable axis, locked sides cannot move, and blocked-side recovery can transfer remaining legal recovery to the available side.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationSolverTests — head-on/crossing, asymmetric speed, reversed ordering, simultaneous neighbors, guard cancellation, shared translation, multi-tick overlap/coincidence recovery, wall/lock limits, saturation, and external-displacement ownership.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Tests authored before implementation, not run. Unity/EditMode/PlayMode execution remains with user.
+- Solver is not yet wired into live movement. Forced external displacement remains separate and can create exceptional overlap; no impulse is allocated to neighbors.
+
 ## 2026-09-29 - codex/fix-first-contact-separation (issue #306, discovery)
 
 ### Summary
