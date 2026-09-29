@@ -161,5 +161,17 @@ namespace Castlebound.Gameplay.AI
         }
         private void OnDisable() => Suspend();
         private void OnDestroy() => navigation?.Dispose();
+#if UNITY_EDITOR
+        public void Debug_RecordAppliedLocomotion(Vector2 displacement)
+        {
+            if (DebugMovementTime != Time.fixedTime)
+            {
+                DebugRequestedDisplacement = Vector2.zero;
+                DebugGuardState = StaticNavigationSampleState.Unknown;
+            }
+            DebugMovementTime = Time.fixedTime;
+            DebugAllowedDisplacement = displacement;
+        }
+#endif
     }
 }

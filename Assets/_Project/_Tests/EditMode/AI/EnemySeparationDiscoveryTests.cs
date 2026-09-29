@@ -56,6 +56,19 @@ namespace Castlebound.Tests.AI
             Assert.That(discovery.PairCount, Is.EqualTo(1));
         }
 
+        [Test]
+        public void FiftySeparatedActors_OnlyProduceLocalPairs_WithoutDuplicateCells()
+        {
+            var bodies = new EnemySeparationBody[50];
+            for (int i = 0; i < bodies.Length; i++) bodies[i] = Body(i + 1, Vector2.right * (i * 4f), 0.16f);
+            var discovery = new EnemySeparationDiscovery();
+            Assert.IsTrue(discovery.Build(bodies, bodies.Length));
+            Assert.That(discovery.PairCount, Is.Zero);
+            bodies[1].Position = bodies[0].Position + Vector2.right * 0.5f;
+            Assert.IsTrue(discovery.Build(bodies, bodies.Length));
+            Assert.That(discovery.PairCount, Is.EqualTo(1));
+        }
+
         private static EnemySeparationBody Body(int id, Vector2 position, float budget)
             => new EnemySeparationBody { Id = id, Position = position, Radius = 0.2f, Budget = budget };
     }

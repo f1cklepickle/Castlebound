@@ -27,7 +27,7 @@ namespace Castlebound.Gameplay.AI
                 var pair = discovery.Pairs[p]; Union(pair.First, pair.Second);
                 if (Overlapped(bodies[pair.First], bodies[pair.Second])) RecoveryPairs++;
             }
-            ConstrainComponents(bodies, count, discovery);
+            PreventContacts(bodies, discovery);
             // Exceptional recovery replaces locomotion for the affected pair. Multiple
             // constraints are rechecked below; an infeasible pocket waits rather than launches.
             for (int pass = 0; pass < RecoveryPasses; pass++)
@@ -35,26 +35,26 @@ namespace Castlebound.Gameplay.AI
                 bool changed = false;
                 for (int p = 0; p < discovery.PairCount; p++)
                 {
-                var pair = discovery.Pairs[p]; int a = pair.First, b = pair.Second;
-                if (!Overlapped(bodies[a], bodies[b]) || bodies[a].External.sqrMagnitude > 0f || bodies[b].External.sqrMagnitude > 0f) continue;
-                Vector2 delta = bodies[b].Position - bodies[a].Position;
-                Vector2 axis = EnemySeparationMath.ResolveAxis(delta, 0.00001f);
-                float needed = bodies[a].Radius + bodies[b].Radius + Skin - delta.magnitude;
-                float capacityA = bodies[a].Locked ? 0f : bodies[a].Budget;
-                float capacityB = bodies[b].Locked ? 0f : bodies[b].Budget;
-                EnemySeparationMath.AllocateCorrections(needed, capacityA, capacityB, out float moveA, out float moveB);
-                Vector2 allowedA = Guard(a, -axis * moveA, bodies, guard);
-                Vector2 allowedB = Guard(b, axis * moveB, bodies, guard);
-                float remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
-                if (remaining > Skin)
-                {
-                    allowedA = Guard(a, -axis * Mathf.Min(capacityA, moveA + remaining), bodies, guard);
-                    remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
-                    allowedB = Guard(b, axis * Mathf.Min(capacityB, moveB + remaining), bodies, guard);
-                }
-                changed |= (bodies[a].Displacement - allowedA).sqrMagnitude > 1e-10f ||
-                    (bodies[b].Displacement - allowedB).sqrMagnitude > 1e-10f;
-                bodies[a].Displacement = allowedA; bodies[b].Displacement = allowedB;
+                    var pair = discovery.Pairs[p]; int a = pair.First, b = pair.Second;
+                    if (!Overlapped(bodies[a], bodies[b]) || bodies[a].External.sqrMagnitude > 0f || bodies[b].External.sqrMagnitude > 0f) continue;
+                    Vector2 delta = bodies[b].Position - bodies[a].Position;
+                    Vector2 axis = EnemySeparationMath.ResolveAxis(delta, 0.00001f);
+                    float needed = bodies[a].Radius + bodies[b].Radius + Skin - delta.magnitude;
+                    float capacityA = bodies[a].Locked ? 0f : bodies[a].Budget;
+                    float capacityB = bodies[b].Locked ? 0f : bodies[b].Budget;
+                    EnemySeparationMath.AllocateCorrections(needed, capacityA, capacityB, out float moveA, out float moveB);
+                    Vector2 allowedA = Guard(a, -axis * moveA, bodies, guard);
+                    Vector2 allowedB = Guard(b, axis * moveB, bodies, guard);
+                    float remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
+                    if (remaining > Skin)
+                    {
+                        allowedA = Guard(a, -axis * Mathf.Min(capacityA, moveA + remaining), bodies, guard);
+                        remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
+                        allowedB = Guard(b, axis * Mathf.Min(capacityB, moveB + remaining), bodies, guard);
+                    }
+                    changed |= (bodies[a].Displacement - allowedA).sqrMagnitude > 1e-10f ||
+                        (bodies[b].Displacement - allowedB).sqrMagnitude > 1e-10f;
+                    bodies[a].Displacement = allowedA; bodies[b].Displacement = allowedB;
                 }
                 if (!changed) break;
             }
@@ -75,6 +75,36 @@ namespace Castlebound.Gameplay.AI
                 int root = Find(a); fractions[root] = Mathf.Min(fractions[root], fraction);
             }
             for (int i = 0; i < count; i++) bodies[i].Displacement *= fractions[Find(i)];
+        }
+
+        private static void PreventContacts(EnemySeparationBody[] bodies, EnemySeparationDiscovery discovery)
+        {
+            // Remove only closing motion, preserving common translation and tangent.
+            // Every edit reduces a positive inward component, so it cannot increase speed.
+            // Other pair constraints may be affected; bounded passes end in swept revalidation.
+            for (int pass = 0; pass < 4; pass++)
+            {
+                bool changed = false;
+                for (int p = 0; p < discovery.PairCount; p++)
+                {
+                    var pair = discovery.Pairs[p]; int a = pair.First, b = pair.Second;
+                    Vector2 delta = bodies[b].Position - bodies[a].Position;
+                    float distance = delta.magnitude, radius = bodies[a].Radius + bodies[b].Radius;
+                    if (distance < radius - Skin || distance <= 0.00001f) continue;
+                    Vector2 axis = delta / distance;
+                    Vector2 da = bodies[a].Displacement, db = bodies[b].Displacement;
+                    if (SafeFraction(delta, db - da, radius) >= 1f) continue;
+                    float inwardA = Vector2.Dot(da, axis), inwardB = Vector2.Dot(db, -axis);
+                    float excess = inwardA + inwardB - Mathf.Max(0f, distance - radius - Skin);
+                    if (excess <= 0f) continue;
+                    EnemySeparationMath.AllocateCorrections(excess, Mathf.Max(0f, inwardA), Mathf.Max(0f, inwardB),
+                        out float removeA, out float removeB);
+                    bodies[a].Displacement = da - axis * removeA;
+                    bodies[b].Displacement = db + axis * removeB;
+                    changed |= removeA + removeB > 0f;
+                }
+                if (!changed) break;
+            }
         }
 
         public static float SafeFraction(Vector2 delta, Vector2 relativeStep, float radius)

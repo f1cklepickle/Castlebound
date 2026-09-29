@@ -260,7 +260,7 @@ public class EnemyController2D : MonoBehaviour
             navigationChase?.Suspend();
             Locomotion.ResetChaseApproachTarget();
             bool moved = Locomotion.ExecuteMovement(_rb, Vector2.zero, Vector2.zero, dt);
-            animationPresenter?.SetMovementRequested(moved);
+            if (!Locomotion.IsMovementDeferred) animationPresenter?.SetMovementRequested(moved);
             return;
         }
         if (steerTarget == null) steerTarget = target;
@@ -351,7 +351,7 @@ public class EnemyController2D : MonoBehaviour
         else Facing.FaceTarget(pos, target, dt);
 
         bool movementApplied = Locomotion.ExecuteMovement(_rb, radial, tangent, dt);
-        animationPresenter?.SetMovementRequested(movementApplied);
+        if (!Locomotion.IsMovementDeferred) animationPresenter?.SetMovementRequested(movementApplied);
     }
 
     private Transform SelectTarget(bool playerInside, bool enemyInside)

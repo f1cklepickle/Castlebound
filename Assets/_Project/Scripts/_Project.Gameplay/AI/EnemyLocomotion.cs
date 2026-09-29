@@ -22,6 +22,7 @@ public class EnemyLocomotion : MonoBehaviour
     public EnemyController2D.State CurrentState { get; private set; } = EnemyController2D.State.CHASE;
     public bool IsChaseRequested { get; private set; }
     public bool IsInHoldRange => CurrentState == EnemyController2D.State.HOLD;
+    public bool IsMovementDeferred { get; private set; }
     public MonoBehaviour HoldMovementPolicySource => holdMovementPolicySource;
 
     public bool CanUsePredictiveChase(EnemyController2D owner, Transform player)
@@ -226,6 +227,7 @@ public class EnemyLocomotion : MonoBehaviour
 
     public bool ExecuteMovement(Rigidbody2D body, Vector2 radial, Vector2 tangent, float deltaTime)
     {
+        IsMovementDeferred = false;
         if (body == null)
             return false;
 
@@ -237,29 +239,24 @@ public class EnemyLocomotion : MonoBehaviour
         if (knockbackReceiver == null)
             knockbackReceiver = GetComponent<EnemyKnockbackReceiver>();
 
-        Vector2 knockback = knockbackReceiver != null
-            ? knockbackReceiver.ConsumeDisplacement(deltaTime)
-            : Vector2.zero;
         Vector2 locomotionDisplacement = (radial + tangent) * deltaTime;
         if (separationCollider == null)
             separationCollider = GetComponentInChildren<EnemySeparationCollider>();
-        if (separationCollider != null)
+        if (separationCollider != null && separationCollider.Participates)
         {
-            locomotionDisplacement = separationCollider
-                .ConstrainLocomotionDisplacement(locomotionDisplacement);
+            // Return value reports intent; coordinated application updates presentation later.
+            IsMovementDeferred = true;
+            return separationCollider.Submit(locomotionDisplacement, knockbackReceiver, deltaTime);
         }
+
+        Vector2 knockback = knockbackReceiver != null
+            ? knockbackReceiver.ConsumeDisplacement(deltaTime) : Vector2.zero;
 
         if (navigationChase == null) navigationChase = GetComponent<EnemyNavigationChase>();
         if (navigationChase != null && navigationChase.isActiveAndEnabled)
             locomotionDisplacement = navigationChase.ConstrainFinalDisplacement(locomotionDisplacement);
 
         Vector2 displacement = locomotionDisplacement + knockback;
-        if (separationCollider != null)
-        {
-            separationCollider.RecordScheduledBodyPosition(
-                body.position + displacement);
-        }
-
         body.MovePosition(body.position + displacement);
         return displacement.sqrMagnitude > Mathf.Epsilon;
     }

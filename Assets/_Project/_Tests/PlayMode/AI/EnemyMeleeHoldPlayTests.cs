@@ -95,10 +95,9 @@ public class EnemyMeleeHoldPlayTests
                 Vector2 tangent = ccw;
                 Vector2 radial = Vector2.right * 2f;
                 Vector2 requested = (radial + tangent) * Time.fixedDeltaTime;
-                Vector2 constrained = sensor.ConstrainLocomotionDisplacement(requested);
-                clampObserved |= (requested - constrained).sqrMagnitude > 0.000001f;
                 locomotion.ExecuteMovement(body, radial, tangent, Time.fixedDeltaTime);
                 yield return new WaitForFixedUpdate();
+                clampObserved |= (requested - sensor.DebugAppliedStep).sqrMagnitude > 0.000001f;
                 Assert.That(Vector2.Distance(sensor.Collider.bounds.center, otherSensor.Collider.bounds.center),
                     Is.GreaterThanOrEqualTo(minimum - 0.005f));
             }

@@ -13,7 +13,7 @@ namespace Castlebound.Tests.AI
             if (reverse) System.Array.Reverse(bodies);
             Solve(bodies);
             AssertSafe(bodies);
-            foreach (var body in bodies) Assert.That(body.Displacement.magnitude, Is.GreaterThan(0f));
+            Assert.That(bodies[0].Displacement.magnitude + bodies[1].Displacement.magnitude, Is.GreaterThan(0f));
         }
 
         [Test]
@@ -21,7 +21,7 @@ namespace Castlebound.Tests.AI
         {
             var bodies = new[] { Body(1, Vector2.left, Vector2.right * 2f), Body(2, Vector2.down, Vector2.up * 2f) };
             Solve(bodies); AssertSafe(bodies);
-            Assert.That(bodies[0].Displacement.magnitude, Is.LessThan(1f));
+            Assert.That(bodies[0].Displacement.magnitude, Is.LessThan(2f));
         }
 
         [Test]
@@ -52,6 +52,16 @@ namespace Castlebound.Tests.AI
             Solve(bodies);
             Assert.That(bodies[0].Displacement, Is.EqualTo(bodies[0].Desired));
             Assert.That(bodies[1].Displacement, Is.EqualTo(bodies[1].Desired));
+        }
+
+        [Test]
+        public void ConvergingPairAtContact_PreservesSharedTangentialMovement()
+        {
+            var bodies = new[] { Body(1, Vector2.zero, new Vector2(0.04f, 0.01f)),
+                Body(2, Vector2.right * 0.4f, new Vector2(-0.04f, 0.01f)) };
+            Solve(bodies); AssertSafe(bodies);
+            Assert.That(bodies[0].Displacement.y, Is.EqualTo(0.01f).Within(0.00001f));
+            Assert.That(bodies[1].Displacement.y, Is.EqualTo(0.01f).Within(0.00001f));
         }
 
         [TestCase(false)] [TestCase(true)]

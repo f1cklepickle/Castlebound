@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, coordinated movement and recovery)
+
+### Summary
+- Wire registered separation sensors to a fixed-step coordinator after controller intent submission and before physics; freeze poses, discover local pairs, constrain closing motion, guard world movement, revalidate swept pairs, and apply one MovePosition per body.
+- Remove trigger-owned Rigidbody2D position correction and order-dependent scheduled-neighbor clamping. Exceptional initial/teleport/forced overlap recovery uses the same authored allowance and world guards; residual overlap waits for subsequent ticks.
+- Preserve hard radii, prefab/layer contracts, predictive groups, navigation and target policies. Controller changes only defer movement presentation until the actual resolved step.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationDiscoveryTests — add 50-actor sparse locality and duplicate-cell coverage.
+- EnemySeparationSolverTests — preserve shared tangential motion while removing convergence; retain swept crossing, asymmetry, ordering, simultaneous neighbors, guard cancellation, speed/lock/recovery and saturation contracts.
+
+**PlayMode**
+- EnemyFirstContactSeparationPlayTests — production mixed first contact, one owned application, speed limits, bounded multi-tick recovery, wall-adjacent coincidence, HOLD/root/stagger, once-consumed knockback without impulse transfer, and explicit teleport recovery.
+- EnemySeparationPlayTests — route the two ordinary direct-MovePosition fixtures through production locomotion; assertions unchanged. Existing coincidence, locks, knockback, hitbox/projectile/trap and world-contact coverage retained.
+- EnemyMeleeHoldPlayTests — observe the actual coordinated #277 output instead of calling the removed standalone clamp; assertions unchanged.
+
+### Notes
+- Unity, compilation, EditMode and PlayMode were NOT run by agent. Source/diff review only; all execution and performance validation remain with user.
+- Runtime owner auto-registers sensors with no scene/prefab changes; controller-disabled actors still support exceptional recovery. Root/stagger remain fixed. Settled HOLD receives no autonomous recovery allowance, while explicit HOLD-policy requests retain their own bounded movement.
+- ExecuteMovement returns submitted intent for coordinated actors. Controllers defer animation movement reporting; the final application reports the resolved result. Sensor-less actors retain immediate movement.
+- No post-contact position writer remains in separation. Legacy DebugFallbackCorrectionCount stays zero for compatibility; sensor debug fields expose requested/applied ordinary displacement, application count and discovery saturation. Navigation applied-displacement diagnostics are updated after coordination.
+- Knockback is consumed once per pending application and retains its separate displacement/decay. Its envelope participates in discovery but external displacement is neither speed-clamped nor transferred. Swept guarantees apply to ordinary movement; forced knockback can create exceptional overlap, resolved on later legal steps.
+- Capacity: 256 bodies, 4096 hash buckets, 16384 bucket entries, 8192 pairs, at most 64 cells per body. Overflow stops ordinary movement for all registered actors, including actors beyond capacity. No discovery physics queries or steady-state buffer allocations; local pairs are sorted by stable IDs.
+- Up to four preventive/recovery passes; unresolved components share the earliest safe time fraction after guards. All-body scans are linear snapshots/applications, not global all-pairs discovery. Dense local populations can still reach the explicit pair limit.
+- Primary-body sweeps add bounded world-safety queries; repeated identical guard requests are cached, with at most 256 guard evaluations per fixed step and 16 cast hits per evaluation. Saturated casts/refused guard evaluations return zero. Existing navigation query budget remains authoritative for its own queries. Editor coordinator diagnostics expose pair count, saturated steps and guard-budget refusals.
+- Guard cancellation is revalidated against actual surviving steps; final common scaling uses prefixes of guarded sweeps. Existing navigation contact recovery retains its specialized guard. Enclosed/locked or mutually conflicting recovery may wait rather than deepen overlap or violate the world.
+- User validation: run EnemySeparationDiscoveryTests, EnemySeparationSolverTests, EnemyFirstContactSeparationPlayTests, existing #277 suites, EnemyMeleeHoldPlayTests, EnemyApproachSpreadPlayTests and #301/#304 navigation/recovery suites. Profile 50+ enemies for allocations, query pressure, saturation, and unexpected stalls.
+- #305 stays paused on its preserved branch. After this repair is validated and merged, integrate updated main there and rerun all seven bottleneck reproductions with unchanged assertions; no PR or push performed in this task.
+
 ## 2026-09-29 - codex/fix-first-contact-separation (issue #306, bounded solver)
 
 ### Summary
