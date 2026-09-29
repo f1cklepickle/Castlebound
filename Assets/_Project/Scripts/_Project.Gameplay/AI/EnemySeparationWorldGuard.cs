@@ -26,6 +26,15 @@ namespace Castlebound.Gameplay.AI
             for (int i = 0; i < count; i++)
             {
                 if (hits[i].collider == null) continue;
+                // Cast travel and signed collider distance have different contact-skin
+                // semantics. Preserve the signed starting gap as well as the cast bound.
+                ColliderDistance2D gap = primary.Distance(hits[i].collider);
+                if (!gap.isValid) return Vector2.zero;
+                Vector2 outward = (Vector2)primary.bounds.center - hits[i].collider.ClosestPoint(primary.bounds.center);
+                if (outward.sqrMagnitude <= 0f) return Vector2.zero;
+                float inward = -Vector2.Dot(direction, outward.normalized);
+                if (inward > 0f)
+                    allowed = Mathf.Min(allowed, Mathf.Max(0f, gap.distance - Physics2D.defaultContactOffset) / inward);
                 if (hits[i].distance <= 0f && Vector2.Dot(direction, hits[i].normal) >= 0f) continue;
                 allowed = Mathf.Min(allowed, Mathf.Max(0f, hits[i].distance - Physics2D.defaultContactOffset));
             }

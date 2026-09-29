@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, validation corrections)
+
+### Summary
+- Address user-reported wall-adjacent recovery penetration by additionally bounding inward movement against the current signed collider gap, including contact-offset clearance; retain the cast bound.
+- Restrict coordinator animation reporting to submitted movement, actual recovery movement, and one settling update after owned movement. Idle registered sensors no longer continually overwrite independently driven presentation.
+- Preserve the failed wall and animation assertions; add initial wall-clearance preconditions to distinguish fixture penetration from recovery-induced penetration.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationWorldGuardTests — inward recovery cannot consume the signed contact gap; outward escape remains available, at origin and large coordinates.
+
+**PlayMode**
+- EnemyFirstContactSeparationPlayTests.WallAdjacentCoincidence_UsesLegalSide_WithoutWorldPenetration — initial signed-clearance preconditions; existing movement/world/final separation assertions unchanged.
+- EnemyGoblinAnimationPlayTests.SustainedMovementRequests_AllowWalkAnimationToAdvance — unchanged regression supplied by user; idle separation sensors must not reset Walk playback.
+
+### Notes
+- Unity, compilation, EditMode and PlayMode not run by agent. Source/diff checks only; rerun both reported failures and the separation regression suites.
+- World guard now reads signed Distance and ClosestPoint for each cast hit (at most 16), within the existing guard-evaluation cap. No new discovery queries or movement-budget exceptions.
+- No #305 changes or assertion relaxations; both corrections remain within the approved #306 scope.
+
 ## 2026-09-29 - codex/fix-first-contact-separation (issue #306, coordinated movement and recovery)
 
 ### Summary

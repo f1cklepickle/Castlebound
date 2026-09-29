@@ -66,6 +66,10 @@ namespace Castlebound.Tests.PlayMode.AI
             var first = Enemy("Enemy_Lurker", Vector2.zero);
             var second = Enemy("Enemy_Goblin_Melee", Vector2.zero);
             Physics2D.SyncTransforms();
+            Assert.That(Physics2D.Distance(first.Body.GetComponent<CircleCollider2D>(), box).distance,
+                Is.GreaterThanOrEqualTo(-0.002f), "Fixture must start outside the wall before recovery.");
+            Assert.That(Physics2D.Distance(second.Body.GetComponent<CircleCollider2D>(), box).distance,
+                Is.GreaterThanOrEqualTo(-0.002f), "Fixture must start outside the wall before recovery.");
             for (int tick = 0; tick < 20; tick++)
             {
                 Vector2 a = first.Body.position, b = second.Body.position;

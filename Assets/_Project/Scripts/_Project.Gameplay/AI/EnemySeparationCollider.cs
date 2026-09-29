@@ -17,6 +17,7 @@ public sealed class EnemySeparationCollider : MonoBehaviour
     private EnemySeparationWorldGuard worldGuard;
     private Vector2 desired, external;
     private bool pending;
+    private bool reportedMovement;
     public CircleCollider2D Collider => separationCollider != null ? separationCollider : (separationCollider = GetComponent<CircleCollider2D>());
     public Rigidbody2D Body { get { Cache(); return body; } }
     public EnemyController2D Owner { get { Cache(); return owner; } }
@@ -37,7 +38,7 @@ public sealed class EnemySeparationCollider : MonoBehaviour
 
     private void Awake() => Cache();
     private void OnEnable() { Cache(); EnemySeparationCoordinator.Register(this); }
-    private void OnDisable() { pending = false; desired = external = Vector2.zero; EnemySeparationCoordinator.Unregister(this); }
+    private void OnDisable() { pending = reportedMovement = false; desired = external = Vector2.zero; EnemySeparationCoordinator.Unregister(this); }
 
     public bool Submit(Vector2 displacement, EnemyKnockbackReceiver knockback, float dt)
     {
@@ -82,7 +83,12 @@ public sealed class EnemySeparationCollider : MonoBehaviour
         Vector2 ordinary = Locked ? Vector2.zero : step.Displacement;
         Vector2 impulse = Locked ? Vector2.zero : step.External;
         body.MovePosition(body.position + ordinary + impulse);
-        animationPresenter?.SetMovementRequested((ordinary + impulse).sqrMagnitude > Mathf.Epsilon);
+        bool moved = (ordinary + impulse).sqrMagnitude > Mathf.Epsilon;
+        // Own presentation only for submitted movement or recovery we actually applied.
+        // Send one settling update after owned motion; idle registered sensors must not
+        // overwrite independent animation requests on controller-disabled actors.
+        if (pending || moved || reportedMovement) animationPresenter?.SetMovementRequested(moved);
+        reportedMovement = moved;
 #if UNITY_EDITOR
         DebugMovesLastStep = 1; DebugAppliedStep = ordinary; DebugDiscoverySaturated = saturated;
         if (navigation != null) navigation.Debug_RecordAppliedLocomotion(ordinary);
