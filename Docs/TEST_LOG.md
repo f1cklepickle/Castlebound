@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, discovery)
+
+### Summary
+- Preserve #305 fixture/log corrections separately in 115ddf7; create independent #306 repair branch from verified main a197ebb.
+- Add fixed-capacity spatial buckets over frozen body movement envelopes, including external movement; output stable unique local pairs without trigger timing, group filtering, or physics discovery queries.
+- Capacity saturation is explicit; runtime integration must stop ordinary movement on an incomplete discovery result.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationDiscoveryTests — untouched asymmetric pairs, crossing envelopes, reversed submission, deterministic ID ordering, external trajectories, distant exclusion, and saturation/reset.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Tests authored before implementation; Unity/EditMode/PlayMode not run by agent at user request. Red/green execution remains with user.
+- No movement behavior is connected to discovery in this checkpoint; hard radii and prefabs are unchanged.
+
 ## 2026-09-27 - navigation-fallback-editmode-fixture
 
 ### Summary
