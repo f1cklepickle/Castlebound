@@ -9,7 +9,7 @@ namespace Castlebound.Gameplay.AI
     public sealed class EnemySeparationSolver
     {
         private const float Skin = 0.0002f;
-        private const int RecoveryPasses = 4;
+        private readonly EnemyOverlapRecovery recovery = new EnemyOverlapRecovery();
         private readonly int[] parents = new int[EnemySeparationDiscovery.BodyCapacity];
         private readonly float[] fractions = new float[EnemySeparationDiscovery.BodyCapacity];
         public int RecoveryPairs { get; private set; }
@@ -28,37 +28,8 @@ namespace Castlebound.Gameplay.AI
                 if (Overlapped(bodies[pair.First], bodies[pair.Second])) RecoveryPairs++;
             }
             PreventContacts(bodies, discovery);
-            // Exceptional recovery replaces locomotion for the affected pair. Multiple
-            // constraints are rechecked below; an infeasible pocket waits rather than launches.
-            for (int pass = 0; pass < RecoveryPasses; pass++)
-            {
-                bool changed = false;
-                for (int p = 0; p < discovery.PairCount; p++)
-                {
-                    var pair = discovery.Pairs[p]; int a = pair.First, b = pair.Second;
-                    if (!Overlapped(bodies[a], bodies[b]) || bodies[a].External.sqrMagnitude > 0f || bodies[b].External.sqrMagnitude > 0f) continue;
-                    Vector2 delta = bodies[b].Position - bodies[a].Position;
-                    Vector2 axis = EnemySeparationMath.ResolveAxis(delta, 0.00001f);
-                    float needed = bodies[a].Radius + bodies[b].Radius + Skin - delta.magnitude;
-                    float capacityA = bodies[a].Locked ? 0f : bodies[a].Budget;
-                    float capacityB = bodies[b].Locked ? 0f : bodies[b].Budget;
-                    EnemySeparationMath.AllocateCorrections(needed, capacityA, capacityB, out float moveA, out float moveB);
-                    Vector2 allowedA = Guard(a, -axis * moveA, bodies, guard);
-                    Vector2 allowedB = Guard(b, axis * moveB, bodies, guard);
-                    float remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
-                    if (remaining > Skin)
-                    {
-                        allowedA = Guard(a, -axis * Mathf.Min(capacityA, moveA + remaining), bodies, guard);
-                        remaining = Mathf.Max(0f, needed - Vector2.Dot(allowedB - allowedA, axis));
-                        allowedB = Guard(b, axis * Mathf.Min(capacityB, moveB + remaining), bodies, guard);
-                    }
-                    changed |= (bodies[a].Displacement - allowedA).sqrMagnitude > 1e-10f ||
-                        (bodies[b].Displacement - allowedB).sqrMagnitude > 1e-10f;
-                    bodies[a].Displacement = allowedA; bodies[b].Displacement = allowedB;
-                }
-                if (!changed) break;
-            }
             for (int i = 0; i < count; i++) bodies[i].Displacement = Guard(i, bodies[i].Displacement, bodies, guard);
+            if (RecoveryPairs > 0) recovery.Resolve(bodies, count, discovery.Pairs, discovery.PairCount, guard);
             // This is also the post-world-guard revalidation: use only the displacements
             // that actually survived the guard, never another controller's speculative endpoint.
             ConstrainComponents(bodies, count, discovery);

@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-10-01 - fix-first-contact-separation P1 overlap chains
+
+### Summary
+- Fixed the P1 blocker where later pair recovery replaced earlier corrections and final component constraining repeatedly stopped an overlapping chain.
+- Recovery now builds one component plan in stable ID order over discovered local pairs; guarded candidates must preserve every active overlap constraint and previously achieved clearance.
+- Recovery remains bounded by each body's existing budget, locks and world guard, with no persistent separation debt, direct position writes or crowd-flow changes.
+
+### New or Updated Tests
+**EditMode**
+- EnemyOverlapChainRecoveryTests — exact stacks, overlap chains, reversed pair/body ordering, locked middle, legal wall sides and blocked-then-released recovery; monotonic separation and per-body budgets.
+
+**PlayMode**
+- EnemyOverlapChainRecoveryPlayTests — three real-prefab actors recovering from coincidence in open space, beside a wall and with a rooted middle actor; world clearance and bounded owned steps.
+
+### Notes
+- Existing #306 tests are unchanged. Local Unity/tests were not run by the agent; EditMode and PlayMode CI are required before merge.
+
 ## 2026-09-29 - codex/fix-first-contact-separation (issue #306, validation corrections)
 
 ### Summary
