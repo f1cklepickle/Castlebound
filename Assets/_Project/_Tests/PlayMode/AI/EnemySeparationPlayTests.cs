@@ -60,10 +60,10 @@ namespace Castlebound.Tests.PlayMode.AI
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    left.GetComponent<Rigidbody2D>().MovePosition(
-                        left.GetComponent<Rigidbody2D>().position + Vector2.right * 0.04f);
-                    right.GetComponent<Rigidbody2D>().MovePosition(
-                        right.GetComponent<Rigidbody2D>().position + Vector2.left * 0.04f);
+                    left.GetComponent<EnemyLocomotion>().ExecuteMovement(left.GetComponent<Rigidbody2D>(),
+                        Vector2.right * 2f, Vector2.zero, Time.fixedDeltaTime);
+                    right.GetComponent<EnemyLocomotion>().ExecuteMovement(right.GetComponent<Rigidbody2D>(),
+                        Vector2.left * 2f, Vector2.zero, Time.fixedDeltaTime);
                     yield return new WaitForFixedUpdate();
                 }
 
@@ -218,7 +218,8 @@ namespace Castlebound.Tests.PlayMode.AI
                     for (int i = 0; i < enemies.Length; i++)
                     {
                         Rigidbody2D body = enemies[i].GetComponent<Rigidbody2D>();
-                        body.MovePosition(body.position + Vector2.right * 0.04f);
+                        enemies[i].GetComponent<EnemyLocomotion>().ExecuteMovement(body,
+                            Vector2.right * 2f, Vector2.zero, Time.fixedDeltaTime);
                     }
 
                     yield return new WaitForFixedUpdate();

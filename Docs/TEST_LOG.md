@@ -4,6 +4,109 @@
 
 ---
 
+## 2026-10-01 - fix-first-contact-separation P1 overlap chains
+
+### Summary
+- Fixed the P1 blocker where later pair recovery replaced earlier corrections and final component constraining repeatedly stopped an overlapping chain.
+- Recovery now builds one component plan in stable ID order over discovered local pairs; guarded candidates must preserve every active overlap constraint and previously achieved clearance.
+- Recovery remains bounded by each body's existing budget, locks and world guard, with no persistent separation debt, direct position writes or crowd-flow changes.
+
+### New or Updated Tests
+**EditMode**
+- EnemyOverlapChainRecoveryTests — exact stacks, overlap chains, reversed pair/body ordering, locked middle, legal wall sides and blocked-then-released recovery; monotonic separation and per-body budgets.
+
+**PlayMode**
+- EnemyOverlapChainRecoveryPlayTests — three real-prefab actors recovering from coincidence in open space, beside a wall and with a rooted middle actor; world clearance and bounded owned steps.
+
+### Notes
+- Existing #306 tests are unchanged. Local Unity/tests were not run by the agent; EditMode and PlayMode CI are required before merge.
+
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, validation corrections)
+
+### Summary
+- Address user-reported wall-adjacent recovery penetration by additionally bounding inward movement against the current signed collider gap, including contact-offset clearance; retain the cast bound.
+- Restrict coordinator animation reporting to submitted movement, actual recovery movement, and one settling update after owned movement. Idle registered sensors no longer continually overwrite independently driven presentation.
+- Preserve the failed wall and animation assertions; add initial wall-clearance preconditions to distinguish fixture penetration from recovery-induced penetration.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationWorldGuardTests — inward recovery cannot consume the signed contact gap; outward escape remains available, at origin and large coordinates.
+
+**PlayMode**
+- EnemyFirstContactSeparationPlayTests.WallAdjacentCoincidence_UsesLegalSide_WithoutWorldPenetration — initial signed-clearance preconditions; existing movement/world/final separation assertions unchanged.
+- EnemyGoblinAnimationPlayTests.SustainedMovementRequests_AllowWalkAnimationToAdvance — unchanged regression supplied by user; idle separation sensors must not reset Walk playback.
+
+### Notes
+- Unity, compilation, EditMode and PlayMode not run by agent. Source/diff checks only; rerun both reported failures and the separation regression suites.
+- World guard now reads signed Distance and ClosestPoint for each cast hit (at most 16), within the existing guard-evaluation cap. No new discovery queries or movement-budget exceptions.
+- No #305 changes or assertion relaxations; both corrections remain within the approved #306 scope.
+
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, coordinated movement and recovery)
+
+### Summary
+- Wire registered separation sensors to a fixed-step coordinator after controller intent submission and before physics; freeze poses, discover local pairs, constrain closing motion, guard world movement, revalidate swept pairs, and apply one MovePosition per body.
+- Remove trigger-owned Rigidbody2D position correction and order-dependent scheduled-neighbor clamping. Exceptional initial/teleport/forced overlap recovery uses the same authored allowance and world guards; residual overlap waits for subsequent ticks.
+- Preserve hard radii, prefab/layer contracts, predictive groups, navigation and target policies. Controller changes only defer movement presentation until the actual resolved step.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationDiscoveryTests — add 50-actor sparse locality and duplicate-cell coverage.
+- EnemySeparationSolverTests — preserve shared tangential motion while removing convergence; retain swept crossing, asymmetry, ordering, simultaneous neighbors, guard cancellation, speed/lock/recovery and saturation contracts.
+
+**PlayMode**
+- EnemyFirstContactSeparationPlayTests — production mixed first contact, one owned application, speed limits, bounded multi-tick recovery, wall-adjacent coincidence, HOLD/root/stagger, once-consumed knockback without impulse transfer, and explicit teleport recovery.
+- EnemySeparationPlayTests — route the two ordinary direct-MovePosition fixtures through production locomotion; assertions unchanged. Existing coincidence, locks, knockback, hitbox/projectile/trap and world-contact coverage retained.
+- EnemyMeleeHoldPlayTests — observe the actual coordinated #277 output instead of calling the removed standalone clamp; assertions unchanged.
+
+### Notes
+- Unity, compilation, EditMode and PlayMode were NOT run by agent. Source/diff review only; all execution and performance validation remain with user.
+- Runtime owner auto-registers sensors with no scene/prefab changes; controller-disabled actors still support exceptional recovery. Root/stagger remain fixed. Settled HOLD receives no autonomous recovery allowance, while explicit HOLD-policy requests retain their own bounded movement.
+- ExecuteMovement returns submitted intent for coordinated actors. Controllers defer animation movement reporting; the final application reports the resolved result. Sensor-less actors retain immediate movement.
+- No post-contact position writer remains in separation. Legacy DebugFallbackCorrectionCount stays zero for compatibility; sensor debug fields expose requested/applied ordinary displacement, application count and discovery saturation. Navigation applied-displacement diagnostics are updated after coordination.
+- Knockback is consumed once per pending application and retains its separate displacement/decay. Its envelope participates in discovery but external displacement is neither speed-clamped nor transferred. Swept guarantees apply to ordinary movement; forced knockback can create exceptional overlap, resolved on later legal steps.
+- Capacity: 256 bodies, 4096 hash buckets, 16384 bucket entries, 8192 pairs, at most 64 cells per body. Overflow stops ordinary movement for all registered actors, including actors beyond capacity. No discovery physics queries or steady-state buffer allocations; local pairs are sorted by stable IDs.
+- Up to four preventive/recovery passes; unresolved components share the earliest safe time fraction after guards. All-body scans are linear snapshots/applications, not global all-pairs discovery. Dense local populations can still reach the explicit pair limit.
+- Primary-body sweeps add bounded world-safety queries; repeated identical guard requests are cached, with at most 256 guard evaluations per fixed step and 16 cast hits per evaluation. Saturated casts/refused guard evaluations return zero. Existing navigation query budget remains authoritative for its own queries. Editor coordinator diagnostics expose pair count, saturated steps and guard-budget refusals.
+- Guard cancellation is revalidated against actual surviving steps; final common scaling uses prefixes of guarded sweeps. Existing navigation contact recovery retains its specialized guard. Enclosed/locked or mutually conflicting recovery may wait rather than deepen overlap or violate the world.
+- User validation: run EnemySeparationDiscoveryTests, EnemySeparationSolverTests, EnemyFirstContactSeparationPlayTests, existing #277 suites, EnemyMeleeHoldPlayTests, EnemyApproachSpreadPlayTests and #301/#304 navigation/recovery suites. Profile 50+ enemies for allocations, query pressure, saturation, and unexpected stalls.
+- #305 stays paused on its preserved branch. After this repair is validated and merged, integrate updated main there and rerun all seven bottleneck reproductions with unchanged assertions; no PR or push performed in this task.
+
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, bounded solver)
+
+### Summary
+- Add pure swept relative-motion resolution with stable local components and a conservative common time fraction; no body position writes or speed allocation beyond each body's allowance.
+- Revalidate pairs after world-guard cancellation, keeping shared translation while stopping before first contact.
+- Bound exceptional recovery to authored allowance; exact coincidence uses a stable axis, locked sides cannot move, and blocked-side recovery can transfer remaining legal recovery to the available side.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationSolverTests — head-on/crossing, asymmetric speed, reversed ordering, simultaneous neighbors, guard cancellation, shared translation, multi-tick overlap/coincidence recovery, wall/lock limits, saturation, and external-displacement ownership.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Tests authored before implementation, not run. Unity/EditMode/PlayMode execution remains with user.
+- Solver is not yet wired into live movement. Forced external displacement remains separate and can create exceptional overlap; no impulse is allocated to neighbors.
+
+## 2026-09-29 - codex/fix-first-contact-separation (issue #306, discovery)
+
+### Summary
+- Preserve #305 fixture/log corrections separately in 115ddf7; create independent #306 repair branch from verified main a197ebb.
+- Add fixed-capacity spatial buckets over frozen body movement envelopes, including external movement; output stable unique local pairs without trigger timing, group filtering, or physics discovery queries.
+- Capacity saturation is explicit; runtime integration must stop ordinary movement on an incomplete discovery result.
+
+### New or Updated Tests
+**EditMode**
+- EnemySeparationDiscoveryTests — untouched asymmetric pairs, crossing envelopes, reversed submission, deterministic ID ordering, external trajectories, distant exclusion, and saturation/reset.
+
+**PlayMode**
+- N/A
+
+### Notes
+- Tests authored before implementation; Unity/EditMode/PlayMode not run by agent at user request. Red/green execution remains with user.
+- No movement behavior is connected to discovery in this checkpoint; hard radii and prefabs are unchanged.
+
 ## 2026-09-27 - navigation-fallback-editmode-fixture
 
 ### Summary
